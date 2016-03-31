@@ -77,7 +77,7 @@ public class FileMetricInputStream implements MetricInputStream {
             String metricsStr = null;
             metricsStr = reader.readLine();
             if (metricsStr != null) {
-                return marshaller.marshallSample(metricsHeaderStr,metricsStr);
+               // return marshaller.unmarshallSample(metricsHeaderStr,metricsStr);
             } else {
                 //TODO do something when file is done
             }

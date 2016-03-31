@@ -8,7 +8,7 @@ import java.util.Date;
 public class MetricsSample {
 
     private String[] metricsHeader;
-    private float[] metrics;
+    private Double[] metrics;
 
     public Date getTimestamp() {
         return timestamp;
@@ -28,11 +28,11 @@ public class MetricsSample {
         this.metricsHeader = metricsHeader;
     }
 
-    public float[] getMetrics() {
+    public Double[] getMetrics() {
         return metrics;
     }
 
-    public void setMetrics(float[] metrics) {
+    public void setMetrics(Double[] metrics) {
         this.metrics = metrics;
     }
 }
