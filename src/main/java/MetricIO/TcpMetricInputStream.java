@@ -36,16 +36,16 @@ public class TcpMetricInputStream implements MetricInputStream {
 
         this.tcpSocket = new ServerSocket(port);
 
-        boolean accepted = false;
-        while(!accepted) {
+
+        while(true) {
             this.connectionSocket = tcpSocket.accept();
+
             if (this.connectionSocket.isConnected()) {
-                accepted = true;
-                System.out.println("connection accepted");
+                System.out.println("connection accepted.");
+                break;
             }
         }
         this.dataInputStream = new DataInputStream(this.connectionSocket.getInputStream());
-
 
             switch (format) {
                 case "CSV":
@@ -58,16 +58,8 @@ public class TcpMetricInputStream implements MetricInputStream {
                     //this.marshaller = new TextMarshaller();
                     break;
             }
-        new Thread()
-        {
-            public void run() {
-                try {
-                    marshaller.unmarshallSampleHeader(dataInputStream);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
+        marshaller.unmarshallSampleHeader(dataInputStream);
+
 
     }
 
