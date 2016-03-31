@@ -1,6 +1,7 @@
 package start;
 
 import MetricIO.MetricInputStream;
+import MetricIO.MetricsSample;
 import MetricIO.TCPMetricOutputStream;
 import MetricIO.TcpMetricInputStream;
 
@@ -12,19 +13,28 @@ import java.text.ParseException;
  * @author fschmidt
  */
 public class RunApp {
-    
+
+    static final int PORT = 9999;
+
     public static void main(String[] args){
 
-        System.out.println("Hello world");
         try {
 
-            MetricInputStream mis = new TcpMetricInputStream(9999,"CSV");
+            MetricInputStream mis = new TcpMetricInputStream(PORT,"CSV");
             while(true) {
+                try {
+                    Thread.sleep(500);
 
-                //System.out.println("read "+mis.readSample().getMetricsHeader().toString());
+                    MetricsSample sample = mis.readSample();
+
+
+                } catch(InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
             }
             } catch (IOException e) {
-            // restart TcpMetricInputStream ...
             e.printStackTrace();
         }
 

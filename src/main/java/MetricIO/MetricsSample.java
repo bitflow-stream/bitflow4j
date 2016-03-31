@@ -25,6 +25,7 @@ public class MetricsSample {
     }
 
     public void setMetricsHeader(String[] metricsHeader) {
+
         this.metricsHeader = metricsHeader;
     }
 
@@ -33,6 +34,7 @@ public class MetricsSample {
     }
 
     public void setMetrics(Double[] metrics) {
+
         this.metrics = metrics;
     }
     

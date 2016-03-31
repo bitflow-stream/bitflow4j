@@ -58,26 +58,15 @@ public class TcpMetricInputStream implements MetricInputStream {
                     //this.marshaller = new TextMarshaller();
                     break;
             }
+
         marshaller.unmarshallSampleHeader(dataInputStream);
 
 
     }
 
-    private MetricsSample sample = new MetricsSample();
-
     public MetricsSample readSample() throws IOException, ParseException {
-        new Thread()
-        {
-            public void run() {
-                try {
-                    sample = marshaller.unmarshallSampleMetrics(dataInputStream);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
+
+        MetricsSample sample =  marshaller.unmarshallSampleMetrics(dataInputStream);
         return sample;
     }
 }
