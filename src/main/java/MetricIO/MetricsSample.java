@@ -1,12 +1,24 @@
 package MetricIO;
 
+import java.util.Date;
+
 /**
  * Created by mwall on 30.03.16.
  */
 public class MetricsSample {
 
     private String[] metricsHeader;
-    private float[] metrics;
+    private Double[] metrics;
+
+    public Date getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Date timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    private Date timestamp;
 
     public String[] getMetricsHeader() {
         return metricsHeader;
@@ -16,11 +28,11 @@ public class MetricsSample {
         this.metricsHeader = metricsHeader;
     }
 
-    public float[] getMetrics() {
+    public Double[] getMetrics() {
         return metrics;
     }
 
-    public void setMetrics(float[] metrics) {
+    public void setMetrics(Double[] metrics) {
         this.metrics = metrics;
     }
     

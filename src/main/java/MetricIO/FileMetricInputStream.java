@@ -16,19 +16,18 @@ import java.io.IOException;
 public class FileMetricInputStream implements MetricInputStream {
 
     private BufferedReader reader = null;
-    private String metricsHeaderStr = null;
+    private String metricsHeaderStr = "";
     private String format = "CSV";
 
     private Marshaller_Interface marshaller = null;
 
-    void FileReader(String FilePath, String format) {
-        this.format = format;
-        this.FileReader(FilePath);
+    public FileMetricInputStream(String FilePath) {
+        this(FilePath,"CSV");
     }
 
 
-    void FileReader(String FilePath) {
-
+    public FileMetricInputStream(String FilePath,String format) {
+        this.format = format;
         switch (format) {
             case "CSV":
                 this.marshaller = new CsvMarshaller();
@@ -48,7 +47,9 @@ public class FileMetricInputStream implements MetricInputStream {
             // read header
             if (format == "BIN"){
                 // as long as empty
-                while((this.metricsHeaderStr += reader.readLine()+",") != ""){
+                String tmpHeader = "";
+                while(!(tmpHeader = reader.readLine()).isEmpty()){
+                    this.metricsHeaderStr += tmpHeader+",";
                     // remove last ,
                     this.metricsHeaderStr = this.metricsHeaderStr.substring(0, this.metricsHeaderStr.length() - 1);
                 }
@@ -76,7 +77,7 @@ public class FileMetricInputStream implements MetricInputStream {
             String metricsStr = null;
             metricsStr = reader.readLine();
             if (metricsStr != null) {
-                return marshaller.marshallSample(metricsHeaderStr,metricsStr);
+               // return marshaller.unmarshallSample(metricsHeaderStr,metricsStr);
             } else {
                 //TODO do something when file is done
             }
