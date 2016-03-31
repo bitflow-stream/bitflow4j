@@ -7,5 +7,6 @@ public interface MetricInputStream {
 
 
     MetricsSample readSample();
-  
+
+
 }
