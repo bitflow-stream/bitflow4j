@@ -50,10 +50,14 @@ public class CsvMarshaller implements Marshaller_Interface{
 
     @Override
     public MetricsSample unmarshallSampleHeader(DataInputStream header) throws IOException {
+        System.out.println("header");
 
         String line = header.readUTF();
+        System.out.println(line);
         String[] headerStrArr = line.split(",");
+
         MetricsSample sample = new MetricsSample();
+
         sample.setMetricsHeader(headerStrArr);
 
         return sample;

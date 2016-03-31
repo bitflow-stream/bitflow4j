@@ -39,7 +39,7 @@ public class FileMetricOutputStream implements MetricOutputStream{
     
     @Override
     public void writeSample(MetricsSample data) {
-        this.marshaller.unmarshallSample(data);
+        //this.marshaller.unmarshallSample(data);
         throw new UnsupportedOperationException("Not supported yet."); 
     }
     

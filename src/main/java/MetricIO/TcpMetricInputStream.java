@@ -25,8 +25,6 @@ public class TcpMetricInputStream implements MetricInputStream {
     private Socket connectionSocket = null;
     private DataInputStream dataInputStream = null;
 
-    private String metricsHeaderStr = "";
-    private String metricsStr = "";
     private Marshaller_Interface marshaller = null;
 
 
@@ -36,10 +34,17 @@ public class TcpMetricInputStream implements MetricInputStream {
 
     public TcpMetricInputStream(int port, String format) throws IOException {
 
-            this.tcpSocket = new ServerSocket(port);
+        this.tcpSocket = new ServerSocket(port);
+
+        boolean accepted = false;
+        while(!accepted) {
             this.connectionSocket = tcpSocket.accept();
-            this.dataInputStream = new DataInputStream(
-                    this.connectionSocket.getInputStream());
+            if (this.connectionSocket.isConnected()) {
+                accepted = true;
+                System.out.println("connection accepted");
+            }
+        }
+        this.dataInputStream = new DataInputStream(this.connectionSocket.getInputStream());
 
 
             switch (format) {
@@ -53,13 +58,35 @@ public class TcpMetricInputStream implements MetricInputStream {
                     //this.marshaller = new TextMarshaller();
                     break;
             }
-            marshaller.unmarshallSampleHeader(dataInputStream);
+        new Thread()
+        {
+            public void run() {
+                try {
+                    marshaller.unmarshallSampleHeader(dataInputStream);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
     }
 
+    private MetricsSample sample = new MetricsSample();
 
     public MetricsSample readSample() throws IOException, ParseException {
-
-        return marshaller.unmarshallSampleMetrics(dataInputStream);
+        new Thread()
+        {
+            public void run() {
+                try {
+                    sample = marshaller.unmarshallSampleMetrics(dataInputStream);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        return sample;
     }
 }
 

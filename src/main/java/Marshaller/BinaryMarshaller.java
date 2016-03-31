@@ -39,8 +39,10 @@ public class BinaryMarshaller implements Marshaller_Interface {
         MetricsSample sample = new MetricsSample();
         String value = "";
         List<String> headerList = new ArrayList<String>();
+        System.out.println(header.available());
 
         while((value = header.readUTF()).isEmpty()) {
+
             headerList.add(value);
         }
 
