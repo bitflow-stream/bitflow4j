@@ -16,8 +16,13 @@ public class FileMetricOutputStream implements MetricOutputStream{
 
     private final Format outputFormat;
     private final Marshaller_Interface marshaller;
+    private final String filePath = "";
     
     public FileMetricOutputStream(Format outputFormat){
+        this(outputFormat, "");
+    }
+    
+    public FileMetricOutputStream(Format outputFormat, String filePath){
         this.outputFormat = outputFormat;
         switch (outputFormat) {
             case CSV:

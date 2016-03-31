@@ -23,4 +23,10 @@ public class MetricsSample {
     public void setMetrics(float[] metrics) {
         this.metrics = metrics;
     }
+    
+    public MetricsSample aggregate(MetricsSample otherSample){
+        MetricsSample aggregatedSample = new MetricsSample();
+        String[] aggregatedMetricsHeader = new String[this.getMetricsHeader().length + otherSample.getMetricsHeader().length];
+        throw new UnsupportedOperationException("Not supported yet."); 
+    }
 }
