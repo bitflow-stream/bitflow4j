@@ -1,6 +1,7 @@
 package MetricIO;
 
 import Marshaller.Marshaller;
+import Metrics.Sample;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -69,7 +70,7 @@ public class TcpMetricInputStream implements MetricInputStream {
         }
     }
 
-    public MetricsSample readSample() throws IOException {
+    public Sample readSample() throws IOException {
         DataInputStream input;
         String[] header;
         lock.lock();

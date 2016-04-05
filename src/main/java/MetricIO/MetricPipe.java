@@ -1,5 +1,7 @@
 package MetricIO;
 
+import Metrics.Sample;
+
 import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -9,9 +11,9 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class MetricPipe implements MetricInputStream, MetricOutputStream {
 
-    private final BlockingQueue<MetricsSample> values = new LinkedBlockingQueue<>();
+    private final BlockingQueue<Sample> values = new LinkedBlockingQueue<>();
 
-    public MetricsSample readSample() throws IOException {
+    public Sample readSample() throws IOException {
         while (true) {
             try {
                 return values.take();
@@ -21,7 +23,7 @@ public class MetricPipe implements MetricInputStream, MetricOutputStream {
         }
     }
 
-    public void writeSample(MetricsSample data) throws IOException {
+    public void writeSample(Sample data) throws IOException {
         while (true) {
             try {
                 values.put(data); // Should never block or throw

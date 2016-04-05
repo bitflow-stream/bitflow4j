@@ -1,6 +1,6 @@
 package Marshaller;
 
-import MetricIO.MetricsSample;
+import Metrics.Sample;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -14,7 +14,7 @@ import java.util.List;
  */
 public class BinaryMarshaller implements Marshaller {
 
-    public MetricsSample unmarshallSample(DataInputStream input, String[] header) throws IOException {
+    public Sample unmarshallSample(DataInputStream input, String[] header) throws IOException {
 
         Date timestamp = new Date(input.readLong() / 1000000);
         Double value = 0.0;
@@ -24,7 +24,7 @@ public class BinaryMarshaller implements Marshaller {
             metricList.add(value);
         }
 
-        return new MetricsSample(header, timestamp, (Double[]) metricList.toArray());
+        return new Sample(header, timestamp, (Double[]) metricList.toArray());
     }
 
     public String[] unmarshallHeader(DataInputStream input) throws IOException {
@@ -40,7 +40,7 @@ public class BinaryMarshaller implements Marshaller {
         return (String[]) headerList.toArray();
     }
 
-    public void marshallSample(DataOutputStream output, MetricsSample sample) throws IOException {
+    public void marshallSample(DataOutputStream output, Sample sample) throws IOException {
         throw new UnsupportedOperationException("not implemented");
     }
 

@@ -1,6 +1,6 @@
 package Marshaller;
 
-import MetricIO.MetricsSample;
+import Metrics.Sample;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -32,7 +32,7 @@ public class CsvMarshaller implements Marshaller {
         return buffer.toString().split(",");
     }
 
-    public MetricsSample unmarshallSample(DataInputStream input, String[] header) throws IOException {
+    public Sample unmarshallSample(DataInputStream input, String[] header) throws IOException {
 
         int chr;
         StringBuffer buffer = new StringBuffer(512);
@@ -69,10 +69,10 @@ public class CsvMarshaller implements Marshaller {
             }
         }
 
-        return new MetricsSample(header, timestamp, metricsDblArr);
+        return new Sample(header, timestamp, metricsDblArr);
     }
 
-    public void marshallSample(DataOutputStream output, MetricsSample sample) throws IOException {
+    public void marshallSample(DataOutputStream output, Sample sample) throws IOException {
         throw new UnsupportedOperationException("not implemented");
     }
 

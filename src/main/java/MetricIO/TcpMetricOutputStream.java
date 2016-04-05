@@ -1,5 +1,7 @@
 package MetricIO;
 
+import Metrics.Sample;
+
 import java.io.IOException;
 
 /**
@@ -9,7 +11,7 @@ import java.io.IOException;
 public class TcpMetricOutputStream implements MetricOutputStream{
 
     @Override
-    public void writeSample(MetricsSample data) throws IOException {
+    public void writeSample(Sample data) throws IOException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
     

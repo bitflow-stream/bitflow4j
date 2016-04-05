@@ -1,5 +1,7 @@
 package MetricIO;
 
+import Metrics.Sample;
+
 import java.io.IOException;
 
 /**
@@ -7,6 +9,6 @@ import java.io.IOException;
  */
 public interface MetricInputStream {
 
-    MetricsSample readSample() throws IOException;
+    Sample readSample() throws IOException;
 
 }

@@ -3,7 +3,7 @@ package start;
 import Marshaller.CsvMarshaller;
 import Marshaller.Marshaller;
 import MetricIO.MetricInputStream;
-import MetricIO.MetricsSample;
+import Metrics.Sample;
 import MetricIO.TcpMetricInputStream;
 
 import java.io.IOException;
@@ -42,7 +42,7 @@ public class RunApp {
             MetricInputStream input = createTcpStream(PORT);
             while (true) {
                 try {
-                    MetricsSample sample = input.readSample();
+                    Sample sample = input.readSample();
                     System.err.println("Received: " + Arrays.toString(sample.getHeader()));
                     System.err.println("Data: " + Arrays.toString(sample.getMetrics()));
                 } catch(IOException exc) {

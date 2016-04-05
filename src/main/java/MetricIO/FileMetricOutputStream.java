@@ -1,6 +1,7 @@
 package MetricIO;
 
 import Marshaller.Marshaller;
+import Metrics.Sample;
 
 import java.io.IOException;
 
@@ -19,7 +20,7 @@ public class FileMetricOutputStream implements MetricOutputStream{
     }
     
     @Override
-    public void writeSample(MetricsSample data) throws IOException {
+    public void writeSample(Sample data) throws IOException {
         // TODO check if this is the first write, or if the header has changed since the last
         // writeSample() call. If so, open a new file and write the header.
         // Then, write the sample.
