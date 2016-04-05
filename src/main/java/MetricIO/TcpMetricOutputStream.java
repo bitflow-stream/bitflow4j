@@ -4,7 +4,7 @@ package MetricIO;
  *
  * @author fschmidt
  */
-public class TCPMetricOutputStream  implements MetricOutputStream{
+public class TcpMetricOutputStream implements MetricOutputStream{
 
     @Override
     public void writeSample(MetricsSample data) {

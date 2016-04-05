@@ -9,6 +9,6 @@ import MetricIO.FileMetricOutputStream;
  */
 public interface Algorithm {
     
-    public FileMetricOutputStream execute(FileMetricInputStream dataInputStream);
+    public void execute(FileMetricInputStream input, FileMetricOutputStream output);
     
 }

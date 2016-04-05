@@ -9,7 +9,7 @@ import java.text.ParseException;
 public interface MetricInputStream {
 
 
-    MetricsSample readSample() throws IOException, ParseException;
+    public MetricsSample readSample() throws IOException;
 
 
 }

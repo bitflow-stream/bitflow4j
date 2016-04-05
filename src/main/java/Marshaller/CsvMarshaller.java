@@ -21,35 +21,29 @@ import java.util.List;
  */
 public class CsvMarshaller implements Marshaller_Interface{
 
+    static int lineSep = System.getProperty("line.separator").charAt(0);
+
     @Override
-    public MetricsSample unmarshallSampleHeader(DataInputStream header) throws IOException {
+    public String[] unmarshallSampleHeader(DataInputStream header) throws IOException {
 
         int chr;
         StringBuffer desc = new StringBuffer(20);
-        int lineSep = System.getProperty("line.separator").charAt(0);
 
         while ((chr = header.read()) != lineSep) {
             desc.append((char) chr);
         }
 
-        System.out.print(desc.toString());
-        String[] headerStrArr = desc.toString().split(",");
-
-        MetricsSample sample = new MetricsSample();
-
-        sample.setMetricsHeader(headerStrArr);
-
-        return sample;
+        return desc.toString().split(",");
     }
 
     @Override
-    public MetricsSample unmarshallSampleMetrics(DataInputStream metrics) throws IOException, ParseException {
+    public MetricsSample unmarshallSampleMetrics(DataInputStream metrics, String[] header) throws IOException {
 
         MetricsSample sample = new MetricsSample();
+        sample.setMetricsHeader(header);
 
         int chr;
         StringBuffer desc = new StringBuffer(20);
-        int lineSep = System.getProperty("line.separator").charAt(0);
 
         while ((chr = metrics.read()) != lineSep) {
             desc.append((char) chr);
@@ -60,7 +54,12 @@ public class CsvMarshaller implements Marshaller_Interface{
         String timestampSubstring = timestampAsString.substring(0, 23);
         SimpleDateFormat formatter = new SimpleDateFormat(
                 "yyyy-MM-dd HH:mm:ss.SSS");
-        Date timestamp = formatter.parse(timestampSubstring);
+        Date timestamp;
+        try {
+            timestamp = formatter.parse(timestampSubstring);
+        } catch (ParseException exc) {
+            throw new IOException(exc);
+        }
 
         Double[] metricsDblArr = new Double[metricsStrArr.length - 1];
 
@@ -69,9 +68,6 @@ public class CsvMarshaller implements Marshaller_Interface{
             metricsDblArr[i-1] = Double.valueOf(metricsStrArr[i]);
 
         }
-        //for (Double speed : metricsDblArr) {
-         //  System.out.println((speed)+",");
-        //}
 
         sample.setTimestamp(timestamp);
         sample.setMetrics(metricsDblArr);
@@ -85,7 +81,7 @@ public class CsvMarshaller implements Marshaller_Interface{
     }
 
     @Override
-    public void marshallSampleHeaders(MetricsSample metricsSample, DataOutputStream outputStream) {
+    public void marshallSampleHeader(String[] header, DataOutputStream outputStream) {
 
     }
 }

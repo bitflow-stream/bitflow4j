@@ -15,9 +15,10 @@ import java.util.List;
 public class BinaryMarshaller implements Marshaller_Interface {
 
     @Override
-    public MetricsSample unmarshallSampleMetrics(DataInputStream metrics) throws IOException {
+    public MetricsSample unmarshallSampleMetrics(DataInputStream metrics, String[] header) throws IOException {
 
         MetricsSample sample = new MetricsSample();
+        sample.setMetricsHeader(header);
 
         Date timestamp = new Date(metrics.readLong() / 1000000);
         Double value= 0.0;
@@ -34,20 +35,17 @@ public class BinaryMarshaller implements Marshaller_Interface {
     }
 
     @Override
-    public MetricsSample unmarshallSampleHeader(DataInputStream header) throws IOException {
+    public String[] unmarshallSampleHeader(DataInputStream header) throws IOException {
 
-        MetricsSample sample = new MetricsSample();
         String value = "";
         List<String> headerList = new ArrayList<String>();
-        System.out.println(header.available());
 
         while((value = header.readUTF()).isEmpty()) {
 
             headerList.add(value);
         }
 
-        sample.setMetricsHeader((String[]) headerList.toArray());
-            return sample;
+        return (String[]) headerList.toArray();
     }
 
     @Override
@@ -56,7 +54,7 @@ public class BinaryMarshaller implements Marshaller_Interface {
     }
 
     @Override
-    public void marshallSampleHeaders(MetricsSample metricsSample, DataOutputStream outputStream) {
+    public void marshallSampleHeader(String[] header, DataOutputStream outputStream) {
 
     }
 }

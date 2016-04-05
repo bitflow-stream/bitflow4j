@@ -26,16 +26,11 @@ public class TcpMetricInputStream implements MetricInputStream {
     private DataInputStream dataInputStream = null;
 
     private Marshaller_Interface marshaller = null;
+    private String[] header;
 
-
-    public TcpMetricInputStream(int port) throws IOException {
-        this(port,"CSV");
-    }
-
-    public TcpMetricInputStream(int port, String format) throws IOException {
+    public TcpMetricInputStream(int port, Marshaller_Interface marshaller) throws IOException {
 
         this.tcpSocket = new ServerSocket(port);
-
 
         while(true) {
             this.connectionSocket = tcpSocket.accept();
@@ -45,28 +40,17 @@ public class TcpMetricInputStream implements MetricInputStream {
                 break;
             }
         }
+
+        this.marshaller = marshaller;
         this.dataInputStream = new DataInputStream(this.connectionSocket.getInputStream());
 
-            switch (format) {
-                case "CSV":
-                    this.marshaller = new CsvMarshaller();
-                    break;
-                case "BIN":
-                    this.marshaller = new BinaryMarshaller();
-                    break;
-                case "TEXT":
-                    //this.marshaller = new TextMarshaller();
-                    break;
-            }
-
-        marshaller.unmarshallSampleHeader(dataInputStream);
-
+        header = marshaller.unmarshallSampleHeader(dataInputStream);
 
     }
 
-    public MetricsSample readSample() throws IOException, ParseException {
+    public MetricsSample readSample() throws IOException {
 
-        MetricsSample sample =  marshaller.unmarshallSampleMetrics(dataInputStream);
+        MetricsSample sample =  marshaller.unmarshallSampleMetrics(dataInputStream, this.header);
         return sample;
     }
 }

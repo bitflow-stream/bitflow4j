@@ -10,36 +10,19 @@ import Marshaller.Marshaller_Interface;
  */
 public class FileMetricOutputStream implements MetricOutputStream{
 
-    public enum Format{
-        BIN, CSV;
-    }
-
-    private final Format outputFormat;
     private final Marshaller_Interface marshaller;
     private final String filePath = "";
-    
-    public FileMetricOutputStream(Format outputFormat){
-        this(outputFormat, "");
-    }
-    
-    public FileMetricOutputStream(Format outputFormat, String filePath){
-        this.outputFormat = outputFormat;
-        switch (outputFormat) {
-            case CSV:
-                this.marshaller = new CsvMarshaller();
-                break;
-            case BIN:
-                this.marshaller = new BinaryMarshaller();
-                break;
-            default:
-                this.marshaller = new BinaryMarshaller();
-                break;
-        }
+
+    public FileMetricOutputStream(String filePath, Marshaller_Interface marshaller){
+        this.marshaller = marshaller;
     }
     
     @Override
     public void writeSample(MetricsSample data) {
-        //this.marshaller.unmarshallSample(data);
+        // TODO check if this is the first write, or if the header has changed since the last
+        // writeSample() call. If so, open a new file and write the header.
+        // Then, write the sample.
+
         throw new UnsupportedOperationException("Not supported yet."); 
     }
     

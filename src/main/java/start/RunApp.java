@@ -1,12 +1,14 @@
 package start;
 
+import Marshaller.CsvMarshaller;
+import Marshaller.Marshaller_Interface;
 import MetricIO.MetricInputStream;
 import MetricIO.MetricsSample;
-import MetricIO.TCPMetricOutputStream;
 import MetricIO.TcpMetricInputStream;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.Arrays;
 
 /**
  *
@@ -19,25 +21,19 @@ public class RunApp {
     public static void main(String[] args){
 
         try {
+            Marshaller_Interface marshaller = new CsvMarshaller();
+            MetricInputStream mis = new TcpMetricInputStream(PORT, marshaller);
 
-            MetricInputStream mis = new TcpMetricInputStream(PORT,"CSV");
             while(true) {
-                try {
-                    Thread.sleep(500);
 
-                    MetricsSample sample = mis.readSample();
+                MetricsSample sample = mis.readSample();
+                System.out.println("Received: " + Arrays.toString(sample.getMetricsHeader()));
+                System.out.println("Data: " + Arrays.toString(sample.getMetrics()));
 
-
-                } catch(InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
             }
-            } catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
-
 
     }
     
