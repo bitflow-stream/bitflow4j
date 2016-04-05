@@ -17,20 +17,39 @@ public class RunApp {
 
     static final int PORT = 9999;
 
+    private static MetricInputStream createTcpStream(int port) throws IOException {
+        Marshaller marshaller = new CsvMarshaller();
+        TcpMetricInputStream mis = new TcpMetricInputStream(PORT, marshaller);
+        System.err.println("Listening on " + PORT);
+
+        Thread t = new Thread() {
+            public void run() {
+                try {
+                    mis.acceptConnections();
+                } catch(IOException exc) {
+                    exc.printStackTrace();
+                }
+            }
+        };
+        t.setDaemon(true);
+        t.start();
+
+        return mis;
+    }
+
     public static void main(String[] args){
         try {
-            Marshaller marshaller = new CsvMarshaller();
-            System.out.println("Listening on " + PORT);
-            MetricInputStream mis = new TcpMetricInputStream(PORT, marshaller);
-
+            MetricInputStream input = createTcpStream(PORT);
             while (true) {
-
-                MetricsSample sample = mis.readSample();
-                System.out.println("Received: " + Arrays.toString(sample.getHeader()));
-                System.out.println("Data: " + Arrays.toString(sample.getMetrics()));
-
+                try {
+                    MetricsSample sample = input.readSample();
+                    System.err.println("Received: " + Arrays.toString(sample.getHeader()));
+                    System.err.println("Data: " + Arrays.toString(sample.getMetrics()));
+                } catch(IOException exc) {
+                    exc.printStackTrace();
+                }
             }
-        } catch (IOException e) {
+        } catch (Throwable e) {
             e.printStackTrace();
         }
     }

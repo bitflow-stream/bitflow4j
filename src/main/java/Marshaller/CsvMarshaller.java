@@ -51,6 +51,9 @@ public class CsvMarshaller implements Marshaller {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
         Date timestamp;
         try {
+            if (timestampAsString.length() < 23) {
+                throw new IOException("Failed to parse timestamp field");
+            }
             timestamp = formatter.parse(timestampAsString.substring(0, 23));
         } catch (ParseException exc) {
             throw new IOException(exc);
