@@ -1,6 +1,6 @@
 package MetricIO;
 
-import Marshaller.Marshaller_Interface;
+import Marshaller.Marshaller;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -23,10 +23,10 @@ public class TcpMetricInputStream implements MetricInputStream {
     private Socket connectionSocket = null;
     private DataInputStream dataInputStream = null;
 
-    private Marshaller_Interface marshaller = null;
+    private Marshaller marshaller = null;
     private String[] header;
 
-    public TcpMetricInputStream(int port, Marshaller_Interface marshaller) throws IOException {
+    public TcpMetricInputStream(int port, Marshaller marshaller) throws IOException {
 
         this.tcpSocket = new ServerSocket(port);
 
@@ -42,13 +42,13 @@ public class TcpMetricInputStream implements MetricInputStream {
         this.marshaller = marshaller;
         this.dataInputStream = new DataInputStream(this.connectionSocket.getInputStream());
 
-        header = marshaller.unmarshallSampleHeader(dataInputStream);
+        header = marshaller.unmarshallHeader(dataInputStream);
 
     }
 
     public MetricsSample readSample() throws IOException {
 
-        MetricsSample sample =  marshaller.unmarshallSampleMetrics(dataInputStream, this.header);
+        MetricsSample sample =  marshaller.unmarshallSample(dataInputStream, this.header);
         return sample;
     }
 }

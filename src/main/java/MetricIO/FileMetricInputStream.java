@@ -1,6 +1,6 @@
 package MetricIO;
 
-import Marshaller.Marshaller_Interface;
+import Marshaller.Marshaller;
 
 import java.io.DataInputStream;
 import java.io.FileInputStream;
@@ -16,21 +16,19 @@ public class FileMetricInputStream implements MetricInputStream {
     private DataInputStream data;
     private String[] header;
 
-    private Marshaller_Interface marshaller = null;
+    private Marshaller marshaller = null;
 
-    public FileMetricInputStream(String FilePath, Marshaller_Interface marshaller) throws IOException {
+    public FileMetricInputStream(String FilePath, Marshaller marshaller) throws IOException {
         this.marshaller = marshaller;
 
         FileInputStream fileStream = new FileInputStream(FilePath);
         data = new DataInputStream(fileStream);
 
-        this.header = marshaller.unmarshallSampleHeader(data);
+        this.header = marshaller.unmarshallHeader(data);
     }
 
     public MetricsSample readSample() throws IOException {
-
-        return this.marshaller.unmarshallSampleMetrics(this.data, this.header);
-
+        return this.marshaller.unmarshallSample(this.data, this.header);
     }
 
 }

@@ -16,44 +16,42 @@ import java.util.Date;
  * and further cuts of the first metric and sets it as timestamp in sample object
  *
  */
-public class CsvMarshaller implements Marshaller_Interface{
+public class CsvMarshaller implements Marshaller {
 
-    static int lineSep = System.getProperty("line.separator").charAt(0);
+    private static int lineSep = System.getProperty("line.separator").charAt(0);
 
-    @Override
-    public String[] unmarshallSampleHeader(DataInputStream header) throws IOException {
+    public String[] unmarshallHeader(DataInputStream input) throws IOException {
 
         int chr;
-        StringBuffer desc = new StringBuffer(20);
+        StringBuffer buffer = new StringBuffer(20);
 
-        while ((chr = header.read()) != lineSep) {
-            desc.append((char) chr);
+        while ((chr = input.read()) != lineSep) {
+            buffer.append((char) chr);
         }
 
-        return desc.toString().split(",");
+        return buffer.toString().split(",");
     }
 
-    @Override
-    public MetricsSample unmarshallSampleMetrics(DataInputStream metrics, String[] header) throws IOException {
-
-        MetricsSample sample = new MetricsSample();
-        sample.setMetricsHeader(header);
+    public MetricsSample unmarshallSample(DataInputStream input, String[] header) throws IOException {
 
         int chr;
-        StringBuffer desc = new StringBuffer(20);
+        StringBuffer buffer = new StringBuffer(512);
 
-        while ((chr = metrics.read()) != lineSep) {
-            desc.append((char) chr);
+        while ((chr = input.read()) != lineSep) {
+            buffer.append((char) chr);
         }
-        String[] metricsStrArr = desc.toString().split(",");
+        String[] metricsStrArr = buffer.toString().split(",");
+        if (metricsStrArr.length == 0) {
+            throw new IOException("Received empty sample");
+        }
+        // TODO error if number of values is not equal to the number of header fields
+
         // generate timestamp from first value
         String timestampAsString = metricsStrArr[0];
-        String timestampSubstring = timestampAsString.substring(0, 23);
-        SimpleDateFormat formatter = new SimpleDateFormat(
-                "yyyy-MM-dd HH:mm:ss.SSS");
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
         Date timestamp;
         try {
-            timestamp = formatter.parse(timestampSubstring);
+            timestamp = formatter.parse(timestampAsString.substring(0, 23));
         } catch (ParseException exc) {
             throw new IOException(exc);
         }
@@ -61,24 +59,22 @@ public class CsvMarshaller implements Marshaller_Interface{
         Double[] metricsDblArr = new Double[metricsStrArr.length - 1];
 
         for (int i = 1; i < metricsStrArr.length; i++){
-
-            metricsDblArr[i-1] = Double.valueOf(metricsStrArr[i]);
-
+            try {
+                metricsDblArr[i - 1] = Double.valueOf(metricsStrArr[i]);
+            } catch (NumberFormatException exc) {
+                throw new IOException(exc);
+            }
         }
 
-        sample.setTimestamp(timestamp);
-        sample.setMetrics(metricsDblArr);
-        return sample;
+        return new MetricsSample(header, timestamp, metricsDblArr);
     }
 
-
-    @Override
-    public void marshallSampleMetrics(MetricsSample metricsSample, DataOutputStream outputStream) {
-
+    public void marshallSample(DataOutputStream output, MetricsSample sample) throws IOException {
+        throw new UnsupportedOperationException("not implemented");
     }
 
-    @Override
-    public void marshallSampleHeader(String[] header, DataOutputStream outputStream) {
-
+    public void marshallHeader(DataOutputStream output, String[] header) throws IOException {
+        throw new UnsupportedOperationException("not implemented");
     }
+
 }

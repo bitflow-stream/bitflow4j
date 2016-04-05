@@ -12,35 +12,27 @@ import java.util.List;
 /**
  * Created by mwall on 30.03.16.
  */
-public class BinaryMarshaller implements Marshaller_Interface {
+public class BinaryMarshaller implements Marshaller {
 
-    @Override
-    public MetricsSample unmarshallSampleMetrics(DataInputStream metrics, String[] header) throws IOException {
+    public MetricsSample unmarshallSample(DataInputStream input, String[] header) throws IOException {
 
-        MetricsSample sample = new MetricsSample();
-        sample.setMetricsHeader(header);
-
-        Date timestamp = new Date(metrics.readLong() / 1000000);
-        Double value= 0.0;
+        Date timestamp = new Date(input.readLong() / 1000000);
+        Double value = 0.0;
         List<Double> metricList = new ArrayList<Double>();
 
-        while((value = metrics.readDouble()) != null) {
+        while((value = input.readDouble()) != null) {
             metricList.add(value);
         }
 
-        sample.setTimestamp(timestamp);
-        sample.setMetrics((Double[]) metricList.toArray());
-
-        return sample;
+        return new MetricsSample(header, timestamp, (Double[]) metricList.toArray());
     }
 
-    @Override
-    public String[] unmarshallSampleHeader(DataInputStream header) throws IOException {
+    public String[] unmarshallHeader(DataInputStream input) throws IOException {
 
-        String value = "";
+        String value;
         List<String> headerList = new ArrayList<String>();
 
-        while((value = header.readUTF()).isEmpty()) {
+        while(!(value = input.readUTF()).isEmpty()) {
 
             headerList.add(value);
         }
@@ -48,14 +40,13 @@ public class BinaryMarshaller implements Marshaller_Interface {
         return (String[]) headerList.toArray();
     }
 
-    @Override
-    public void marshallSampleMetrics(MetricsSample metricsSample, DataOutputStream outputStream) {
-
+    public void marshallSample(DataOutputStream output, MetricsSample sample) throws IOException {
+        throw new UnsupportedOperationException("not implemented");
     }
 
-    @Override
-    public void marshallSampleHeader(String[] header, DataOutputStream outputStream) {
-
+    public void marshallHeader(DataOutputStream output, String[] header) throws IOException {
+        throw new UnsupportedOperationException("not implemented");
     }
+
 }
 

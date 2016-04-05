@@ -7,8 +7,6 @@ import java.io.IOException;
  */
 public interface MetricInputStream {
 
-
-    public MetricsSample readSample() throws IOException;
-
+    MetricsSample readSample() throws IOException;
 
 }

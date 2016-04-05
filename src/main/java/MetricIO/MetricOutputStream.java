@@ -1,11 +1,13 @@
 package MetricIO;
 
+import java.io.IOException;
+
 /**
  *
  * @author fschmidt
  */
 public interface MetricOutputStream {
 
-    public void writeSample(MetricsSample data);
+    void writeSample(MetricsSample data) throws IOException;
   
 }

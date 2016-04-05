@@ -7,40 +7,29 @@ import java.util.Date;
  */
 public class MetricsSample {
 
-    private String[] metricsHeader;
-    private Double[] metrics;
+    private final Date timestamp;
+    private final String[] header;
+    private final Double[] metrics;
+
+    public MetricsSample(String[] header, Date timestamp, Double[] metrics) {
+        this.header = header;
+        this.timestamp = timestamp;
+        this.metrics = metrics;
+    }
 
     public Date getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(Date timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    private Date timestamp;
-
-    public String[] getMetricsHeader() {
-        return metricsHeader;
-    }
-
-    public void setMetricsHeader(String[] metricsHeader) {
-
-        this.metricsHeader = metricsHeader;
+    public String[] getHeader() {
+        return header;
     }
 
     public Double[] getMetrics() {
         return metrics;
     }
 
-    public void setMetrics(Double[] metrics) {
-
-        this.metrics = metrics;
-    }
-    
     public MetricsSample aggregate(MetricsSample otherSample){
-        MetricsSample aggregatedSample = new MetricsSample();
-        String[] aggregatedMetricsHeader = new String[this.getMetricsHeader().length + otherSample.getMetricsHeader().length];
-        throw new UnsupportedOperationException("Not supported yet."); 
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
