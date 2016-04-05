@@ -7,7 +7,6 @@ import MetricIO.MetricsSample;
 import MetricIO.TcpMetricInputStream;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.Arrays;
 
 /**

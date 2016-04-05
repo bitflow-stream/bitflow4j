@@ -5,8 +5,6 @@ import MetricIO.MetricsSample;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.text.ParseException;
 
 /**
  * Created by mwall on 30.03.16.

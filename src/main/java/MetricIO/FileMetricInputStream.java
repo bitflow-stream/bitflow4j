@@ -1,11 +1,10 @@
 package MetricIO;
 
-import Marshaller.BinaryMarshaller;
-import Marshaller.CsvMarshaller;
 import Marshaller.Marshaller_Interface;
 
-import java.io.*;
-import java.text.ParseException;
+import java.io.DataInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
 
 /**
  * Created by mwall on 30.03.16.

@@ -1,7 +1,5 @@
 package MetricIO;
 
-import Marshaller.BinaryMarshaller;
-import Marshaller.CsvMarshaller;
 import Marshaller.Marshaller_Interface;
 
 /**
@@ -11,9 +9,10 @@ import Marshaller.Marshaller_Interface;
 public class FileMetricOutputStream implements MetricOutputStream{
 
     private final Marshaller_Interface marshaller;
-    private final String filePath = "";
+    private final String filePath;
 
     public FileMetricOutputStream(String filePath, Marshaller_Interface marshaller){
+        this.filePath = filePath;
         this.marshaller = marshaller;
     }
     
