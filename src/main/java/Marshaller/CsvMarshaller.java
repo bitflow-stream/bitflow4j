@@ -1,11 +1,10 @@
 package Marshaller;
 
-import MetricIO.InputStreamClosedException;
 import Metrics.Sample;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -17,34 +16,14 @@ import java.util.Date;
  * and further cuts of the first metric and sets it as timestamp in sample object
  *
  */
-public class CsvMarshaller implements Marshaller {
+public class CsvMarshaller extends AbstractMarshaller {
 
-    private static int lineSep = System.getProperty("line.separator").charAt(0);
-
-    public String[] unmarshallHeader(DataInputStream input) throws IOException {
-
-        int chr;
-        StringBuffer buffer = new StringBuffer(20);
-
-        while ((chr = input.read()) != lineSep) {
-            buffer.append((char) chr);
-        }
-
-        return buffer.toString().split(",");
+    public String[] unmarshallHeader(InputStream input) throws IOException {
+        return readLine(input).split(",");
     }
 
-    public Sample unmarshallSample(DataInputStream input, String[] header) throws IOException {
-
-        int chr;
-        StringBuffer buffer = new StringBuffer(512);
-
-        while ((chr = input.read()) != lineSep) {
-            if (chr < 0) {
-                throw new InputStreamClosedException();
-            }
-            buffer.append((char) chr);
-        }
-        String[] metricsStrArr = buffer.toString().split(",");
+    public Sample unmarshallSample(InputStream input, String[] header) throws IOException {
+        String[] metricsStrArr = readLine(input).split(",");
         if (metricsStrArr.length == 0) {
             throw new IOException("Received empty sample");
         }
@@ -76,11 +55,11 @@ public class CsvMarshaller implements Marshaller {
         return new Sample(header, timestamp, metricsDblArr);
     }
 
-    public void marshallSample(DataOutputStream output, Sample sample) throws IOException {
+    public void marshallSample(OutputStream output, Sample sample) throws IOException {
         throw new UnsupportedOperationException("not implemented");
     }
 
-    public void marshallHeader(DataOutputStream output, String[] header) throws IOException {
+    public void marshallHeader(OutputStream output, String[] header) throws IOException {
         throw new UnsupportedOperationException("not implemented");
     }
 

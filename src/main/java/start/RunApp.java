@@ -1,5 +1,6 @@
 package start;
 
+import Marshaller.BinaryMarshaller;
 import Marshaller.CsvMarshaller;
 import Marshaller.Marshaller;
 import MetricIO.InputStreamClosedException;
@@ -17,11 +18,23 @@ import java.util.Arrays;
 public class RunApp {
 
     static final int PORT = 9999;
+//    static final String MARSHALLER = "CSV";
+    static final String MARSHALLER = "BIN";
 
-    private static MetricInputStream createTcpStream(int port) throws IOException {
-        Marshaller marshaller = new CsvMarshaller();
-        TcpMetricInputStream mis = new TcpMetricInputStream(PORT, marshaller);
-        System.err.println("Listening on " + PORT);
+    private static Marshaller getMarshaller(String format) {
+        switch(format) {
+            case "CSV":
+                return new CsvMarshaller();
+            case "BIN":
+                return new BinaryMarshaller();
+            default:
+                throw new IllegalStateException("Unknown marshaller format: " + format);
+        }
+    }
+
+    private static MetricInputStream createTcpStream(int port, Marshaller marshaller) throws IOException {
+        TcpMetricInputStream mis = new TcpMetricInputStream(port, marshaller);
+        System.err.println("Listening on " + port);
 
         Thread t = new Thread() {
             public void run() {
@@ -39,8 +52,9 @@ public class RunApp {
     }
 
     public static void main(String[] args){
+        Marshaller marshaller = getMarshaller(MARSHALLER);
         try {
-            MetricInputStream input = createTcpStream(PORT);
+            MetricInputStream input = createTcpStream(PORT, marshaller);
             while (true) {
                 try {
                     Sample sample = input.readSample();
