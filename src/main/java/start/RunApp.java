@@ -5,9 +5,9 @@ import Marshaller.BinaryMarshaller;
 import Marshaller.CsvMarshaller;
 import Marshaller.Marshaller;
 import Marshaller.TextMarshaller;
-import MetricIO.MetricInputStream;
+import MetricIO.InputStreamProducer;
 import MetricIO.MetricPrinter;
-import MetricIO.TcpMetricInputStream;
+import MetricIO.TcpMetricsListener;
 
 import java.io.IOException;
 
@@ -37,31 +37,18 @@ public class RunApp {
         }
     }
 
-    private static MetricInputStream createTcpStream(int port, Marshaller marshaller) throws IOException {
-        TcpMetricInputStream mis = new TcpMetricInputStream(port, marshaller);
-        System.err.println("Listening on " + port);
-
-        Thread t = new Thread() {
-            public void run() {
-                try {
-                    mis.acceptConnections();
-                } catch(IOException exc) {
-                    exc.printStackTrace();
-                }
-            }
-        };
-        t.setDaemon(true);
-        t.start();
-
-        return mis;
+    private static InputStreamProducer createTcpStream(int port, Marshaller marshaller) throws IOException {
+        TcpMetricsListener listener = new TcpMetricsListener(port, marshaller);
+        System.err.println("Listening on port " + port);
+        return listener;
     }
 
     public static void main(String[] args){
         AppBuilder builder = new AppBuilder();
         try {
             Marshaller marshaller = getMarshaller(MARSHALLER);
-            MetricInputStream input = createTcpStream(PORT, marshaller);
-            builder.addInput(input);
+            InputStreamProducer producer = createTcpStream(PORT, marshaller);
+            builder.addInputProducer(producer);
             builder.addAlgorithm(new NoopAlgorithm());
             builder.setOutput(new MetricPrinter(getMarshaller(OUTPUT_MARSHALLER)));
             builder.runApp();

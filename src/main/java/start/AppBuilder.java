@@ -2,10 +2,7 @@ package start;
 
 import Algorithms.Algorithm;
 import Algorithms.AlgorithmRunner;
-import MetricIO.AggregatingMetricInputStream;
-import MetricIO.MetricInputStream;
-import MetricIO.MetricOutputStream;
-import MetricIO.MetricPipe;
+import MetricIO.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +16,8 @@ public class AppBuilder {
     public int pipeBuffer = 128;
 
     private final List<Algorithm> algorithms = new ArrayList<>();
-    private final List<MetricInputStream> inputs = new ArrayList<>();
+    private final List<InputStreamProducer> producers = new ArrayList<>();
+    MetricInputAggregator aggregator = new MetricInputAggregator();
     MetricOutputStream output;
 
     private final List<AlgorithmRunner> algorithmRunners = new ArrayList<>();
@@ -28,8 +26,12 @@ public class AppBuilder {
         algorithms.add(algo);
     }
 
-    public void addInput(MetricInputStream input) {
-        inputs.add(input);
+    public void addInput(String name, MetricInputStream input) {
+        aggregator.addInput(name, input);
+    }
+
+    public void addInputProducer(InputStreamProducer producer) {
+        producers.add(producer);
     }
 
     public void setOutput(MetricOutputStream output) {
@@ -37,27 +39,21 @@ public class AppBuilder {
     }
 
     public void runApp() {
-        if (algorithms.size() == 0) {
-            System.err.println("No algorithms selected");
-            return;
-        }
-        if (inputs.size() == 0) {
-            System.err.println("No inputs selected");
-            return;
+        if (aggregator.size() == 0 && producers.isEmpty()) {
+            throw new IllegalStateException("No inputs selected");
         }
         if (output == null) {
-            System.err.println("No output selected");
-            return;
+            throw new IllegalStateException("No output selected");
+        }
+        if (algorithms.size() == 0) {
+            throw new IllegalStateException("No algorithms selected");
         }
         this.doRun();
     }
 
     private void doRun() {
-        AggregatingMetricInputStream aggregator = new AggregatingMetricInputStream();
-        for (MetricInputStream inputStream : inputs) {
-            aggregator.addInput(inputStream);
-        }
-        aggregator.start();
+        for (InputStreamProducer producer : producers)
+            producer.start(aggregator);
 
         MetricInputStream runningInput = aggregator;
         for (int i = 0; i < algorithms.size(); i++) {
