@@ -9,9 +9,9 @@ public class Sample {
 
     private final Date timestamp;
     private final String[] header;
-    private final Double[] metrics;
+    private final double[] metrics;
 
-    public Sample(String[] header, Date timestamp, Double[] metrics) {
+    public Sample(String[] header, Date timestamp, double[] metrics) {
         this.header = header;
         this.timestamp = timestamp;
         this.metrics = metrics;
@@ -25,11 +25,8 @@ public class Sample {
         return header;
     }
 
-    public Double[] getMetrics() {
+    public double[] getMetrics() {
         return metrics;
     }
 
-    public Sample aggregate(Sample otherSample){
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
 }
