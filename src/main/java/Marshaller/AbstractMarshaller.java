@@ -10,7 +10,10 @@ import java.io.InputStream;
  */
 public abstract class AbstractMarshaller implements Marshaller {
 
-    private static int lineSep = System.getProperty("line.separator").charAt(0);
+    // This is not necessarily System.getProperty("line.separator")
+    protected static String lineSepString = "\n";
+    protected static byte[] lineSepBytes = lineSepString.getBytes();
+    protected static int lineSep = lineSepString.charAt(0);
 
     protected String readLine(InputStream input) throws IOException {
         int chr;

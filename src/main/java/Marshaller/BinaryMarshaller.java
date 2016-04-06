@@ -40,12 +40,20 @@ public class BinaryMarshaller extends AbstractMarshaller {
     }
 
     public void marshallHeader(OutputStream output, String[] header) throws IOException {
-        throw new UnsupportedOperationException("not implemented");
+        for (int i = 0; i < header.length; i++) {
+            output.write(header[i].getBytes());
+            output.write(lineSepBytes);
+        }
+        output.write(lineSepBytes);
     }
 
 
     public void marshallSample(OutputStream output, Sample sample) throws IOException {
-        throw new UnsupportedOperationException("not implemented");
+        DataOutputStream data = new DataOutputStream(output);
+        double[] values = sample.getMetrics();
+        for (int i = 0; i < values.length; i++) {
+            data.writeDouble(values[i]);
+        }
     }
 
 }
