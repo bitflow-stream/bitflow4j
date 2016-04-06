@@ -3,6 +3,7 @@ package MetricIO;
 import Metrics.Sample;
 
 import java.io.IOException;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -11,7 +12,15 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class MetricPipe implements MetricInputStream, MetricOutputStream {
 
-    private final BlockingQueue<Sample> values = new LinkedBlockingQueue<>();
+    private final BlockingQueue<Sample> values;
+
+    public MetricPipe() {
+        values = new LinkedBlockingQueue<>();
+    }
+
+    public MetricPipe(int bufferSize) {
+        values = new ArrayBlockingQueue<>(bufferSize);
+    }
 
     public Sample readSample() throws IOException {
         while (true) {
@@ -26,7 +35,7 @@ public class MetricPipe implements MetricInputStream, MetricOutputStream {
     public void writeSample(Sample data) throws IOException {
         while (true) {
             try {
-                values.put(data); // Should never block or throw
+                values.put(data);
                 return;
             } catch (InterruptedException exc) {
                 continue;

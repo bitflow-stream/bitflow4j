@@ -10,6 +10,6 @@ import java.io.IOException;
  */
 public interface MetricOutputStream {
 
-    void writeSample(Sample data) throws IOException;
+    void writeSample(Sample sample) throws IOException;
   
 }

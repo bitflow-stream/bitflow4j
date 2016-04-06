@@ -1,15 +1,15 @@
 package start;
 
+import Algorithms.NoopAlgorithm;
 import Marshaller.BinaryMarshaller;
 import Marshaller.CsvMarshaller;
 import Marshaller.Marshaller;
-import MetricIO.InputStreamClosedException;
+import Marshaller.TextMarshaller;
 import MetricIO.MetricInputStream;
+import MetricIO.MetricPrinter;
 import MetricIO.TcpMetricInputStream;
-import Metrics.Sample;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 /**
  *
@@ -21,12 +21,17 @@ public class RunApp {
 //    static final String MARSHALLER = "CSV";
     static final String MARSHALLER = "BIN";
 
+    static final String OUTPUT_MARSHALLER = "CSV";
+//    static final String OUTPUT_MARSHALLER = "TXT";
+
     private static Marshaller getMarshaller(String format) {
         switch(format) {
             case "CSV":
                 return new CsvMarshaller();
             case "BIN":
                 return new BinaryMarshaller();
+            case "TXT":
+                return new TextMarshaller();
             default:
                 throw new IllegalStateException("Unknown marshaller format: " + format);
         }
@@ -52,20 +57,14 @@ public class RunApp {
     }
 
     public static void main(String[] args){
-        Marshaller marshaller = getMarshaller(MARSHALLER);
+        AppBuilder builder = new AppBuilder();
         try {
+            Marshaller marshaller = getMarshaller(MARSHALLER);
             MetricInputStream input = createTcpStream(PORT, marshaller);
-            while (true) {
-                try {
-                    Sample sample = input.readSample();
-                    System.err.println("Received: " + Arrays.toString(sample.getHeader()));
-                    System.err.println("Data: " + Arrays.toString(sample.getMetrics()));
-                } catch(InputStreamClosedException e) {
-                    // ignore
-                } catch(IOException exc) {
-                    exc.printStackTrace();
-                }
-            }
+            builder.addInput(input);
+            builder.addAlgorithm(new NoopAlgorithm());
+            builder.setOutput(new MetricPrinter(getMarshaller(OUTPUT_MARSHALLER)));
+            builder.runApp();
         } catch (Throwable e) {
             e.printStackTrace();
         }

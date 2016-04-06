@@ -67,6 +67,7 @@ public class CsvMarshaller extends AbstractMarshaller {
             }
             output.write(header[i].getBytes());
         }
+        output.write(lineSepBytes);
     }
 
     public void marshallSample(OutputStream output, Sample sample) throws IOException {
@@ -77,6 +78,7 @@ public class CsvMarshaller extends AbstractMarshaller {
             }
             output.write(String.valueOf(values[i]).getBytes());
         }
+        output.write(lineSepBytes);
     }
 
 }
