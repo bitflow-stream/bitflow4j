@@ -2,9 +2,10 @@ package start;
 
 import Marshaller.CsvMarshaller;
 import Marshaller.Marshaller;
+import MetricIO.InputStreamClosedException;
 import MetricIO.MetricInputStream;
-import Metrics.Sample;
 import MetricIO.TcpMetricInputStream;
+import Metrics.Sample;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -45,6 +46,8 @@ public class RunApp {
                     Sample sample = input.readSample();
                     System.err.println("Received: " + Arrays.toString(sample.getHeader()));
                     System.err.println("Data: " + Arrays.toString(sample.getMetrics()));
+                } catch(InputStreamClosedException e) {
+                    // ignore
                 } catch(IOException exc) {
                     exc.printStackTrace();
                 }

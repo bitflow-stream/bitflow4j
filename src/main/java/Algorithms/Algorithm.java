@@ -1,7 +1,7 @@
 package Algorithms;
 
-import MetricIO.FileMetricInputStream;
-import MetricIO.FileMetricOutputStream;
+import MetricIO.MetricInputStream;
+import MetricIO.MetricOutputStream;
 
 /**
  *
@@ -9,6 +9,6 @@ import MetricIO.FileMetricOutputStream;
  */
 public interface Algorithm {
     
-    void execute(FileMetricInputStream input, FileMetricOutputStream output);
+    void execute(MetricInputStream input, MetricOutputStream output);
     
 }

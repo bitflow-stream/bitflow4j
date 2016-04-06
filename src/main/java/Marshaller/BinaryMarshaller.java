@@ -49,4 +49,3 @@ public class BinaryMarshaller implements Marshaller {
     }
 
 }
-

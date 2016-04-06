@@ -1,5 +1,6 @@
 package Marshaller;
 
+import MetricIO.InputStreamClosedException;
 import Metrics.Sample;
 
 import java.io.DataInputStream;
@@ -38,6 +39,9 @@ public class CsvMarshaller implements Marshaller {
         StringBuffer buffer = new StringBuffer(512);
 
         while ((chr = input.read()) != lineSep) {
+            if (chr < 0) {
+                throw new InputStreamClosedException();
+            }
             buffer.append((char) chr);
         }
         String[] metricsStrArr = buffer.toString().split(",");
