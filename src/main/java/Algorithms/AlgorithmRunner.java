@@ -24,8 +24,8 @@ public class AlgorithmRunner extends Thread {
 
     @Override
     public void run() {
+        String name = this.algorithm.getName();
         while (true) {
-            String name = this.algorithm.getName();
             try {
                 this.algorithm.execute(input, output);
             } catch (InputStreamClosedException exc) {

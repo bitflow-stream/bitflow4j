@@ -29,4 +29,18 @@ public class Sample {
         return metrics;
     }
 
+    public boolean headerChanged(String[] oldHeader) {
+        if (oldHeader == null || header.length != oldHeader.length) {
+            return true;
+        } else if (header != oldHeader) {
+            // New instance with same length: must compare all header fields. Rare case.
+            for (int i = 0; i < header.length; i++) {
+                if (!header[i].equals(oldHeader[i])) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
 }
