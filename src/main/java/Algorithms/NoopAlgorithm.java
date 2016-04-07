@@ -30,7 +30,7 @@ public class NoopAlgorithm implements Algorithm {
     }
 
     public String getName() {
-        return "No-op Algorithm";
+        return "no-op algorithm";
     }
 
 }

@@ -13,6 +13,7 @@ import java.util.*;
  */
 public class MetricInputAggregator implements MetricInputStream {
 
+    private static final int MAX_INPUT_ERRORS = 0;
     private static final String HEADER_SEPARATOR = "/";
 
     private final SortedMap<String, AggregatingThread> inputs = new TreeMap<>();
@@ -109,7 +110,6 @@ public class MetricInputAggregator implements MetricInputStream {
         private final MetricInputStream input;
         private final String name;
         private int errors = 0;
-        private static final int MAX_ERRORS = 15;
 
         private Date timestamp = null;
         private String[] header = null;
@@ -143,7 +143,7 @@ public class MetricInputAggregator implements MetricInputStream {
                 return false;
             } catch (Exception exc) {
                 errors++;
-                if (errors > MAX_ERRORS) {
+                if (errors > MAX_INPUT_ERRORS) {
                     throw new IllegalStateException("Too many errors in input stream " + name, exc);
                 }
             }

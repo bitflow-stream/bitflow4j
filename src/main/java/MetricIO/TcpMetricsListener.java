@@ -18,6 +18,7 @@ public class TcpMetricsListener implements InputStreamProducer {
     public TcpMetricsListener(int port, Marshaller marshaller) throws IOException {
         this.marshaller = marshaller;
         this.tcpSocket = new ServerSocket(port);
+        System.err.println("Listening on port " + port);
     }
 
     public void start(MetricInputAggregator aggregator) {
