@@ -19,6 +19,11 @@ public class DecoupledMetricAggregator extends AbstractMetricAggregator {
     }
 
     @Override
+    protected void inputReceived() {
+        // nothing
+    }
+
+    @Override
     protected void waitForNewInput() {
         synchronized (newInputLock) {
             while (!newInput) {

@@ -1,5 +1,9 @@
 package metrics.io;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Created by anton on 4/8/16.
  *
@@ -8,32 +12,52 @@ package metrics.io;
  */
 public class LockstepMetricAggregator extends AbstractMetricAggregator {
 
-    private int collectedInputs = 0;
-    private final Object collectedLock = new Object();
+    private Set<AggregatingThread> dataDelivered = Collections.synchronizedSet(new HashSet<>());
+
+    private boolean allDataDelivered() {
+        synchronized (activeInputs) {
+            return dataDelivered.size() >= activeInputs.size();
+        }
+    }
 
     @Override
     protected void waitForNewInput() {
-        synchronized (collectedLock) {
-            while (collectedInputs < activeInputs.size()) {
+        synchronized (dataDelivered) {
+            while (!allDataDelivered()) {
                 try {
-                    collectedLock.wait();
+                    dataDelivered.wait();
                 } catch (InterruptedException e) {
                 }
             }
-            collectedInputs = 0;
+        }
+    }
+
+    @Override
+    protected void inputReceived() {
+        synchronized (dataDelivered) {
+            dataDelivered.forEach(AggregatingThread::notifyAll);
+            dataDelivered.clear();
         }
     }
 
     @Override
     protected void inputReady(AggregatingThread input) {
-        // TODO: block
+        synchronized (input) {
+            while (dataDelivered.contains(input)) {
+                try {
+                    input.wait();
+                } catch (InterruptedException exc) {
+                }
+            }
+        }
     }
 
     @Override
     protected void notifyNewInput(AggregatingThread input) {
-        synchronized (collectedLock) {
-            collectedInputs++;
-            collectedLock.notifyAll();
+        synchronized (dataDelivered) {
+            dataDelivered.add(input);
+            if (allDataDelivered())
+                dataDelivered.notifyAll();
         }
     }
 

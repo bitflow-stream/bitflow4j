@@ -1,10 +1,10 @@
 package metrics.main;
 
-import metrics.algorithms.NoopAlgorithm;
 import metrics.BinaryMarshaller;
 import metrics.CsvMarshaller;
 import metrics.Marshaller;
 import metrics.TextMarshaller;
+import metrics.algorithms.MetricCounter;
 import metrics.io.FileMetricReader;
 import metrics.io.MetricPrinter;
 import metrics.io.TcpMetricsListener;
@@ -80,7 +80,7 @@ public class RunApp {
 //        final boolean FILES = false;
 
         final boolean TCP = !FILES;
-        final boolean CONSOLE = !FILES;
+        final boolean CONSOLE = true;
 
         AppBuilder builder;
         try {
@@ -90,7 +90,8 @@ public class RunApp {
                 builder = filesApp();
             }
 
-            builder.addAlgorithm(new NoopAlgorithm());
+//            builder.addAlgorithm(new NoopAlgorithm());
+            builder.addAlgorithm(new MetricCounter());
 
             if (CONSOLE) {
                 builder.setOutput(new MetricPrinter(getMarshaller(OUTPUT_MARSHALLER)));

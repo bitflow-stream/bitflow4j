@@ -78,6 +78,7 @@ public abstract class AbstractMetricAggregator implements MetricInputStream {
                     metrics[i++] = value;
                 }
             }
+            inputReceived();
             return new Sample(aggregatedHeader, timestamp, metrics);
         }
     }
@@ -100,9 +101,11 @@ public abstract class AbstractMetricAggregator implements MetricInputStream {
         }
     }
 
-    protected abstract void waitForNewInput();
-    protected abstract void inputReady(AggregatingThread input);
-    protected abstract void notifyNewInput(AggregatingThread input);
+    // By implementing this subclasses control the blocking & timing behaviour of all involved Threads
+    protected abstract void waitForNewInput(); // May block
+    protected abstract void inputReceived(); // Must not block
+    protected abstract void inputReady(AggregatingThread input); // May block
+    protected abstract void notifyNewInput(AggregatingThread input); // Must not block
 
     private synchronized boolean inputStarting(String name, AggregatingThread thread) {
         if (inputs.containsKey(name))
@@ -169,8 +172,8 @@ public abstract class AbstractMetricAggregator implements MetricInputStream {
         }
 
         private void updateSample(Sample sample) {
+            inputReady(this);
             synchronized (activeInputs) {
-                inputReady(this);
                 timestamp = sample.getTimestamp();
                 values = sample.getMetrics();
                 if (sample.headerChanged(header)) {
