@@ -1,7 +1,6 @@
-package Marshaller;
+package metrics;
 
-import MetricIO.InputStreamClosedException;
-import Metrics.Sample;
+import metrics.io.InputStreamClosedException;
 
 import java.io.*;
 import java.util.ArrayList;

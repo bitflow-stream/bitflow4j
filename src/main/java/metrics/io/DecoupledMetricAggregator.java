@@ -1,4 +1,4 @@
-package MetricIO;
+package metrics.io;
 
 /**
  * Created by anton on 4/8/16.

@@ -1,6 +1,6 @@
-package MetricIO;
+package metrics.io;
 
-import Marshaller.Marshaller;
+import metrics.Marshaller;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;

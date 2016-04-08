@@ -1,7 +1,7 @@
-package MetricIO;
+package metrics.io;
 
-import Marshaller.Marshaller;
-import Metrics.Sample;
+import metrics.Marshaller;
+import metrics.Sample;
 
 import java.io.IOException;
 import java.io.OutputStream;

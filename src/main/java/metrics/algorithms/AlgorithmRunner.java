@@ -1,8 +1,8 @@
-package Algorithms;
+package metrics.algorithms;
 
-import MetricIO.InputStreamClosedException;
-import MetricIO.MetricInputStream;
-import MetricIO.MetricOutputStream;
+import metrics.io.InputStreamClosedException;
+import metrics.io.MetricInputStream;
+import metrics.io.MetricOutputStream;
 
 import java.io.IOException;
 

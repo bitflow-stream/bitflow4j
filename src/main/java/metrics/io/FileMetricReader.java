@@ -1,6 +1,6 @@
-package MetricIO;
+package metrics.io;
 
-import Marshaller.Marshaller;
+import metrics.Marshaller;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -45,7 +45,7 @@ public class FileMetricReader implements InputStreamProducer {
     private final Marshaller marshaller;
     private final NameConverter converter;
 
-    // Must be set before calling start()
+    // Must be set before calling metrics.main()
     public boolean parallelRead = false;
 
     public FileMetricReader(Marshaller marshaller, NameConverter converter) {

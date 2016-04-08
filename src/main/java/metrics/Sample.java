@@ -1,4 +1,4 @@
-package Metrics;
+package metrics;
 
 import java.util.Date;
 

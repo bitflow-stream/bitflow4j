@@ -1,4 +1,4 @@
-package Algorithms;
+package metrics.algorithms;
 
 /**
  * Created by anton on 4/6/16.

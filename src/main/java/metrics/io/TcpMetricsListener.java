@@ -1,6 +1,6 @@
-package MetricIO;
+package metrics.io;
 
-import Marshaller.Marshaller;
+import metrics.Marshaller;
 
 import java.io.IOException;
 import java.net.ServerSocket;

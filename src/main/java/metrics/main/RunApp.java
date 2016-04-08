@@ -1,13 +1,13 @@
-package start;
+package metrics.main;
 
-import Algorithms.NoopAlgorithm;
-import Marshaller.BinaryMarshaller;
-import Marshaller.CsvMarshaller;
-import Marshaller.Marshaller;
-import Marshaller.TextMarshaller;
-import MetricIO.FileMetricReader;
-import MetricIO.MetricPrinter;
-import MetricIO.TcpMetricsListener;
+import metrics.algorithms.NoopAlgorithm;
+import metrics.BinaryMarshaller;
+import metrics.CsvMarshaller;
+import metrics.Marshaller;
+import metrics.TextMarshaller;
+import metrics.io.FileMetricReader;
+import metrics.io.MetricPrinter;
+import metrics.io.TcpMetricsListener;
 
 import java.io.IOException;
 import java.nio.file.Path;

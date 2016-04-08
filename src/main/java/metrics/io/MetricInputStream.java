@@ -1,6 +1,6 @@
-package MetricIO;
+package metrics.io;
 
-import Metrics.Sample;
+import metrics.Sample;
 
 import java.io.IOException;
 

@@ -1,8 +1,8 @@
-package start;
+package metrics.main;
 
-import Algorithms.Algorithm;
-import Algorithms.AlgorithmRunner;
-import MetricIO.*;
+import metrics.algorithms.Algorithm;
+import metrics.algorithms.AlgorithmRunner;
+import metrics.io.*;
 
 import java.util.ArrayList;
 import java.util.List;
