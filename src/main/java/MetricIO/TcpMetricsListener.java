@@ -13,7 +13,7 @@ public class TcpMetricsListener implements InputStreamProducer {
 
     private final Marshaller marshaller;
     private final ServerSocket tcpSocket;
-    private MetricInputAggregator aggregator;
+    private AbstractMetricAggregator aggregator;
 
     public TcpMetricsListener(int port, Marshaller marshaller) throws IOException {
         this.marshaller = marshaller;
@@ -21,7 +21,7 @@ public class TcpMetricsListener implements InputStreamProducer {
         System.err.println("Listening on port " + port);
     }
 
-    public void start(MetricInputAggregator aggregator) {
+    public void start(AbstractMetricAggregator aggregator) {
         this.aggregator = aggregator;
         aggregator.producerStarting(this); // TODO this producer never finishes
         forkAcceptConnections();

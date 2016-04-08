@@ -13,6 +13,6 @@ public interface InputStreamProducer {
      *
      * @param aggregator
      */
-    void start(MetricInputAggregator aggregator);
+    void start(AbstractMetricAggregator aggregator);
 
 }

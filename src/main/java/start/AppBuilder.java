@@ -17,8 +17,16 @@ public class AppBuilder {
 
     private final List<Algorithm> algorithms = new ArrayList<>();
     private final List<InputStreamProducer> producers = new ArrayList<>();
-    MetricInputAggregator aggregator = new MetricInputAggregator();
+    private final AbstractMetricAggregator aggregator;
     MetricOutputStream output;
+
+    public AppBuilder(boolean lockStep) {
+        if (lockStep) {
+            aggregator = new LockstepMetricAggregator();
+        } else {
+            aggregator = new DecoupledMetricAggregator();
+        }
+    }
 
     private final List<AlgorithmRunner> algorithmRunners = new ArrayList<>();
 

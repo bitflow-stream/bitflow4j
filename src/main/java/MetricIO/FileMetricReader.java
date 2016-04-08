@@ -104,7 +104,7 @@ public class FileMetricReader implements InputStreamProducer {
     }
 
     // Must be called after all add* invocations.
-    public void start(MetricInputAggregator aggregator) {
+    public void start(AbstractMetricAggregator aggregator) {
         aggregator.producerStarting(this);
         for (int i = 0; i < inputs.size(); i++) {
             String name = converter.convert(files.get(i));

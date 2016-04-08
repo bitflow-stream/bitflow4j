@@ -8,22 +8,21 @@ import java.util.*;
 /**
  * Created by anton on 4/6/16.
  *
- * TODO Access to the aggregated header and metrics is synchronized on the MetricInputAggregator instance.
- * This could be done more efficiently with Read/Write locks and/or more selective synchronization.
  */
-public class MetricInputAggregator implements MetricInputStream {
+public abstract class AbstractMetricAggregator implements MetricInputStream {
 
     private static final int MAX_INPUT_ERRORS = 0;
     private static final String HEADER_SEPARATOR = "/";
 
-    private final SortedMap<String, AggregatingThread> inputs = new TreeMap<>();
-    private final List<AggregatingThread> activeInputs = new ArrayList<>(); // Subset of inputs that have a valid header
-    private boolean newInput = false;
+    // Access to the following 2 is synchronized on AbstractMetricAggregator.this
+    protected final Map<String, AggregatingThread> inputs = new TreeMap<>();
+    private final Set<InputStreamProducer> producers = new HashSet<>();
 
+    // Access to the following 3 is synchronized on activeInputs
+    // Access to fields in AggregatingThread (header, values, timestamp) is also synchronized on activeInputs
+    protected final List<AggregatingThread> activeInputs = new ArrayList<>(); // Subset of inputs that have a valid header
     private ArrayList<String> aggregatedHeaderList = new ArrayList<>();
     private String[] aggregatedHeader;
-
-    private final Set<InputStreamProducer> producers = new HashSet<>();
 
     public synchronized void producerStarting(InputStreamProducer producer) {
         producers.add(producer);
@@ -32,7 +31,7 @@ public class MetricInputAggregator implements MetricInputStream {
     public synchronized void producerFinished(InputStreamProducer producer) {
         producers.remove(producer);
         if (isClosed()) {
-            notifyNewInput();
+            notifyNewInput(null);
         }
     }
 
@@ -58,16 +57,15 @@ public class MetricInputAggregator implements MetricInputStream {
     }
 
     /**
-     * This should only be read from one Thread. After one read it will block
-     * until the data changes in any way: an input stream delivered data, a new
-     * input stream is added, or an input stream is closed.
+     * This should only be read from one Thread. Possibly blocks until new input data
+     * is available, depending on the subclass implementation.
      * The aggregated timestamp will be the one of the latest received sample.
      */
     public Sample readSample() throws IOException {
         checkClosed();
         waitForNewInput();
-        synchronized (this) {
-            checkClosed();
+        checkClosed();
+        synchronized (activeInputs) {
             Date timestamp = null;
             double[] metrics = new double[aggregatedHeader.length];
             int i = 0;
@@ -84,36 +82,27 @@ public class MetricInputAggregator implements MetricInputStream {
         }
     }
 
-    private synchronized void updateHeader() {
-        aggregatedHeaderList.clear();
-        activeInputs.clear();
-        for (String name : inputs.keySet()) {
-            AggregatingThread thread = inputs.get(name);
-            if (thread.header != null) {
-                activeInputs.add(thread);
-                for (String headerField : thread.header) {
-                    aggregatedHeaderList.add(name + HEADER_SEPARATOR + headerField);
+    private synchronized void updateHeader(AggregatingThread input) {
+        synchronized (activeInputs) {
+            aggregatedHeaderList.clear();
+            activeInputs.clear();
+            for (String name : inputs.keySet()) {
+                AggregatingThread thread = inputs.get(name);
+                if (thread.header != null) {
+                    activeInputs.add(thread);
+                    for (String headerField : thread.header) {
+                        aggregatedHeaderList.add(name + HEADER_SEPARATOR + headerField);
+                    }
                 }
             }
+            aggregatedHeader = aggregatedHeaderList.toArray(new String[aggregatedHeaderList.size()]);
+            notifyNewInput(input);
         }
-        aggregatedHeader = aggregatedHeaderList.toArray(new String[aggregatedHeaderList.size()]);
-        notifyNewInput();
     }
 
-    private synchronized void waitForNewInput() {
-        while (!newInput) {
-            try {
-                this.wait();
-            } catch (InterruptedException e) {
-            }
-        }
-        newInput = false;
-    }
-
-    private synchronized void notifyNewInput() {
-        newInput = true;
-        this.notifyAll();
-    }
+    protected abstract void waitForNewInput();
+    protected abstract void inputReady(AggregatingThread input);
+    protected abstract void notifyNewInput(AggregatingThread input);
 
     private synchronized boolean inputStarting(String name, AggregatingThread thread) {
         if (inputs.containsKey(name))
@@ -130,10 +119,10 @@ public class MetricInputAggregator implements MetricInputStream {
         } else {
             System.err.println("Input closed: " + name);
         }
-        updateHeader();
+        updateHeader(null);
     }
 
-    private class AggregatingThread extends Thread {
+    protected class AggregatingThread extends Thread {
 
         private final MetricInputStream input;
         private final String name;
@@ -180,14 +169,15 @@ public class MetricInputAggregator implements MetricInputStream {
         }
 
         private void updateSample(Sample sample) {
-            synchronized (MetricInputAggregator.this) {
+            synchronized (activeInputs) {
+                inputReady(this);
                 timestamp = sample.getTimestamp();
                 values = sample.getMetrics();
                 if (sample.headerChanged(header)) {
                     header = sample.getHeader();
-                    updateHeader();
+                    updateHeader(this);
                 } else {
-                    notifyNewInput();
+                    notifyNewInput(this);
                 }
             }
         }
