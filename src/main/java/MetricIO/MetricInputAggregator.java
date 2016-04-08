@@ -172,6 +172,7 @@ public class MetricInputAggregator implements MetricInputStream {
             } catch (Exception exc) {
                 errors++;
                 if (errors > MAX_INPUT_ERRORS) {
+                    // TODO the input stream should be closed here, need close() method.
                     throw new IllegalStateException("Too many errors in input stream " + name, exc);
                 }
             }

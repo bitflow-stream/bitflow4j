@@ -22,7 +22,16 @@ public class MetricReader implements MetricInputStream {
     }
 
     public Sample readSample() throws IOException {
-        return marshaller.unmarshallSample(input, header);
+        try {
+            return marshaller.unmarshallSample(input, header);
+        } catch (InputStreamClosedException exc) {
+            try {
+                input.close();
+            } catch (IOException e) {
+                // Ignore, we don't know if the stream was already closed.
+            }
+            throw exc;
+        }
     }
 
 }
