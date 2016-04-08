@@ -9,7 +9,12 @@ import java.io.IOException;
  * notify that the DataInputStream was unexpectedly closed from the outside.
  */
 public class InputStreamClosedException extends IOException {
+
     public InputStreamClosedException() {
         super("Input stream closed");
+    }
+
+    public InputStreamClosedException(Exception cause) {
+        super("Input stream closed", cause);
     }
 }

@@ -35,7 +35,7 @@ public class BinaryMarshaller extends AbstractMarshaller {
             }
             return new Sample(header, timestamp, metrics);
         } catch (EOFException exc) {
-            throw new InputStreamClosedException();
+            throw new InputStreamClosedException(exc);
         }
     }
 

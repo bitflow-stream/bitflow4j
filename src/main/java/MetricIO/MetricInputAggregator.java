@@ -36,7 +36,10 @@ public class MetricInputAggregator implements MetricInputStream {
         }
     }
 
-    public void addInput(String name, MetricInputStream input) {
+    public synchronized void addInput(String name, MetricInputStream input) {
+        // Another check like this will be performed inside the thread.
+        if (inputs.containsKey(name))
+            throw new IllegalStateException("Input with name " + name + " already exists");
         new AggregatingThread(input, name).start();
     }
 
