@@ -2,6 +2,8 @@ package MetricIO;
 
 import Marshaller.Marshaller;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -14,6 +16,10 @@ public class MetricPrinter extends AbstractMetricPrinter {
 
     public MetricPrinter(Marshaller marshaller) {
         this(System.out, marshaller);
+    }
+
+    public MetricPrinter(String filename, Marshaller marshaller) throws FileNotFoundException {
+        this(new FileOutputStream(filename, false), marshaller);
     }
 
     public MetricPrinter(OutputStream output, Marshaller marshaller) {

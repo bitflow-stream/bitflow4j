@@ -23,6 +23,7 @@ public class TcpMetricsListener implements InputStreamProducer {
 
     public void start(MetricInputAggregator aggregator) {
         this.aggregator = aggregator;
+        aggregator.producerStarting(this); // TODO this producer never finishes
         forkAcceptConnections();
     }
 

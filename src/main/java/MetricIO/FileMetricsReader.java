@@ -11,7 +11,11 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+
+import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
 
 /**
  * Created by anton on 4/7/16.
@@ -36,7 +40,7 @@ public class FileMetricsReader implements InputStreamProducer {
     public static final NameConverter FILE_NAME = (File file) -> file.getName();
 
     private List<MetricInputStream> inputs = new ArrayList<>();
-    public List<File> files = new ArrayList<>();
+    private List<File> files = new ArrayList<>();
 
     private final Marshaller marshaller;
     private final NameConverter converter;
@@ -53,6 +57,10 @@ public class FileMetricsReader implements InputStreamProducer {
         this(marshaller, FILE_NAME);
     }
 
+    public int size() {
+        return files.size();
+    }
+
     public void addFiles(String directory, String extension) throws IOException {
         addFiles(directory, (Path path) -> path.getFileName().toString().endsWith(extension));
     }
@@ -65,8 +73,9 @@ public class FileMetricsReader implements InputStreamProducer {
 
     public void addFiles(String directory, FileVisitor visitor) throws IOException {
         Files.walkFileTree(new File(directory).toPath(),
+            new HashSet<>(Arrays.asList(FOLLOW_LINKS)),
+            Integer.MAX_VALUE,
             new SimpleFileVisitor<Path>() {
-
                 @Override
                 public FileVisitResult preVisitDirectory(Path path, BasicFileAttributes attr) throws IOException {
                     boolean result = visitor.visitFile(path, attr);
@@ -96,11 +105,13 @@ public class FileMetricsReader implements InputStreamProducer {
 
     // Must be called after all add* invocations.
     public void start(MetricInputAggregator aggregator) {
+        aggregator.producerStarting(this);
         for (int i = 0; i < inputs.size(); i++) {
             String name = converter.convert(files.get(i));
             MetricInputStream input = inputs.get(i);
             aggregator.addInput(name, input);
         }
+        aggregator.producerFinished(this);
     }
 
 }

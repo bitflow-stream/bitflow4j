@@ -23,12 +23,29 @@ public class MetricInputAggregator implements MetricInputStream {
     private ArrayList<String> aggregatedHeaderList = new ArrayList<>();
     private String[] aggregatedHeader;
 
+    private final Set<InputStreamProducer> producers = new HashSet<>();
+
+    public synchronized void producerStarting(InputStreamProducer producer) {
+        producers.add(producer);
+    }
+
+    public synchronized void producerFinished(InputStreamProducer producer) {
+        producers.remove(producer);
+        if (isClosed()) {
+            notifyNewInput();
+        }
+    }
+
     public void addInput(String name, MetricInputStream input) {
         new AggregatingThread(input, name).start();
     }
 
     public synchronized int size() {
         return inputs.size();
+    }
+
+    public synchronized boolean isClosed() {
+        return producers.isEmpty() && inputs.isEmpty();
     }
 
     /**
@@ -40,6 +57,9 @@ public class MetricInputAggregator implements MetricInputStream {
     public Sample readSample() throws IOException {
         waitForNewInput();
         synchronized (this) {
+            if (isClosed()) {
+                throw new InputStreamClosedException();
+            }
             Date timestamp = null;
             double[] metrics = new double[aggregatedHeader.length];
             int i = 0;
@@ -118,7 +138,7 @@ public class MetricInputAggregator implements MetricInputStream {
         AggregatingThread(MetricInputStream input, String name) {
             this.name = name;
             this.input = input;
-            this.setDaemon(true);
+            this.setDaemon(false);
         }
 
         public void run() {
