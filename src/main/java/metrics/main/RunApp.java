@@ -18,7 +18,8 @@ import java.nio.file.Path;
  */
 public class RunApp {
 
-    static final String CSV_PATH = "/home/anton/software/monitoring-data/experiments/global-overload/latest-results";
+    static final String ROOT = "/home/anton/software/monitoring-data/experiments/";
+    static final String EXPERIMENT = ROOT + "global-overload/latest-results/";
     static final String OUT_PATH = "/home/anton/test.out";
 
     static final int PORT = 9999;
@@ -64,8 +65,8 @@ public class RunApp {
     }
 
     private static AppBuilder filesApp() throws IOException {
-        AppBuilder builder = new AppBuilder(false);
-        builder.addInputProducer(readCsvFiles(CSV_PATH));
+        AppBuilder builder = new AppBuilder(true);
+        builder.addInputProducer(readCsvFiles(EXPERIMENT));
         return builder;
     }
 

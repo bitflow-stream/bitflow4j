@@ -47,7 +47,11 @@ public abstract class AbstractMetricAggregator implements MetricInputStream {
     }
 
     public synchronized boolean isClosed() {
-        return producers.isEmpty() && inputs.isEmpty();
+        if (!producers.isEmpty()) return false;
+        for (AggregatingThread input : inputs.values())
+            if (input.running)
+                return false;
+        return true;
     }
 
     private void checkClosed() throws InputStreamClosedException {
@@ -107,22 +111,26 @@ public abstract class AbstractMetricAggregator implements MetricInputStream {
     protected abstract void inputReady(AggregatingThread input); // May block
     protected abstract void notifyNewInput(AggregatingThread input); // Must not block
 
-    private synchronized boolean inputStarting(String name, AggregatingThread thread) {
-        if (inputs.containsKey(name))
+    private synchronized boolean inputStarting(AggregatingThread thread) {
+        if (inputs.containsKey(thread.name))
             return false;
-        inputs.put(name, thread);
+        inputs.put(thread.name, thread);
         return true;
     }
 
-    private synchronized void inputFinished(String name, Throwable exception) {
-        inputs.remove(name);
+    private synchronized void inputFinished(AggregatingThread thread, Throwable exception) {
+        removeInput(thread);
         if (exception != null) {
-            System.err.println("Input closed: " + name + ", error: " + exception.getMessage());
+            System.err.println("Input closed: " + thread.name + ", error: " + exception.getMessage());
             exception.printStackTrace();
         } else {
-            System.err.println("Input closed: " + name);
+            System.err.println("Input closed: " + thread.name);
         }
-        updateHeader(null);
+    }
+
+    protected void removeInput(AggregatingThread thread) {
+        inputs.remove(thread.name);
+        updateHeader(thread);
     }
 
     protected class AggregatingThread extends Thread {
@@ -130,6 +138,7 @@ public abstract class AbstractMetricAggregator implements MetricInputStream {
         private final MetricInputStream input;
         private final String name;
         private int errors = 0;
+        protected boolean running = true;
 
         private Date timestamp = null;
         private String[] header = null;
@@ -142,7 +151,7 @@ public abstract class AbstractMetricAggregator implements MetricInputStream {
         }
 
         public void run() {
-            if (!inputStarting(name, this))
+            if (!inputStarting(this))
                 throw new IllegalStateException("Input with name " + name + " already exists");
             Throwable exception = null;
             try {
@@ -150,7 +159,8 @@ public abstract class AbstractMetricAggregator implements MetricInputStream {
             } catch (Throwable t) {
                 exception = t;
             } finally {
-                inputFinished(name, exception);
+                running = false;
+                inputFinished(this, exception);
             }
         }
 

@@ -1,8 +1,6 @@
 package metrics.io;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by anton on 4/8/16.
@@ -12,12 +10,31 @@ import java.util.Set;
  */
 public class LockstepMetricAggregator extends AbstractMetricAggregator {
 
-    private Set<AggregatingThread> dataDelivered = Collections.synchronizedSet(new HashSet<>());
+    // Recursive waits occur without wait-timeouts :(
+    private static final long LOCK_TIMEOUT = 100;
+
+    private final Set<AggregatingThread> dataDelivered = Collections.synchronizedSet(new HashSet<>());
+    private final Map<AggregatingThread, Object> locks = new HashMap<>();
+
+    private Object getInputLock(AggregatingThread thread) {
+        synchronized (locks) {
+            if (locks.containsKey(thread)) {
+                return locks.get(thread);
+            }
+            Object lock = new Object();
+            locks.put(thread, lock);
+            return lock;
+        }
+    }
 
     private boolean allDataDelivered() {
-        synchronized (activeInputs) {
-            return dataDelivered.size() >= activeInputs.size();
+        int numRunningInputs = 0;
+        for (AggregatingThread thread : activeInputs) {
+            if (thread.running)
+                numRunningInputs++;
         }
+        return numRunningInputs == 0 ||
+                (numRunningInputs > 0 && dataDelivered.size() >= numRunningInputs);
     }
 
     @Override
@@ -25,7 +42,7 @@ public class LockstepMetricAggregator extends AbstractMetricAggregator {
         synchronized (dataDelivered) {
             while (!allDataDelivered()) {
                 try {
-                    dataDelivered.wait();
+                    dataDelivered.wait(LOCK_TIMEOUT);
                 } catch (InterruptedException e) {
                 }
             }
@@ -35,17 +52,24 @@ public class LockstepMetricAggregator extends AbstractMetricAggregator {
     @Override
     protected void inputReceived() {
         synchronized (dataDelivered) {
-            dataDelivered.forEach(AggregatingThread::notifyAll);
+            List<AggregatingThread> copy = new ArrayList<>(dataDelivered);
             dataDelivered.clear();
+            for (AggregatingThread input : copy) {
+                Object lock = getInputLock(input);
+                synchronized (lock) {
+                    lock.notifyAll();
+                }
+            }
         }
     }
 
     @Override
     protected void inputReady(AggregatingThread input) {
-        synchronized (input) {
-            while (dataDelivered.contains(input)) {
+        Object lock = getInputLock(input);
+        while (dataDelivered.contains(input)) {
+            synchronized (lock) {
                 try {
-                    input.wait();
+                    lock.wait(LOCK_TIMEOUT);
                 } catch (InterruptedException exc) {
                 }
             }
@@ -59,6 +83,15 @@ public class LockstepMetricAggregator extends AbstractMetricAggregator {
             if (allDataDelivered())
                 dataDelivered.notifyAll();
         }
+    }
+
+    @Override
+    protected void removeInput(AggregatingThread thread) {
+        synchronized (dataDelivered) {
+            dataDelivered.remove(thread);
+        }
+        // Do not remove inputs: the last state will persist until all inputs are finished.
+        // This prevents header changes.
     }
 
 }
