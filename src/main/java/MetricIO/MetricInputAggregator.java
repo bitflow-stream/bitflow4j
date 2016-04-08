@@ -48,6 +48,12 @@ public class MetricInputAggregator implements MetricInputStream {
         return producers.isEmpty() && inputs.isEmpty();
     }
 
+    private void checkClosed() throws InputStreamClosedException {
+        if (isClosed()) {
+            throw new InputStreamClosedException();
+        }
+    }
+
     /**
      * This should only be read from one Thread. After one read it will block
      * until the data changes in any way: an input stream delivered data, a new
@@ -55,11 +61,10 @@ public class MetricInputAggregator implements MetricInputStream {
      * The aggregated timestamp will be the one of the latest received sample.
      */
     public Sample readSample() throws IOException {
+        checkClosed();
         waitForNewInput();
         synchronized (this) {
-            if (isClosed()) {
-                throw new InputStreamClosedException();
-            }
+            checkClosed();
             Date timestamp = null;
             double[] metrics = new double[aggregatedHeader.length];
             int i = 0;

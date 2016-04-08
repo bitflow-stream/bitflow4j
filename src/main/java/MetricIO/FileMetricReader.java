@@ -20,7 +20,7 @@ import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
 /**
  * Created by anton on 4/7/16.
  */
-public class FileMetricsReader implements InputStreamProducer {
+public class FileMetricReader implements InputStreamProducer {
 
     public interface NameConverter {
         String convert(File file);
@@ -48,12 +48,12 @@ public class FileMetricsReader implements InputStreamProducer {
     // Must be set before calling start()
     public boolean parallelRead = false;
 
-    public FileMetricsReader(Marshaller marshaller, NameConverter converter) {
+    public FileMetricReader(Marshaller marshaller, NameConverter converter) {
         this.marshaller = marshaller;
         this.converter = converter;
     }
 
-    public FileMetricsReader(Marshaller marshaller) throws IOException {
+    public FileMetricReader(Marshaller marshaller) throws IOException {
         this(marshaller, FILE_NAME);
     }
 

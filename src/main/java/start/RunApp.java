@@ -5,7 +5,7 @@ import Marshaller.BinaryMarshaller;
 import Marshaller.CsvMarshaller;
 import Marshaller.Marshaller;
 import Marshaller.TextMarshaller;
-import MetricIO.FileMetricsReader;
+import MetricIO.FileMetricReader;
 import MetricIO.MetricPrinter;
 
 import java.io.IOException;
@@ -40,15 +40,15 @@ public class RunApp {
         }
     }
 
-    private static FileMetricsReader readCsvFiles(String path) throws IOException {
-        FileMetricsReader.NameConverter conv = file -> {
+    private static FileMetricReader readCsvFiles(String path) throws IOException {
+        FileMetricReader.NameConverter conv = file -> {
             Path path1 = file.toPath();
             int num = path1.getNameCount();
             String host = path1.subpath(num - 2, num - 1).toString();
             String scenario = path1.subpath(num - 4, num - 3).toString();
             return scenario + "/" + host;
         };
-        FileMetricsReader reader = new FileMetricsReader(new CsvMarshaller(), conv);
+        FileMetricReader reader = new FileMetricReader(new CsvMarshaller(), conv);
         reader.addFiles(path,
             (p, attr) -> {
                 if (attr.isDirectory()) {
