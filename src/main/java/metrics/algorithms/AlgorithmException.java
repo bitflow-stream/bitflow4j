@@ -1,7 +1,0 @@
-package metrics.algorithms;
-
-/**
- * Created by anton on 4/6/16.
- */
-public class AlgorithmException extends Exception {
-}

@@ -26,12 +26,22 @@ public abstract class AbstractMetricPrinter implements MetricOutputStream {
         if (header.length == 0) {
             return;
         }
+        OutputStream output = this.output; // Avoid race condition
         if (output == null || sample.headerChanged(lastHeader)) {
-            output = nextOutputStream();
+            this.output = nextOutputStream();
+            output = this.output;
             marshaller.marshallHeader(output, header);
             lastHeader = header;
         }
         marshaller.marshallSample(output, sample);
+    }
+
+    public void close() throws IOException {
+        OutputStream output = this.output; // Avoid race condition
+        if (output != null) {
+            output.close();
+            this.output = null;
+        }
     }
 
 }

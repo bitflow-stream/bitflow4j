@@ -1,15 +1,13 @@
 package metrics.algorithms;
 
 import metrics.Sample;
-import metrics.io.MetricInputStream;
-import metrics.io.MetricOutputStream;
 
 import java.io.IOException;
 
 /**
  * Created by anton on 4/8/16.
  */
-public class MetricCounter implements Algorithm {
+public class MetricCounter extends GenericAlgorithm {
 
     private static final String[] header = new String[] {
                 "metrics", "samples this header", "metrics this header", "total samples", "total metrics", "headers" };
@@ -21,13 +19,12 @@ public class MetricCounter implements Algorithm {
     private long totalMetrics = 0;
     private long headers = 0;
 
-    public String getName() {
-        return "metric counter";
+    public MetricCounter() {
+        super("metric counter");
     }
 
     @Override
-    public void execute(MetricInputStream input, MetricOutputStream output) throws IOException, AlgorithmException {
-        Sample sample = input.readSample();
+    public Sample executeSample(Sample sample) throws IOException {
         if (sample.headerChanged(lastHeader)) {
             lastHeader = sample.getHeader();
             samplesThisHeader = 0;
@@ -41,7 +38,7 @@ public class MetricCounter implements Algorithm {
         totalMetrics += num;
         metricsThisHeader += num;
         double[] values = new double[] { num, samplesThisHeader, metricsThisHeader, totalSamples, totalMetrics, headers };
-        output.writeSample(new Sample(header, sample.getTimestamp(), values ));
+        return new Sample(header, sample.getTimestamp(), values);
     }
 
 }

@@ -29,6 +29,8 @@ public class LockstepMetricAggregator extends AbstractMetricAggregator {
 
     private boolean allDataDelivered() {
         int numRunningInputs = 0;
+        // TODO unsynchronized iteration on activeInputs. Synchronizing it deadlocks.
+        // TODO Rare ConcurrentModificationException.
         for (AggregatingThread thread : activeInputs) {
             if (thread.running)
                 numRunningInputs++;

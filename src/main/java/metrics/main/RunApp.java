@@ -4,7 +4,7 @@ import metrics.BinaryMarshaller;
 import metrics.CsvMarshaller;
 import metrics.Marshaller;
 import metrics.TextMarshaller;
-import metrics.algorithms.MetricCounter;
+import metrics.algorithms.VarianceFilterAlgorithm;
 import metrics.io.FileMetricReader;
 import metrics.io.MetricPrinter;
 import metrics.io.TcpMetricsListener;
@@ -85,8 +85,9 @@ public class RunApp {
 
         AppBuilder builder = TCP ? tcpApp() : filesApp();
 
-//            builder.addAlgorithm(new NoopAlgorithm());
-        builder.addAlgorithm(new MetricCounter());
+//        builder.addAlgorithm(new MetricCounter());
+//        builder.addAlgorithm(new NoopAlgorithm());
+        builder.addAlgorithm(new VarianceFilterAlgorithm(0.1));
 
         if (CONSOLE) {
             builder.setOutput(new MetricPrinter(getMarshaller(OUTPUT_MARSHALLER)));

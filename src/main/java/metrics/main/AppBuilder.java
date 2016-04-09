@@ -1,7 +1,6 @@
 package metrics.main;
 
 import metrics.algorithms.Algorithm;
-import metrics.algorithms.AlgorithmRunner;
 import metrics.io.*;
 
 import java.util.ArrayList;
@@ -27,8 +26,6 @@ public class AppBuilder {
             aggregator = new DecoupledMetricAggregator();
         }
     }
-
-    private final List<AlgorithmRunner> algorithmRunners = new ArrayList<>();
 
     public void addAlgorithm(Algorithm algo) {
         algorithms.add(algo);
@@ -77,9 +74,7 @@ public class AppBuilder {
                 output = this.output;
             }
 
-            AlgorithmRunner runner = new AlgorithmRunner(algo, input, output);
-            runner.start();
-            algorithmRunners.add(runner);
+            algo.start(input, output);
         }
     }
 

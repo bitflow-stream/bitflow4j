@@ -11,5 +11,7 @@ import java.io.IOException;
 public interface MetricOutputStream {
 
     void writeSample(Sample sample) throws IOException;
-  
+
+    void close() throws IOException;
+
 }

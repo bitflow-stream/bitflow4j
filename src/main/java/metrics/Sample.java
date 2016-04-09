@@ -1,5 +1,6 @@
 package metrics;
 
+import java.io.IOException;
 import java.util.Date;
 
 /**
@@ -41,6 +42,18 @@ public class Sample {
             }
         }
         return false;
+    }
+
+    public void checkConsistency() throws IOException {
+        if (timestamp == null)
+            throw new IOException("Sample.timestamp is null");
+        if (header == null)
+            throw new IOException("Sample.header is null");
+        if (metrics == null)
+            throw new IOException("Sample.metrics is null");
+        if (header.length != metrics.length)
+            throw new IOException("Sample.header is size " + header.length +
+                    ", but Sample.metrics is size " + metrics.length);
     }
 
 }
