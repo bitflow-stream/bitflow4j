@@ -76,33 +76,24 @@ public class RunApp {
         return builder;
     }
 
-    public static void main(String[] args){
+    public static void main(String[] args) throws IOException {
         final boolean FILES = true;
 //        final boolean FILES = false;
 
         final boolean TCP = !FILES;
         final boolean CONSOLE = true;
 
-        AppBuilder builder;
-        try {
-            if (TCP) {
-                builder = tcpApp();
-            } else {
-                builder = filesApp();
-            }
+        AppBuilder builder = TCP ? tcpApp() : filesApp();
 
 //            builder.addAlgorithm(new NoopAlgorithm());
-            builder.addAlgorithm(new MetricCounter());
+        builder.addAlgorithm(new MetricCounter());
 
-            if (CONSOLE) {
-                builder.setOutput(new MetricPrinter(getMarshaller(OUTPUT_MARSHALLER)));
-            } else {
-                builder.setOutput(new MetricPrinter(OUT_PATH, getMarshaller(OUTPUT_MARSHALLER)));
-            }
-            builder.runApp();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (CONSOLE) {
+            builder.setOutput(new MetricPrinter(getMarshaller(OUTPUT_MARSHALLER)));
+        } else {
+            builder.setOutput(new MetricPrinter(OUT_PATH, getMarshaller(OUTPUT_MARSHALLER)));
         }
+        builder.runApp();
     }
 
 }
