@@ -4,7 +4,7 @@ import metrics.BinaryMarshaller;
 import metrics.CsvMarshaller;
 import metrics.Marshaller;
 import metrics.TextMarshaller;
-import metrics.algorithms.VarianceFilterAlgorithm;
+import metrics.algorithms.NoopAlgorithm;
 import metrics.io.FileMetricReader;
 import metrics.io.MetricPrinter;
 import metrics.io.TcpMetricsListener;
@@ -19,7 +19,7 @@ import java.nio.file.Path;
 public class RunApp {
 
     static final String ROOT = "/home/anton/software/monitoring-data/experiments/";
-    static final String EXPERIMENT = ROOT + "global-overload/latest-results/";
+    static final String EXPERIMENT = ROOT + "global-overload/latest-results/" + "metrics.bono.ims";
     static final String OUT_PATH = "/home/anton/test.out";
 
     static final int PORT = 9999;
@@ -77,8 +77,8 @@ public class RunApp {
     }
 
     public static void main(String[] args) throws IOException {
-        final boolean FILES = true;
-//        final boolean FILES = false;
+//        final boolean FILES = true;
+        final boolean FILES = false;
 
         final boolean TCP = !FILES;
         final boolean CONSOLE = true;
@@ -86,8 +86,8 @@ public class RunApp {
         AppBuilder builder = TCP ? tcpApp() : filesApp();
 
 //        builder.addAlgorithm(new MetricCounter());
-//        builder.addAlgorithm(new NoopAlgorithm());
-        builder.addAlgorithm(new VarianceFilterAlgorithm(0.1));
+        builder.addAlgorithm(new NoopAlgorithm());
+//        builder.addAlgorithm(new VarianceFilterAlgorithm(0.1));
 
         if (CONSOLE) {
             builder.setOutput(new MetricPrinter(getMarshaller(OUTPUT_MARSHALLER)));

@@ -9,10 +9,12 @@ import java.io.IOException;
  */
 public class MetricCounter extends GenericAlgorithm {
 
-    private static final String[] header = new String[] {
+    private static final String[] headerFields = new String[] {
                 "metrics", "samples this header", "metrics this header", "total samples", "total metrics", "headers" };
 
-    private String[] lastHeader = null;
+    private Sample.Header lastHeader = null;
+    private Sample.Header outputHeader = null;
+
     private long samplesThisHeader = 0;
     private long metricsThisHeader = 0;
     private long totalSamples = 0;
@@ -27,6 +29,7 @@ public class MetricCounter extends GenericAlgorithm {
     public Sample executeSample(Sample sample) throws IOException {
         if (sample.headerChanged(lastHeader)) {
             lastHeader = sample.getHeader();
+            outputHeader = new Sample.Header(lastHeader, headerFields);
             samplesThisHeader = 0;
             metricsThisHeader = 0;
             headers++;
@@ -38,7 +41,7 @@ public class MetricCounter extends GenericAlgorithm {
         totalMetrics += num;
         metricsThisHeader += num;
         double[] values = new double[] { num, samplesThisHeader, metricsThisHeader, totalSamples, totalMetrics, headers };
-        return new Sample(header, sample.getTimestamp(), values);
+        return new Sample(outputHeader, values, sample.getTimestamp());
     }
 
 }

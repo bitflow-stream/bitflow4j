@@ -29,13 +29,14 @@ public abstract class PostAnalysisAlgorithm extends GenericAlgorithm {
             Sample sample = input.readSample();
             analyseSample(sample);
         } catch(InputStreamClosedException closedExc) {
+            System.err.println("Starting analysis phase of " + getName());
             try {
                 writeResults(output);
             } catch (Exception resultExc) {
                 System.err.println("Error writing results of " + getName());
                 resultExc.printStackTrace();
-                throw closedExc;
             }
+            throw closedExc;
         }
     }
 

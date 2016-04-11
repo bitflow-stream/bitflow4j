@@ -13,7 +13,7 @@ public class MetricReader implements MetricInputStream {
 
     private final Marshaller marshaller;
     private final InputStream input;
-    private String[] header;
+    private Sample.Header header;
 
     public MetricReader(InputStream input, Marshaller marshaller) throws IOException {
         this.marshaller = marshaller;

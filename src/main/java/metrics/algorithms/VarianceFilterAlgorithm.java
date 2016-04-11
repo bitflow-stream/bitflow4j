@@ -15,10 +15,10 @@ public class VarianceFilterAlgorithm extends PostAnalysisAlgorithm {
 
     private final double minVariance;
     private SortedMap<String, Statistics> stats = new TreeMap<>();
-    private List<Date> timestamps = new ArrayList<>();
+    private List<SampleMetadata> samples = new ArrayList<>();
 
     public VarianceFilterAlgorithm(double minVariance) {
-        super("zero-filter algorithm");
+        super("variance-filter algorithm");
         this.minVariance = minVariance;
     }
 
@@ -26,7 +26,7 @@ public class VarianceFilterAlgorithm extends PostAnalysisAlgorithm {
         Statistics result;
         if ((result = stats.get(name)) == null) {
             result = new Statistics(name);
-            result.fill(timestamps.size()); // Fill up missed values
+            result.fill(samples.size()); // Fill up missed values
             stats.put(name, result);
         }
         return result;
@@ -35,15 +35,15 @@ public class VarianceFilterAlgorithm extends PostAnalysisAlgorithm {
     @Override
     protected void analyseSample(Sample sample) throws IOException {
         sample.checkConsistency();
-        String[] header = sample.getHeader();
+        String[] header = sample.getHeader().header;
         Set<String> unhandledStats = new HashSet<>(stats.keySet());
         double[] values = sample.getMetrics();
-        for (int i = 0; i > header.length; i++) {
+        for (int i = 0; i < header.length; i++) {
             Statistics stats = getStats(header[i]);
             stats.add(values[i]);
             unhandledStats.remove(stats.name); // Might not be contained
         }
-        timestamps.add(sample.getTimestamp());
+        samples.add(new SampleMetadata(sample.getTimestamp(), sample.getSource(), sample.getLabel()));
         for (String unhandledHeader : unhandledStats) {
             stats.get(unhandledHeader).fill(1);
         }
@@ -51,33 +51,37 @@ public class VarianceFilterAlgorithm extends PostAnalysisAlgorithm {
 
     @Override
     protected void writeResults(MetricOutputStream output) throws IOException {
-
         // Filter out low-variance metrics
         List<Statistics> validStats = new ArrayList<>();
+
         for (Map.Entry<String, Statistics> a : stats.entrySet()) {
             Statistics stats = a.getValue();
-            if (stats.variance() > minVariance) {
+            double variance = stats.variance();
+            System.err.println("Variance of " + stats.name + ": " + variance);
+            if (variance > minVariance) {
                 validStats.add(stats);
             }
         }
 
         // Construct combined header
-        String header[] = new String[validStats.size()];
-        for (int i = 0; i < header.length; i++) {
-            header[i] = validStats.get(i).name;
+        String headerFields[] = new String[validStats.size()];
+        for (int i = 0; i < headerFields.length; i++) {
+            headerFields[i] = validStats.get(i).name;
         }
-        if (header.length == 0) {
-            output.writeSample(new Sample(header, new Date(), new double[0]));
+        if (headerFields.length == 0) {
+            System.err.println(getName() + " produced no output");
             return;
         }
+        Sample.Header header = new Sample.Header(headerFields, Sample.Header.TOTAL_SPECIAL_FIELDS);
 
         // Construct samples from remaining metrics
-        for (int sampleNr = 0; sampleNr < timestamps.size(); sampleNr++) {
-            double metrics[] = new double[header.length];
-            for (int metricNr = 0; metricNr < header.length; metricNr++) {
+        for (int sampleNr = 0; sampleNr < samples.size(); sampleNr++) {
+            double metrics[] = new double[headerFields.length];
+            for (int metricNr = 0; metricNr < headerFields.length; metricNr++) {
                 metrics[metricNr] = validStats.get(metricNr).getValue(sampleNr);
             }
-            Sample sample = new Sample(header, timestamps.get(sampleNr), metrics);
+            SampleMetadata meta = samples.get(sampleNr);
+            Sample sample = new Sample(header, metrics, meta.timestamp, meta.source, meta.label);
             output.writeSample(sample);
         }
     }
@@ -87,6 +91,7 @@ public class VarianceFilterAlgorithm extends PostAnalysisAlgorithm {
         final String name;
         final TDoubleList list = new TDoubleArrayList();
         double sum = 0;
+        long realSize = 0;
 
         Statistics(String name) {
             this.name = name;
@@ -94,42 +99,65 @@ public class VarianceFilterAlgorithm extends PostAnalysisAlgorithm {
 
         double defaultValue() {
             // This can be changed to use a different filler-value when no real value is present
+            // TODO maybe use average?
             return Double.NaN;
+        }
+
+        double getValue(int sampleNr) {
+            double val = list.get(sampleNr);
+            if (Double.isNaN(val)) {
+                val = defaultValue();
+            }
+            return val;
         }
 
         void fill(int num) {
             // TODO this can be more efficient
             for (int i = 0; i < num; i++) {
-                list.add(defaultValue());
+                list.add(Double.NaN);
             }
         }
 
         void add(double val) {
             list.add(val);
-            sum += val;
+            if (!Double.isNaN(val)) {
+                sum += val;
+                realSize++;
+            }
         }
 
         double average() {
-            if (list.size() == 0) return 0.0;
-            return sum / list.size();
+            if (realSize == 0) return 0.0;
+            return sum / realSize;
         }
 
         double variance() {
-            int size = list.size();
+            long size = realSize;
             double avg = average();
-            double variance = 0.0;
+            double stdOffsetSum = 0.0;
             for (int i = 0; i < size; i++) {
                 double val = list.get(i);
-                double stddeviation = Math.sqrt(avg - val);
-                variance += stddeviation / size;
+                if (!Double.isNaN(val)) {
+                    double offset = avg - val;
+                    double stdOffset = offset*offset;
+                    stdOffsetSum += stdOffset;
+                }
             }
-            return variance;
+            return stdOffsetSum / size;
         }
 
-        double getValue(int sampleNr) {
-            return list.get(sampleNr);
-        }
+    }
 
+    private static class SampleMetadata {
+        Date timestamp;
+        String source;
+        String label;
+
+        public SampleMetadata(Date timestamp, String source, String label) {
+            this.source = source;
+            this.label = label;
+            this.timestamp = timestamp;
+        }
     }
 
 }

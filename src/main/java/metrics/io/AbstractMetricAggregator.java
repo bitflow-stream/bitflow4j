@@ -8,6 +8,7 @@ import java.util.*;
 /**
  * Created by anton on 4/6/16.
  *
+ * TODO source and label of incoming Samples are currently discarded.
  */
 public abstract class AbstractMetricAggregator implements MetricInputStream {
 
@@ -22,7 +23,8 @@ public abstract class AbstractMetricAggregator implements MetricInputStream {
     // Access to fields in AggregatingThread (header, values, timestamp) is also synchronized on activeInputs
     protected final List<AggregatingThread> activeInputs = new ArrayList<>(); // Subset of inputs that have a valid header
     private ArrayList<String> aggregatedHeaderList = new ArrayList<>();
-    private String[] aggregatedHeader;
+    private Sample.Header aggregatedHeader;
+    private static final int HANDLED_SPECIAL_FIELDS = 1;
 
     public synchronized void producerStarting(InputStreamProducer producer) {
         producers.add(producer);
@@ -70,8 +72,13 @@ public abstract class AbstractMetricAggregator implements MetricInputStream {
         waitForNewInput();
         checkClosed();
         synchronized (activeInputs) {
+            if (aggregatedHeader == null)
+                // TODO this should not happen
+                return Sample.newEmptySample();
+
+            // TODO also handle source and label of incoming metrics somehow.
+            double[] metrics = new double[aggregatedHeader.header.length];
             Date timestamp = null;
-            double[] metrics = new double[aggregatedHeader.length];
             int i = 0;
             // Iterate in same order as in updateHeader()
             for (AggregatingThread thread : activeInputs) {
@@ -83,7 +90,7 @@ public abstract class AbstractMetricAggregator implements MetricInputStream {
                 }
             }
             inputReceived();
-            return new Sample(aggregatedHeader, timestamp, metrics);
+            return new Sample(aggregatedHeader, metrics, timestamp);
         }
     }
 
@@ -95,12 +102,13 @@ public abstract class AbstractMetricAggregator implements MetricInputStream {
                 AggregatingThread thread = inputs.get(name);
                 if (thread.header != null) {
                     activeInputs.add(thread);
-                    for (String headerField : thread.header) {
+                    for (String headerField : thread.header.header) {
                         aggregatedHeaderList.add(name + HEADER_SEPARATOR + headerField);
                     }
                 }
             }
-            aggregatedHeader = aggregatedHeaderList.toArray(new String[aggregatedHeaderList.size()]);
+            String aggregated[] = aggregatedHeaderList.toArray(new String[aggregatedHeaderList.size()]);
+            aggregatedHeader = new Sample.Header(aggregated, HANDLED_SPECIAL_FIELDS);
             notifyNewInput(input);
         }
     }
@@ -141,7 +149,7 @@ public abstract class AbstractMetricAggregator implements MetricInputStream {
         protected boolean running = true;
 
         private Date timestamp = null;
-        private String[] header = null;
+        private Sample.Header header = null;
         private double[] values = null;
 
         AggregatingThread(MetricInputStream input, String name) {

@@ -13,7 +13,7 @@ public abstract class AbstractMetricPrinter implements MetricOutputStream {
 
     private final Marshaller marshaller;
     private OutputStream output = null;
-    private String[] lastHeader;
+    private Sample.Header lastHeader;
 
     public AbstractMetricPrinter(Marshaller marshaller) {
         this.marshaller = marshaller;
@@ -22,8 +22,8 @@ public abstract class AbstractMetricPrinter implements MetricOutputStream {
     protected abstract OutputStream nextOutputStream() throws IOException;
 
     public synchronized void writeSample(Sample sample) throws IOException {
-        String[] header = sample.getHeader();
-        if (header.length == 0) {
+        Sample.Header header = sample.getHeader();
+        if (header.numFields() <= 0) {
             return;
         }
         OutputStream output = this.output; // Avoid race condition
