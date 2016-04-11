@@ -4,7 +4,7 @@ import metrics.BinaryMarshaller;
 import metrics.CsvMarshaller;
 import metrics.Marshaller;
 import metrics.TextMarshaller;
-import metrics.algorithms.NoopAlgorithm;
+import metrics.algorithms.StdDeviationFilterAlgorithm;
 import metrics.io.FileMetricReader;
 import metrics.io.MetricPrinter;
 import metrics.io.TcpMetricsListener;
@@ -77,17 +77,18 @@ public class RunApp {
     }
 
     public static void main(String[] args) throws IOException {
-//        final boolean FILES = true;
-        final boolean FILES = false;
+        final boolean FILES = true;
+//        final boolean FILES = false;
 
         final boolean TCP = !FILES;
         final boolean CONSOLE = true;
 
         AppBuilder builder = TCP ? tcpApp() : filesApp();
 
+//        builder.addAlgorithm(new MetricFilterAlgorithm(0, 1, 2, 3));
 //        builder.addAlgorithm(new MetricCounter());
-        builder.addAlgorithm(new NoopAlgorithm());
-//        builder.addAlgorithm(new VarianceFilterAlgorithm(0.1));
+//        builder.addAlgorithm(new NoopAlgorithm());
+        builder.addAlgorithm(new StdDeviationFilterAlgorithm(0.001));
 
         if (CONSOLE) {
             builder.setOutput(new MetricPrinter(getMarshaller(OUTPUT_MARSHALLER)));

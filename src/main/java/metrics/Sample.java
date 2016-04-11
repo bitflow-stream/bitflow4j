@@ -77,8 +77,6 @@ public class Sample {
     }
 
     public void checkConsistency() throws IOException {
-        if (timestamp == null)
-            throw new IOException("Sample.timestamp is null");
         if (header == null)
             throw new IOException("Sample.header is null");
         if (metrics == null)
@@ -117,7 +115,7 @@ public class Sample {
 
         public Header(String[] fullHeader) {
             int specialFields = 0;
-            for (int i = 0; i < SPECIAL_FIELDS.size(); i++) {
+            for (int i = 0; i < SPECIAL_FIELDS.size() && i < fullHeader.length; i++) {
                 if (fullHeader[i].equals(SPECIAL_FIELDS.get(i))) {
                     specialFields++;
                 } else {
