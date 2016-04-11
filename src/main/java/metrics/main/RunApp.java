@@ -4,6 +4,7 @@ import metrics.BinaryMarshaller;
 import metrics.CsvMarshaller;
 import metrics.Marshaller;
 import metrics.TextMarshaller;
+import metrics.algorithms.CorrelationAlgorithm;
 import metrics.algorithms.StdDeviationFilterAlgorithm;
 import metrics.io.FileMetricReader;
 import metrics.io.MetricPrinter;
@@ -70,12 +71,6 @@ public class RunApp {
         return builder;
     }
 
-    private static AppBuilder tcpApp() throws IOException {
-        AppBuilder builder = new AppBuilder(false);
-        builder.addInputProducer(new TcpMetricsListener(PORT, getMarshaller(INPUT_MARSHALLER)));
-        return builder;
-    }
-
     public static void main(String[] args) throws IOException {
         final boolean FILES = true;
 //        final boolean FILES = false;
@@ -86,9 +81,10 @@ public class RunApp {
         AppBuilder builder = TCP ? tcpApp() : filesApp();
 
 //        builder.addAlgorithm(new MetricFilterAlgorithm(0, 1, 2, 3));
-//        builder.addAlgorithm(new MetricCounter());
 //        builder.addAlgorithm(new NoopAlgorithm());
         builder.addAlgorithm(new StdDeviationFilterAlgorithm(0.001));
+        builder.addAlgorithm(new CorrelationAlgorithm(CorrelationAlgorithm.Kendalls));
+//        builder.addAlgorithm(new MetricCounter());
 
         if (CONSOLE) {
             builder.setOutput(new MetricPrinter(getMarshaller(OUTPUT_MARSHALLER)));
@@ -96,6 +92,12 @@ public class RunApp {
             builder.setOutput(new MetricPrinter(OUT_PATH, getMarshaller(OUTPUT_MARSHALLER)));
         }
         builder.runApp();
+    }
+
+    private static AppBuilder tcpApp() throws IOException {
+        AppBuilder builder = new AppBuilder(false);
+        builder.addInputProducer(new TcpMetricsListener(PORT, getMarshaller(INPUT_MARSHALLER)));
+        return builder;
     }
 
 }
