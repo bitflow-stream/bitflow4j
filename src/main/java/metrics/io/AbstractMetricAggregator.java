@@ -78,11 +78,11 @@ public abstract class AbstractMetricAggregator implements MetricInputStream {
 
             // TODO also handle source and label of incoming metrics somehow.
             double[] metrics = new double[aggregatedHeader.header.length];
-            Date timestamp = null;
+            Date timestamp = new Date();
             int i = 0;
             // Iterate in same order as in updateHeader()
             for (AggregatingThread thread : activeInputs) {
-                if (timestamp == null || timestamp.before(thread.timestamp)) {
+                if (timestamp.before(thread.timestamp)) {
                     timestamp = thread.timestamp;
                 }
                 for (double value : thread.values) {
