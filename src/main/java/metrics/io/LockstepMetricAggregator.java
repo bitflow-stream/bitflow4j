@@ -8,7 +8,7 @@ import java.util.*;
  * In this implementation readSample() will block until ALL inputs deliver new data.
  * Likewise, after delivering data each input is delayed until the data is fetched through readSample().
  */
-public class LockstepMetricAggregator extends AbstractMetricAggregator {
+public class LockstepMetricAggregator extends AbstractParallelAggregator {
 
     // Recursive waits occur without wait-timeouts :(
     private static final long LOCK_TIMEOUT = 100;

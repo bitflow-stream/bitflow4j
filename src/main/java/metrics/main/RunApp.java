@@ -6,9 +6,7 @@ import metrics.Marshaller;
 import metrics.TextMarshaller;
 import metrics.algorithms.CorrelationAlgorithm;
 import metrics.algorithms.StdDeviationFilterAlgorithm;
-import metrics.io.FileMetricReader;
-import metrics.io.MetricPrinter;
-import metrics.io.TcpMetricsListener;
+import metrics.io.*;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -20,7 +18,7 @@ import java.nio.file.Path;
 public class RunApp {
 
     static final String ROOT = "/home/anton/software/monitoring-data/experiments/";
-    static final String EXPERIMENT = ROOT + "global-overload/latest-results/" + "metrics.bono.ims";
+    static final String EXPERIMENT = ROOT + "global-overload/latest-results/"; // "metrics.bono.ims";
     static final String OUT_PATH = "/home/anton/test.out";
 
     static final int PORT = 9999;
@@ -65,8 +63,20 @@ public class RunApp {
         return reader;
     }
 
+    static MetricInputAggregator aggregator() {
+        return new SequentialAggregator();
+//        return new LockstepMetricAggregator();
+//        return new DecoupledMetricAggregator();
+    }
+
+    private static AppBuilder tcpApp() throws IOException {
+        AppBuilder builder = new AppBuilder(aggregator());
+        builder.addInputProducer(new TcpMetricsListener(PORT, getMarshaller(INPUT_MARSHALLER)));
+        return builder;
+    }
+
     private static AppBuilder filesApp() throws IOException {
-        AppBuilder builder = new AppBuilder(true);
+        AppBuilder builder = new AppBuilder(aggregator());
         builder.addInputProducer(readCsvFiles(EXPERIMENT));
         return builder;
     }
@@ -76,7 +86,7 @@ public class RunApp {
 //        final boolean FILES = false;
 
         final boolean TCP = !FILES;
-        final boolean CONSOLE = true;
+        final boolean CONSOLE = false;
 
         AppBuilder builder = TCP ? tcpApp() : filesApp();
 
@@ -92,12 +102,6 @@ public class RunApp {
             builder.setOutput(new MetricPrinter(OUT_PATH, getMarshaller(OUTPUT_MARSHALLER)));
         }
         builder.runApp();
-    }
-
-    private static AppBuilder tcpApp() throws IOException {
-        AppBuilder builder = new AppBuilder(false);
-        builder.addInputProducer(new TcpMetricsListener(PORT, getMarshaller(INPUT_MARSHALLER)));
-        return builder;
     }
 
 }

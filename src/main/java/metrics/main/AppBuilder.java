@@ -16,15 +16,11 @@ public class AppBuilder {
 
     private final List<Algorithm> algorithms = new ArrayList<>();
     private final List<InputStreamProducer> producers = new ArrayList<>();
-    private final AbstractMetricAggregator aggregator;
+    private final MetricInputAggregator aggregator;
     MetricOutputStream output;
 
-    public AppBuilder(boolean lockStep) {
-        if (lockStep) {
-            aggregator = new LockstepMetricAggregator();
-        } else {
-            aggregator = new DecoupledMetricAggregator();
-        }
+    public AppBuilder(MetricInputAggregator aggregator) {
+        this.aggregator = aggregator;
     }
 
     public void addAlgorithm(Algorithm algo) {

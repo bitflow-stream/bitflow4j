@@ -8,7 +8,7 @@ package metrics.io;
  * readSample() will only block until the data changes in any way:
  * an input stream delivers data, a new input stream is added, or an input stream is closed.
  */
-public class DecoupledMetricAggregator extends AbstractMetricAggregator {
+public class DecoupledMetricAggregator extends AbstractParallelAggregator {
 
     private final Object newInputLock = new Object();
     private boolean newInput = false;

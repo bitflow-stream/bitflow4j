@@ -10,14 +10,13 @@ import java.util.*;
  *
  * TODO source and label of incoming Samples are currently discarded.
  */
-public abstract class AbstractMetricAggregator implements MetricInputStream {
+public abstract class AbstractParallelAggregator extends MetricInputAggregator {
 
     private static final int MAX_INPUT_ERRORS = 0;
     private static final String HEADER_SEPARATOR = "/";
 
-    // Access to the following 2 is synchronized on AbstractMetricAggregator.this
+    // Access to this is synchronized on AbstractParallelAggregator.this
     protected final Map<String, AggregatingThread> inputs = new TreeMap<>();
-    private final Set<InputStreamProducer> producers = new HashSet<>();
 
     // Access to the following 3 is synchronized on activeInputs
     // Access to fields in AggregatingThread (header, values, timestamp) is also synchronized on activeInputs
@@ -26,17 +25,15 @@ public abstract class AbstractMetricAggregator implements MetricInputStream {
     private Sample.Header aggregatedHeader;
     private static final int HANDLED_SPECIAL_FIELDS = 1;
 
-    public synchronized void producerStarting(InputStreamProducer producer) {
-        producers.add(producer);
-    }
-
+    @Override
     public synchronized void producerFinished(InputStreamProducer producer) {
-        producers.remove(producer);
+        super.producerFinished(producer);
         if (isClosed()) {
             notifyNewInput(null);
         }
     }
 
+    @Override
     public synchronized void addInput(String name, MetricInputStream input) {
         // Another check like this will be performed inside the thread.
         if (inputs.containsKey(name))
@@ -48,29 +45,15 @@ public abstract class AbstractMetricAggregator implements MetricInputStream {
         return inputs.size();
     }
 
-    public synchronized boolean isClosed() {
-        if (!producers.isEmpty()) return false;
+    @Override
+    public synchronized boolean hasRunningInput() {
         for (AggregatingThread input : inputs.values())
             if (input.running)
                 return false;
         return true;
     }
 
-    private void checkClosed() throws InputStreamClosedException {
-        if (isClosed()) {
-            throw new InputStreamClosedException();
-        }
-    }
-
-    /**
-     * This should only be read from one Thread. Possibly blocks until new input data
-     * is available, depending on the subclass implementation.
-     * The aggregated timestamp will be the one of the latest received sample.
-     */
-    public Sample readSample() throws IOException {
-        checkClosed();
-        waitForNewInput();
-        checkClosed();
+    public Sample doReadSample() throws IOException {
         synchronized (activeInputs) {
             if (aggregatedHeader == null)
                 // TODO this should not happen
@@ -128,12 +111,7 @@ public abstract class AbstractMetricAggregator implements MetricInputStream {
 
     private synchronized void inputFinished(AggregatingThread thread, Throwable exception) {
         removeInput(thread);
-        if (exception != null) {
-            System.err.println("Input closed: " + thread.name + ", error: " + exception.getMessage());
-            exception.printStackTrace();
-        } else {
-            System.err.println("Input closed: " + thread.name);
-        }
+        super.inputFinished(thread.name, exception);
     }
 
     protected void removeInput(AggregatingThread thread) {
