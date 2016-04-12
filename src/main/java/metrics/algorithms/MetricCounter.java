@@ -21,8 +21,9 @@ public class MetricCounter extends GenericAlgorithm {
     private long totalMetrics = 0;
     private long headers = 0;
 
-    public MetricCounter() {
-        super("metric counter");
+    @Override
+    public String toString() {
+        return "metric statistics counter";
     }
 
     @Override

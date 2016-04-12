@@ -5,8 +5,9 @@ package metrics.algorithms;
  */
 public class NoopAlgorithm extends GenericAlgorithm {
 
-    public NoopAlgorithm() {
-        super("no-op algorithm");
+    @Override
+    public String toString() {
+        return "no-op algorithm";
     }
 
 }

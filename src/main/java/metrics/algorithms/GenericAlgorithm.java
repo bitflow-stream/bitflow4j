@@ -24,22 +24,9 @@ import java.io.IOException;
  * When using GenericAlgorithm directly, all samples from {@link MetricInputStream} are directly forwarded
  * to {@link MetricOutputStream}.
  */
-public class GenericAlgorithm implements Algorithm {
+public abstract class GenericAlgorithm implements Algorithm {
 
-    private final String name;
-
-    /** With this constructor, toString() should be overridden */
-    public GenericAlgorithm() {
-        name = "unknown algorithm";
-    }
-
-    public GenericAlgorithm(String name) {
-        this.name = name;
-    }
-
-    public String toString() {
-        return name;
-    }
+    public abstract String toString();
 
     public final void start(MetricInputStream input, MetricOutputStream output) {
         Runner thread = new Runner(input, output);
