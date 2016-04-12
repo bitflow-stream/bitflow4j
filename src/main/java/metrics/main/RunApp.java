@@ -19,7 +19,7 @@ public class RunApp {
     private static final String CSV_FOLDER = "/home/anton/software/monitoring-data/experiments/";
 
     private static final String RESULTS = "latest-results";
-    private static final String HOST = "bono.ims";
+    private static final String HOST = "wally131";
 
     private static final String OUT_PATH = "/home/anton/test.out";
 
@@ -92,7 +92,7 @@ public class RunApp {
 //        builder.addAlgorithm(new MetricFilterAlgorithm(0, 1, 2, 3));
 //        builder.addAlgorithm(new NoopAlgorithm());
         builder.addAlgorithm(new StdDeviationFilterAlgorithm(0.02, true));
-        builder.addAlgorithm(new CorrelationAlgorithm(true));
+        builder.addAlgorithm(new CorrelationAlgorithm(false));
         builder.addAlgorithm(new CorrelationSignificanceAlgorithm(0.7));
 //        builder.addAlgorithm(new MetricCounter());
 
