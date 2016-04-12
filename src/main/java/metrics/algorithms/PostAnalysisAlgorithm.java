@@ -103,12 +103,15 @@ public abstract class PostAnalysisAlgorithm<M extends PostAnalysisAlgorithm.Metr
         }
 
         double defaultValue() {
-            // This can be changed to use a different filler-value when no real value is present
+            // This is used when accessing individual values to remove occurrences if NaN.
+            // Only relevant, if fillValue() returns NaN.
             // TODO maybe use average?
             return Double.NaN;
         }
 
         double fillValue() {
+            // This will be used whenever filling up the log with unknown values
+            // and whenever a known NaN-values is to be added.
             return Double.NaN;
         }
 
@@ -136,6 +139,9 @@ public abstract class PostAnalysisAlgorithm<M extends PostAnalysisAlgorithm.Metr
         }
 
         void add(double val) {
+            if (Double.isNaN(val)) {
+                val = fillValue();
+            }
             list.add(val);
             vector = null;
         }

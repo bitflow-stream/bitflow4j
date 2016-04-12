@@ -7,6 +7,7 @@ import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.commons.math3.stat.correlation.SpearmansCorrelation;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Date;
 
 /**
@@ -59,12 +60,16 @@ public class CorrelationAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgor
     @Override
     protected void writeResults(MetricOutputStream output) throws IOException {
         Date timestamp = new Date();
-        System.err.println(getName() + " processing " + samples.size() + " samples of " + metrics.size() + " metrics...");
         String[] headerFields = new String[correlations.length];
         for (int i = 0; i < correlations.length; i++) {
             headerFields[i] = correlations[i].getName();
         }
-        Sample.Header header = new Sample.Header(headerFields, 2);
+        System.err.println(getName() + " computing " + Arrays.toString(headerFields) +
+                " correlation(s) for " + samples.size()
+                + " samples of " + metrics.size() + " metrics...");
+
+        // Include the source field in the header, which will indicate the metric-combination for the correlation(S)
+        Sample.Header header = new Sample.Header(headerFields, Sample.Header.HEADER_SOURCE_IDX + 1);
 
         // Iterate every combination of metrics once
         for (String metric1 : metrics.keySet()) {

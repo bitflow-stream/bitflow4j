@@ -1,8 +1,14 @@
 package metrics.main;
 
+import metrics.BinaryMarshaller;
+import metrics.CsvMarshaller;
+import metrics.Marshaller;
+import metrics.TextMarshaller;
 import metrics.algorithms.Algorithm;
 import metrics.io.*;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,8 +25,31 @@ public class AppBuilder {
     private final MetricInputAggregator aggregator;
     MetricOutputStream output;
 
+    public static Marshaller getMarshaller(String format) {
+        switch(format) {
+            case "CSV":
+                return new CsvMarshaller();
+            case "BIN":
+                return new BinaryMarshaller();
+            case "TXT":
+                return new TextMarshaller();
+            default:
+                throw new IllegalStateException("Unknown marshaller format: " + format);
+        }
+    }
+
     public AppBuilder(MetricInputAggregator aggregator) {
         this.aggregator = aggregator;
+    }
+
+    public AppBuilder(int port, String inputMarshaller) throws IOException {
+        this(new DecoupledMetricAggregator());
+        addInputProducer(new TcpMetricsListener(port, getMarshaller(inputMarshaller)));
+    }
+
+    public AppBuilder(FileMetricReader fileInput) {
+        this(new SequentialAggregator());
+        addInputProducer(fileInput);
     }
 
     public void addAlgorithm(Algorithm algo) {
@@ -37,6 +66,14 @@ public class AppBuilder {
 
     public void setOutput(MetricOutputStream output) {
         this.output = output;
+    }
+
+    public void setConsoleOutput(String outputMarshaller) {
+        setOutput(new MetricPrinter(getMarshaller(outputMarshaller)));
+    }
+
+    public void setFileOutput(String path, String outputMarshaller) throws FileNotFoundException {
+        setOutput(new MetricPrinter(path, getMarshaller(outputMarshaller)));
     }
 
     public void runApp() {

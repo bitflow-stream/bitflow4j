@@ -1,13 +1,11 @@
 package metrics.main;
 
-import metrics.BinaryMarshaller;
 import metrics.CsvMarshaller;
-import metrics.Marshaller;
-import metrics.TextMarshaller;
 import metrics.algorithms.CorrelationAlgorithm;
 import metrics.algorithms.StdDeviationFilterAlgorithm;
-import metrics.io.*;
+import metrics.io.FileMetricReader;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -17,89 +15,88 @@ import java.nio.file.Path;
  */
 public class RunApp {
 
-    static final String ROOT = "/home/anton/software/monitoring-data/experiments/";
-    static final String EXPERIMENT = ROOT + "global-overload/latest-results/"; // "metrics.bono.ims";
-    static final String OUT_PATH = "/home/anton/test.out";
+    private static final String CSV_FOLDER = "/home/anton/software/monitoring-data/experiments/";
 
-    static final int PORT = 9999;
+    private static final String RESULTS = "latest-results";
+    private static final String HOST = "bono.ims";
+
+    private static final String OUT_PATH = "/home/anton/test.out";
+
+    private static final int PORT = 9999;
 //    static final String INPUT_MARSHALLER = "CSV";
-    static final String INPUT_MARSHALLER = "BIN";
+    private static final String INPUT_MARSHALLER = "BIN";
 
-    static final String OUTPUT_MARSHALLER = "CSV";
-//    static final String OUTPUT_MARSHALLER = "TXT";
+    private static final String OUTPUT_MARSHALLER = "CSV";
+    //    static final String OUTPUT_MARSHALLER = "TXT";
 
-    private static Marshaller getMarshaller(String format) {
-        switch(format) {
-            case "CSV":
-                return new CsvMarshaller();
-            case "BIN":
-                return new BinaryMarshaller();
-            case "TXT":
-                return new TextMarshaller();
-            default:
-                throw new IllegalStateException("Unknown marshaller format: " + format);
-        }
-    }
+    private static final boolean PRINT_FILES = false;
 
-    private static FileMetricReader readCsvFiles(String path) throws IOException {
-        FileMetricReader.NameConverter conv = file -> {
-            Path path1 = file.toPath();
-            int num = path1.getNameCount();
-            String host = path1.subpath(num - 2, num - 1).toString();
-            String scenario = path1.subpath(num - 4, num - 3).toString();
-            return scenario + "/" + host;
-        };
-        FileMetricReader reader = new FileMetricReader(new CsvMarshaller(), conv);
-        reader.addFiles(path,
+    private static void addAllHostData(FileMetricReader reader, String results, String host) throws IOException {
+        reader.addFiles(CSV_FOLDER,
             (p, attr) -> {
+                String name = p.getFileName().toString();
                 if (attr.isDirectory()) {
-                    return !p.getFileName().toString().equals("analysis"); // Skip analysis dirs
+                    if (name.startsWith("metrics."))
+                        return name.equals("metrics." + host);
+                    if (name.contains("results"))
+                        return name.equals(results);
+                    return !name.equals("analysis");
                 } else if (attr.isRegularFile()) {
-                    return p.getFileName().toString().endsWith("csv");
+                    return name.endsWith("csv");
                 }
                 return false;
             });
+    }
+
+    private static FileMetricReader.NameConverter scenarioAndHostName() {
+        return file -> {
+            Path path = file.toPath();
+            int num = path.getNameCount();
+            String host = path.subpath(num - 2, num - 1).toString();
+            String scenario = path.subpath(num - 4, num - 3).toString();
+            return scenario + "/" + host;
+        };
+    }
+
+    private static FileMetricReader.NameConverter scenarioName() {
+        return file -> {
+            Path path = file.toPath();
+            int num = path.getNameCount();
+            String scenario = path.subpath(num - 4, num - 3).toString();
+            return scenario;
+        };
+    }
+
+    private static FileMetricReader readCsvFiles() throws IOException {
+        FileMetricReader.NameConverter conv = scenarioName();
+        FileMetricReader reader = new FileMetricReader(new CsvMarshaller(), conv);
+        addAllHostData(reader, RESULTS, HOST);
         System.err.println("Reading " + reader.size() + " files");
+        if (PRINT_FILES)
+            for (File f : reader.getFiles()) {
+                System.err.println(f.toString());
+            }
         return reader;
     }
 
-    static MetricInputAggregator aggregator() {
-        return new SequentialAggregator();
-//        return new LockstepMetricAggregator();
-//        return new DecoupledMetricAggregator();
-    }
-
-    private static AppBuilder tcpApp() throws IOException {
-        AppBuilder builder = new AppBuilder(aggregator());
-        builder.addInputProducer(new TcpMetricsListener(PORT, getMarshaller(INPUT_MARSHALLER)));
-        return builder;
-    }
-
-    private static AppBuilder filesApp() throws IOException {
-        AppBuilder builder = new AppBuilder(aggregator());
-        builder.addInputProducer(readCsvFiles(EXPERIMENT));
-        return builder;
-    }
-
     public static void main(String[] args) throws IOException {
-        final boolean FILES = true;
-//        final boolean FILES = false;
+        final boolean TCP = false;
+        final boolean CONSOLE = true;
 
-        final boolean TCP = !FILES;
-        final boolean CONSOLE = false;
-
-        AppBuilder builder = TCP ? tcpApp() : filesApp();
+        AppBuilder builder = TCP
+                ? new AppBuilder(PORT, INPUT_MARSHALLER)
+                : new AppBuilder(readCsvFiles());
 
 //        builder.addAlgorithm(new MetricFilterAlgorithm(0, 1, 2, 3));
 //        builder.addAlgorithm(new NoopAlgorithm());
         builder.addAlgorithm(new StdDeviationFilterAlgorithm(0.001));
-        builder.addAlgorithm(new CorrelationAlgorithm(CorrelationAlgorithm.Kendalls));
+        builder.addAlgorithm(new CorrelationAlgorithm());
 //        builder.addAlgorithm(new MetricCounter());
 
         if (CONSOLE) {
-            builder.setOutput(new MetricPrinter(getMarshaller(OUTPUT_MARSHALLER)));
+            builder.setConsoleOutput(OUTPUT_MARSHALLER);
         } else {
-            builder.setOutput(new MetricPrinter(OUT_PATH, getMarshaller(OUTPUT_MARSHALLER)));
+            builder.setFileOutput(OUT_PATH, OUTPUT_MARSHALLER);
         }
         builder.runApp();
     }

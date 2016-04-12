@@ -10,10 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
 
@@ -39,14 +36,11 @@ public class FileMetricReader implements InputStreamProducer {
     public static final NameConverter FILE_PATH = (File file) -> file.getPath();
     public static final NameConverter FILE_NAME = (File file) -> file.getName();
 
-    private List<MetricInputStream> inputs = new ArrayList<>();
-    private List<File> files = new ArrayList<>();
+    private final List<MetricInputStream> inputs = new ArrayList<>();
+    private final List<File> files = new ArrayList<>();
 
     private final Marshaller marshaller;
     private final NameConverter converter;
-
-    // Must be set before calling metrics.main()
-    public boolean parallelRead = false;
 
     public FileMetricReader(Marshaller marshaller, NameConverter converter) {
         this.marshaller = marshaller;
@@ -101,6 +95,10 @@ public class FileMetricReader implements InputStreamProducer {
         FileInputStream fileInput = new FileInputStream(file);
         MetricInputStream input = new MetricReader(fileInput, marshaller);
         inputs.add(input);
+    }
+
+    public List<File> getFiles() {
+        return Collections.unmodifiableList(files);
     }
 
     // Must be called after all add* invocations.
