@@ -27,7 +27,8 @@ public class CsvMarshaller extends AbstractMarshaller {
         return new Sample.Header(fields);
     }
 
-    public Sample unmarshallSample(InputStream input, Sample.Header header) throws IOException {
+    public Sample unmarshallSample(InputStream input, Sample.Header header,
+                                   Sample.Header sampleHeader) throws IOException {
         String[] metricStrings = readLine(input).split(separator);
         Date timestamp = null;
         String source = null;
@@ -65,7 +66,7 @@ public class CsvMarshaller extends AbstractMarshaller {
             }
         }
 
-        return new Sample(header, metricValues, timestamp, source, label);
+        return new Sample(sampleHeader, metricValues, timestamp, source, label);
     }
 
     private void printString(OutputStream output, String string, boolean separate) throws IOException {

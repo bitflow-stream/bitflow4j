@@ -13,17 +13,32 @@ public class MetricReader implements MetricInputStream {
 
     private final Marshaller marshaller;
     private final InputStream input;
+    private final String sourceName;
+    private Sample.Header unmarshallingHeader;
     private Sample.Header header;
 
-    public MetricReader(InputStream input, Marshaller marshaller) throws IOException {
+    public MetricReader(InputStream input, String sourceName, Marshaller marshaller) throws IOException {
         this.marshaller = marshaller;
         this.input = input;
-        header = marshaller.unmarshallHeader(input);
+        unmarshallingHeader = marshaller.unmarshallHeader(input);
+        if (unmarshallingHeader.hasSource()) {
+            System.err.println("Warning: Received header with source-field, ignoring configured" +
+                    " source field: " + sourceName);
+            this.sourceName = null;
+            header = unmarshallingHeader;
+        } else {
+            this.sourceName = sourceName;
+            header = new Sample.Header(unmarshallingHeader.header, Sample.Header.HEADER_SOURCE_IDX + 1);
+        }
     }
 
     public Sample readSample() throws IOException {
         try {
-            return marshaller.unmarshallSample(input, header);
+            Sample sample = marshaller.unmarshallSample(input, unmarshallingHeader, header);
+            if (sourceName != null) {
+                sample.setSource(sourceName);
+            }
+            return sample;
         } catch (InputStreamClosedException exc) {
             try {
                 input.close();

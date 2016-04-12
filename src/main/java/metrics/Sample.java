@@ -17,8 +17,8 @@ public class Sample {
     private final Date timestamp;
     private final Header header;
     private final double[] metrics;
-    private final String source;
-    private final String label;
+    private String source;
+    private String label;
 
     public Sample(Header header, double[] metrics, Date timestamp, String source, String label) {
         this.header = header;
@@ -76,6 +76,14 @@ public class Sample {
         return header.hasChanged(oldHeader);
     }
 
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
+    }
+
     public void checkConsistency() throws IOException {
         if (header == null)
             throw new IOException("Sample.header is null");
@@ -111,7 +119,7 @@ public class Sample {
         }
 
         public final String[] header;
-        public final int specialFields;
+        public int specialFields;
 
         public Header(String[] fullHeader) {
             int specialFields = 0;
@@ -141,6 +149,12 @@ public class Sample {
         public Header(String[] header, int numSpecialFields) {
             this.specialFields = numSpecialFields;
             this.header = header;
+        }
+
+        public void ensureSpecialField(int fieldIndex) {
+            if (specialFields < fieldIndex + 1) {
+                specialFields = fieldIndex + 1;
+            }
         }
 
         public String[] getSpecialFields() {

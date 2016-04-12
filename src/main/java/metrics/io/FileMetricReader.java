@@ -93,7 +93,8 @@ public class FileMetricReader implements InputStreamProducer {
     public void addFile(File file) throws IOException {
         files.add(file);
         FileInputStream fileInput = new FileInputStream(file);
-        MetricInputStream input = new MetricReader(fileInput, marshaller);
+        String source = converter.convert(file);
+        MetricInputStream input = new MetricReader(fileInput, source, marshaller);
         inputs.add(input);
     }
 

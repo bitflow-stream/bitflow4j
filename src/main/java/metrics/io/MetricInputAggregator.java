@@ -13,6 +13,13 @@ public abstract class MetricInputAggregator implements MetricInputStream {
 
     protected final Set<InputStreamProducer> producers = new HashSet<>();
 
+    protected String unifiedSource = null;
+
+    // Will set Sample.source on every outgoing Sample to unifiedSource.
+    public void setUnifiedSampleSource(String unifiedSource) {
+        this.unifiedSource = unifiedSource;
+    }
+
     public synchronized void producerStarting(InputStreamProducer producer) {
         producers.add(producer);
     }

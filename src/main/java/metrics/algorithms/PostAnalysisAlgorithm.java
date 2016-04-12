@@ -22,14 +22,6 @@ public abstract class PostAnalysisAlgorithm<M extends PostAnalysisAlgorithm.Metr
     protected final List<SampleMetadata> samples = new ArrayList<>();
     protected final SortedMap<String, M> metrics = new TreeMap<>();
 
-    public PostAnalysisAlgorithm() {
-        super();
-    }
-
-    public PostAnalysisAlgorithm(String name) {
-        super(name);
-    }
-
     protected void executeStep(MetricInputStream input, MetricOutputStream output) throws IOException {
         try {
             Sample sample = input.readSample();

@@ -1,8 +1,7 @@
 package metrics.main;
 
 import metrics.CsvMarshaller;
-import metrics.algorithms.CorrelationAlgorithm;
-import metrics.algorithms.StdDeviationFilterAlgorithm;
+import metrics.algorithms.NoopAlgorithm;
 import metrics.io.FileMetricReader;
 
 import java.io.File;
@@ -80,17 +79,18 @@ public class RunApp {
     }
 
     public static void main(String[] args) throws IOException {
-        final boolean TCP = false;
+        final boolean TCP = true;
         final boolean CONSOLE = true;
 
         AppBuilder builder = TCP
                 ? new AppBuilder(PORT, INPUT_MARSHALLER)
                 : new AppBuilder(readCsvFiles());
+//        builder.setUnifiedSource(HOST);
 
 //        builder.addAlgorithm(new MetricFilterAlgorithm(0, 1, 2, 3));
-//        builder.addAlgorithm(new NoopAlgorithm());
-        builder.addAlgorithm(new StdDeviationFilterAlgorithm(0.02));
-        builder.addAlgorithm(new CorrelationAlgorithm());
+        builder.addAlgorithm(new NoopAlgorithm());
+//        builder.addAlgorithm(new StdDeviationFilterAlgorithm(0.02));
+//        builder.addAlgorithm(new CorrelationAlgorithm());
 //        builder.addAlgorithm(new MetricCounter());
 
         if (CONSOLE) {

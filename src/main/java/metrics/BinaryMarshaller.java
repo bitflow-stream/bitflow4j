@@ -24,27 +24,28 @@ public class BinaryMarshaller extends AbstractMarshaller {
         return new Sample.Header(header);
     }
 
-    public Sample unmarshallSample(InputStream input, Sample.Header header) throws IOException {
+    public Sample unmarshallSample(InputStream input, Sample.Header unmarshallingHeader,
+                                   Sample.Header sampleHeader) throws IOException {
         DataInputStream data = new DataInputStream(input);
         Date timestamp = null;
         String source = null;
         String label = null;
         try {
-            if (header.hasTimestamp()) {
+            if (unmarshallingHeader.hasTimestamp()) {
                 timestamp = new Date(data.readLong() / 1000000);
             }
-            if (header.hasSource()) {
+            if (unmarshallingHeader.hasSource()) {
                 source = readLine(input);
             }
-            if (header.hasLabel()) {
+            if (unmarshallingHeader.hasLabel()) {
                 label = readLine(input);
             }
 
-            double[] metrics = new double[header.header.length];
+            double[] metrics = new double[unmarshallingHeader.header.length];
             for (int i = 0; i < metrics.length; i++) {
                 metrics[i] = data.readDouble();
             }
-            return new Sample(header, metrics, timestamp, source, label);
+            return new Sample(sampleHeader, metrics, timestamp, source, label);
         } catch (EOFException exc) {
             throw new InputStreamClosedException(exc);
         }

@@ -15,7 +15,8 @@ import java.io.OutputStream;
 public interface Marshaller {
 
     Sample.Header unmarshallHeader(InputStream input) throws IOException;
-    Sample unmarshallSample(InputStream input, Sample.Header header) throws IOException;
+    Sample unmarshallSample(InputStream input, Sample.Header unmarshallingHeader,
+                            Sample.Header sampleHeader) throws IOException;
 
     void marshallHeader(OutputStream output, Sample.Header header) throws IOException;
     void marshallSample(OutputStream output, Sample sample) throws IOException;

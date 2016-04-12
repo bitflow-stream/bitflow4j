@@ -61,7 +61,7 @@ public class TcpMetricsListener implements InputStreamProducer {
 
     private String acceptConnection(Socket socket) throws IOException {
         String remote = socket.getRemoteSocketAddress().toString(); // TODO try reverse DNS? More descriptive name?
-        MetricReader input = new MetricReader(socket.getInputStream(), marshaller);
+        MetricReader input = new MetricReader(socket.getInputStream(), remote, marshaller);
         aggregator.addInput(remote, input);
         return remote;
     }

@@ -52,6 +52,10 @@ public class AppBuilder {
         addInputProducer(fileInput);
     }
 
+    public void setUnifiedSource(String source) {
+        aggregator.setUnifiedSampleSource(source);
+    }
+
     public void addAlgorithm(Algorithm algo) {
         algorithms.add(algo);
     }

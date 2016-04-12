@@ -47,11 +47,15 @@ public class SequentialAggregator extends MetricInputAggregator {
         if (currentInput == null)
             currentInput = nextInputStream();
         try {
-            return currentInput.input.readSample();
+            Sample sample = currentInput.input.readSample();
+            if (unifiedSource != null) {
+                sample.setSource(unifiedSource);
+            }
+            return sample;
         } catch (InputStreamClosedException exc) {
             inputFinished(currentInput.name, null);
             currentInput = null;
-            return readSample();
+            return doReadSample();
         }
     }
 

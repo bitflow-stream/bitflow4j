@@ -20,7 +20,8 @@ public class TextMarshaller extends AbstractMarshaller implements Marshaller {
         throw new UnsupportedOperationException("TextMarshaller does not support unmarshalling");
     }
 
-    public Sample unmarshallSample(InputStream input, Sample.Header header) throws IOException {
+    public Sample unmarshallSample(InputStream input, Sample.Header unmarshallingHeader,
+                                   Sample.Header sampleHeader) throws IOException {
         throw new UnsupportedOperationException("TextMarshaller does not support unmarshalling");
     }
 
