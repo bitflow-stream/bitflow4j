@@ -16,8 +16,13 @@ public class StdDeviationFilterAlgorithm extends PostAnalysisAlgorithm<PostAnaly
     private final double minNormalizedDeviation;
 
     public StdDeviationFilterAlgorithm(double minNormalizedDeviation) {
-        super("stdDeviation-filter algorithm");
+        super();
         this.minNormalizedDeviation = minNormalizedDeviation;
+    }
+
+    @Override
+    public String toString() {
+        return "stdDeviation-filter [" + minNormalizedDeviation + "]";
     }
 
     @Override
@@ -41,7 +46,7 @@ public class StdDeviationFilterAlgorithm extends PostAnalysisAlgorithm<PostAnaly
             }
         }
         if (validStats.isEmpty()) {
-            System.err.println(getName() + " produced no output");
+            System.err.println(toString() + " produced no output");
             return;
         }
         avgDeviation /= validStats.size();

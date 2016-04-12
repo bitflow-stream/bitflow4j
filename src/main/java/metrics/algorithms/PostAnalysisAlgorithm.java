@@ -35,11 +35,12 @@ public abstract class PostAnalysisAlgorithm<M extends PostAnalysisAlgorithm.Metr
             Sample sample = input.readSample();
             analyseSample(sample);
         } catch(InputStreamClosedException closedExc) {
-            System.err.println("Starting analysis phase of " + getName());
+            System.err.println(toString() + " computing " + samples.size()
+                    + " samples of " + metrics.size() + " metrics...");
             try {
                 writeResults(output);
             } catch (Exception resultExc) {
-                System.err.println("Error writing results of " + getName());
+                System.err.println("Error writing results of " + toString());
                 resultExc.printStackTrace();
             }
             throw closedExc;

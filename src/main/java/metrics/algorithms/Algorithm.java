@@ -9,7 +9,7 @@ import metrics.io.MetricOutputStream;
  */
 public interface Algorithm {
 
-    String getName();
+    String toString();
 
     /**
      * Start a separate Thread and read from input until it throws InputStreamClosedException

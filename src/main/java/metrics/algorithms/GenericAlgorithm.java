@@ -28,7 +28,7 @@ public class GenericAlgorithm implements Algorithm {
 
     private final String name;
 
-    /** With this constructor, getName() should be overridden */
+    /** With this constructor, toString() should be overridden */
     public GenericAlgorithm() {
         name = "unknown algorithm";
     }
@@ -37,14 +37,14 @@ public class GenericAlgorithm implements Algorithm {
         this.name = name;
     }
 
-    public String getName() {
+    public String toString() {
         return name;
     }
 
     public final void start(MetricInputStream input, MetricOutputStream output) {
         Runner thread = new Runner(input, output);
         thread.setDaemon(false);
-        thread.setName("Algorithm Thread '" + getName() + "'");
+        thread.setName("Algorithm Thread '" + toString() + "'");
         thread.start();
     }
 
@@ -55,7 +55,7 @@ public class GenericAlgorithm implements Algorithm {
             } catch (InputStreamClosedException exc) {
                 throw exc;
             } catch (IOException exc) {
-                System.err.println("IO Error executing algorithm " + getName());
+                System.err.println("IO Error executing " + toString());
                 exc.printStackTrace();
             }
         }
@@ -82,7 +82,7 @@ public class GenericAlgorithm implements Algorithm {
         }
 
         public void run() {
-            String name = GenericAlgorithm.this.getName();
+            String name = GenericAlgorithm.this.toString();
             try {
                 execute(input, output);
             } catch (InputStreamClosedException exc) {

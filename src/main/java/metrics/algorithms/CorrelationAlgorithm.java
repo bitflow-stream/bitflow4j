@@ -17,14 +17,14 @@ public class CorrelationAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgor
 
     public interface Correlation {
         double correlation(double[] x, double y[]);
-        String getName();
+        String toString();
     }
 
     public static final Correlation Pearson = new Correlation() {
         public double correlation(double[] x, double[] y) {
             return new PearsonsCorrelation().correlation(x, y);
         }
-        public String getName() {
+        public String toString() {
             return "pearson";
         }
     };
@@ -32,7 +32,7 @@ public class CorrelationAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgor
         public double correlation(double[] x, double[] y) {
             return new SpearmansCorrelation().correlation(x, y);
         }
-        public String getName() {
+        public String toString() {
             return "spearmans";
         }
     };
@@ -40,7 +40,7 @@ public class CorrelationAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgor
         public double correlation(double[] x, double[] y) {
             return new KendallsCorrelation().correlation(x, y);
         }
-        public String getName() {
+        public String toString() {
             return "kendalls";
         }
     };
@@ -49,27 +49,32 @@ public class CorrelationAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgor
     private static final String sourceSeparator = " <-> ";
 
     public CorrelationAlgorithm(Correlation ...correlations) {
-        super("correlation algorithm");
+        super();
         this.correlations = correlations;
+    }
+
+    public String toString() {
+        return "correlation algorithm " + Arrays.toString(correlations);
     }
 
     public CorrelationAlgorithm() {
         this(Pearson, Spearmans, Kendalls);
     }
 
+    private Sample.Header makeHeader() {
+        String[] headerFields = new String[correlations.length];
+        for (int i = 0; i < correlations.length; i++) {
+            headerFields[i] = correlations[i].toString();
+        }
+
+        // Include the source field in the header, which will indicate the metric-combination for the correlation(S)
+        return new Sample.Header(headerFields, Sample.Header.HEADER_SOURCE_IDX + 1);
+    }
+
     @Override
     protected void writeResults(MetricOutputStream output) throws IOException {
         Date timestamp = new Date();
-        String[] headerFields = new String[correlations.length];
-        for (int i = 0; i < correlations.length; i++) {
-            headerFields[i] = correlations[i].getName();
-        }
-        System.err.println(getName() + " computing " + Arrays.toString(headerFields) +
-                " correlation(s) for " + samples.size()
-                + " samples of " + metrics.size() + " metrics...");
-
-        // Include the source field in the header, which will indicate the metric-combination for the correlation(S)
-        Sample.Header header = new Sample.Header(headerFields, Sample.Header.HEADER_SOURCE_IDX + 1);
+        Sample.Header header = makeHeader();
 
         // Iterate every combination of metrics once
         for (String metric1 : metrics.keySet()) {

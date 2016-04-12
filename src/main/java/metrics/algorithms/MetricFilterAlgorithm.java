@@ -18,10 +18,15 @@ public class MetricFilterAlgorithm extends GenericAlgorithm {
 
     // col should be sorted
     public MetricFilterAlgorithm(int ...col) {
-        super("simple metric filter");
+        super();
         for (int i : col)
             this.columns.add(i);
         this.maxCol = col.length == 0 ? 0 : col[col.length - 1];
+    }
+
+    @Override
+    public String toString() {
+        return "metric filter " + columns.toString();
     }
 
     protected Sample executeSample(Sample sample) throws IOException {

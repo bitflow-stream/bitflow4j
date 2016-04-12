@@ -89,7 +89,7 @@ public class RunApp {
 
 //        builder.addAlgorithm(new MetricFilterAlgorithm(0, 1, 2, 3));
 //        builder.addAlgorithm(new NoopAlgorithm());
-        builder.addAlgorithm(new StdDeviationFilterAlgorithm(0.001));
+        builder.addAlgorithm(new StdDeviationFilterAlgorithm(0.02));
         builder.addAlgorithm(new CorrelationAlgorithm());
 //        builder.addAlgorithm(new MetricCounter());
 
