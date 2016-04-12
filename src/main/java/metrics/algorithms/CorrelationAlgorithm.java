@@ -48,17 +48,17 @@ public class CorrelationAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgor
     private final Correlation[] correlations;
     private static final String sourceSeparator = " <-> ";
 
-    public CorrelationAlgorithm(Correlation ...correlations) {
-        super();
+    public CorrelationAlgorithm(boolean globalAnalysis, Correlation ...correlations) {
+        super(globalAnalysis);
         this.correlations = correlations;
+    }
+
+    public CorrelationAlgorithm(boolean globalAnalysis) {
+        this(globalAnalysis, Pearson, Spearmans, Kendalls);
     }
 
     public String toString() {
         return "correlation algorithm " + Arrays.toString(correlations);
-    }
-
-    public CorrelationAlgorithm() {
-        this(Pearson, Spearmans, Kendalls);
     }
 
     private Sample.Header makeHeader() {
@@ -68,7 +68,7 @@ public class CorrelationAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgor
         }
 
         // Include the source field in the header, which will indicate the metric-combination for the correlation(S)
-        return new Sample.Header(headerFields, Sample.Header.HEADER_SOURCE_IDX + 1);
+        return new Sample.Header(headerFields, Sample.Header.HEADER_LABEL_IDX + 1);
     }
 
     @Override
@@ -86,7 +86,7 @@ public class CorrelationAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgor
                     for (int i = 0; i < corr.length; i++) {
                         corr[i] = correlations[i].correlation(vector1, vector2);
                     }
-                    Sample sample = new Sample(header, corr, timestamp, metric1 + sourceSeparator + metric2);
+                    Sample sample = new Sample(header, corr, timestamp, currentSource, metric1 + sourceSeparator + metric2);
                     output.writeSample(sample);
                 }
             }

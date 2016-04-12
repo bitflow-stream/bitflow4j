@@ -15,8 +15,8 @@ public class StdDeviationFilterAlgorithm extends PostAnalysisAlgorithm<PostAnaly
 
     private final double minNormalizedDeviation;
 
-    public StdDeviationFilterAlgorithm(double minNormalizedDeviation) {
-        super();
+    public StdDeviationFilterAlgorithm(double minNormalizedDeviation, boolean globalAnalysis) {
+        super(globalAnalysis);
         this.minNormalizedDeviation = minNormalizedDeviation;
     }
 
