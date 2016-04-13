@@ -6,6 +6,7 @@ import metrics.Sample;
 import metrics.io.MetricOutputStream;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * Created by anton on 4/13/16.
@@ -13,19 +14,28 @@ import java.io.IOException;
  * Perform a PCA training on the entire dataset, then apply the resulting
  * model to the entire dataset and output the results;
  */
-public class PCAAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgorithm.MetricLog> {
+public class PCAAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgorithm.NoNanMetricLog> {
 
-    public PCAAlgorithm() {
+    private final int trainingSamples;
+
+    // If trainingSamples is > 0, only the beginning of the input is used for training the PCA model.
+    // Afterwards, the entire data set is transformed.
+    public PCAAlgorithm(int trainingSamples) {
         super(true);
+        this.trainingSamples = trainingSamples;
     }
 
     @Override
     protected void writeResults(MetricOutputStream output) throws IOException {
-        double[][] matrixValues = getSampleMatrix();
-        Matrix matrix = new Matrix(matrixValues);
-        PCA pca = new PCA(matrix);
+        double[][] dataset = getSampleMatrix();
+        int trainingSize = trainingSamples > 0 ? trainingSamples : dataset.length;
+        if (trainingSize > dataset.length) trainingSize = dataset.length;
+        double[][] trainingSet = Arrays.copyOf(dataset, trainingSize);
+        PCA pca = new PCA(new Matrix(trainingSet));
+
         System.err.println("PCA model computed, now transforming input data...");
-        Matrix transformed = pca.transform(matrix, PCA.TransformationType.WHITENING);
+        Matrix transformMatrix = new Matrix(dataset);
+        Matrix transformed = pca.transform(transformMatrix, PCA.TransformationType.WHITENING);
         outputValues(transformed.getArray(), output);
     }
 
@@ -49,14 +59,13 @@ public class PCAAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgorithm.Met
             Sample sample = new Sample(header, values[i], meta.timestamp, meta.source, meta.label);
             output.writeSample(sample);
         }
+        if (values.length != samples.size()) {
+            System.err.println("Warning: output " + values.length + " samples, but input contained " + samples.size() + " samples");
+        }
     }
 
     private double[][] getSampleMatrix() {
         int rows = samples.size();
-
-        // TODO
-        rows = 10;
-
         double matrix[][] = new double[rows][];
         for (int sampleNr = 0; sampleNr < rows; sampleNr++) {
             matrix[sampleNr] = getSampleValues(sampleNr);
@@ -75,13 +84,13 @@ public class PCAAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgorithm.Met
     }
 
     @Override
-    protected CorrelationAlgorithm.MetricLog createMetricStats(String name) {
-        return new CorrelationAlgorithm.MetricLog(name);
+    protected CorrelationAlgorithm.NoNanMetricLog createMetricStats(String name) {
+        return new CorrelationAlgorithm.NoNanMetricLog(name);
     }
 
     @Override
     public String toString() {
-        return "pca algorithm";
+        return "pca algorithm [" + trainingSamples + "]";
     }
 
 }

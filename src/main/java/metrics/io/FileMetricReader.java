@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
 
@@ -55,8 +56,12 @@ public class FileMetricReader implements InputStreamProducer {
         return files.size();
     }
 
+    public void addFiles(String root, Pattern pattern) throws IOException {
+        addFiles(root, (path) -> pattern.matcher(path.toString()).matches());
+    }
+
     public void addFiles(String directory, String extension) throws IOException {
-        addFiles(directory, (Path path) -> path.getFileName().toString().endsWith(extension));
+        addFiles(directory, (path) -> path.getFileName().toString().endsWith(extension));
     }
 
     public void addFiles(String directory, FileFilter filter) throws IOException {
