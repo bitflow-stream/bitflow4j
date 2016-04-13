@@ -18,12 +18,20 @@ public class PCAAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgorithm.NoN
 
     private final int trainingSamples;
 
+    private double accuracy;
+
     // If trainingSamples is > 0, only the beginning of the input is used for training the PCA model.
     // Afterwards, the entire data set is transformed.
     public PCAAlgorithm(int trainingSamples) {
+        this(trainingSamples,0.99);
+    }
+
+    public PCAAlgorithm(int trainingSamples, double accuracy){
         super(true);
+        this.accuracy = accuracy;
         this.trainingSamples = trainingSamples;
     }
+
 
     @Override
     protected void writeResults(MetricOutputStream output) throws IOException {
@@ -33,20 +41,21 @@ public class PCAAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgorithm.NoN
         double[][] trainingSet = Arrays.copyOf(dataset, trainingSize);
         PCA pca = new PCA(new Matrix(trainingSet));
 
-        System.err.println("PCA model computed, now transforming input data...");
+        int eigenLength = calcEigenLength(pca);
+
+        System.err.println("PCA model computed, now transforming input data to " + eigenLength + " dimensions...");
         Matrix transformMatrix = new Matrix(dataset);
-        Matrix transformed = pca.transform(transformMatrix, PCA.TransformationType.WHITENING);
-        outputValues(transformed.getArray(), output);
+        Matrix transformed = pca.transform(transformMatrix, PCA.TransformationType.ROTATION);
+        outputValues(transformed.getArray(), eigenLength, output);
     }
 
-    private void outputValues(double[][] values, MetricOutputStream output) throws IOException {
+    private void outputValues(double[][] values, int numCols, MetricOutputStream output) throws IOException {
         if (values.length == 0) {
             System.err.println(toString() + " produced no output");
             return;
         }
 
         // Create header for PCA values
-        int numCols = values[0].length;
         String[] headerFields = new String[numCols];
         for (int i = 0; i < numCols; i++) {
             headerFields[i] = "component" + i;
@@ -56,12 +65,33 @@ public class PCAAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgorithm.NoN
         // Output values
         for (int i = 0; i < values.length; i++) {
             SampleMetadata meta = samples.get(i);
-            Sample sample = new Sample(header, values[i], meta.timestamp, meta.source, meta.label);
+            double[] vector = values[i];
+            if (numCols < vector.length)
+                vector = Arrays.copyOf(vector, numCols);
+            Sample sample = new Sample(header, vector, meta.timestamp, meta.source, meta.label);
             output.writeSample(sample);
         }
         if (values.length != samples.size()) {
             System.err.println("Warning: output " + values.length + " samples, but input contained " + samples.size() + " samples");
         }
+    }
+
+    private int calcEigenLength(PCA pca){
+        int eigenLength=0;
+        double eigenSum = 0;
+        for ( int i =0; i < pca.getOutputDimsNo();i++){
+                eigenSum += pca.getEigenvalue(i);
+        }
+        double eigenVar = 0.00;
+        while (eigenVar < this.accuracy) {
+            if( eigenLength < pca.getOutputDimsNo()) {
+                eigenVar += pca.getEigenvalue(eigenLength) / eigenSum;
+                eigenLength += 1;
+            }else {
+                System.err.println("accuracy not reached, using " + eigenSum + " instead");
+            }
+        }
+        return eigenLength;
     }
 
     private double[][] getSampleMatrix() {

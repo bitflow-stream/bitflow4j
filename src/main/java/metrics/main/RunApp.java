@@ -3,6 +3,7 @@ package metrics.main;
 import metrics.CsvMarshaller;
 import metrics.algorithms.PCAAlgorithm;
 import metrics.io.FileMetricReader;
+import metrics.io.OutputMetricScatterPlotter;
 
 import java.io.File;
 import java.io.IOException;
@@ -110,9 +111,10 @@ public class RunApp {
 //        builder.addAlgorithm(new CorrelationAlgorithm(false));
 //        builder.addAlgorithm(new CorrelationSignificanceAlgorithm(0.7));
 //        builder.addAlgorithm(new MetricCounter());
-        builder.addAlgorithm(new PCAAlgorithm(-1));
+        builder.addAlgorithm(new PCAAlgorithm(-1,0.95));
 
-        builder.setConsoleOutput("CSV");
+        builder.setOutput(new OutputMetricScatterPlotter(0,1));
+        //builder.setConsoleOutput("CSV");
 //        builder.setFileOutput(OUTPUT_FILE, "CSV");
 
         builder.runApp();
