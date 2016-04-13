@@ -13,7 +13,7 @@ import java.util.Date;
 /**
  * Created by anton on 4/11/16.
  */
-public class CorrelationAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgorithm.MetricLog> {
+public class CorrelationAlgorithm extends PostAnalysisAlgorithm<PostAnalysisAlgorithm.NoNanMetricLog> {
 
     public interface Correlation {
         double correlation(double[] x, double y[]);
@@ -94,22 +94,8 @@ public class CorrelationAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgor
     }
 
     @Override
-    protected MetricLog createMetricStats(String name) {
-        return new MetricLog(name);
-    }
-
-    // SpearmansCorrelation does not allow NaN, so use 0.0 instead.
-    static class MetricLog extends PostAnalysisAlgorithm.MetricLog {
-
-        MetricLog(String name) {
-            super(name);
-        }
-
-        @Override
-        double fillValue() {
-            return 0.0;
-        }
-
+    protected NoNanMetricLog createMetricStats(String name) {
+        return new NoNanMetricLog(name);
     }
 
 }

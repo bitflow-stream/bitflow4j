@@ -74,8 +74,12 @@ public abstract class PostAnalysisAlgorithm<M extends PostAnalysisAlgorithm.Metr
 
     protected abstract void writeResults(MetricOutputStream output) throws IOException;
 
-    protected void analyseSample(Sample sample) throws IOException {
+    private void analyseSample(Sample sample) throws IOException {
         sample.checkConsistency();
+        registerMetricData(sample);
+    }
+
+    protected void registerMetricData(Sample sample) throws IOException {
         String[] header = sample.getHeader().header;
         Set<String> unhandledStats = new HashSet<>(metrics.keySet());
         double[] values = sample.getMetrics();
@@ -172,6 +176,16 @@ public abstract class PostAnalysisAlgorithm<M extends PostAnalysisAlgorithm.Metr
             vector = null;
         }
 
+    }
+
+    static class NoNanMetricLog extends MetricLog {
+        NoNanMetricLog(String name) {
+            super(name);
+        }
+        @Override
+        double defaultValue() { return 0.0; }
+        @Override
+        double fillValue() { return 0.0; }
     }
 
     static class MetricStatistics extends MetricLog {

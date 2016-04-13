@@ -32,8 +32,7 @@ public class CorrelationSignificanceAlgorithm extends PostAnalysisAlgorithm<Corr
     }
 
     @Override
-    protected void analyseSample(Sample sample) throws IOException {
-        sample.checkConsistency();
+    protected void registerMetricData(Sample sample) throws IOException {
         registerSample(sample);
         String label = sample.getLabel();
         String source = sample.getSource();

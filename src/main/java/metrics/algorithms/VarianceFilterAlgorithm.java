@@ -11,11 +11,11 @@ import java.util.Map;
 /**
  * Created by anton on 4/7/16.
  */
-public class StdDeviationFilterAlgorithm extends PostAnalysisAlgorithm<PostAnalysisAlgorithm.MetricStatistics> {
+public class VarianceFilterAlgorithm extends PostAnalysisAlgorithm<PostAnalysisAlgorithm.MetricStatistics> {
 
     private final double minNormalizedDeviation;
 
-    public StdDeviationFilterAlgorithm(double minNormalizedDeviation, boolean globalAnalysis) {
+    public VarianceFilterAlgorithm(double minNormalizedDeviation, boolean globalAnalysis) {
         super(globalAnalysis);
         this.minNormalizedDeviation = minNormalizedDeviation;
     }
@@ -69,7 +69,7 @@ public class StdDeviationFilterAlgorithm extends PostAnalysisAlgorithm<PostAnaly
             output.writeSample(sample);
         }
 
-        System.err.printf("%d of %d metrics passed stdDeviation filter (%d filtered out). Avg normalized deviation: %f.\n",
+        System.err.printf("%d of %d metrics passed stdDeviation filter (%d filtered out). Avg normalized variance: %f.\n",
                 validStats.size(), metrics.size(), metrics.size() - validStats.size(), avgDeviation);
     }
 
