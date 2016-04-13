@@ -7,54 +7,56 @@ import metrics.io.FileMetricReader;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 import java.util.regex.Pattern;
 
 /**
- *
  * @author fschmidt
  */
 public class RunApp {
 
-    private static final String CSV_FOLDER = "/home/anton/software/monitoring-data/experiments/";
+    private static final String resource_bundle_name = "config";
+    private static ResourceBundle resources;
 
-//    private static final String HOST = "wally131";
-    private static final String HOST = "bono.ims";
+    static {
+        try {
+            resources = ResourceBundle.getBundle(resource_bundle_name);
+        } catch (MissingResourceException exc) {
+            System.err.println("ResourceBundle '" + resource_bundle_name + "' was not found," +
+                    "make sure config.properties exists inside src/main/resources");
+            System.exit(1);
+        }
+    }
 
-    private static final String OUT_PATH = "/home/anton/test.csv";
-
-    private static final int PORT = 9999;
-//    static final String INPUT_MARSHALLER = "CSV";
-    private static final String INPUT_MARSHALLER = "BIN";
-
-    private static final String OUTPUT_MARSHALLER = "CSV";
-    //    static final String OUTPUT_MARSHALLER = "TXT";
-
-    private static final boolean PRINT_FILES = false;
+    private static final String EXPERIMENT_FOLDER = resources.getString("experiment_dir");
+    private static final String OUTPUT_FOLDER = resources.getString("output_dir");
+    private static final String OUTPUT_FILE = OUTPUT_FOLDER + "/output.csv";
 
     private static void addAllHostDataCode(FileMetricReader reader, String results, String host) throws IOException {
-        reader.addFiles(CSV_FOLDER,
-            (p, attr) -> {
-                String name = p.getFileName().toString();
-                if (attr.isDirectory()) {
-                    if (name.startsWith("metrics."))
-                        return name.equals("metrics." + host);
-                    if (name.contains("results"))
-                        return name.equals(results);
-                    if (name.equals("analysis"))
-                        return false;
-                    return true;
-                } else if (attr.isRegularFile()) {
-                    return name.endsWith("csv");
-                }
-                return false;
-            });
+        reader.addFiles(EXPERIMENT_FOLDER,
+                (p, attr) -> {
+                    String name = p.getFileName().toString();
+                    if (attr.isDirectory()) {
+                        if (name.startsWith("metrics."))
+                            return name.equals("metrics." + host);
+                        if (name.contains("results"))
+                            return name.equals(results);
+                        if (name.equals("analysis"))
+                            return false;
+                        return true;
+                    } else if (attr.isRegularFile()) {
+                        return name.endsWith("csv");
+                    }
+                    return false;
+                });
     }
 
     private static void addAllHostData(FileMetricReader reader, String host, boolean latest, boolean allExperiments) throws IOException {
-        String experiment = allExperiments ? "[^/]*" : "(global-[^/]*|local-[^/]*-" + HOST + ")";
+        String experiment = allExperiments ? "[^/]*" : "(global-[^/]*|local-[^/]*-" + host + ")";
         String results = latest ? "latest-results" : "results-[^/]*";
         host = "\\Q" + host + "\\E";
-        reader.addFiles(CSV_FOLDER, Pattern.compile(
+        reader.addFiles(EXPERIMENT_FOLDER, Pattern.compile(
                 ".*/" + experiment + "/" + results + "/metrics\\." + host + "/[^/]*\\.csv$"
         ));
     }
@@ -82,12 +84,12 @@ public class RunApp {
         };
     }
 
-    private static FileMetricReader readCsvFiles() throws IOException {
+    private static FileMetricReader readCsvFiles(String host, boolean printFiles) throws IOException {
         FileMetricReader.NameConverter conv = scenarioName();
         FileMetricReader reader = new FileMetricReader(new CsvMarshaller(), conv);
-        addAllHostData(reader, HOST, true, false);
+        addAllHostData(reader, host, true, false);
         System.err.println("Reading " + reader.size() + " files");
-        if (PRINT_FILES)
+        if (printFiles)
             for (File f : reader.getFiles()) {
                 System.err.println(f.toString());
             }
@@ -95,9 +97,11 @@ public class RunApp {
     }
 
     public static void main(String[] args) throws IOException {
+        //    String host = "wally131";
+        String host = "bono.ims";
 
-//        AppBuilder builder = new AppBuilder(PORT, INPUT_MARSHALLER);
-        AppBuilder builder = new AppBuilder(readCsvFiles());
+//        AppBuilder builder = new AppBuilder(9999, "BIN");
+        AppBuilder builder = new AppBuilder(readCsvFiles(host, false));
 //        builder.setUnifiedSource(HOST);
 
 //        builder.addAlgorithm(new MetricFilterAlgorithm(0, 1, 2, 3));
@@ -108,8 +112,8 @@ public class RunApp {
 //        builder.addAlgorithm(new MetricCounter());
         builder.addAlgorithm(new PCAAlgorithm(-1));
 
-//        builder.setConsoleOutput(OUTPUT_MARSHALLER);
-        builder.setFileOutput(OUT_PATH, OUTPUT_MARSHALLER);
+        builder.setConsoleOutput("CSV");
+//        builder.setFileOutput(OUTPUT_FILE, "CSV");
 
         builder.runApp();
     }
