@@ -2,7 +2,6 @@ package metrics.io;
 
 import de.erichseifert.gral.data.DataSeries;
 import de.erichseifert.gral.data.DataTable;
-import de.erichseifert.gral.graphics.Insets2D;
 import de.erichseifert.gral.graphics.Orientation;
 import de.erichseifert.gral.plots.XYPlot;
 import de.erichseifert.gral.ui.InteractivePanel;
@@ -37,6 +36,7 @@ public class ScatterPlotter extends PlotPanel implements Plotter {
             plot.getPointRenderers(ds).get(0).setColor(this.getNextColor());
         }
 
+
         plot.getLegend().setOrientation(Orientation.VERTICAL);
         plot.setLegendVisible(true);
         //plot.getLegend().se
@@ -44,7 +44,7 @@ public class ScatterPlotter extends PlotPanel implements Plotter {
         plot.getLegend().setAlignmentX(1.0);
 
 
-        plot.setInsets(new Insets2D.Double(20.0, 40.0, 40.0, 40.0));
+        //plot.setInsets(new Insets2D.Double(20.0, 40.0, 40.0, 40.0));
         plot.getTitle().setText(getDescription());
 
         System.err.println("Prepare output");

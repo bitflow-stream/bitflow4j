@@ -31,20 +31,20 @@ public class OutputMetricPlotter extends AbstractOutputStream implements MetricO
         this(xColumn, yColumn, plotter, OutputMetricPlotter.AS_FILE, filename);
     }
 
-
     public OutputMetricPlotter(int xColumn, int yColumn, Plotter plotter) {
         this(xColumn, yColumn, plotter, OutputMetricPlotter.IN_FRAME);
     }
 
     public OutputMetricPlotter(int xColumn, int yColumn, Plotter plotter, int outputType) {
-        this(xColumn, yColumn, plotter, OutputMetricPlotter.AS_FILE, null);
+        this(xColumn, yColumn, plotter, outputType, null);
     }
 
-    public OutputMetricPlotter(int xColumn, int yColumn, Plotter plotter, int outputType, String filename) {
+    private OutputMetricPlotter(int xColumn, int yColumn, Plotter plotter, int outputType, String filename) {
         System.err.println("Starting plot Results");
         this.plotter = plotter;
         this.xColumn = xColumn;
         this.yColumn = yColumn;
+        this.filename = filename;
 
         this.outputType = outputType;
 
@@ -62,7 +62,12 @@ public class OutputMetricPlotter extends AbstractOutputStream implements MetricO
         }
         DataTable data = this.colorMap.get(label);
         double[] values = sample.getMetrics();
-        data.add(getValue(values, xColumn), getValue(values, yColumn));
+        double xVal = getValue(values, xColumn);
+        if (values.length == 1) {
+            data.add(xVal, xVal);
+        } else {
+            data.add(xVal, getValue(values, yColumn));
+        }
     }
 
     private double getValue(double[] values, int index) {

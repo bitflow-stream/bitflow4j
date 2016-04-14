@@ -4,14 +4,11 @@ import de.erichseifert.gral.io.plots.DrawableWriter;
 import de.erichseifert.gral.io.plots.DrawableWriterFactory;
 import de.erichseifert.gral.plots.XYPlot;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
+import javax.swing.*;
+import java.awt.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-
-import javax.swing.*;
 
 /**
     plotpanel based on gral example
@@ -44,7 +41,7 @@ public abstract class PlotPanel extends JPanel {
      */
     public abstract String getDescription();
 
-    /**q
+    /**
      * Opens a frame and shows the example in it.
      * @return the frame instance used for displaying the example.
      */
@@ -88,7 +85,8 @@ public abstract class PlotPanel extends JPanel {
         this.color[0] = (color[0] + 32) % 256;
         this.color[1] = (color[1] + 128) % 256;
         this.color[2] = (color[2] + 64) % 256;
-        Color rc = new Color(color[0], color[1], color[2]);
+
+        Color rc = new Color(color[0], color[1], color[2],128);
 
         return rc;
     }
