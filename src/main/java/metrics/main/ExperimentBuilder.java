@@ -47,7 +47,7 @@ public class ExperimentBuilder extends AppBuilder {
         reader.addFiles(rootDir, Pattern.compile(pattern));
     }
 
-    private static FileMetricReader.NameConverter scenarioName() {
+    public static FileMetricReader.NameConverter scenarioName() {
         return file -> {
             Path path = file.toPath();
             int num = path.getNameCount();

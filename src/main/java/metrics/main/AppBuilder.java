@@ -7,6 +7,7 @@ import metrics.TextMarshaller;
 import metrics.algorithms.Algorithm;
 import metrics.io.*;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -52,6 +53,16 @@ public class AppBuilder {
         addInputProducer(fileInput);
     }
 
+    public AppBuilder(File csvFile, FileMetricReader.NameConverter conv) throws IOException {
+        this(csvFileReader(csvFile, conv));
+    }
+
+    public static FileMetricReader csvFileReader(File csvFile, FileMetricReader.NameConverter conv) throws IOException {
+        FileMetricReader reader = new FileMetricReader(getMarshaller("CSV"), conv);
+        reader.addFile(csvFile);
+        return reader;
+    }
+
     public void setUnifiedSource(String source) {
         aggregator.setUnifiedSampleSource(source);
     }
@@ -78,6 +89,10 @@ public class AppBuilder {
 
     public void setFileOutput(String path, String outputMarshaller) throws FileNotFoundException {
         setOutput(new MetricPrinter(path, getMarshaller(outputMarshaller)));
+    }
+
+    public void setFileOutput(File file, String outputMarshaller) throws FileNotFoundException {
+        setOutput(new MetricPrinter(file, getMarshaller(outputMarshaller)));
     }
 
     public void runApp() {

@@ -10,7 +10,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
@@ -72,7 +75,7 @@ public class FileMetricReader implements InputStreamProducer {
 
     public void addFiles(String directory, FileVisitor visitor) throws IOException {
         Files.walkFileTree(new File(directory).toPath(),
-            new HashSet<>(Arrays.asList(FOLLOW_LINKS)),
+            new HashSet<>(Collections.singletonList(FOLLOW_LINKS)),
             Integer.MAX_VALUE,
             new SimpleFileVisitor<Path>() {
                 @Override

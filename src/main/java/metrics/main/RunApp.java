@@ -1,7 +1,6 @@
 package metrics.main;
 
 import metrics.algorithms.PCAAlgorithm;
-import metrics.io.OutputMetricScatterPlotter;
 
 import java.io.IOException;
 
@@ -14,11 +13,28 @@ public class RunApp {
     private static final ExperimentBuilder.Host wally131 = new ExperimentBuilder.Host("wally131", "physical");
 
     public static void main(String[] args) throws IOException {
-//        ExperimentBuilder.Host host = bono;
-        ExperimentBuilder.Host host = wally131;
+                ExperimentBuilder.Host host = bono;
+//        ExperimentBuilder.Host host = wally131;
+
+//        App app = new DimensionReductionApp(Config.config, host);
+        App app = new CodeApp(Config.config, host);
+
+        app.runAll();
+    }
+
+    static class CodeApp implements App {
+        final ExperimentBuilder.Host host;
+        final Config config;
+
+        CodeApp(Config config, ExperimentBuilder.Host host) {
+            this.host = host;
+            this.config = config;
+        }
+
+        public void runAll() throws IOException {
 
 //        AppBuilder builder = new AppBuilder(9999, "BIN");
-        AppBuilder builder = new OldExperimentBuilder(Config.EXPERIMENT_FOLDER, host.name, true, false, true);
+            AppBuilder builder = new OldExperimentBuilder(config.EXPERIMENT_FOLDER, host.name, true, false, false);
 //        AppBuilder builder = new ExperimentBuilder(Config.EXPERIMENT_FOLDER, host, true);
 //        builder.setUnifiedSource(HOST);
 
@@ -28,13 +44,15 @@ public class RunApp {
 //        builder.addAlgorithm(new CorrelationAlgorithm(false));
 //        builder.addAlgorithm(new CorrelationSignificanceAlgorithm(0.7));
 //        builder.addAlgorithm(new MetricCounter());
-        builder.addAlgorithm(new PCAAlgorithm(2));
+            builder.addAlgorithm(new PCAAlgorithm(0.99));
 
-        builder.setOutput(new OutputMetricScatterPlotter(0,1));
-//        builder.setConsoleOutput("CSV");
+//            builder.setOutput(new OutputMetricScatterPlotter(0, 1));
+            builder.setConsoleOutput("CSV");
 //        builder.setFileOutput(OUTPUT_FILE, "CSV");
 
-//        builder.runApp();
+        builder.runApp();
+
+        }
     }
 
 }

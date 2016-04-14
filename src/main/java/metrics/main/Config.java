@@ -21,8 +21,10 @@ public class Config {
         }
     }
 
-    static final String EXPERIMENT_FOLDER = resources.getString("experiment_dir");
-    static final String OUTPUT_FOLDER = resources.getString("output_dir");
-    static final String OUTPUT_FILE = OUTPUT_FOLDER + "/output.csv";
+    public final String EXPERIMENT_FOLDER = resources.getString("experiment_dir");
+    public final String OUTPUT_FOLDER = resources.getString("output_dir");
+    public final String OUTPUT_FILE = OUTPUT_FOLDER + "/output.csv";
+
+    public static final Config config = new Config();
 
 }
