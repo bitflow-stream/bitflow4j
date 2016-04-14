@@ -1,6 +1,7 @@
 package metrics.main;
 
 import metrics.algorithms.PCAAlgorithm;
+import metrics.io.OutputMetricScatterPlotter;
 
 import java.io.IOException;
 
@@ -19,10 +20,10 @@ public class RunApp {
 //        ExperimentBuilder.Host host = wally131;
 
 //        AppBuilder source = new ExperimentBuilder(Config.config, host, false);
-        AppBuilder source = new OldExperimentBuilder(conf, host.name, true, false, false);
-        App app = new DimensionReductionApp(conf, host, source);
+//        AppBuilder source = new OldExperimentBuilder(conf, host.name, true, false, false);
+//        App app = new DimensionReductionApp(conf, host, source);
 
-//        App app = new CodeApp(Config.config, host);
+        App app = new CodeApp(conf, host);
 
         app.runAll();
     }
@@ -51,12 +52,11 @@ public class RunApp {
 //        builder.addAlgorithm(new MetricCounter());
             builder.addAlgorithm(new PCAAlgorithm(0.99));
 
-//            builder.setOutput(new OutputMetricScatterPlotter(0, 1));
-            builder.setConsoleOutput("CSV");
+            builder.setOutput(new OutputMetricScatterPlotter(0, 1, OutputMetricScatterPlotter.IN_FRAME));
+//            builder.setConsoleOutput("CSV");
 //        builder.setFileOutput(outputFile, "CSV");
 
             builder.runApp();
-
         }
     }
 

@@ -14,10 +14,9 @@ import java.util.concurrent.LinkedBlockingQueue;
  * Only the Thread the uses writeSample() should call close().
  * Otherwise the synchronization mechanisms must be extended.
  */
-public class MetricPipe implements MetricInputStream, MetricOutputStream {
+public class MetricPipe extends AbstractOutputStream implements MetricInputStream, MetricOutputStream {
 
     private final BlockingQueue<Sample> values;
-    private boolean closed = false;
 
     // This is used to wake up the reading Thread when closing the pipe
     private final Sample closedMarker = new Sample(null, null, null);
@@ -64,7 +63,7 @@ public class MetricPipe implements MetricInputStream, MetricOutputStream {
     public void close() throws IOException {
         if (closed) return;
         writeSample(closedMarker);
-        closed = true;
+        super.close();
     }
 
 }

@@ -1,12 +1,18 @@
 package metrics.io;
 
 import de.erichseifert.gral.data.DataTable;
+import de.erichseifert.gral.graphics.Insets2D;
 import de.erichseifert.gral.graphics.Orientation;
+import de.erichseifert.gral.io.plots.DrawableWriter;
+import de.erichseifert.gral.io.plots.DrawableWriterFactory;
 import de.erichseifert.gral.plots.XYPlot;
 import de.erichseifert.gral.ui.InteractivePanel;
 import metrics.Sample;
 
+import javax.swing.*;
 import java.awt.*;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,12 +21,12 @@ import java.util.Map;
 /**
  * Created by mwall on 13.04.16.
  */
-public class OutputMetricScatterPlotter extends PlotPanel implements MetricOutputStream {
+public class OutputMetricScatterPlotter extends AbstractOutputStream implements MetricOutputStream {
 
     private int xColumn;
     private int yColumn;
 
-    private Map<String,DataTable> colorMap;
+    private Map<String, DataTable> colorMap;
 
     private int outputType = 0;
 
@@ -28,10 +34,10 @@ public class OutputMetricScatterPlotter extends PlotPanel implements MetricOutpu
     public static final int AS_FILE = 1;
     public static final int AS_FILE_AND_IN_FRAME = 2;
 
-    private int[] color = {0,0,0};
+    private int[] color = {0, 0, 0};
 
-    public OutputMetricScatterPlotter(int xColumn, int yColumn){
-        this(xColumn,yColumn,OutputMetricScatterPlotter.IN_FRAME);
+    public OutputMetricScatterPlotter(int xColumn, int yColumn) {
+        this(xColumn, yColumn, OutputMetricScatterPlotter.IN_FRAME);
     }
 
     public OutputMetricScatterPlotter(int xColumn, int yColumn, int outputType) {
@@ -41,59 +47,31 @@ public class OutputMetricScatterPlotter extends PlotPanel implements MetricOutpu
 
         this.outputType = outputType;
 
-        this.colorMap = new HashMap<String,DataTable>();
+        this.colorMap = new HashMap<>();
     }
-    private void plotResult(){
-        //XYPlot plot = new XYPlot(colorMap.get("load"));
-        XYPlot plot = new XYPlot();
 
-        System.err.println("Adding DataTables to Plot");
-        for (DataTable a : this.colorMap.values()) {
-            plot.add(a);
-            a.setName("testname");
-            plot.getPointRenderers(a).get(0).setColor(this.getNextColor());
-        }
-
-        // Format legend
-        plot.getLegend().setOrientation(Orientation.HORIZONTAL);
-        plot.getLegend().setAlignmentY(1.0);
-
-
-        //plot.setInsets(new Insets2D.Double(20.0, 40.0, 40.0, 40.0));
-        plot.getTitle().setText(getDescription());
-
-        // Add plot to Swing component
-        add(new InteractivePanel(plot), BorderLayout.CENTER);
-        this.showInFrame();
-        switch(outputType){
-            case IN_FRAME:
-
-                break;
-            case AS_FILE:
-                break;
-            case AS_FILE_AND_IN_FRAME:
-                break;
+    void save(XYPlot plot) {
+        JFileChooser chooser = new JFileChooser();
+        int option = chooser.showSaveDialog(null);
+        if (option == JFileChooser.APPROVE_OPTION) {
+            File file = chooser.getSelectedFile();
+            try {
+                DrawableWriter writer = DrawableWriterFactory.getInstance().get("application/postscript");
+                writer.write(plot, new FileOutputStream(file), 800, 600);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
-    private Color getNextColor(){
+
+    private Color getNextColor() {
         this.color[0] = (color[0] + 32) % 256;
         this.color[1] = (color[1] + 128) % 256;
         this.color[2] = (color[2] + 64) % 256;
-        System.err.println("Color" + color[0] + " " + color[1] + " " + color[2]);
-        Color rc = new Color(color[0],color[1],color[2]);
+        Color rc = new Color(color[0], color[1], color[2]);
 
         return rc;
-    }
-
-    @Override
-    public String getTitle() {
-        return "Test-Plot";
-    }
-
-    @Override
-    public String getDescription() {
-        return "description";
     }
 
     public void writeSample(Sample sample) throws IOException {
@@ -106,7 +84,7 @@ public class OutputMetricScatterPlotter extends PlotPanel implements MetricOutpu
         }
         DataTable data = this.colorMap.get(label);
         double[] values = sample.getMetrics();
-        data.add(getValue(values,xColumn),getValue(values,yColumn));
+        data.add(getValue(values, xColumn), getValue(values, yColumn));
     }
 
     private double getValue(double[] values, int index) {
@@ -117,7 +95,59 @@ public class OutputMetricScatterPlotter extends PlotPanel implements MetricOutpu
     }
 
     public void close() throws IOException {
-        this.plotResult();
+        new Plotter().plotResult();
+        super.close();
+    }
+
+    private class Plotter extends PlotPanel {
+
+        void plotResult() {
+            //XYPlot plot = new XYPlot(colorMap.get("load"));
+            XYPlot plot = new XYPlot();
+
+            System.err.println("Adding DataTables to Plot");
+            for (DataTable a : colorMap.values()) {
+                plot.add(a);
+                a.setName("testname");
+                plot.getPointRenderers(a).get(0).setColor(getNextColor());
+            }
+
+            // Format legend
+            plot.getLegend().setOrientation(Orientation.HORIZONTAL);
+            plot.setLegendVisible(true);
+            plot.getLegend().setAlignmentY(1.0);
+
+
+            plot.setInsets(new Insets2D.Double(20.0, 40.0, 40.0, 40.0));
+            plot.getTitle().setText(getDescription());
+
+            // Add plot to Swing component
+            add(new InteractivePanel(plot), BorderLayout.CENTER);
+            switch (outputType) {
+                case IN_FRAME:
+                    this.showInFrame();
+                    break;
+                case AS_FILE:
+                    System.err.println("Save plot to file");
+                    save(plot);
+                    break;
+                case AS_FILE_AND_IN_FRAME:
+                    save(plot);
+                    this.showInFrame();
+                    break;
+            }
+        }
+
+        @Override
+        public String getTitle() {
+            return "Test-Plot";
+        }
+
+        @Override
+        public String getDescription() {
+            return "description";
+        }
+
     }
 
 }
