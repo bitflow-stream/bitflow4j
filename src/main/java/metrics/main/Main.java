@@ -8,7 +8,7 @@ import java.io.IOException;
 /**
  * @author fschmidt
  */
-public class RunApp {
+public class Main {
 
     private static final ExperimentBuilder.Host bono = new ExperimentBuilder.Host("bono.ims", "virtual");
     private static final ExperimentBuilder.Host wally131 = new ExperimentBuilder.Host("wally131", "physical");
