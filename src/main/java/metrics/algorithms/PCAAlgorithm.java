@@ -117,7 +117,7 @@ public class PCAAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgorithm.NoN
                 double variance = variances.get(i) / eigenvalueSum;
                 variances.set(i, variance);
                 if (dimensions < maxDimensions && containedVariance < minContainedVariance) {
-                    dimensions = i;
+                    dimensions++;
                     containedVariance += variance;
                 }
             }
