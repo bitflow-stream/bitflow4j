@@ -37,6 +37,7 @@ public class ScatterPlotter extends PlotPanel implements Plotter {
             plot.getPointRenderers(ds).get(0).setColor(this.getNextColor());
         }
 
+
         plot.getLegend().setOrientation(Orientation.VERTICAL);
         plot.setLegendVisible(true);
         //plot.getLegend().se
@@ -44,7 +45,7 @@ public class ScatterPlotter extends PlotPanel implements Plotter {
         plot.getLegend().setAlignmentX(1.0);
 
 
-        plot.setInsets(new Insets2D.Double(20.0, 40.0, 40.0, 40.0));
+        //plot.setInsets(new Insets2D.Double(20.0, 40.0, 40.0, 40.0));
         plot.getTitle().setText(getDescription());
 
         System.err.println("Prepare output");

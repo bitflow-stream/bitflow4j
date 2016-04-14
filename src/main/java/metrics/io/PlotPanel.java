@@ -88,7 +88,8 @@ public abstract class PlotPanel extends JPanel {
         this.color[0] = (color[0] + 32) % 256;
         this.color[1] = (color[1] + 128) % 256;
         this.color[2] = (color[2] + 64) % 256;
-        Color rc = new Color(color[0], color[1], color[2]);
+
+        Color rc = new Color(color[0], color[1], color[2],128);
 
         return rc;
     }
