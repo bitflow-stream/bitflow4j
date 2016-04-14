@@ -7,38 +7,22 @@ import metrics.Sample;
 
 import java.awt.*;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-//import de.erichseifert.gral.examples.ExamplePanel;
-
 
 /**
  * Created by mwall on 13.04.16.
  */
-public class OutputMetricScatterPlotter extends PlotPanel implements MetricOutputStream  {
+public class OutputMetricScatterPlotter extends PlotPanel implements MetricOutputStream {
 
-    private int xColumn;
-    private int yColumn;
+    private final int xColumn;
+    private final int yColumn;
+    private final DataTable data = new DataTable(Double.class, Double.class);
 
-    private List<Double> xList = null;
-    private List<Double> yList = null;
-
-
-    public OutputMetricScatterPlotter(int xColumn, int yColumn){
+    public OutputMetricScatterPlotter(int xColumn, int yColumn) {
         this.xColumn = xColumn;
         this.yColumn = yColumn;
-        xList = new ArrayList<Double>();
-        yList = new ArrayList<Double>();
     }
 
-
-    private void plotResult(){
-
-        DataTable data = new DataTable(Double.class, Double.class);
-        for (int i = 0; i < xList.size(); i++) {
-            data.add(xList.get(i), yList.get(i));
-        }
+    private void plotResult() {
         XYPlot plot = new XYPlot(data);
         // Format plot
         //plot.setInsets(new Insets2D.Double(20.0, 40.0, 40.0, 40.0));
@@ -64,9 +48,15 @@ public class OutputMetricScatterPlotter extends PlotPanel implements MetricOutpu
     }
 
     public void writeSample(Sample sample) throws IOException {
-        this.xList.add(sample.getMetrics()[xColumn]);
-        int yCol = yColumn >= sample.getMetrics().length ? sample.getMetrics().length - 1 : yColumn;
-        this.yList.add(sample.getMetrics()[yCol]);
+        double[] values = sample.getMetrics();
+        data.add(getValue(values, xColumn), getValue(values, yColumn));
+    }
+
+    private double getValue(double[] values, int index) {
+        if (index >= values.length) {
+            return 0.0;
+        }
+        return values[index];
     }
 
     public void close() throws IOException {
