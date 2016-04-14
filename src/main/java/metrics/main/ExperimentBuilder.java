@@ -22,8 +22,8 @@ public class ExperimentBuilder extends AppBuilder {
         }
     }
 
-    public ExperimentBuilder(String rootDir, Host host, boolean printFiles) throws IOException {
-        super(readCsvFiles(rootDir, host, printFiles));
+    public ExperimentBuilder(Config config, Host host, boolean printFiles) throws IOException {
+        super(readCsvFiles(config.experimentFolder, host, printFiles));
     }
 
     private static FileMetricReader readCsvFiles(String rootDir, Host host, boolean printFiles) throws IOException {

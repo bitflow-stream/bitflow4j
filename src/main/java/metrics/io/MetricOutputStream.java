@@ -14,4 +14,6 @@ public interface MetricOutputStream {
 
     void close() throws IOException;
 
+    void waitUntilClosed();
+
 }

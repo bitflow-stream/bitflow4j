@@ -15,16 +15,16 @@ import java.util.regex.Pattern;
  */
 public class OldExperimentBuilder extends AppBuilder {
 
-    public OldExperimentBuilder(String rootDir, String host,
+    public OldExperimentBuilder(Config config, String host,
                                 boolean latestResults, boolean allExperiments, boolean printFiles) throws IOException {
-        super(readCsvFiles(rootDir, host, latestResults, allExperiments, printFiles));
+        super(readCsvFiles(config, host, latestResults, allExperiments, printFiles));
     }
 
-    private static FileMetricReader readCsvFiles(String rootDir, String host,
+    private static FileMetricReader readCsvFiles(Config config, String host,
                                                  boolean latestResults, boolean allExperiments, boolean printFiles) throws IOException {
         FileMetricReader.NameConverter conv = scenarioName();
         FileMetricReader reader = new FileMetricReader(new CsvMarshaller(), conv);
-        addAllHostData(reader, rootDir, host, latestResults, allExperiments);
+        addAllHostData(reader, config.experimentFolder, host, latestResults, allExperiments);
         System.err.println("Reading " + reader.size() + " files");
         if (printFiles)
             for (File f : reader.getFiles()) {

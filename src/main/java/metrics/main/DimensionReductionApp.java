@@ -25,11 +25,13 @@ public class DimensionReductionApp implements App {
     private final String rootDir;
     private final ExperimentBuilder.Host host;
     private final File outputDir;
+    private final AppBuilder sourceDataBuilder;
 
-    public DimensionReductionApp(Config config, ExperimentBuilder.Host host) throws IOException {
+    public DimensionReductionApp(Config config, ExperimentBuilder.Host host, AppBuilder sourceData) throws IOException {
+        this.sourceDataBuilder = sourceData;
         this.host = host;
-        this.rootDir = config.EXPERIMENT_FOLDER;
-        this.outputDir = makeOutputDir(config.OUTPUT_FOLDER);
+        this.rootDir = config.experimentFolder;
+        this.outputDir = makeOutputDir(config.outputFolder);
         System.err.println("Writing results to " + this.outputDir);
     }
 
@@ -64,10 +66,6 @@ public class DimensionReductionApp implements App {
         pca();
     }
 
-    private AppBuilder newExperimentBuilder() throws IOException {
-        return new ExperimentBuilder(rootDir, host, false);
-    }
-
     private AppBuilder newBuilder(File inputFile) throws IOException {
         return new AppBuilder(inputFile, FileMetricReader.FILE_NAME);
     }
@@ -77,12 +75,12 @@ public class DimensionReductionApp implements App {
     }
 
     private void combineData() throws IOException {
-        AppBuilder builder = newExperimentBuilder();
+        AppBuilder builder = sourceDataBuilder;
         builder.addAlgorithm(new NoopAlgorithm());
         File output = getOutputFile(COMBINED_FILE);
         builder.setFileOutput(output, "CSV");
         message("Writing combined host metrics to " + output.toString());
-        builder.runApp();
+        builder.runAndWait();
     }
 
     private void varianceFilter() throws IOException {
@@ -91,7 +89,7 @@ public class DimensionReductionApp implements App {
         File output = getOutputFile(VARIANCE_FILE);
         builder.setFileOutput(output, "CSV");
         message("Writing variance-filtered data to " + output.toString());
-        builder.runApp();
+        builder.runAndWait();
     }
 
     private void correlation() throws IOException {
@@ -100,7 +98,7 @@ public class DimensionReductionApp implements App {
         File output = getOutputFile(CORR_FILE);
         builder.setFileOutput(output, "CSV");
         message("Writing correlation data to " + output.toString());
-        builder.runApp();
+        builder.runAndWait();
     }
 
     private void correlationStatistics() throws IOException {
@@ -109,7 +107,7 @@ public class DimensionReductionApp implements App {
         File output = getOutputFile(CORR_STATS_FILE);
         builder.setFileOutput(output, "CSV");
         message("Writing correlation data to " + output.toString());
-        builder.runApp();
+        builder.runAndWait();
     }
 
     private void pca() throws IOException {
@@ -121,7 +119,7 @@ public class DimensionReductionApp implements App {
         File output = getOutputFile(PCA_FILE);
         builder.setFileOutput(output, "CSV");
         message("Writing PCA data to " + output.toString());
-        builder.runApp();
+        builder.runAndWait();
     }
 
 }

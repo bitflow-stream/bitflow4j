@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
  * @author fschmidt
  */
 public class AppBuilder {
@@ -27,7 +26,7 @@ public class AppBuilder {
     MetricOutputStream output;
 
     public static Marshaller getMarshaller(String format) {
-        switch(format) {
+        switch (format) {
             case "CSV":
                 return new CsvMarshaller();
             case "BIN":
@@ -93,6 +92,15 @@ public class AppBuilder {
 
     public void setFileOutput(File file, String outputMarshaller) throws FileNotFoundException {
         setOutput(new MetricPrinter(file, getMarshaller(outputMarshaller)));
+    }
+
+    public void waitForOutput() {
+        output.waitUntilClosed();
+    }
+
+    public void runAndWait() {
+        runApp();
+        waitForOutput();
     }
 
     public void runApp() {

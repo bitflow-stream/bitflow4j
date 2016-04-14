@@ -1,16 +1,15 @@
 package metrics.io;
 
+import de.erichseifert.gral.data.DataTable;
 import de.erichseifert.gral.graphics.Orientation;
+import de.erichseifert.gral.plots.XYPlot;
+import de.erichseifert.gral.ui.InteractivePanel;
 import metrics.Sample;
 
 import java.awt.*;
 import java.io.IOException;
-
-import java.util.*;
-
-import de.erichseifert.gral.data.DataTable;
-import de.erichseifert.gral.plots.XYPlot;
-import de.erichseifert.gral.ui.InteractivePanel;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**

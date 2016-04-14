@@ -9,7 +9,7 @@ import java.io.OutputStream;
 /**
  * Created by anton on 4/6/16.
  */
-public abstract class AbstractMetricPrinter implements MetricOutputStream {
+public abstract class AbstractMetricPrinter extends AbstractOutputStream {
 
     private final Marshaller marshaller;
     private OutputStream output = null;
@@ -39,8 +39,9 @@ public abstract class AbstractMetricPrinter implements MetricOutputStream {
     public void close() throws IOException {
         OutputStream output = this.output; // Avoid race condition
         if (output != null) {
-            output.close();
             this.output = null;
+            super.close();
+            output.close();
         }
     }
 

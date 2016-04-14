@@ -13,11 +13,16 @@ public class RunApp {
     private static final ExperimentBuilder.Host wally131 = new ExperimentBuilder.Host("wally131", "physical");
 
     public static void main(String[] args) throws IOException {
-                ExperimentBuilder.Host host = bono;
+        Config conf = new Config();
+
+        ExperimentBuilder.Host host = bono;
 //        ExperimentBuilder.Host host = wally131;
 
-//        App app = new DimensionReductionApp(Config.config, host);
-        App app = new CodeApp(Config.config, host);
+//        AppBuilder source = new ExperimentBuilder(Config.config, host, false);
+        AppBuilder source = new OldExperimentBuilder(conf, host.name, true, false, false);
+        App app = new DimensionReductionApp(conf, host, source);
+
+//        App app = new CodeApp(Config.config, host);
 
         app.runAll();
     }
@@ -34,8 +39,8 @@ public class RunApp {
         public void runAll() throws IOException {
 
 //        AppBuilder builder = new AppBuilder(9999, "BIN");
-            AppBuilder builder = new OldExperimentBuilder(config.EXPERIMENT_FOLDER, host.name, true, false, false);
-//        AppBuilder builder = new ExperimentBuilder(Config.EXPERIMENT_FOLDER, host, true);
+            AppBuilder builder = new OldExperimentBuilder(config, host.name, true, false, false);
+//        AppBuilder builder = new ExperimentBuilder(Config.experimentFolder, host, true);
 //        builder.setUnifiedSource(HOST);
 
 //        builder.addAlgorithm(new MetricFilterAlgorithm(0, 1, 2, 3));
@@ -48,9 +53,9 @@ public class RunApp {
 
 //            builder.setOutput(new OutputMetricScatterPlotter(0, 1));
             builder.setConsoleOutput("CSV");
-//        builder.setFileOutput(OUTPUT_FILE, "CSV");
+//        builder.setFileOutput(outputFile, "CSV");
 
-        builder.runApp();
+            builder.runApp();
 
         }
     }
