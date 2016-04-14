@@ -1,18 +1,8 @@
 package metrics.io;
 
 import de.erichseifert.gral.data.DataTable;
-import de.erichseifert.gral.graphics.Insets2D;
-import de.erichseifert.gral.graphics.Orientation;
-import de.erichseifert.gral.io.plots.DrawableWriter;
-import de.erichseifert.gral.io.plots.DrawableWriterFactory;
-import de.erichseifert.gral.plots.XYPlot;
-import de.erichseifert.gral.ui.InteractivePanel;
 import metrics.Sample;
 
-import javax.swing.*;
-import java.awt.*;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,7 +10,7 @@ import java.util.Map;
 /**
  * Created by mwall on 14.04.16.
  */
-public class OutputMetricPlotter extends AbstractOutputStream implements MetricOutputStream{
+public class OutputMetricPlotter extends AbstractOutputStream implements MetricOutputStream {
     private int xColumn;
     private int yColumn;
 
@@ -50,7 +40,7 @@ public class OutputMetricPlotter extends AbstractOutputStream implements MetricO
         this(xColumn, yColumn, plotter, OutputMetricPlotter.AS_FILE, null);
     }
 
-    public OutputMetricPlotter(int xColumn, int yColumn, Plotter plotter, int outputType,String filename){
+    public OutputMetricPlotter(int xColumn, int yColumn, Plotter plotter, int outputType, String filename) {
         System.err.println("Starting plot Results");
         this.plotter = plotter;
         this.xColumn = xColumn;
@@ -83,7 +73,7 @@ public class OutputMetricPlotter extends AbstractOutputStream implements MetricO
     }
 
     public void close() throws IOException {
-        this.plotter.plotResult(this.outputType,this.colorMap,this.filename);
+        this.plotter.plotResult(this.outputType, this.colorMap, this.filename);
         super.close();
     }
 

@@ -7,6 +7,7 @@ import metrics.io.ScatterPlotter;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.TreeSet;
 
 /**
  * Created by anton on 4/14/16.
@@ -18,7 +19,6 @@ public class DimensionReductionApp implements App {
     private static final String CORR_FILE = "3-correlation.csv";
     private static final String CORR_STATS_FILE = "4-correlation-stats.csv";
     private static final String PCA_FILE = "5-pca.csv";
-    private static final String PCA_PLOT_FILE = "6-pca.eps";
 
     private static final double MIN_VARIANCE = 0.02;
     private static final double SIGNIFICANT_CORRELATION = 0.7;
@@ -26,14 +26,12 @@ public class DimensionReductionApp implements App {
     private static final double PCA_VARIANCE = 0.99;
 
     private final ExperimentBuilder.Host host;
-    private final File outputDir;
-    private final AppBuilder sourceDataBuilder;
+    private final Config config;
+    private File outputDir;
 
-    public DimensionReductionApp(Config config, ExperimentBuilder.Host host, AppBuilder sourceData) throws IOException {
-        this.sourceDataBuilder = sourceData;
+    public DimensionReductionApp(Config config, ExperimentBuilder.Host host) throws IOException {
         this.host = host;
-        this.outputDir = makeOutputDir(config.outputFolder);
-        System.err.println("Writing results to " + this.outputDir);
+        this.config = config;
     }
 
     private String outputDirname(int suffix) {
@@ -55,17 +53,38 @@ public class DimensionReductionApp implements App {
         return output;
     }
 
+    private File getInputDirectory() {
+        String prefix = outputDirname(0);
+        TreeSet<File> candidates = new TreeSet<>();
+        for (File child : new File(config.outputFolder).listFiles()) {
+            if (child.isDirectory() && child.getName().startsWith(prefix)) {
+                candidates.add(child);
+            }
+        }
+        File result = candidates.pollLast();
+        if (result == null) {
+            throw new IllegalStateException("Could not find foldre like '" + prefix + "*' inside " + config.outputFolder);
+        }
+        return result;
+    }
+
+    private File getInputFile(String filename) {
+        File dir = getInputDirectory();
+        return new File(dir, filename);
+    }
+
     private File getOutputFile(String filename) {
         return new File(outputDir, filename);
     }
 
-    public void runAll() throws IOException {
-        combineData();
+    public void runAll(AppBuilder sourceDataBuilder) throws IOException {
+        outputDir = makeOutputDir(config.outputFolder);
+        System.err.println("Writing results to " + outputDir);
+        combineData(sourceDataBuilder);
         varianceFilter();
         correlation();
         correlationStatistics();
         pca();
-        pcaPlot();
     }
 
     private AppBuilder newBuilder(File inputFile) throws IOException {
@@ -76,8 +95,7 @@ public class DimensionReductionApp implements App {
         System.err.println("===================== " + msg);
     }
 
-    private void combineData() throws IOException {
-        AppBuilder builder = sourceDataBuilder;
+    private void combineData(AppBuilder builder) throws IOException {
         builder.addAlgorithm(new NoopAlgorithm());
         File output = getOutputFile(COMBINED_FILE);
         builder.setFileOutput(output, "CSV");
@@ -121,12 +139,10 @@ public class DimensionReductionApp implements App {
         builder.runAndWait();
     }
 
-    private void pcaPlot() throws IOException {
-        AppBuilder builder = newBuilder(getOutputFile(PCA_FILE));
+    void plotPca() throws IOException {
+        AppBuilder builder = newBuilder(getInputFile(PCA_FILE));
         builder.addAlgorithm(new NoopAlgorithm());
-        File output = getOutputFile(PCA_PLOT_FILE);
-        builder.setOutput(new OutputMetricPlotter(0, 1,new ScatterPlotter(),output.toString()));
-        message("Writing PCA plot to " + output.toString());
+        builder.setOutput(new OutputMetricPlotter(0, 1, new ScatterPlotter()));
         builder.runAndWait();
     }
 

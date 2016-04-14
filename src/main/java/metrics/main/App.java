@@ -7,6 +7,6 @@ import java.io.IOException;
  */
 public interface App {
 
-    void runAll() throws IOException;
+    void runAll(AppBuilder sourceDataBuilder) throws IOException;
 
 }
