@@ -1,23 +1,26 @@
 package metrics.io;
 
+import de.erichseifert.gral.io.plots.DrawableWriter;
+import de.erichseifert.gral.io.plots.DrawableWriterFactory;
+import de.erichseifert.gral.plots.XYPlot;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
+import javax.swing.*;
 
 /**
     plotpanel based on gral example
  */
 public abstract class PlotPanel extends JPanel {
+
+    private int[] color = {0, 0, 0};
     /** Version id for serialization. */
     private static final long serialVersionUID = 8221256658243821951L;
-
-    /** First corporate color used for normal coloring.*/
-    protected static final Color COLOR1 = new Color( 55, 170, 200);
-    /** Second corporate color used as signal color */
-    protected static final Color COLOR2 = new Color(200,  80,  75);
 
     /**
      * Performs basic initialization of an example,
@@ -41,7 +44,7 @@ public abstract class PlotPanel extends JPanel {
      */
     public abstract String getDescription();
 
-    /**
+    /**q
      * Opens a frame and shows the example in it.
      * @return the frame instance used for displaying the example.
      */
@@ -54,8 +57,39 @@ public abstract class PlotPanel extends JPanel {
         return frame;
     }
 
+    protected void save(XYPlot plot,String filename) {
+
+        JFileChooser chooser = new JFileChooser();
+        File file = null;
+        int option = chooser.showSaveDialog(null);
+        if (option == JFileChooser.APPROVE_OPTION) {
+            if (filename == null) {
+                file = chooser.getSelectedFile();
+            }else{
+                file = new File(filename);
+            }
+                try {
+                DrawableWriter writer = DrawableWriterFactory.getInstance().get("application/postscript");
+                writer.write(plot, new FileOutputStream(file), 800, 600);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
     @Override
     public String toString() {
         return getTitle();
+    }
+
+
+    public Color getNextColor() {
+        this.color[0] = (color[0] + 32) % 256;
+        this.color[1] = (color[1] + 128) % 256;
+        this.color[2] = (color[2] + 64) % 256;
+        Color rc = new Color(color[0], color[1], color[2]);
+
+        return rc;
     }
 }
