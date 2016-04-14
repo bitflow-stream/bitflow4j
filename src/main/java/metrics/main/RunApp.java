@@ -113,7 +113,7 @@ public class RunApp {
 //        builder.addAlgorithm(new MetricCounter());
         builder.addAlgorithm(new PCAAlgorithm(-1,0.95));
 
-        builder.setOutput(new OutputMetricScatterPlotter(0,1));
+        builder.setOutput(new OutputMetricScatterPlotter(0,1,OutputMetricScatterPlotter.IN_FRAME));
         //builder.setConsoleOutput("CSV");
 //        builder.setFileOutput(OUTPUT_FILE, "CSV");
 
