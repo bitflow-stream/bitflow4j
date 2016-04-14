@@ -59,7 +59,7 @@ public class CsvMarshaller extends AbstractMarshaller {
             metricValues = new double[metricStrings.length - header.specialFields];
             for (int i = header.specialFields; i < metricStrings.length; i++) {
                 try {
-                    metricValues[i - 1] = Double.valueOf(metricStrings[i]);
+                    metricValues[i - header.specialFields] = Double.valueOf(metricStrings[i]);
                 } catch (NumberFormatException exc) {
                     throw new IOException(exc);
                 }
@@ -105,7 +105,8 @@ public class CsvMarshaller extends AbstractMarshaller {
         Sample.Header header = sample.getHeader();
         boolean startedPrinting = false;
         if (header.hasTimestamp()) {
-            printSpecialField(output, sample.getTimestamp(), startedPrinting);
+            String dateStr = date_formatter.format(sample.getTimestamp());
+            printSpecialField(output, dateStr, startedPrinting);
             startedPrinting = true;
         }
         if (header.hasSource()) {

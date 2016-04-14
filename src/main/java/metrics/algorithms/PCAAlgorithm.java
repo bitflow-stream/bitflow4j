@@ -26,14 +26,10 @@ public class PCAAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgorithm.NoN
     private final int trainingSamples;
 
     private final double minContainedVariance;
-    private final int maxDimensions;
+    private final int minDimensions;
 
-    public PCAAlgorithm() {
-        this(-1, 0.99);
-    }
-
-    public PCAAlgorithm(int maxDimensions) {
-        this(-1, maxDimensions);
+    public PCAAlgorithm(int minDimensions) {
+        this(-1, minDimensions);
     }
 
     public PCAAlgorithm(double minContainedVariance) {
@@ -41,16 +37,21 @@ public class PCAAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgorithm.NoN
     }
 
     public PCAAlgorithm(int trainingSamples, double minContainedVariance) {
-        super(true);
-        this.minContainedVariance = minContainedVariance;
-        this.maxDimensions = Integer.MAX_VALUE;
-        this.trainingSamples = trainingSamples;
+        this(trainingSamples, Integer.MIN_VALUE, minContainedVariance);
     }
 
-    public PCAAlgorithm(int trainingSamples, int maxDimensions) {
+    public PCAAlgorithm(int trainingSamples, int minDimensions) {
+        this(trainingSamples, minDimensions, Double.MIN_VALUE);
+    }
+
+    // If both minDimensions and minContainedVariance is given, then both conditions will be satisfied,
+    // potentially "over-satisfying" one of them.
+    public PCAAlgorithm(int trainingSamples, int minDimensions, double minContainedVariance) {
         super(true);
-        this.minContainedVariance = Double.MAX_VALUE;
-        this.maxDimensions = maxDimensions;
+        if (minContainedVariance >= 1)
+            throw new IllegalArgumentException("Contained variance must be < 1: " + minContainedVariance);
+        this.minContainedVariance = minContainedVariance;
+        this.minDimensions = minDimensions;
         this.trainingSamples = trainingSamples;
     }
 
@@ -62,7 +63,7 @@ public class PCAAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgorithm.NoN
         double[][] trainingSet = Arrays.copyOf(dataset, trainingSize);
         PCA pca = new PCA(new Matrix(trainingSet), true);
 
-        TransformationParameters params = new TransformationParameters(pca, maxDimensions, minContainedVariance);
+        TransformationParameters params = new TransformationParameters(pca, minDimensions, minContainedVariance);
         params.printMessage(REPORT_VARIANCE);
         Matrix transformed = pca.transform(new Matrix(dataset), TRANSFORMATION_TYPE);
         outputValues(transformed.getArray(), params.dimensions, output);
@@ -100,7 +101,7 @@ public class PCAAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgorithm.NoN
         final int dimensions;
         final TDoubleList variances;
 
-        TransformationParameters(PCA pca, int maxDimensions, double minContainedVariance) {
+        TransformationParameters(PCA pca, int minDimensions, double minContainedVariance) {
             int totalDimensions = pca.getOutputDimsNo();
             variances = new TDoubleArrayList(totalDimensions);
 
@@ -116,7 +117,7 @@ public class PCAAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgorithm.NoN
             for (int i = 0; i < totalDimensions; i++) {
                 double variance = variances.get(i) / eigenvalueSum;
                 variances.set(i, variance);
-                if (dimensions < maxDimensions && containedVariance < minContainedVariance) {
+                if (dimensions < minDimensions || containedVariance < minContainedVariance) {
                     dimensions++;
                     containedVariance += variance;
                 }
@@ -175,14 +176,14 @@ public class PCAAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgorithm.NoN
             str.append(trainingSamples).append(" trainingset");
             hasInfo = true;
         }
-        if (minContainedVariance != Double.MAX_VALUE) {
+        if (minContainedVariance > 0) {
             if (hasInfo) str.append(", ");
             str.append(minContainedVariance).append(" variance");
             hasInfo = true;
         }
-        if (maxDimensions != Integer.MAX_VALUE) {
+        if (minDimensions > 0) {
             if (hasInfo) str.append(", ");
-            str.append(maxDimensions).append(" dimensions");
+            str.append(minDimensions).append(" dimensions");
         }
         return str.append("]").toString();
     }
