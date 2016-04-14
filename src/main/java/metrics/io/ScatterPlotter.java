@@ -8,13 +8,12 @@ import de.erichseifert.gral.plots.XYPlot;
 import de.erichseifert.gral.ui.InteractivePanel;
 
 import java.awt.*;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Created by mwall on 14.04.16.
  */
-public class ScatterPlotter extends PlotPanel implements Plotter{
+public class ScatterPlotter extends PlotPanel implements Plotter {
     @Override
     public String getTitle() {
         return "Titel";
@@ -27,12 +26,12 @@ public class ScatterPlotter extends PlotPanel implements Plotter{
 
     @Override
     public void plotResult(int outputType, Map<String, DataTable> map, String filename) {
-        //XYPlot plot = new XYPlot(colorMap.get("load"));
+
         XYPlot plot = new XYPlot();
         System.err.println("Adding DataTables to Plot");
-        for (final String key : map.keySet()){
+        for (final String key : map.keySet()) {
             DataTable a = map.get(key);
-            DataSeries ds = new DataSeries(key,a);
+            DataSeries ds = new DataSeries(key, a);
 
             plot.add(ds);
             plot.getPointRenderers(ds).get(0).setColor(this.getNextColor());
@@ -57,10 +56,10 @@ public class ScatterPlotter extends PlotPanel implements Plotter{
                 break;
             case OutputMetricPlotter.AS_FILE:
                 System.err.println("Save plot to file");
-                this.save(plot,filename);
+                this.save(plot, filename);
                 break;
             case OutputMetricPlotter.AS_FILE_AND_IN_FRAME:
-                this.save(plot,filename);
+                this.save(plot, filename);
                 this.showInFrame();
                 break;
         }

@@ -2,6 +2,8 @@ package metrics.main;
 
 import metrics.algorithms.*;
 import metrics.io.FileMetricReader;
+import metrics.io.OutputMetricPlotter;
+import metrics.io.ScatterPlotter;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,6 +18,7 @@ public class DimensionReductionApp implements App {
     private static final String CORR_FILE = "3-correlation.csv";
     private static final String CORR_STATS_FILE = "4-correlation-stats.csv";
     private static final String PCA_FILE = "5-pca.csv";
+    private static final String PCA_PLOT_FILE = "6-pca.eps";
 
     private static final double MIN_VARIANCE = 0.02;
     private static final double SIGNIFICANT_CORRELATION = 0.7;
@@ -62,6 +65,7 @@ public class DimensionReductionApp implements App {
         correlation();
         correlationStatistics();
         pca();
+        pcaPlot();
     }
 
     private AppBuilder newBuilder(File inputFile) throws IOException {
@@ -114,6 +118,15 @@ public class DimensionReductionApp implements App {
         File output = getOutputFile(PCA_FILE);
         builder.setFileOutput(output, "CSV");
         message("Writing PCA data to " + output.toString());
+        builder.runAndWait();
+    }
+
+    private void pcaPlot() throws IOException {
+        AppBuilder builder = newBuilder(getOutputFile(PCA_FILE));
+        builder.addAlgorithm(new NoopAlgorithm());
+        File output = getOutputFile(PCA_PLOT_FILE);
+        builder.setOutput(new OutputMetricPlotter(0, 1,new ScatterPlotter(),output.toString()));
+        message("Writing PCA plot to " + output.toString());
         builder.runAndWait();
     }
 
