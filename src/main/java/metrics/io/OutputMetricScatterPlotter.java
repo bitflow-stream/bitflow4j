@@ -1,19 +1,16 @@
 package metrics.io;
 
-import metrics.Sample;
-
-import java.io.IOException;
-
-import java.awt.BorderLayout;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-
 import de.erichseifert.gral.data.DataTable;
-//import de.erichseifert.gral.examples.ExamplePanel;
 import de.erichseifert.gral.plots.XYPlot;
 import de.erichseifert.gral.ui.InteractivePanel;
-import de.erichseifert.gral.graphics.Insets2D;
+import metrics.Sample;
+
+import java.awt.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+//import de.erichseifert.gral.examples.ExamplePanel;
 
 
 /**
@@ -66,13 +63,12 @@ public class OutputMetricScatterPlotter extends PlotPanel implements MetricOutpu
         return "description";
     }
 
-    @Override
     public void writeSample(Sample sample) throws IOException {
         this.xList.add(sample.getMetrics()[xColumn]);
-        this.yList.add(sample.getMetrics()[yColumn]);
+        int yCol = yColumn >= sample.getMetrics().length ? sample.getMetrics().length - 1 : yColumn;
+        this.yList.add(sample.getMetrics()[yCol]);
     }
 
-    @Override
     public void close() throws IOException {
         this.plotResult();
     }
