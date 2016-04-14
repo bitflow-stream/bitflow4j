@@ -11,18 +11,17 @@ import java.io.IOException;
  */
 public class DimensionReductionApp implements App {
 
-    private static final String COMBINED_FILE = "combined.csv";
-    private static final String VARIANCE_FILE = "variance.csv";
-    private static final String CORR_FILE = "correlation.csv";
-    private static final String CORR_STATS_FILE = "correlation-stats.csv";
-    private static final String PCA_FILE = "pca.csv";
+    private static final String COMBINED_FILE = "1-combined.csv";
+    private static final String VARIANCE_FILE = "2-variance-filtered.csv";
+    private static final String CORR_FILE = "3-correlation.csv";
+    private static final String CORR_STATS_FILE = "4-correlation-stats.csv";
+    private static final String PCA_FILE = "5-pca.csv";
 
     private static final double MIN_VARIANCE = 0.02;
     private static final double SIGNIFICANT_CORRELATION = 0.7;
-    private static final int PCA_COLS = -1; // Take precedence over PCA_VARIANCE
+    private static final int PCA_COLS = -1; // Can be set to 2 to force at least 2 components
     private static final double PCA_VARIANCE = 0.99;
 
-    private final String rootDir;
     private final ExperimentBuilder.Host host;
     private final File outputDir;
     private final AppBuilder sourceDataBuilder;
@@ -30,7 +29,6 @@ public class DimensionReductionApp implements App {
     public DimensionReductionApp(Config config, ExperimentBuilder.Host host, AppBuilder sourceData) throws IOException {
         this.sourceDataBuilder = sourceData;
         this.host = host;
-        this.rootDir = config.experimentFolder;
         this.outputDir = makeOutputDir(config.outputFolder);
         System.err.println("Writing results to " + this.outputDir);
     }
@@ -111,11 +109,8 @@ public class DimensionReductionApp implements App {
     }
 
     private void pca() throws IOException {
-        AppBuilder builder = newBuilder(getOutputFile(VARIANCE_FILE));
-        if (PCA_COLS > 0)
-            builder.addAlgorithm(new PCAAlgorithm(PCA_COLS));
-        else
-            builder.addAlgorithm(new PCAAlgorithm(PCA_VARIANCE));
+        AppBuilder builder = newBuilder(getOutputFile(COMBINED_FILE));
+        builder.addAlgorithm(new PCAAlgorithm(-1, PCA_COLS, PCA_VARIANCE));
         File output = getOutputFile(PCA_FILE);
         builder.setFileOutput(output, "CSV");
         message("Writing PCA data to " + output.toString());

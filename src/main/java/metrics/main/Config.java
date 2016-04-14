@@ -9,6 +9,7 @@ import java.util.ResourceBundle;
 public class Config {
 
     public final String experimentFolder;
+    public final String oldExperimentFolder;
     public final String outputFolder;
     public final String outputFile;
 
@@ -20,6 +21,7 @@ public class Config {
         ResourceBundle resources = ResourceBundle.getBundle(name);
 
         experimentFolder = resources.getString("experiment_dir");
+        oldExperimentFolder = resources.getString("old_experiment_dir");
         outputFolder = resources.getString("output_dir");
         outputFile = outputFolder + "/output.csv";
     }

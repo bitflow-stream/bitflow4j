@@ -23,7 +23,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.2.1</version>
                 <configuration>
-                    <mainClass>metrics.main.RunApp</mainClass>
+                    <mainClass>metrics.main.Main</mainClass>
                 </configuration>
             </plugin>
         </plugins>

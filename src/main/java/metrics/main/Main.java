@@ -9,7 +9,7 @@ import java.io.IOException;
 /**
  * @author fschmidt
  */
-public class RunApp {
+public class Main {
 
     private static final ExperimentBuilder.Host bono = new ExperimentBuilder.Host("bono.ims", "virtual");
     private static final ExperimentBuilder.Host wally131 = new ExperimentBuilder.Host("wally131", "physical");
@@ -17,14 +17,14 @@ public class RunApp {
     public static void main(String[] args) throws IOException {
         Config conf = new Config();
 
-        ExperimentBuilder.Host host = bono;
-//        ExperimentBuilder.Host host = wally131;
+//        ExperimentBuilder.Host host = bono;
+        ExperimentBuilder.Host host = wally131;
 
-//        AppBuilder source = new ExperimentBuilder(Config.config, host, false);
+        AppBuilder source = new ExperimentBuilder(conf, host, false);
 //        AppBuilder source = new OldExperimentBuilder(conf, host.name, true, false, false);
-//        App app = new DimensionReductionApp(conf, host, source);
+        App app = new DimensionReductionApp(conf, host, source);
 
-        App app = new CodeApp(conf, host);
+//        App app = new CodeApp(conf, host);
 
         app.runAll();
     }

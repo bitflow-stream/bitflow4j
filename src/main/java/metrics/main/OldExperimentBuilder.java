@@ -24,7 +24,7 @@ public class OldExperimentBuilder extends AppBuilder {
                                                  boolean latestResults, boolean allExperiments, boolean printFiles) throws IOException {
         FileMetricReader.NameConverter conv = scenarioName();
         FileMetricReader reader = new FileMetricReader(new CsvMarshaller(), conv);
-        addAllHostData(reader, config.experimentFolder, host, latestResults, allExperiments);
+        addAllHostData(reader, config.oldExperimentFolder, host, latestResults, allExperiments);
         System.err.println("Reading " + reader.size() + " files");
         if (printFiles)
             for (File f : reader.getFiles()) {

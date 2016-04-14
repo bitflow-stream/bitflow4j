@@ -84,7 +84,9 @@ public class CorrelationAlgorithm extends PostAnalysisAlgorithm<PostAnalysisAlgo
                     double vector2[] = getStats(metric2).getVector();
                     double corr[] = new double[correlations.length];
                     for (int i = 0; i < corr.length; i++) {
-                        corr[i] = correlations[i].correlation(vector1, vector2);
+                        double val = correlations[i].correlation(vector1, vector2);
+                        if (Double.isNaN(val)) val = 0;
+                        corr[i] = val;
                     }
                     Sample sample = new Sample(header, corr, timestamp, currentSource, metric1 + sourceSeparator + metric2);
                     output.writeSample(sample);
