@@ -1,5 +1,6 @@
 package metrics.io;
 
+import de.erichseifert.gral.graphics.Orientation;
 import metrics.Sample;
 
 import java.awt.*;
@@ -10,10 +11,7 @@ import java.util.*;
 import de.erichseifert.gral.data.DataTable;
 import de.erichseifert.gral.plots.XYPlot;
 import de.erichseifert.gral.ui.InteractivePanel;
-import metrics.Sample;
 
-import java.awt.*;
-import java.io.IOException;
 
 /**
  * Created by mwall on 13.04.16.
@@ -47,24 +45,30 @@ public class OutputMetricScatterPlotter extends PlotPanel implements MetricOutpu
         this.colorMap = new HashMap<String,DataTable>();
     }
     private void plotResult(){
+        //XYPlot plot = new XYPlot(colorMap.get("load"));
         XYPlot plot = new XYPlot();
+
         System.err.println("Adding DataTables to Plot");
         for (DataTable a : this.colorMap.values()) {
             plot.add(a);
-
-            // Format points
+            a.setName("testname");
             plot.getPointRenderers(a).get(0).setColor(this.getNextColor());
         }
-        // Format plot
+
+        // Format legend
+        plot.getLegend().setOrientation(Orientation.HORIZONTAL);
+        plot.getLegend().setAlignmentY(1.0);
+
+
         //plot.setInsets(new Insets2D.Double(20.0, 40.0, 40.0, 40.0));
         plot.getTitle().setText(getDescription());
 
         // Add plot to Swing component
         add(new InteractivePanel(plot), BorderLayout.CENTER);
-
+        this.showInFrame();
         switch(outputType){
             case IN_FRAME:
-                this.showInFrame();
+
                 break;
             case AS_FILE:
                 break;
@@ -74,9 +78,10 @@ public class OutputMetricScatterPlotter extends PlotPanel implements MetricOutpu
     }
 
     private Color getNextColor(){
-        this.color[0] = color[0] + 16 % 255;
-        this.color[1] = color[1] + 32 % 255;
-        this.color[2] = color[2] + 64 % 255;
+        this.color[0] = (color[0] + 32) % 256;
+        this.color[1] = (color[1] + 128) % 256;
+        this.color[2] = (color[2] + 64) % 256;
+        System.err.println("Color" + color[0] + " " + color[1] + " " + color[2]);
         Color rc = new Color(color[0],color[1],color[2]);
 
         return rc;
@@ -93,17 +98,16 @@ public class OutputMetricScatterPlotter extends PlotPanel implements MetricOutpu
     }
 
     public void writeSample(Sample sample) throws IOException {
+        String label = sample.getSource();
 
-        String label = sample.getLabel();
-
-        if (this.colorMap.containsKey(label)){
-            DataTable data = this.colorMap.get(label);
-            double[] values = sample.getMetrics();
-            data.add(getValue(values,xColumn),getValue(values,yColumn));
-        }else{
+        if (!this.colorMap.containsKey(label)) {
+            System.err.println("write " + label + " to Map");
             DataTable data = new DataTable(Double.class, Double.class);
-            this.colorMap.put(label,data);
+            this.colorMap.put(label, data);
         }
+        DataTable data = this.colorMap.get(label);
+        double[] values = sample.getMetrics();
+        data.add(getValue(values,xColumn),getValue(values,yColumn));
     }
 
     private double getValue(double[] values, int index) {

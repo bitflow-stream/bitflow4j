@@ -111,7 +111,7 @@ public class RunApp {
 //        builder.addAlgorithm(new CorrelationAlgorithm(false));
 //        builder.addAlgorithm(new CorrelationSignificanceAlgorithm(0.7));
 //        builder.addAlgorithm(new MetricCounter());
-        builder.addAlgorithm(new PCAAlgorithm(-1,0.95));
+        builder.addAlgorithm(new PCAAlgorithm(0.99));
 
         builder.setOutput(new OutputMetricScatterPlotter(0,1,OutputMetricScatterPlotter.IN_FRAME));
         //builder.setConsoleOutput("CSV");
