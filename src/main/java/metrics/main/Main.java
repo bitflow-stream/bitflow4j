@@ -27,8 +27,8 @@ public class Main {
         DimensionReductionApp app = new DimensionReductionApp(conf, host, source);
 //        App app = new CodeApp(conf, host, source);
 
-//        app.runAll();
-        app.plotPca();
+        app.runAll();
+//        app.plotPca();
     }
 
     static class CodeApp implements App {

@@ -23,6 +23,8 @@ public class DimensionReductionApp implements App {
     private static final double SIGNIFICANT_CORRELATION = 0.7;
     private static final int PCA_COLS = -1; // Can be set to 2 to force at least 2 components
     private static final double PCA_VARIANCE = 0.99;
+    private static final int WARMUP_MINS = 2;
+    private static final String DEFAULT_LABEL = "idle";
 
     private final ExperimentBuilder.Host host;
     private final Config config;
@@ -76,7 +78,7 @@ public class DimensionReductionApp implements App {
 
     private void combineData() throws IOException {
         AppBuilder builder = sourceDataBuilder;
-        builder.addAlgorithm(new NoopAlgorithm());
+        builder.addAlgorithm(new ExperimentLabellingAlgorithm(WARMUP_MINS, DEFAULT_LABEL));
         File output = getOutputFile(COMBINED_FILE);
         builder.setFileOutput(output, "CSV");
         message("Writing combined host metrics to " + output.toString());

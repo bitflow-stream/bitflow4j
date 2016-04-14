@@ -94,11 +94,21 @@ public abstract class PostAnalysisAlgorithm<M extends PostAnalysisAlgorithm.Metr
         }
     }
 
-    protected void registerSample(Sample sample) {
+    void registerSample(Sample sample) {
         samples.add(new SampleMetadata(sample.getTimestamp(), sample.getSource(), sample.getLabel()));
     }
 
-    protected M getStats(String name) {
+    double[] getSampleValues(int sampleNr) {
+        double row[] = new double[metrics.size()];
+        int metricNr = 0;
+        for (MetricLog metricLog : metrics.values()) {
+            row[metricNr] = metricLog.getValue(sampleNr);
+            metricNr++;
+        }
+        return row;
+    }
+
+    M getStats(String name) {
         M result;
         if ((result = metrics.get(name)) == null) {
             result = createMetricStats(name);
