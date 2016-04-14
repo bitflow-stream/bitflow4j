@@ -8,16 +8,17 @@ import java.io.IOException;
 import java.util.*;
 
 import de.erichseifert.gral.data.DataTable;
-//import de.erichseifert.gral.examples.ExamplePanel;
 import de.erichseifert.gral.plots.XYPlot;
 import de.erichseifert.gral.ui.InteractivePanel;
-import de.erichseifert.gral.graphics.Insets2D;
+import metrics.Sample;
 
+import java.awt.*;
+import java.io.IOException;
 
 /**
  * Created by mwall on 13.04.16.
  */
-public class OutputMetricScatterPlotter extends PlotPanel implements MetricOutputStream  {
+public class OutputMetricScatterPlotter extends PlotPanel implements MetricOutputStream {
 
     private int xColumn;
     private int yColumn;
@@ -58,7 +59,6 @@ public class OutputMetricScatterPlotter extends PlotPanel implements MetricOutpu
         //plot.setInsets(new Insets2D.Double(20.0, 40.0, 40.0, 40.0));
         plot.getTitle().setText(getDescription());
 
-
         // Add plot to Swing component
         add(new InteractivePanel(plot), BorderLayout.CENTER);
 
@@ -92,21 +92,27 @@ public class OutputMetricScatterPlotter extends PlotPanel implements MetricOutpu
         return "description";
     }
 
-    @Override
     public void writeSample(Sample sample) throws IOException {
 
         String label = sample.getLabel();
 
         if (this.colorMap.containsKey(label)){
             DataTable data = this.colorMap.get(label);
-            data.add(sample.getMetrics()[xColumn],sample.getMetrics()[yColumn]);
+            double[] values = sample.getMetrics();
+            data.add(getValue(values,xColumn),getValue(values,yColumn));
         }else{
             DataTable data = new DataTable(Double.class, Double.class);
             this.colorMap.put(label,data);
         }
     }
 
-    @Override
+    private double getValue(double[] values, int index) {
+        if (index >= values.length) {
+            return 0.0;
+        }
+        return values[index];
+    }
+
     public void close() throws IOException {
         this.plotResult();
     }
