@@ -20,27 +20,29 @@ public class Main {
 //        ExperimentBuilder.Host host = bono;
         ExperimentBuilder.Host host = wally131;
 
-//        AppBuilder builder = new AppBuilder(9999, "BIN");
+//        AppBuilder source = new AppBuilder(9999, "BIN");
         AppBuilder source = new ExperimentBuilder(conf, host, false);
 //        AppBuilder source = new OldExperimentBuilder(conf, host.name, true, false, false);
 
-        DimensionReductionApp app = new DimensionReductionApp(conf, host);
-//        App app = new CodeApp(conf, host);
+        DimensionReductionApp app = new DimensionReductionApp(conf, host, source);
+//        App app = new CodeApp(conf, host, source);
 
-//        app.runAll(source);
+//        app.runAll();
         app.plotPca();
     }
 
     static class CodeApp implements App {
         final ExperimentBuilder.Host host;
         final Config config;
+        final AppBuilder builder;
 
-        CodeApp(Config config, ExperimentBuilder.Host host) {
+        CodeApp(Config config, ExperimentBuilder.Host host, AppBuilder builder) {
             this.host = host;
             this.config = config;
+            this.builder = builder;
         }
 
-        public void runAll(AppBuilder builder) throws IOException {
+        public void runAll() throws IOException {
 
 //        builder.addAlgorithm(new MetricFilterAlgorithm(0, 1, 2, 3));
             builder.addAlgorithm(new NoopAlgorithm());

@@ -7,7 +7,6 @@ import metrics.io.ScatterPlotter;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.TreeSet;
 
 /**
  * Created by anton on 4/14/16.
@@ -27,60 +26,40 @@ public class DimensionReductionApp implements App {
 
     private final ExperimentBuilder.Host host;
     private final Config config;
-    private File outputDir;
+    private final AppBuilder sourceDataBuilder;
+    private final File outputDir;
 
-    public DimensionReductionApp(Config config, ExperimentBuilder.Host host) throws IOException {
+    public DimensionReductionApp(Config config, ExperimentBuilder.Host host,
+                                AppBuilder sourceDataBuilder) throws IOException {
         this.host = host;
         this.config = config;
+        this.sourceDataBuilder = sourceDataBuilder;
+        this.outputDir = makeOutputDir();
     }
 
-    private String outputDirname(int suffix) {
-        String result = "DimensionReduction-" + host.name;
-        if (suffix > 0) result += "-" + suffix;
+    public String getName() {
+        return "DimensionReduction";
+    }
+
+    private File makeOutputDir() throws IOException {
+        String filename = config.outputFolder + "/" + getName();
+        filename += "-" + sourceDataBuilder.getName();
+        filename += "-" + host.name;
+        File result = new File(filename);
+        if (result.exists() && !result.isDirectory())
+            throw new IOException("Not a directory: " + filename);
+        if (!result.exists() && !result.mkdirs())
+            throw new IOException("Failed to create output directory " + filename);
         return result;
-    }
-
-    private File makeOutputDir(String root) throws IOException {
-        File output;
-        int suffix = 0;
-        do {
-            output = new File(root + "/" + outputDirname(suffix));
-            suffix++;
-            if (suffix >= 1000) {
-                throw new IOException("Failed to create output directory");
-            }
-        } while (!output.mkdirs());
-        return output;
-    }
-
-    private File getInputDirectory() {
-        String prefix = outputDirname(0);
-        TreeSet<File> candidates = new TreeSet<>();
-        for (File child : new File(config.outputFolder).listFiles()) {
-            if (child.isDirectory() && child.getName().startsWith(prefix)) {
-                candidates.add(child);
-            }
-        }
-        File result = candidates.pollLast();
-        if (result == null) {
-            throw new IllegalStateException("Could not find foldre like '" + prefix + "*' inside " + config.outputFolder);
-        }
-        return result;
-    }
-
-    private File getInputFile(String filename) {
-        File dir = getInputDirectory();
-        return new File(dir, filename);
     }
 
     private File getOutputFile(String filename) {
         return new File(outputDir, filename);
     }
 
-    public void runAll(AppBuilder sourceDataBuilder) throws IOException {
-        outputDir = makeOutputDir(config.outputFolder);
+    public void runAll() throws IOException {
         System.err.println("Writing results to " + outputDir);
-        combineData(sourceDataBuilder);
+        combineData();
         varianceFilter();
         correlation();
         correlationStatistics();
@@ -95,7 +74,8 @@ public class DimensionReductionApp implements App {
         System.err.println("===================== " + msg);
     }
 
-    private void combineData(AppBuilder builder) throws IOException {
+    private void combineData() throws IOException {
+        AppBuilder builder = sourceDataBuilder;
         builder.addAlgorithm(new NoopAlgorithm());
         File output = getOutputFile(COMBINED_FILE);
         builder.setFileOutput(output, "CSV");
@@ -140,7 +120,7 @@ public class DimensionReductionApp implements App {
     }
 
     void plotPca() throws IOException {
-        AppBuilder builder = newBuilder(getInputFile(PCA_FILE));
+        AppBuilder builder = newBuilder(getOutputFile(PCA_FILE));
         builder.addAlgorithm(new NoopAlgorithm());
         builder.setOutput(new OutputMetricPlotter(0, 1, new ScatterPlotter()));
         builder.runAndWait();
