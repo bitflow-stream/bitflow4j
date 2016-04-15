@@ -24,6 +24,11 @@ public class ScatterPlotter extends PlotPanel implements Plotter {
     }
 
     @Override
+    public String toString() {
+        return "scatter plot";
+    }
+
+    @Override
     public void plotResult(OutputMetricPlotter.PlotType outputType, Map<String, DataTable> map, String filename) {
         XYPlot plot = new XYPlot();
         for (final String key : map.keySet()) {
@@ -42,9 +47,9 @@ public class ScatterPlotter extends PlotPanel implements Plotter {
         //plot.setInsets(new Insets2D.Double(20.0, 40.0, 40.0, 40.0));
         plot.getTitle().setText(getDescription());
 
-        System.err.println("Prepare output");
         // Add plot to Swing component
         add(new InteractivePanel(plot), BorderLayout.CENTER);
         decideOutput(plot, outputType, filename);
     }
+
 }

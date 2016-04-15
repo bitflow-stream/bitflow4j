@@ -29,6 +29,11 @@ public class HistogramPlotter extends PlotPanel implements Plotter {
     }
 
     @Override
+    public String toString() {
+        return "histogram";
+    }
+
+    @Override
     public void plotResult(OutputMetricPlotter.PlotType outputType, Map<String, DataTable> map, String filename) {
 
         // Create histogram from data

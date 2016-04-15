@@ -20,7 +20,6 @@ public class OutputMetricPlotter extends AbstractOutputStream implements MetricO
         AS_FILE_AND_IN_FRAME
     }
 
-    private int[] color = {0, 0, 0};
     private final int[] columns;
     private final Map<String, DataTable> colorMap;
     private final PlotType outputType;
@@ -30,7 +29,6 @@ public class OutputMetricPlotter extends AbstractOutputStream implements MetricO
     public OutputMetricPlotter(Plotter plotter, String filename, int ...columns) {
         this(plotter, PlotType.AS_FILE, filename, columns);
     }
-
 
     public OutputMetricPlotter(Plotter plotter, int ...columns) {
         this(plotter, PlotType.IN_FRAME, columns);
@@ -96,6 +94,7 @@ public class OutputMetricPlotter extends AbstractOutputStream implements MetricO
     }
 
     public void close() throws IOException {
+        System.err.println("Plotting data with " + this.plotter.toString());
         this.plotter.plotResult(this.outputType, this.colorMap, this.filename);
         super.close();
     }

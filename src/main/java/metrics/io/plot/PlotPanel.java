@@ -16,6 +16,7 @@ import java.io.IOException;
 public abstract class PlotPanel extends JPanel {
 
     private int[] color = {0, 0, 0};
+
     /**
      * Version id for serialization.
      */
@@ -79,12 +80,10 @@ public abstract class PlotPanel extends JPanel {
         }
     }
 
-
     @Override
     public String toString() {
         return getTitle();
     }
-
 
     public Color getNextColor() {
         this.color[0] = (color[0] + 32) % 256;
