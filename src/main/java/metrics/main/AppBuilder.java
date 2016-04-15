@@ -13,9 +13,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author fschmidt
- */
 public class AppBuilder {
 
     public int pipeBuffer = 128;

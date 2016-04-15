@@ -6,9 +6,6 @@ import metrics.io.plot.ScatterPlotter;
 
 import java.io.IOException;
 
-/**
- * @author fschmidt
- */
 public class Main {
 
     private static final ExperimentBuilder.Host bono = new ExperimentBuilder.Host("bono.ims", "virtual");
@@ -52,7 +49,7 @@ public class Main {
 //        builder.addAlgorithm(new MetricCounter());
 //            builder.addAlgorithm(new PCAAlgorithm(0.99));
 
-            builder.setOutput(new OutputMetricPlotter(0, 1, new ScatterPlotter(), OutputMetricPlotter.IN_FRAME));
+            builder.setOutput(new OutputMetricPlotter(new int[] {0, 1}, new ScatterPlotter()));
 //            builder.setConsoleOutput("CSV");
 //        builder.setFileOutput(outputFile, "CSV");
 

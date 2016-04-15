@@ -42,22 +42,17 @@ public class OutputMetricPlotter extends AbstractOutputStream implements MetricO
     }
 
     /**
-     * @param columns    is an array of colums used from data sheet, you also define dimensions with this variable
-     * @param plotter
-     * @param outputType
-     * @param filename
+     * @param columns is an array of colums used from data sheet, you also define dimensions with this variable
      */
-
-    private OutputMetricPlotter(int[] columns, Plotter plotter, int outputType, String filename) {
-        System.err.println("Starting plot Results");
+    public OutputMetricPlotter(int[] columns, Plotter plotter, int outputType, String filename) {
+        if (columns.length < 1 || columns.length > 2) {
+            throw new IllegalArgumentException("Only 1D and 2D plots are supported.");
+        }
         this.plotter = plotter;
         this.columns = columns;
         this.filename = filename;
-
         this.outputType = outputType;
-
         this.colorMap = new HashMap<>();
-
     }
 
     public void writeSample(Sample sample) throws IOException {
@@ -68,7 +63,6 @@ public class OutputMetricPlotter extends AbstractOutputStream implements MetricO
             // 1D Plots
             case 1:
                 if (!this.colorMap.containsKey(label)) {
-                    System.err.println("write " + label + " to Map");
                     DataTable data1d = new DataTable(Double.class);
                     this.colorMap.put(label, data1d);
                 }
@@ -80,7 +74,6 @@ public class OutputMetricPlotter extends AbstractOutputStream implements MetricO
             // 2d Plots
             case 2:
                 if (!this.colorMap.containsKey(label)) {
-                    System.err.println("write " + label + " to Map");
                     DataTable data2d = new DataTable(Double.class, Double.class);
                     this.colorMap.put(label, data2d);
                 }
@@ -94,8 +87,6 @@ public class OutputMetricPlotter extends AbstractOutputStream implements MetricO
                 }
                 break;
         }
-
-
     }
 
     private double getValue(double[] values, int index) {
