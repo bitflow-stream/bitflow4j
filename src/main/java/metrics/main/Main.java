@@ -49,7 +49,7 @@ public class Main {
 //        builder.addAlgorithm(new MetricCounter());
 //            builder.addAlgorithm(new PCAAlgorithm(0.99));
 
-            builder.setOutput(new OutputMetricPlotter(new int[] {0, 1}, new ScatterPlotter()));
+            builder.setOutput(new OutputMetricPlotter(new ScatterPlotter(), 0, 1));
 //            builder.setConsoleOutput("CSV");
 //        builder.setFileOutput(outputFile, "CSV");
 

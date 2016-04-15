@@ -124,7 +124,7 @@ public class DimensionReductionApp implements App {
     void plotPca() throws IOException {
         AppBuilder builder = newBuilder(getOutputFile(PCA_FILE));
         builder.addAlgorithm(new NoopAlgorithm());
-        builder.setOutput(new OutputMetricPlotter(0, 1, new ScatterPlotter()));
+        builder.setOutput(new OutputMetricPlotter(new ScatterPlotter(), 0, 1));
         builder.runAndWait();
     }
 

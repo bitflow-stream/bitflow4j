@@ -9,6 +9,6 @@ import java.util.Map;
  */
 public interface Plotter {
 
-    void plotResult(int outputType, Map<String, DataTable> map, String filename);
+    void plotResult(OutputMetricPlotter.PlotType outputType, Map<String, DataTable> map, String filename);
 
 }

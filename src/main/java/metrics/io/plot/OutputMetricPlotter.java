@@ -13,38 +13,37 @@ import java.util.Map;
  * Created by mwall on 14.04.16.
  */
 public class OutputMetricPlotter extends AbstractOutputStream implements MetricOutputStream {
-    private int[] columns;
 
-    private Map<String, DataTable> colorMap;
-
-    private int outputType = 0;
-
-    public static final int IN_FRAME = 0;
-    public static final int AS_FILE = 1;
-    public static final int AS_FILE_AND_IN_FRAME = 2;
+    public enum PlotType {
+        IN_FRAME,
+        AS_FILE,
+        AS_FILE_AND_IN_FRAME
+    }
 
     private int[] color = {0, 0, 0};
+    private final int[] columns;
+    private final Map<String, DataTable> colorMap;
+    private final PlotType outputType;
+    private final Plotter plotter;
+    private final String filename;
 
-    private Plotter plotter;
-    private String filename = null;
-
-    public OutputMetricPlotter(int[] columns, Plotter plotter, String filename) {
-        this(columns, plotter, OutputMetricPlotter.AS_FILE, filename);
+    public OutputMetricPlotter(Plotter plotter, String filename, int ...columns) {
+        this(plotter, PlotType.AS_FILE, filename, columns);
     }
 
 
-    public OutputMetricPlotter(int[] columns, Plotter plotter) {
-        this(columns, plotter, OutputMetricPlotter.IN_FRAME);
+    public OutputMetricPlotter(Plotter plotter, int ...columns) {
+        this(plotter, PlotType.IN_FRAME, columns);
     }
 
-    public OutputMetricPlotter(int[] columns, Plotter plotter, int outputType) {
-        this(columns, plotter, outputType, null);
+    public OutputMetricPlotter(Plotter plotter, PlotType outputType, int ...columns) {
+        this(plotter, outputType, null, columns);
     }
 
     /**
      * @param columns is an array of colums used from data sheet, you also define dimensions with this variable
      */
-    public OutputMetricPlotter(int[] columns, Plotter plotter, int outputType, String filename) {
+    public OutputMetricPlotter(Plotter plotter, PlotType outputType, String filename, int ...columns) {
         if (columns.length < 1 || columns.length > 2) {
             throw new IllegalArgumentException("Only 1D and 2D plots are supported.");
         }

@@ -24,10 +24,8 @@ public class ScatterPlotter extends PlotPanel implements Plotter {
     }
 
     @Override
-    public void plotResult(int outputType, Map<String, DataTable> map, String filename) {
-
+    public void plotResult(OutputMetricPlotter.PlotType outputType, Map<String, DataTable> map, String filename) {
         XYPlot plot = new XYPlot();
-        System.err.println("Adding DataTables to Plot");
         for (final String key : map.keySet()) {
             DataTable a = map.get(key);
             DataSeries ds = new DataSeries(key, a);
@@ -36,13 +34,10 @@ public class ScatterPlotter extends PlotPanel implements Plotter {
             plot.getPointRenderers(ds).get(0).setColor(this.getNextColor());
         }
 
-
         plot.getLegend().setOrientation(Orientation.VERTICAL);
         plot.setLegendVisible(true);
-        //plot.getLegend().se
         plot.getLegend().setAlignmentY(1.0);
         plot.getLegend().setAlignmentX(1.0);
-
 
         //plot.setInsets(new Insets2D.Double(20.0, 40.0, 40.0, 40.0));
         plot.getTitle().setText(getDescription());

@@ -29,7 +29,7 @@ public class HistogramPlotter extends PlotPanel implements Plotter {
     }
 
     @Override
-    public void plotResult(int outputType, Map<String, DataTable> map, String filename) {
+    public void plotResult(OutputMetricPlotter.PlotType outputType, Map<String, DataTable> map, String filename) {
 
         // Create histogram from data
         //for (final String key : map.keySet()) {
