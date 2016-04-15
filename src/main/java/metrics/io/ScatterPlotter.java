@@ -2,7 +2,6 @@ package metrics.io;
 
 import de.erichseifert.gral.data.DataSeries;
 import de.erichseifert.gral.data.DataTable;
-import de.erichseifert.gral.graphics.Insets2D;
 import de.erichseifert.gral.graphics.Orientation;
 import de.erichseifert.gral.plots.XYPlot;
 import de.erichseifert.gral.ui.InteractivePanel;

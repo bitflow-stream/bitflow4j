@@ -153,16 +153,6 @@ public class PCAAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgorithm.NoN
         return matrix;
     }
 
-    private double[] getSampleValues(int sampleNr) {
-        double row[] = new double[metrics.size()];
-        int metricNr = 0;
-        for (MetricLog metricLog : metrics.values()) {
-            row[metricNr] = metricLog.getValue(sampleNr);
-            metricNr++;
-        }
-        return row;
-    }
-
     @Override
     protected CorrelationAlgorithm.NoNanMetricLog createMetricStats(String name) {
         return new CorrelationAlgorithm.NoNanMetricLog(name);

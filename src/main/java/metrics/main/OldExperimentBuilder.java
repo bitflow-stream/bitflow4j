@@ -20,6 +20,10 @@ public class OldExperimentBuilder extends AppBuilder {
         super(readCsvFiles(config, host, latestResults, allExperiments, printFiles));
     }
 
+    public String getName() {
+        return "old";
+    }
+
     private static FileMetricReader readCsvFiles(Config config, String host,
                                                  boolean latestResults, boolean allExperiments, boolean printFiles) throws IOException {
         FileMetricReader.NameConverter conv = scenarioName();

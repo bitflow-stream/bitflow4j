@@ -18,46 +18,41 @@ public class DimensionReductionApp implements App {
     private static final String CORR_FILE = "3-correlation.csv";
     private static final String CORR_STATS_FILE = "4-correlation-stats.csv";
     private static final String PCA_FILE = "5-pca.csv";
-    private static final String PCA_FILE_2D = "5-pca-2d.csv";
-
-    private static final String PCA_PLOT_FILE = "6-pca.eps";
-    private static final String PCA_PLOT_FILE_2D = "6-pca-2d.eps";
 
     private static final double MIN_VARIANCE = 0.02;
     private static final double SIGNIFICANT_CORRELATION = 0.7;
     private static final int PCA_COLS = -1; // Can be set to 2 to force at least 2 components
-    private static final int PCA_COLS_2D = 2; // Can be set to 2 to force at least 2 components
-
     private static final double PCA_VARIANCE = 0.99;
+    private static final int WARMUP_MINS = 2;
+    private static final String DEFAULT_LABEL = "idle";
 
     private final ExperimentBuilder.Host host;
-    private final File outputDir;
+    private final Config config;
     private final AppBuilder sourceDataBuilder;
+    private final File outputDir;
 
-    public DimensionReductionApp(Config config, ExperimentBuilder.Host host, AppBuilder sourceData) throws IOException {
-        this.sourceDataBuilder = sourceData;
+    public DimensionReductionApp(Config config, ExperimentBuilder.Host host,
+                                AppBuilder sourceDataBuilder) throws IOException {
         this.host = host;
-        this.outputDir = makeOutputDir(config.outputFolder);
-        System.err.println("Writing results to " + this.outputDir);
+        this.config = config;
+        this.sourceDataBuilder = sourceDataBuilder;
+        this.outputDir = makeOutputDir();
     }
 
-    private String outputDirname(int suffix) {
-        String result = "DimensionReduction-" + host.name;
-        if (suffix > 0) result += "-" + suffix;
+    public String getName() {
+        return "DimensionReduction";
+    }
+
+    private File makeOutputDir() throws IOException {
+        String filename = config.outputFolder + "/" + getName();
+        filename += "-" + sourceDataBuilder.getName();
+        filename += "-" + host.name;
+        File result = new File(filename);
+        if (result.exists() && !result.isDirectory())
+            throw new IOException("Not a directory: " + filename);
+        if (!result.exists() && !result.mkdirs())
+            throw new IOException("Failed to create output directory " + filename);
         return result;
-    }
-
-    private File makeOutputDir(String root) throws IOException {
-        File output;
-        int suffix = 0;
-        do {
-            output = new File(root + "/" + outputDirname(suffix));
-            suffix++;
-            if (suffix >= 1000) {
-                throw new IOException("Failed to create output directory");
-            }
-        } while (!output.mkdirs());
-        return output;
     }
 
     private File getOutputFile(String filename) {
@@ -65,13 +60,12 @@ public class DimensionReductionApp implements App {
     }
 
     public void runAll() throws IOException {
+        System.err.println("Writing results to " + outputDir);
         combineData();
         varianceFilter();
         correlation();
         correlationStatistics();
         pca();
-        pca_2d();
-        pcaPlot();
     }
 
     private AppBuilder newBuilder(File inputFile) throws IOException {
@@ -84,7 +78,7 @@ public class DimensionReductionApp implements App {
 
     private void combineData() throws IOException {
         AppBuilder builder = sourceDataBuilder;
-        builder.addAlgorithm(new NoopAlgorithm());
+        builder.addAlgorithm(new ExperimentLabellingAlgorithm(WARMUP_MINS, DEFAULT_LABEL));
         File output = getOutputFile(COMBINED_FILE);
         builder.setFileOutput(output, "CSV");
         message("Writing combined host metrics to " + output.toString());
@@ -126,29 +120,11 @@ public class DimensionReductionApp implements App {
         message("Writing PCA data to " + output.toString());
         builder.runAndWait();
     }
-    private void pca_2d() throws IOException {
-        AppBuilder builder = newBuilder(getOutputFile(COMBINED_FILE));
-        builder.addAlgorithm(new PCAAlgorithm(-1, PCA_COLS_2D, PCA_VARIANCE));
-        File output = getOutputFile(PCA_FILE_2D);
-        builder.setFileOutput(output, "CSV");
-        message("Writing PCA data to " + output.toString());
-        builder.runAndWait();
-    }
 
-    private void pcaPlot() throws IOException {
+    void plotPca() throws IOException {
         AppBuilder builder = newBuilder(getOutputFile(PCA_FILE));
         builder.addAlgorithm(new NoopAlgorithm());
-        File output = getOutputFile(PCA_PLOT_FILE);
-        builder.setOutput(new OutputMetricPlotter(new int[] {0,-1},new ScatterPlotter(),output.toString()));
-        message("Writing PCA plot to " + output.toString());
-        builder.runAndWait();
-    }
-    private void pcaPlot2d() throws IOException {
-        AppBuilder builder = newBuilder(getOutputFile(PCA_FILE_2D));
-        builder.addAlgorithm(new NoopAlgorithm());
-        File output = getOutputFile(PCA_PLOT_FILE_2D);
-        builder.setOutput(new OutputMetricPlotter(new int[] {0,1},new ScatterPlotter(),output.toString()));
-        message("Writing PCA plot to " + output.toString());
+        builder.setOutput(new OutputMetricPlotter(0, 1, new ScatterPlotter()));
         builder.runAndWait();
     }
 

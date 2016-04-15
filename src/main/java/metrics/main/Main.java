@@ -1,13 +1,9 @@
 package metrics.main;
 
 import metrics.algorithms.NoopAlgorithm;
-import metrics.algorithms.PCAAlgorithm;
-import metrics.io.FileMetricReader;
-import metrics.io.HistogramPlotter;
 import metrics.io.OutputMetricPlotter;
 import metrics.io.ScatterPlotter;
 
-import java.io.File;
 import java.io.IOException;
 
 /**
@@ -24,40 +20,39 @@ public class Main {
 //        ExperimentBuilder.Host host = bono;
         ExperimentBuilder.Host host = wally131;
 
+//        AppBuilder source = new AppBuilder(9999, "BIN");
         AppBuilder source = new ExperimentBuilder(conf, host, false);
 //        AppBuilder source = new OldExperimentBuilder(conf, host.name, true, false, false);
-        //App app = new DimensionReductionApp(conf, host, source);
 
-        App app = new CodeApp(conf, host);
+        DimensionReductionApp app = new DimensionReductionApp(conf, host, source);
+//        App app = new CodeApp(conf, host, source);
 
         app.runAll();
+//        app.plotPca();
     }
 
     static class CodeApp implements App {
         final ExperimentBuilder.Host host;
         final Config config;
+        final AppBuilder builder;
 
-        CodeApp(Config config, ExperimentBuilder.Host host) {
+        CodeApp(Config config, ExperimentBuilder.Host host, AppBuilder builder) {
             this.host = host;
             this.config = config;
+            this.builder = builder;
         }
 
         public void runAll() throws IOException {
 
-//        AppBuilder builder = new AppBuilder(9999, "BIN");
-//            AppBuilder builder = new OldExperimentBuilder(config, host.name, true, false, false);
-        AppBuilder builder = new AppBuilder(new File(config.outputFolder + "/DimensionReduction-" + host.name + "/5-pca.csv"), FileMetricReader.FILE_NAME);
-   //     AppBuilder builder = new ExperimentBuilder(config.experimentFolder, host, true);
-//        builder.setUnifiedSource(HOST);
-
 //        builder.addAlgorithm(new MetricFilterAlgorithm(0, 1, 2, 3));
-          builder.addAlgorithm(new NoopAlgorithm());
+            builder.addAlgorithm(new NoopAlgorithm());
 //        builder.addAlgorithm(new VarianceFilterAlgorithm(0.02, true));
 //        builder.addAlgorithm(new CorrelationAlgorithm(false));
 //        builder.addAlgorithm(new CorrelationSignificanceAlgorithm(0.7));
 //        builder.addAlgorithm(new MetricCounter());
 //            builder.addAlgorithm(new PCAAlgorithm(0.99));
-          builder.setOutput(new OutputMetricPlotter(new int[] {0},new HistogramPlotter(),OutputMetricPlotter.IN_FRAME));
+
+            builder.setOutput(new OutputMetricPlotter(0, 1, new ScatterPlotter(), OutputMetricPlotter.IN_FRAME));
 //            builder.setConsoleOutput("CSV");
 //        builder.setFileOutput(outputFile, "CSV");
 

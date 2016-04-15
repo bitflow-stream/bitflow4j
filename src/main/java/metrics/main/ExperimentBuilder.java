@@ -13,17 +13,23 @@ import java.util.regex.Pattern;
  */
 public class ExperimentBuilder extends AppBuilder {
 
+    public ExperimentBuilder(Config config, Host host, boolean printFiles) throws IOException {
+        super(readCsvFiles(config.experimentFolder, host, printFiles));
+    }
+
+    public String getName() {
+        return "new";
+    }
+
     public static class Host {
+
         public final String layer;
         public final String name;
+
         public Host(String name, String layer) {
             this.layer = layer;
             this.name = name;
         }
-    }
-
-    public ExperimentBuilder(Config config, Host host, boolean printFiles) throws IOException {
-        super(readCsvFiles(config.experimentFolder, host, printFiles));
     }
 
     private static FileMetricReader readCsvFiles(String rootDir, Host host, boolean printFiles) throws IOException {
