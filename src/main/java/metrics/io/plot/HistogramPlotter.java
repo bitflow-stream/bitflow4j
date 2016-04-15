@@ -1,12 +1,10 @@
-package metrics.io;
+package metrics.io.plot;
 
-import de.erichseifert.gral.data.Column;
 import de.erichseifert.gral.data.DataSource;
 import de.erichseifert.gral.data.DataTable;
 import de.erichseifert.gral.data.EnumeratedData;
 import de.erichseifert.gral.data.statistics.Histogram1D;
 import de.erichseifert.gral.data.statistics.Statistics;
-import de.erichseifert.gral.graphics.Insets2D;
 import de.erichseifert.gral.graphics.Orientation;
 import de.erichseifert.gral.plots.BarPlot;
 import de.erichseifert.gral.plots.points.PointRenderer;
@@ -37,7 +35,7 @@ public class HistogramPlotter extends PlotPanel implements Plotter {
         //for (final String key : map.keySet()) {
         DataTable data = map.get("load");
 
-        Histogram1D histogram = new Histogram1D(data, Orientation.VERTICAL,new Number[] {1000});
+        Histogram1D histogram = new Histogram1D(data, Orientation.VERTICAL, new Number[]{1000});
         // Create a second dimension (x axis) for plotting
         DataSource histogram2d = new EnumeratedData(histogram);
 
@@ -56,7 +54,7 @@ public class HistogramPlotter extends PlotPanel implements Plotter {
         plot.getAxisRenderer(BarPlot.AXIS_X).setMinorTicksVisible(true);
         // Format y axis
         plot.getAxis(BarPlot.AXIS_Y).setRange(0.0,
-                MathUtils.ceil(histogram.getStatistics().get(Statistics.MAX)*1.1, 25.0));
+                MathUtils.ceil(histogram.getStatistics().get(Statistics.MAX) * 1.1, 25.0));
         plot.getAxisRenderer(BarPlot.AXIS_Y).setTickAlignment(0.0);
         plot.getAxisRenderer(BarPlot.AXIS_Y).setMinorTicksVisible(true);
         plot.getAxisRenderer(BarPlot.AXIS_Y).setIntersection(-4.4);
@@ -72,6 +70,6 @@ public class HistogramPlotter extends PlotPanel implements Plotter {
         panel.setZoomable(true);
         add(panel);
 
-        decideOutput(plot,outputType,filename);
+        decideOutput(plot, outputType, filename);
     }
 }

@@ -1,4 +1,4 @@
-package metrics.io;
+package metrics.io.plot;
 
 import de.erichseifert.gral.data.DataSeries;
 import de.erichseifert.gral.data.DataTable;
@@ -50,6 +50,6 @@ public class ScatterPlotter extends PlotPanel implements Plotter {
         System.err.println("Prepare output");
         // Add plot to Swing component
         add(new InteractivePanel(plot), BorderLayout.CENTER);
-        decideOutput(plot,outputType,filename);
+        decideOutput(plot, outputType, filename);
     }
 }

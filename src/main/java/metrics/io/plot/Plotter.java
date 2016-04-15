@@ -1,4 +1,4 @@
-package metrics.io;
+package metrics.io.plot;
 
 import de.erichseifert.gral.data.DataTable;
 

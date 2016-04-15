@@ -7,7 +7,7 @@ import java.util.*;
 
 /**
  * Created by anton on 4/6/16.
- *
+ * <p>
  * TODO source and label of incoming Samples are currently discarded.
  */
 public abstract class AbstractParallelAggregator extends MetricInputAggregator {
@@ -122,8 +122,11 @@ public abstract class AbstractParallelAggregator extends MetricInputAggregator {
 
     // By implementing this subclasses control the blocking & timing behaviour of all involved Threads
     protected abstract void waitForNewInput(); // May block
+
     protected abstract void inputReceived(); // Must not block
+
     protected abstract void inputReady(AggregatingThread input); // May block
+
     protected abstract void notifyNewInput(AggregatingThread input); // Must not block
 
     private synchronized boolean inputStarting(AggregatingThread thread) {

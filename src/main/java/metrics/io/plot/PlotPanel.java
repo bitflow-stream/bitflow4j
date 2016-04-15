@@ -1,4 +1,4 @@
-package metrics.io;
+package metrics.io.plot;
 
 import de.erichseifert.gral.io.plots.DrawableWriter;
 import de.erichseifert.gral.io.plots.DrawableWriterFactory;
@@ -11,12 +11,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 /**
-    plotpanel based on gral example
+ * plotpanel based on gral example
  */
 public abstract class PlotPanel extends JPanel {
 
     private int[] color = {0, 0, 0};
-    /** Version id for serialization. */
+    /**
+     * Version id for serialization.
+     */
     private static final long serialVersionUID = 8221256658243821951L;
 
     /**
@@ -31,18 +33,21 @@ public abstract class PlotPanel extends JPanel {
 
     /**
      * Returns a short title for the example.
+     *
      * @return A title text.
      */
     public abstract String getTitle();
 
     /**
      * Returns a more detailed description of the example contents.
+     *
      * @return A description of the example.
      */
     public abstract String getDescription();
 
     /**
      * Opens a frame and shows the example in it.
+     *
      * @return the frame instance used for displaying the example.
      */
     protected JFrame showInFrame() {
@@ -54,7 +59,7 @@ public abstract class PlotPanel extends JPanel {
         return frame;
     }
 
-    protected void save(XYPlot plot,String filename) {
+    protected void save(XYPlot plot, String filename) {
 
         JFileChooser chooser = new JFileChooser();
         File file = null;
@@ -62,10 +67,10 @@ public abstract class PlotPanel extends JPanel {
         if (option == JFileChooser.APPROVE_OPTION) {
             if (filename == null) {
                 file = chooser.getSelectedFile();
-            }else{
+            } else {
                 file = new File(filename);
             }
-                try {
+            try {
                 DrawableWriter writer = DrawableWriterFactory.getInstance().get("application/postscript");
                 writer.write(plot, new FileOutputStream(file), 800, 600);
             } catch (IOException e) {
@@ -86,12 +91,12 @@ public abstract class PlotPanel extends JPanel {
         this.color[1] = (color[1] + 128) % 256;
         this.color[2] = (color[2] + 64) % 256;
 
-        Color rc = new Color(color[0], color[1], color[2],128);
+        Color rc = new Color(color[0], color[1], color[2], 128);
 
         return rc;
     }
 
-    protected void decideOutput(XYPlot plot,int outputType,String filename) {
+    protected void decideOutput(XYPlot plot, int outputType, String filename) {
         switch (outputType) {
             case OutputMetricPlotter.IN_FRAME:
                 this.showInFrame();

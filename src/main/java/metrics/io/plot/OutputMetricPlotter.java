@@ -1,7 +1,10 @@
-package metrics.io;
+package metrics.io.plot;
 
 import de.erichseifert.gral.data.DataTable;
 import metrics.Sample;
+import metrics.io.AbstractOutputStream;
+import metrics.io.MetricOutputStream;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -9,7 +12,7 @@ import java.util.Map;
 /**
  * Created by mwall on 14.04.16.
  */
-public class OutputMetricPlotter extends AbstractOutputStream implements MetricOutputStream{
+public class OutputMetricPlotter extends AbstractOutputStream implements MetricOutputStream {
     private int[] columns;
 
     private Map<String, DataTable> colorMap;
@@ -39,14 +42,13 @@ public class OutputMetricPlotter extends AbstractOutputStream implements MetricO
     }
 
     /**
-     *
-     * @param columns is an array of colums used from data sheet, you also define dimensions with this variable
+     * @param columns    is an array of colums used from data sheet, you also define dimensions with this variable
      * @param plotter
      * @param outputType
      * @param filename
      */
 
-    private OutputMetricPlotter(int[] columns, Plotter plotter, int outputType,String filename){
+    private OutputMetricPlotter(int[] columns, Plotter plotter, int outputType, String filename) {
         System.err.println("Starting plot Results");
         this.plotter = plotter;
         this.columns = columns;
@@ -61,7 +63,7 @@ public class OutputMetricPlotter extends AbstractOutputStream implements MetricO
     public void writeSample(Sample sample) throws IOException {
         String label = sample.getSource();
         double[] values = sample.getMetrics();
-        switch(columns.length){
+        switch (columns.length) {
 
             // 1D Plots
             case 1:
@@ -85,7 +87,7 @@ public class OutputMetricPlotter extends AbstractOutputStream implements MetricO
                 DataTable data2d = this.colorMap.get(label);
                 double xVal2d = getValue(values, columns[0]);
 
-                if ( columns[1] == -1) {
+                if (columns[1] == -1) {
                     data2d.add(xVal2d, xVal2d);
                 } else {
                     data2d.add(xVal2d, getValue(values, columns[1]));
@@ -104,7 +106,7 @@ public class OutputMetricPlotter extends AbstractOutputStream implements MetricO
     }
 
     public void close() throws IOException {
-        this.plotter.plotResult(this.outputType,this.colorMap,this.filename);
+        this.plotter.plotResult(this.outputType, this.colorMap, this.filename);
         super.close();
     }
 

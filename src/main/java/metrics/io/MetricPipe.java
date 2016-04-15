@@ -9,7 +9,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by anton on 4/5/16.
- *
+ * <p>
  * Should be used by exactly one Thread for readSample() and one Thread for writeSample().
  * Only the Thread the uses writeSample() should call close().
  * Otherwise the synchronization mechanisms must be extended.

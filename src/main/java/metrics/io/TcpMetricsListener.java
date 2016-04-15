@@ -46,7 +46,7 @@ public class TcpMetricsListener implements InputStreamProducer {
                     String remote = acceptConnection(socket);
                     System.err.println("Accepted connection from " + remote);
                 }
-            } catch(Exception exc) {
+            } catch (Exception exc) {
                 System.err.println("Error accepting connection: " + exc.getMessage());
                 if (socket != null) {
                     try {

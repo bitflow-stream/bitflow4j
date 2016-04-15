@@ -2,8 +2,8 @@ package metrics.main;
 
 import metrics.algorithms.*;
 import metrics.io.FileMetricReader;
-import metrics.io.OutputMetricPlotter;
-import metrics.io.ScatterPlotter;
+import metrics.io.plot.OutputMetricPlotter;
+import metrics.io.plot.ScatterPlotter;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,7 +32,7 @@ public class DimensionReductionApp implements App {
     private final File outputDir;
 
     public DimensionReductionApp(Config config, ExperimentBuilder.Host host,
-                                AppBuilder sourceDataBuilder) throws IOException {
+                                 AppBuilder sourceDataBuilder) throws IOException {
         this.host = host;
         this.config = config;
         this.sourceDataBuilder = sourceDataBuilder;

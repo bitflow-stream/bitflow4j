@@ -1,8 +1,8 @@
 package metrics.main;
 
 import metrics.algorithms.NoopAlgorithm;
-import metrics.io.OutputMetricPlotter;
-import metrics.io.ScatterPlotter;
+import metrics.io.plot.OutputMetricPlotter;
+import metrics.io.plot.ScatterPlotter;
 
 import java.io.IOException;
 

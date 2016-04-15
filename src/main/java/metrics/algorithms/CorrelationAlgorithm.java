@@ -17,6 +17,7 @@ public class CorrelationAlgorithm extends PostAnalysisAlgorithm<PostAnalysisAlgo
 
     public interface Correlation {
         double correlation(double[] x, double y[]);
+
         String toString();
     }
 
@@ -24,6 +25,7 @@ public class CorrelationAlgorithm extends PostAnalysisAlgorithm<PostAnalysisAlgo
         public double correlation(double[] x, double[] y) {
             return new PearsonsCorrelation().correlation(x, y);
         }
+
         public String toString() {
             return "pearson";
         }
@@ -32,6 +34,7 @@ public class CorrelationAlgorithm extends PostAnalysisAlgorithm<PostAnalysisAlgo
         public double correlation(double[] x, double[] y) {
             return new SpearmansCorrelation().correlation(x, y);
         }
+
         public String toString() {
             return "spearmans";
         }
@@ -40,6 +43,7 @@ public class CorrelationAlgorithm extends PostAnalysisAlgorithm<PostAnalysisAlgo
         public double correlation(double[] x, double[] y) {
             return new KendallsCorrelation().correlation(x, y);
         }
+
         public String toString() {
             return "kendalls";
         }
@@ -48,7 +52,7 @@ public class CorrelationAlgorithm extends PostAnalysisAlgorithm<PostAnalysisAlgo
     private final Correlation[] correlations;
     private static final String sourceSeparator = " <-> ";
 
-    public CorrelationAlgorithm(boolean globalAnalysis, Correlation ...correlations) {
+    public CorrelationAlgorithm(boolean globalAnalysis, Correlation... correlations) {
         super(globalAnalysis);
         this.correlations = correlations;
     }

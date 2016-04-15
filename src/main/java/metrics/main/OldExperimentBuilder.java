@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 
 /**
  * Created by anton on 4/14/16.
- *
+ * <p>
  * This builder represents the experiment folder structure of the first batch of experiment results (experiments-old/)
  */
 public class OldExperimentBuilder extends AppBuilder {

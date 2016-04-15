@@ -69,29 +69,29 @@ public class FileMetricReader implements InputStreamProducer {
 
     public void addFiles(String directory, FileFilter filter) throws IOException {
         addFiles(directory,
-            (Path path, BasicFileAttributes attr) ->
-                attr.isDirectory() || (attr.isRegularFile() && filter.shouldInclude(path)));
+                (Path path, BasicFileAttributes attr) ->
+                        attr.isDirectory() || (attr.isRegularFile() && filter.shouldInclude(path)));
     }
 
     public void addFiles(String directory, FileVisitor visitor) throws IOException {
         Files.walkFileTree(new File(directory).toPath(),
-            new HashSet<>(Collections.singletonList(FOLLOW_LINKS)),
-            Integer.MAX_VALUE,
-            new SimpleFileVisitor<Path>() {
-                @Override
-                public FileVisitResult preVisitDirectory(Path path, BasicFileAttributes attr) throws IOException {
-                    boolean result = visitor.visitFile(path, attr);
-                    return result ? FileVisitResult.CONTINUE : FileVisitResult.SKIP_SUBTREE;
-                }
+                new HashSet<>(Collections.singletonList(FOLLOW_LINKS)),
+                Integer.MAX_VALUE,
+                new SimpleFileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult preVisitDirectory(Path path, BasicFileAttributes attr) throws IOException {
+                        boolean result = visitor.visitFile(path, attr);
+                        return result ? FileVisitResult.CONTINUE : FileVisitResult.SKIP_SUBTREE;
+                    }
 
-                @Override
-                public FileVisitResult visitFile(Path path, BasicFileAttributes attr) throws IOException {
-                    boolean result = visitor.visitFile(path, attr);
-                    if (result)
-                        addFile(path.toFile().getPath());
-                    return FileVisitResult.SKIP_SUBTREE;
-                }
-            });
+                    @Override
+                    public FileVisitResult visitFile(Path path, BasicFileAttributes attr) throws IOException {
+                        boolean result = visitor.visitFile(path, attr);
+                        if (result)
+                            addFile(path.toFile().getPath());
+                        return FileVisitResult.SKIP_SUBTREE;
+                    }
+                });
     }
 
     public void addFile(String path) throws IOException {

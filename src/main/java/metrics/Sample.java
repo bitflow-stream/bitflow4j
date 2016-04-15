@@ -7,7 +7,7 @@ import java.util.List;
 
 /**
  * Created by mwall on 30.03.16.
- *
+ * <p>
  * Represents one vector of data.
  * The header contains labels for the values. It does not contain special fields like
  * {@link Header#HEADER_TIME}, although these fields are also transported over the network.
@@ -106,7 +106,7 @@ public class Sample {
         public static final int TOTAL_SPECIAL_FIELDS = 3;
 
         public static final List<String> SPECIAL_FIELDS = Arrays.asList(
-            HEADER_TIME, HEADER_SOURCE, HEADER_LABEL
+                HEADER_TIME, HEADER_SOURCE, HEADER_LABEL
         );
 
         private static boolean isSpecial(String field) {

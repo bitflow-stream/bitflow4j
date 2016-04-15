@@ -9,7 +9,7 @@ import java.util.Date;
 
 /**
  * Created by mwall on 30.03.16.
- *
+ * <p>
  * parses csv like header, metrics to a Sample object containing String[], and double[]
  * and further cuts of the first metric and sets it as timestamp in sample object
  */

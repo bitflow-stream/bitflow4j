@@ -4,7 +4,7 @@ import java.util.*;
 
 /**
  * Created by anton on 4/8/16.
- *
+ * <p>
  * In this implementation readSample() will block until ALL inputs deliver new data.
  * Likewise, after delivering data each input is delayed until the data is fetched through readSample().
  */
