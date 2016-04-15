@@ -18,11 +18,16 @@ public class DimensionReductionApp implements App {
     private static final String CORR_FILE = "3-correlation.csv";
     private static final String CORR_STATS_FILE = "4-correlation-stats.csv";
     private static final String PCA_FILE = "5-pca.csv";
+    private static final String PCA_FILE_2D = "5-pca-2d.csv";
+
     private static final String PCA_PLOT_FILE = "6-pca.eps";
+    private static final String PCA_PLOT_FILE_2D = "6-pca-2d.eps";
 
     private static final double MIN_VARIANCE = 0.02;
     private static final double SIGNIFICANT_CORRELATION = 0.7;
     private static final int PCA_COLS = -1; // Can be set to 2 to force at least 2 components
+    private static final int PCA_COLS_2D = 2; // Can be set to 2 to force at least 2 components
+
     private static final double PCA_VARIANCE = 0.99;
 
     private final ExperimentBuilder.Host host;
@@ -65,6 +70,7 @@ public class DimensionReductionApp implements App {
         correlation();
         correlationStatistics();
         pca();
+        pca_2d();
         pcaPlot();
     }
 
@@ -120,12 +126,28 @@ public class DimensionReductionApp implements App {
         message("Writing PCA data to " + output.toString());
         builder.runAndWait();
     }
+    private void pca_2d() throws IOException {
+        AppBuilder builder = newBuilder(getOutputFile(COMBINED_FILE));
+        builder.addAlgorithm(new PCAAlgorithm(-1, PCA_COLS_2D, PCA_VARIANCE));
+        File output = getOutputFile(PCA_FILE_2D);
+        builder.setFileOutput(output, "CSV");
+        message("Writing PCA data to " + output.toString());
+        builder.runAndWait();
+    }
 
     private void pcaPlot() throws IOException {
         AppBuilder builder = newBuilder(getOutputFile(PCA_FILE));
         builder.addAlgorithm(new NoopAlgorithm());
         File output = getOutputFile(PCA_PLOT_FILE);
-        builder.setOutput(new OutputMetricPlotter(0, 1,new ScatterPlotter(),output.toString()));
+        builder.setOutput(new OutputMetricPlotter(new int[] {0,-1},new ScatterPlotter(),output.toString()));
+        message("Writing PCA plot to " + output.toString());
+        builder.runAndWait();
+    }
+    private void pcaPlot2d() throws IOException {
+        AppBuilder builder = newBuilder(getOutputFile(PCA_FILE_2D));
+        builder.addAlgorithm(new NoopAlgorithm());
+        File output = getOutputFile(PCA_PLOT_FILE_2D);
+        builder.setOutput(new OutputMetricPlotter(new int[] {0,1},new ScatterPlotter(),output.toString()));
         message("Writing PCA plot to " + output.toString());
         builder.runAndWait();
     }

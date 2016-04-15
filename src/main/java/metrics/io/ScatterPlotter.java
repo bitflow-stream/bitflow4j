@@ -51,18 +51,6 @@ public class ScatterPlotter extends PlotPanel implements Plotter {
         System.err.println("Prepare output");
         // Add plot to Swing component
         add(new InteractivePanel(plot), BorderLayout.CENTER);
-        switch (outputType) {
-            case OutputMetricPlotter.IN_FRAME:
-                this.showInFrame();
-                break;
-            case OutputMetricPlotter.AS_FILE:
-                System.err.println("Save plot to file");
-                this.save(plot, filename);
-                break;
-            case OutputMetricPlotter.AS_FILE_AND_IN_FRAME:
-                this.save(plot, filename);
-                this.showInFrame();
-                break;
-        }
+        decideOutput(plot,outputType,filename);
     }
 }

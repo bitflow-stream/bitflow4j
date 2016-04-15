@@ -93,4 +93,20 @@ public abstract class PlotPanel extends JPanel {
 
         return rc;
     }
+
+    protected void decideOutput(XYPlot plot,int outputType,String filename) {
+        switch (outputType) {
+            case OutputMetricPlotter.IN_FRAME:
+                this.showInFrame();
+                break;
+            case OutputMetricPlotter.AS_FILE:
+                System.err.println("Save plot to file");
+                this.save(plot, filename);
+                break;
+            case OutputMetricPlotter.AS_FILE_AND_IN_FRAME:
+                this.save(plot, filename);
+                this.showInFrame();
+                break;
+        }
+    }
 }

@@ -1,18 +1,7 @@
 package metrics.io;
 
 import de.erichseifert.gral.data.DataTable;
-import de.erichseifert.gral.graphics.Insets2D;
-import de.erichseifert.gral.graphics.Orientation;
-import de.erichseifert.gral.io.plots.DrawableWriter;
-import de.erichseifert.gral.io.plots.DrawableWriterFactory;
-import de.erichseifert.gral.plots.XYPlot;
-import de.erichseifert.gral.ui.InteractivePanel;
 import metrics.Sample;
-
-import javax.swing.*;
-import java.awt.*;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,8 +10,7 @@ import java.util.Map;
  * Created by mwall on 14.04.16.
  */
 public class OutputMetricPlotter extends AbstractOutputStream implements MetricOutputStream{
-    private int xColumn;
-    private int yColumn;
+    private int[] columns;
 
     private Map<String, DataTable> colorMap;
 
@@ -37,24 +25,31 @@ public class OutputMetricPlotter extends AbstractOutputStream implements MetricO
     private Plotter plotter;
     private String filename = null;
 
-    public OutputMetricPlotter(int xColumn, int yColumn, Plotter plotter, String filename) {
-        this(xColumn, yColumn, plotter, OutputMetricPlotter.AS_FILE, filename);
+    public OutputMetricPlotter(int[] columns, Plotter plotter, String filename) {
+        this(columns, plotter, OutputMetricPlotter.AS_FILE, filename);
     }
 
 
-    public OutputMetricPlotter(int xColumn, int yColumn, Plotter plotter) {
-        this(xColumn, yColumn, plotter, OutputMetricPlotter.IN_FRAME);
+    public OutputMetricPlotter(int[] columns, Plotter plotter) {
+        this(columns, plotter, OutputMetricPlotter.IN_FRAME);
     }
 
-    public OutputMetricPlotter(int xColumn, int yColumn, Plotter plotter, int outputType) {
-        this(xColumn, yColumn, plotter, outputType, null);
+    public OutputMetricPlotter(int[] columns, Plotter plotter, int outputType) {
+        this(columns, plotter, outputType, null);
     }
 
-    private OutputMetricPlotter(int xColumn, int yColumn, Plotter plotter, int outputType,String filename){
+    /**
+     *
+     * @param columns is an array of colums used from data sheet, you also define dimensions with this variable
+     * @param plotter
+     * @param outputType
+     * @param filename
+     */
+
+    private OutputMetricPlotter(int[] columns, Plotter plotter, int outputType,String filename){
         System.err.println("Starting plot Results");
         this.plotter = plotter;
-        this.xColumn = xColumn;
-        this.yColumn = yColumn;
+        this.columns = columns;
         this.filename = filename;
 
         this.outputType = outputType;
@@ -65,20 +60,40 @@ public class OutputMetricPlotter extends AbstractOutputStream implements MetricO
 
     public void writeSample(Sample sample) throws IOException {
         String label = sample.getSource();
-
-        if (!this.colorMap.containsKey(label)) {
-            System.err.println("write " + label + " to Map");
-            DataTable data = new DataTable(Double.class, Double.class);
-            this.colorMap.put(label, data);
-        }
-        DataTable data = this.colorMap.get(label);
         double[] values = sample.getMetrics();
-        double xVal = getValue(values, xColumn);
-        if (values.length == 1) {
-            data.add(xVal, xVal);
-        } else {
-            data.add(xVal, getValue(values, yColumn));
+        switch(columns.length){
+
+            // 1D Plots
+            case 1:
+                if (!this.colorMap.containsKey(label)) {
+                    System.err.println("write " + label + " to Map");
+                    DataTable data1d = new DataTable(Double.class);
+                    this.colorMap.put(label, data1d);
+                }
+                DataTable data1d = this.colorMap.get(label);
+                double xVal1d = getValue(values, columns[0]);
+                data1d.add(xVal1d);
+                break;
+
+            // 2d Plots
+            case 2:
+                if (!this.colorMap.containsKey(label)) {
+                    System.err.println("write " + label + " to Map");
+                    DataTable data2d = new DataTable(Double.class, Double.class);
+                    this.colorMap.put(label, data2d);
+                }
+                DataTable data2d = this.colorMap.get(label);
+                double xVal2d = getValue(values, columns[0]);
+
+                if ( columns[1] == -1) {
+                    data2d.add(xVal2d, xVal2d);
+                } else {
+                    data2d.add(xVal2d, getValue(values, columns[1]));
+                }
+                break;
         }
+
+
     }
 
     private double getValue(double[] values, int index) {
