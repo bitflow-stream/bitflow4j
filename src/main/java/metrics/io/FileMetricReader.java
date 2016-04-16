@@ -10,10 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
@@ -95,15 +92,22 @@ public class FileMetricReader implements InputStreamProducer {
     }
 
     public void addFile(String path) throws IOException {
-        addFile(new File(path));
+        String source = converter.convert(new File(path));
+        FileGroup group = new FileGroup(path);
+        Collection<String> filenames = group.listFiles();
+        if (filenames.isEmpty())
+            throw new IOException("File not found: " + path);
+        for (String filename : filenames) {
+            File file = new File(filename);
+            files.add(file);
+            FileInputStream fileInput = new FileInputStream(file);
+            MetricInputStream input = new MetricReader(fileInput, source, marshaller);
+            inputs.add(input);
+        }
     }
 
     public void addFile(File file) throws IOException {
-        files.add(file);
-        FileInputStream fileInput = new FileInputStream(file);
-        String source = converter.convert(file);
-        MetricInputStream input = new MetricReader(fileInput, source, marshaller);
-        inputs.add(input);
+        addFile(file.toString());
     }
 
     public List<File> getFiles() {

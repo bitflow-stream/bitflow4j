@@ -8,7 +8,6 @@ import metrics.algorithms.Algorithm;
 import metrics.io.*;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -87,12 +86,12 @@ public class AppBuilder {
         setOutput(new MetricPrinter(getMarshaller(outputMarshaller)));
     }
 
-    public void setFileOutput(String path, String outputMarshaller) throws FileNotFoundException {
-        setOutput(new MetricPrinter(path, getMarshaller(outputMarshaller)));
+    public void setFileOutput(String path, String outputMarshaller) throws IOException {
+        setOutput(new FileMetricPrinter(path, getMarshaller(outputMarshaller)));
     }
 
-    public void setFileOutput(File file, String outputMarshaller) throws FileNotFoundException {
-        setOutput(new MetricPrinter(file, getMarshaller(outputMarshaller)));
+    public void setFileOutput(File file, String outputMarshaller) throws IOException {
+        setFileOutput(file.toString(), outputMarshaller);
     }
 
     public void waitForOutput() {
