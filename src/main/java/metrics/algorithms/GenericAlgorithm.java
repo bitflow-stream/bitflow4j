@@ -26,6 +26,8 @@ import java.io.IOException;
  */
 public abstract class GenericAlgorithm implements Algorithm {
 
+    public boolean catchExceptions = false;
+
     public abstract String toString();
 
     public final void start(MetricInputStream input, MetricOutputStream output) {
@@ -42,8 +44,12 @@ public abstract class GenericAlgorithm implements Algorithm {
             } catch (InputStreamClosedException exc) {
                 throw exc;
             } catch (IOException exc) {
-                System.err.println("IO Error executing " + toString());
-                exc.printStackTrace();
+                if (catchExceptions) {
+                    System.err.println("IO Error executing " + toString());
+                    exc.printStackTrace();
+                } else {
+                    throw exc;
+                }
             }
         }
     }

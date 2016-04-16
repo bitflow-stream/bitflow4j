@@ -8,33 +8,44 @@ import java.io.IOException;
 
 public class Main {
 
-    private static final ExperimentBuilder.Host bono = new ExperimentBuilder.Host("bono.ims", "virtual");
-    private static final ExperimentBuilder.Host wally131 = new ExperimentBuilder.Host("wally131", "physical");
+    static final Config conf = new Config();
 
-    public static void main(String[] args) throws IOException {
-        Config conf = new Config();
+    private static final AbstractExperimentBuilder.Host bono = new AbstractExperimentBuilder.Host("bono.ims", "virtual");
+    private static final AbstractExperimentBuilder.Host wally131 = new AbstractExperimentBuilder.Host("wally131", "physical");
 
-//        ExperimentBuilder.Host host = bono;
-        ExperimentBuilder.Host host = wally131;
-
-//        AppBuilder source = new AppBuilder(9999, "BIN");
-        AppBuilder source = new ExperimentBuilder(conf, host, false);
-//        AppBuilder source = new OldExperimentBuilder(conf, host.name, true, false, false);
-
-        DimensionReductionApp app = new DimensionReductionApp(conf, host, source);
-//        App app = new CodeApp(conf, host, source);
-
-        app.runAll();
-//        app.plotPca();
+    static class OldExpFactory extends OldExperimentBuilder.Factory {
+        public AbstractExperimentBuilder makeExperimentBuilder(AbstractExperimentBuilder.Host host) throws IOException {
+            return new OldExperimentBuilder(conf, host.name, true,false,false);
+        }
     }
 
-    static class CodeApp implements App {
-        final ExperimentBuilder.Host host;
+    static class NewExpFactory extends ExperimentBuilder.Factory {
+        public AbstractExperimentBuilder makeExperimentBuilder(AbstractExperimentBuilder.Host host) throws IOException {
+            return new ExperimentBuilder(conf, host, false);
+        }
+    }
+
+    public static void main(String[] args) throws IOException {
+//        ExperimentBuilder.Host host = bono;
+        AbstractExperimentBuilder.Host host = wally131;
+
+//        AppBuilder source = new AppBuilder(9999, "BIN");
+        DimensionReductionApp.ExperimentBuilderFactory exp = new NewExpFactory();
+//        DimensionReductionApp.ExperimentBuilderFactory exp = new OldExpFactory();
+
+        DimensionReductionApp app = new DimensionReductionApp(conf, exp);
+//        CodeApp app = new CodeApp(conf, host, source);
+
+        app.runAll();
+//        app.runForHost(wally131);
+//        app.plotPca(wally131);
+    }
+
+    static class CodeApp {
         final Config config;
         final AppBuilder builder;
 
-        CodeApp(Config config, ExperimentBuilder.Host host, AppBuilder builder) {
-            this.host = host;
+        CodeApp(Config config, AppBuilder builder) {
             this.config = config;
             this.builder = builder;
         }
