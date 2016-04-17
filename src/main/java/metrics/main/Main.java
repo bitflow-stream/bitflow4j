@@ -18,19 +18,14 @@ public class Main {
     private static final ExperimentData newData = new NewExperimentData(conf, false);
 
     public static void main(String[] args) throws IOException {
-//        NewExperimentData.Host host = bono;
-        ExperimentData.Host host = wally131;
+        DimensionReductionApp oldDimensionReduction = new DimensionReductionApp(conf, oldData);
+        DimensionReductionApp newDimensionReduction = new DimensionReductionApp(conf, newData);
 
-        ExperimentData data = newData;
-//        ExperimentData data = oldData;
+        oldDimensionReduction.PCA.execute();
+//        oldDimensionReduction.PCA.executeCached();
 
-        DimensionReductionApp app = new DimensionReductionApp(conf, data);
-//        CodeApp app = new CodeApp(conf, data.makeBuilder(host));
-//        CodeApp app = new CodeApp(conf, new AppBuilder(9999, "BIN"));
-
-        app.runAll();
-//        app.runForHost(host);
-//        app.plotPca(host);
+//        new CodeApp(conf, newData.makeBuilder(bono)).runAll();
+//        new CodeApp(conf, new AppBuilder(9999, "BIN")).runAll();
     }
 
     static class CodeApp {
@@ -45,7 +40,7 @@ public class Main {
         public void runAll() throws IOException {
 
 //        builder.addAlgorithm(new MetricFilterAlgorithm(0, 1, 2, 3));
-//            builder.addAlgorithm(new NoopAlgorithm());
+//        builder.addAlgorithm(new NoopAlgorithm());
 //        builder.addAlgorithm(new VarianceFilterAlgorithm(0.02, true));
 //        builder.addAlgorithm(new CorrelationAlgorithm(false));
 //        builder.addAlgorithm(new CorrelationSignificanceAlgorithm(0.7));
@@ -53,7 +48,7 @@ public class Main {
             builder.addAlgorithm(new PCAAlgorithm(0.99));
 
             builder.setOutput(new OutputMetricPlotter(new ScatterPlotter(), 0, 1));
-//            builder.setConsoleOutput("CSV");
+//        builder.setConsoleOutput("CSV");
 //        builder.setFileOutput(outputFile, "CSV");
 
             builder.runApp();

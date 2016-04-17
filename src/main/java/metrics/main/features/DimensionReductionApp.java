@@ -1,145 +1,181 @@
 package metrics.main.features;
 
 import metrics.algorithms.*;
-import metrics.io.file.FileMetricReader;
 import metrics.io.plot.OutputMetricPlotter;
 import metrics.io.plot.ScatterPlotter;
 import metrics.main.AppBuilder;
 import metrics.main.Config;
+import metrics.main.DataAnalyser;
 import metrics.main.ExperimentData;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 /**
  * Created by anton on 4/14/16.
  */
-public class DimensionReductionApp {
+public class DimensionReductionApp extends DataAnalyser {
 
-    private static final String COMBINED_FILE = "1-combined.csv";
-    private static final String VARIANCE_FILE = "2-variance-filtered.csv";
-    private static final String CORR_FILE = "3-correlation.csv";
-    private static final String CORR_STATS_FILE = "4-correlation-stats.csv";
-    private static final String PCA_FILE = "5-pca.csv";
-
-    private static final double MIN_VARIANCE = 0.02;
-    private static final double SIGNIFICANT_CORRELATION = 0.7;
-    private static final int PCA_COLS = -1; // Can be set to 2 to force at least 2 components
-    private static final double PCA_VARIANCE = 0.99;
-    private static final int WARMUP_MINS = 2;
-    private static final String DEFAULT_LABEL = "idle";
-
-    private final Config config;
-    private final ExperimentData data;
+    public final AnalysisStep COMBINE_DATA = new CombineData();
+    public final AnalysisStep VARIANCE_FILTER = new VarianceFilter();
+    public final AnalysisStep CORRELATION = new CorrelationAnalysis();
+    public final AnalysisStep CORRELATION_STATS = new CorrelationStats();
+    public final AnalysisStep PCA = new PcaAnalysis();
+    public final AnalysisStep PCA_PLOT = new PlotPca();
 
     public DimensionReductionApp(Config config, ExperimentData data) throws IOException {
-        this.config = config;
-        this.data = data;
+        super(config, data);
     }
 
-    public String getName() {
+    @Override
+    public String toString() {
         return "DimensionReduction";
     }
 
-    private File makeOutputDir(ExperimentData.Host host) throws IOException {
-        String filename = config.outputFolder + "/" + getName();
-        filename += "-" + data.toString();
-        filename += "/" + host.name;
-        File result = new File(filename);
-        if (result.exists() && !result.isDirectory())
-            throw new IOException("Not a directory: " + filename);
-        if (!result.exists() && !result.mkdirs())
-            throw new IOException("Failed to create output directory " + filename);
-        return result;
-    }
+    public class CombineData extends AnalysisStep {
+        private static final int WARMUP_MINS = 2;
+        private static final String DEFAULT_LABEL = "idle";
 
-    private File getOutputFile(File outputDir, String filename) {
-        return new File(outputDir, filename);
-    }
+        CombineData() {
+            super("1-combined.csv");
+        }
 
-    public void runAll() throws IOException {
-        List<ExperimentData.Host> hosts = data.getAllHosts();
-        message("Running " + getName() + " for " + hosts.size() + " hosts");
-        for (ExperimentData.Host host : hosts) {
-            AppBuilder builder = data.makeBuilder(host);
-            doRunForHost(builder, host);
+        @Override
+        public String toString() {
+            return "combine data";
+        }
+
+        @Override
+        protected void addAlgorithms(AppBuilder builder) {
+            builder.addAlgorithm(new ExperimentLabellingAlgorithm(WARMUP_MINS, DEFAULT_LABEL));
+        }
+
+        @Override
+        protected AnalysisStep getInputStep() {
+            return null;
         }
     }
 
-    public void runForHost(ExperimentData.Host host) throws IOException {
-        AppBuilder builder = data.makeBuilder(host);
-        doRunForHost(builder, host);
+    public class VarianceFilter extends AnalysisStep {
+        private static final double MIN_VARIANCE = 0.02;
+
+        VarianceFilter() {
+            super("2-variance-filtered.csv");
+        }
+
+        @Override
+        public String toString() {
+            return "variance filter";
+        }
+
+        @Override
+        protected void addAlgorithms(AppBuilder builder) {
+            builder.addAlgorithm(new VarianceFilterAlgorithm(MIN_VARIANCE, true));
+        }
+
+        @Override
+        protected AnalysisStep getInputStep() {
+            return COMBINE_DATA;
+        }
     }
 
-    private void doRunForHost(AppBuilder builder, ExperimentData.Host host) throws IOException {
-        File outputDir = makeOutputDir(host);
-        message("Analysing " + host + " into " + outputDir);
-        combineData(builder, outputDir);
-        varianceFilter(outputDir);
-        correlation(outputDir);
-        correlationStatistics(outputDir);
-        pca(outputDir);
+    public class CorrelationAnalysis extends AnalysisStep {
+        CorrelationAnalysis() {
+            super("3-correlation.csv");
+        }
+
+        @Override
+        public String toString() {
+            return "correlation analysis";
+        }
+
+        @Override
+        protected void addAlgorithms(AppBuilder builder) {
+            builder.addAlgorithm(new CorrelationAlgorithm(false));
+        }
+
+        @Override
+        protected AnalysisStep getInputStep() {
+            return VARIANCE_FILTER;
+        }
     }
 
-    private AppBuilder newBuilder(File inputFile) throws IOException {
-        return new AppBuilder(inputFile, FileMetricReader.FILE_NAME);
+    public class CorrelationStats extends AnalysisStep {
+        private static final double SIGNIFICANT_CORRELATION = 0.7;
+
+        CorrelationStats() {
+            super("4-correlation-stats.csv");
+        }
+
+        @Override
+        public String toString() {
+            return "correlation statistics";
+        }
+
+        @Override
+        protected void addAlgorithms(AppBuilder builder) {
+            builder.addAlgorithm(new CorrelationSignificanceAlgorithm(SIGNIFICANT_CORRELATION));
+        }
+
+        @Override
+        protected AnalysisStep getInputStep() {
+            return CORRELATION;
+        }
     }
 
-    private void message(String msg) {
-        System.err.println("===================== " + msg);
+    public class PcaAnalysis extends AnalysisStep {
+        private static final int PCA_COLS = -1; // Can be set to 2 to force at least 2 components
+        private static final double PCA_VARIANCE = 0.99;
+
+        PcaAnalysis() {
+            super("5-pca.csv");
+        }
+
+        @Override
+        public String toString() {
+            return "PCA analysis";
+        }
+
+        @Override
+        protected void addAlgorithms(AppBuilder builder) {
+            builder.addAlgorithm(new PCAAlgorithm(-1, PCA_COLS, PCA_VARIANCE));
+        }
+
+        @Override
+        protected AnalysisStep getInputStep() {
+            return COMBINE_DATA;
+        }
     }
 
-    private void combineData(AppBuilder builder, File outputDir) throws IOException {
-        builder.addAlgorithm(new ExperimentLabellingAlgorithm(WARMUP_MINS, DEFAULT_LABEL));
-        File output = getOutputFile(outputDir, COMBINED_FILE);
-        builder.setFileOutput(output, "CSV");
-        message("Writing combined host metrics to " + output.toString());
-        builder.runAndWait();
-    }
+    public class PlotPca extends AnalysisStep {
+        PlotPca() {
+            super("6-pca-plot.esv");
+        }
 
-    private void varianceFilter(File outputDir) throws IOException {
-        AppBuilder builder = newBuilder(getOutputFile(outputDir, COMBINED_FILE));
-        builder.addAlgorithm(new VarianceFilterAlgorithm(MIN_VARIANCE, true));
-        File output = getOutputFile(outputDir, VARIANCE_FILE);
-        builder.setFileOutput(output, "CSV");
-        message("Writing variance-filtered data to " + output.toString());
-        builder.runAndWait();
-    }
+        @Override
+        public String toString() {
+            return "PCA plot";
+        }
 
-    private void correlation(File outputDir) throws IOException {
-        AppBuilder builder = newBuilder(getOutputFile(outputDir, VARIANCE_FILE));
-        builder.addAlgorithm(new CorrelationAlgorithm(false));
-        File output = getOutputFile(outputDir, CORR_FILE);
-        builder.setFileOutput(output, "CSV");
-        message("Writing correlation data to " + output.toString());
-        builder.runAndWait();
-    }
+        @Override
+        protected void addAlgorithms(AppBuilder builder) {
+            builder.addAlgorithm(new NoopAlgorithm());
+        }
 
-    private void correlationStatistics(File outputDir) throws IOException {
-        AppBuilder builder = newBuilder(getOutputFile(outputDir, CORR_FILE));
-        builder.addAlgorithm(new CorrelationSignificanceAlgorithm(SIGNIFICANT_CORRELATION));
-        File output = getOutputFile(outputDir, CORR_STATS_FILE);
-        builder.setFileOutput(output, "CSV");
-        message("Writing correlation data to " + output.toString());
-        builder.runAndWait();
-    }
+        @Override
+        protected AnalysisStep getInputStep() {
+            return PCA;
+        }
 
-    private void pca(File outputDir) throws IOException {
-        AppBuilder builder = newBuilder(getOutputFile(outputDir, COMBINED_FILE));
-        builder.addAlgorithm(new PCAAlgorithm(-1, PCA_COLS, PCA_VARIANCE));
-        File output = getOutputFile(outputDir, PCA_FILE);
-        builder.setFileOutput(output, "CSV");
-        message("Writing PCA data to " + output.toString());
-        builder.runAndWait();
-    }
+        @Override
+        protected void setInMemoryOutput(AppBuilder builder) {
+            builder.setOutput(new OutputMetricPlotter(new ScatterPlotter(), 0, 1));
+        }
 
-    void plotPca(ExperimentData.Host host) throws IOException {
-        File outputDir = makeOutputDir(host);
-        AppBuilder builder = newBuilder(getOutputFile(outputDir, PCA_FILE));
-        builder.addAlgorithm(new NoopAlgorithm());
-        builder.setOutput(new OutputMetricPlotter(new ScatterPlotter(), 0, 1));
-        builder.runAndWait();
+        @Override
+        protected void setFileOutput(AppBuilder builder, File output) throws IOException {
+            builder.setOutput(new OutputMetricPlotter(new ScatterPlotter(), output.toString(), 0, 1));
+        }
     }
 
 }
