@@ -3,6 +3,7 @@ package metrics.main;
 import metrics.algorithms.PCAAlgorithm;
 import metrics.io.plot.OutputMetricPlotter;
 import metrics.io.plot.ScatterPlotter;
+import metrics.main.features.DimensionReductionApp;
 
 import java.io.IOException;
 

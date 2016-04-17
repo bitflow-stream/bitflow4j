@@ -1,9 +1,12 @@
-package metrics.main;
+package metrics.main.features;
 
 import metrics.algorithms.*;
 import metrics.io.file.FileMetricReader;
 import metrics.io.plot.OutputMetricPlotter;
 import metrics.io.plot.ScatterPlotter;
+import metrics.main.AppBuilder;
+import metrics.main.Config;
+import metrics.main.ExperimentData;
 
 import java.io.File;
 import java.io.IOException;

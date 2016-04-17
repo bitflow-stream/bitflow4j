@@ -1,4 +1,4 @@
-package metrics.main;
+package metrics.main.features;
 
 import metrics.Sample;
 import metrics.algorithms.LabellingAlgorithm;
