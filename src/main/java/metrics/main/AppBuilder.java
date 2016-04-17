@@ -55,10 +55,6 @@ public class AppBuilder {
         this(csvFileReader(csvFile, conv));
     }
 
-    public String getName() {
-        return "generic";
-    }
-
     public static FileMetricReader csvFileReader(File csvFile, FileMetricReader.NameConverter conv) throws IOException {
         FileMetricReader reader = new FileMetricReader(getMarshaller("CSV"), conv);
         reader.addFile(csvFile);

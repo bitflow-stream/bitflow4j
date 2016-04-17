@@ -28,27 +28,20 @@ public class DimensionReductionApp {
     private static final String DEFAULT_LABEL = "idle";
 
     private final Config config;
-    private final ExperimentBuilderFactory builderFactory;
+    private final ExperimentData data;
 
-    public interface ExperimentBuilderFactory {
-        // TODO needs refactoring
-        AbstractExperimentBuilder makeExperimentBuilder(AbstractExperimentBuilder.Host host) throws IOException;
-
-        List<AbstractExperimentBuilder.Host> getAllHosts();
-    }
-
-    public DimensionReductionApp(Config config, ExperimentBuilderFactory builderFactory) throws IOException {
+    public DimensionReductionApp(Config config, ExperimentData data) throws IOException {
         this.config = config;
-        this.builderFactory = builderFactory;
+        this.data = data;
     }
 
     public String getName() {
         return "DimensionReduction";
     }
 
-    private File makeOutputDir(AbstractExperimentBuilder builder, AbstractExperimentBuilder.Host host) throws IOException {
+    private File makeOutputDir(ExperimentData.Host host) throws IOException {
         String filename = config.outputFolder + "/" + getName();
-        filename += "-" + builder.getName();
+        filename += "-" + data.toString();
         filename += "/" + host.name;
         File result = new File(filename);
         if (result.exists() && !result.isDirectory())
@@ -63,21 +56,21 @@ public class DimensionReductionApp {
     }
 
     public void runAll() throws IOException {
-        List<AbstractExperimentBuilder.Host> hosts = builderFactory.getAllHosts();
+        List<ExperimentData.Host> hosts = data.getAllHosts();
         message("Running " + getName() + " for " + hosts.size() + " hosts");
-        for (AbstractExperimentBuilder.Host host : hosts) {
-            AbstractExperimentBuilder builder = builderFactory.makeExperimentBuilder(host);
+        for (ExperimentData.Host host : hosts) {
+            AppBuilder builder = data.makeBuilder(host);
             doRunForHost(builder, host);
         }
     }
 
-    public void runForHost(AbstractExperimentBuilder.Host host) throws IOException {
-        AbstractExperimentBuilder builder = builderFactory.makeExperimentBuilder(host);
+    public void runForHost(ExperimentData.Host host) throws IOException {
+        AppBuilder builder = data.makeBuilder(host);
         doRunForHost(builder, host);
     }
 
-    private void doRunForHost(AbstractExperimentBuilder builder, AbstractExperimentBuilder.Host host) throws IOException {
-        File outputDir = makeOutputDir(builder, host);
+    private void doRunForHost(AppBuilder builder, ExperimentData.Host host) throws IOException {
+        File outputDir = makeOutputDir(host);
         message("Analysing " + host + " into " + outputDir);
         combineData(builder, outputDir);
         varianceFilter(outputDir);
@@ -138,8 +131,8 @@ public class DimensionReductionApp {
         builder.runAndWait();
     }
 
-    void plotPca(AbstractExperimentBuilder.Host host) throws IOException {
-        File outputDir = makeOutputDir(builderFactory.makeExperimentBuilder(host), host);
+    void plotPca(ExperimentData.Host host) throws IOException {
+        File outputDir = makeOutputDir(host);
         AppBuilder builder = newBuilder(getOutputFile(outputDir, PCA_FILE));
         builder.addAlgorithm(new NoopAlgorithm());
         builder.setOutput(new OutputMetricPlotter(new ScatterPlotter(), 0, 1));

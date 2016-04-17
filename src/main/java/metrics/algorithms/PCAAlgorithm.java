@@ -18,13 +18,13 @@ import java.util.Arrays;
  */
 public class PCAAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgorithm.NoNanMetricLog> {
 
-    private static final double REPORT_VARIANCE = 0.99;
+    private static final double REPORT_VARIANCE = 0.999;
     private static final PCA.TransformationType TRANSFORMATION_TYPE = PCA.TransformationType.ROTATION;
 
     // If trainingSamples is > 0, only the beginning of the input is used for training the PCA model.
     // Afterwards, the entire data set is transformed.
     private final int trainingSamples;
-
+    
     private final double minContainedVariance;
     private final int minDimensions;
 
