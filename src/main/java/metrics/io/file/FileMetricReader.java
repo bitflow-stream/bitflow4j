@@ -1,6 +1,10 @@
-package metrics.io;
+package metrics.io.file;
 
 import metrics.Marshaller;
+import metrics.io.InputStreamProducer;
+import metrics.io.MetricInputAggregator;
+import metrics.io.MetricInputStream;
+import metrics.io.MetricReader;
 
 import java.io.File;
 import java.io.FileInputStream;

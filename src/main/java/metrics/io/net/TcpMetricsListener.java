@@ -1,6 +1,9 @@
-package metrics.io;
+package metrics.io.net;
 
 import metrics.Marshaller;
+import metrics.io.InputStreamProducer;
+import metrics.io.MetricInputAggregator;
+import metrics.io.MetricReader;
 
 import java.io.IOException;
 import java.net.ServerSocket;

@@ -1,7 +1,7 @@
 package metrics.main;
 
 import metrics.algorithms.*;
-import metrics.io.FileMetricReader;
+import metrics.io.file.FileMetricReader;
 import metrics.io.plot.OutputMetricPlotter;
 import metrics.io.plot.ScatterPlotter;
 

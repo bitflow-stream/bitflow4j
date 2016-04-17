@@ -1,6 +1,7 @@
-package metrics.io;
+package metrics.io.file;
 
 import metrics.Marshaller;
+import metrics.io.AbstractMetricPrinter;
 
 import java.io.FileOutputStream;
 import java.io.IOException;

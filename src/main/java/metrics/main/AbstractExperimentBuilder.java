@@ -1,6 +1,6 @@
 package metrics.main;
 
-import metrics.io.FileMetricReader;
+import metrics.io.file.FileMetricReader;
 import metrics.io.MetricInputAggregator;
 
 import java.io.File;

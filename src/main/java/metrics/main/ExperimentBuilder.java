@@ -1,7 +1,7 @@
 package metrics.main;
 
 import metrics.CsvMarshaller;
-import metrics.io.FileMetricReader;
+import metrics.io.file.FileMetricReader;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,15 +56,15 @@ public class ExperimentBuilder extends AbstractExperimentBuilder {
 
         public List<Host> getAllHosts() {
             return Arrays.asList(
-//                    new Host("bono.ims", "virtual"),
-//                    new Host("ellis.ims", "virtual"),
-//                    new Host("homer.ims", "virtual"),
-//                    new Host("hs.ims", "virtual"),
-//                    new Host("ns.ims", "virtual"),
-//                    new Host("ralf.ims", "virtual"),
-//                    new Host("sprout.ims", "virtual"),
-//
-//                    new Host("wally131", "physical"),
+                    new Host("bono.ims", "virtual"),
+                    new Host("ellis.ims", "virtual"),
+                    new Host("homer.ims", "virtual"),
+                    new Host("hs.ims", "virtual"),
+                    new Host("ns.ims", "virtual"),
+                    new Host("ralf.ims", "virtual"),
+                    new Host("sprout.ims", "virtual"),
+
+                    new Host("wally131", "physical"),
                     new Host("wally134", "physical"),
                     new Host("wally135", "physical"),
                     new Host("wally136", "physical"),

@@ -1,4 +1,4 @@
-package metrics.io;
+package metrics.io.file;
 
 import java.io.File;
 import java.io.IOException;

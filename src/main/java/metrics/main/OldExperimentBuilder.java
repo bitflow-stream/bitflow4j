@@ -1,7 +1,7 @@
 package metrics.main;
 
 import metrics.CsvMarshaller;
-import metrics.io.FileMetricReader;
+import metrics.io.file.FileMetricReader;
 
 import java.io.File;
 import java.io.IOException;
