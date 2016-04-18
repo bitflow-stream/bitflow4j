@@ -36,8 +36,10 @@ public class HistogramPlotter extends PlotPanel implements Plotter {
         // Create histogram from data
         //for (final String key : map.keySet()) {
         DataTable data = map.get("load");
+        double max = data.getColumn(0).getStatistics(Statistics.MAX);
+        double min = data.getColumn(0).getStatistics(Statistics.MIN);
 
-        Histogram1D histogram = new Histogram1D(data, Orientation.VERTICAL,new Number[] {1000});
+        Histogram1D histogram = new Histogram1D(data, Orientation.VERTICAL,new Number[] {max,0,min});
         // Create a second dimension (x axis) for plotting
         DataSource histogram2d = new EnumeratedData(histogram);
 

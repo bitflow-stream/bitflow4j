@@ -1,9 +1,12 @@
 package metrics.main;
 
 import metrics.algorithms.NoopAlgorithm;
+import metrics.io.FileMetricReader;
+import metrics.io.HistogramPlotter;
 import metrics.io.OutputMetricPlotter;
 import metrics.io.ScatterPlotter;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -20,12 +23,13 @@ public class Main {
 //        ExperimentBuilder.Host host = bono;
         ExperimentBuilder.Host host = wally131;
 
-//        AppBuilder source = new AppBuilder(9999, "BIN");
-        AppBuilder source = new ExperimentBuilder(conf, host, false);
+//AppBuilder source = new AppBuilder(9999, "BIN");
+       //AppBuilder source = new ExperimentBuilder(conf, host, false);
 //        AppBuilder source = new OldExperimentBuilder(conf, host.name, true, false, false);
+        AppBuilder builder = new AppBuilder(new File(conf.outputFolder + "/DimensionReduction-" + host.name + "/5-pca.csv"), FileMetricReader.FILE_NAME);
 
-        DimensionReductionApp app = new DimensionReductionApp(conf, host, source);
-//        App app = new CodeApp(conf, host, source);
+        //DimensionReductionApp app = new DimensionReductionApp(conf, host, source);
+        App app = new CodeApp(conf, host, builder);
 
         app.runAll();
 //        app.plotPca();
@@ -51,8 +55,7 @@ public class Main {
 //        builder.addAlgorithm(new CorrelationSignificanceAlgorithm(0.7));
 //        builder.addAlgorithm(new MetricCounter());
 //            builder.addAlgorithm(new PCAAlgorithm(0.99));
-
-            builder.setOutput(new OutputMetricPlotter(0, 1, new ScatterPlotter(), OutputMetricPlotter.IN_FRAME));
+            builder.setOutput(new OutputMetricPlotter(new int[] {0}, new HistogramPlotter(), OutputMetricPlotter.IN_FRAME));
 //            builder.setConsoleOutput("CSV");
 //        builder.setFileOutput(outputFile, "CSV");
 
