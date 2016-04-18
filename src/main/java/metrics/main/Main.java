@@ -18,10 +18,13 @@ public class Main {
     private static final ExperimentData newData = new NewExperimentData(conf, false);
 
     public static void main(String[] args) throws IOException {
-        DimensionReductionApp oldDimensionReduction = new DimensionReductionApp(conf, oldData);
-        DimensionReductionApp newDimensionReduction = new DimensionReductionApp(conf, newData);
+        DimensionReductionApp oldDR = new DimensionReductionApp(conf, oldData);
+        DimensionReductionApp newDR = new DimensionReductionApp(conf, newData);
 
-        oldDimensionReduction.PCA.execute();
+//        oldDimensionReduction.PCA.execute();
+
+        newDR.PCA_PLOT.execute();
+
 //        oldDimensionReduction.PCA.executeCached();
 
 //        new CodeApp(conf, newData.makeBuilder(bono)).runAll();

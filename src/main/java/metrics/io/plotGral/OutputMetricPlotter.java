@@ -1,4 +1,4 @@
-package metrics.io.plot;
+package metrics.io.plotGral;
 
 import de.erichseifert.gral.data.DataTable;
 import metrics.Sample;
@@ -77,7 +77,7 @@ public class OutputMetricPlotter extends AbstractOutputStream implements MetricO
                 DataTable data2d = this.colorMap.get(label);
                 double xVal2d = getValue(values, columns[0]);
 
-                if (columns[1] == -1) {
+                if (values.length == 1 || columns[1] < 0) {
                     data2d.add(xVal2d, xVal2d);
                 } else {
                     data2d.add(xVal2d, getValue(values, columns[1]));
@@ -86,9 +86,9 @@ public class OutputMetricPlotter extends AbstractOutputStream implements MetricO
         }
     }
 
-    private double getValue(double[] values, int index) {
+    private double getValue(double[] values, int index) throws IOException{
         if (index >= values.length) {
-            return 0.0;
+            throw new IOException("Not enough metrics in sample (need index " + index + ", have " + values.length + ")");
         }
         return values[index];
     }

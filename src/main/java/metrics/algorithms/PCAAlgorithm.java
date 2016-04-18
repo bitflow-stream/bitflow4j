@@ -19,7 +19,6 @@ import java.util.Arrays;
 public class PCAAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgorithm.NoNanMetricLog> {
 
     private static final double REPORT_VARIANCE = 0.999;
-    private static final PCA.TransformationType TRANSFORMATION_TYPE = PCA.TransformationType.ROTATION;
 
     // If trainingSamples is > 0, only the beginning of the input is used for training the PCA model.
     // Afterwards, the entire data set is transformed.
@@ -27,6 +26,8 @@ public class PCAAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgorithm.NoN
     
     private final double minContainedVariance;
     private final int minDimensions;
+    private final boolean centerPca;
+    private final PCA.TransformationType transformationType;
 
     public PCAAlgorithm(int minDimensions) {
         this(-1, minDimensions);
@@ -44,15 +45,21 @@ public class PCAAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgorithm.NoN
         this(trainingSamples, minDimensions, Double.MIN_VALUE);
     }
 
+    public PCAAlgorithm(int trainingSamples, int minDimensions, double minContainedVariance) {
+        this(trainingSamples, minDimensions, minContainedVariance, true, PCA.TransformationType.ROTATION);
+    }
+
     // If both minDimensions and minContainedVariance is given, then both conditions will be satisfied,
     // potentially "over-satisfying" one of them.
-    public PCAAlgorithm(int trainingSamples, int minDimensions, double minContainedVariance) {
+    public PCAAlgorithm(int trainingSamples, int minDimensions, double minContainedVariance, boolean center, PCA.TransformationType transformationType) {
         super(true);
         if (minContainedVariance >= 1)
             throw new IllegalArgumentException("Contained variance must be < 1: " + minContainedVariance);
         this.minContainedVariance = minContainedVariance;
         this.minDimensions = minDimensions;
         this.trainingSamples = trainingSamples;
+        this.centerPca = center;
+        this.transformationType = transformationType;
     }
 
     @Override
@@ -61,11 +68,11 @@ public class PCAAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgorithm.NoN
         int trainingSize = trainingSamples > 0 ? trainingSamples : dataset.length;
         if (trainingSize > dataset.length) trainingSize = dataset.length;
         double[][] trainingSet = Arrays.copyOf(dataset, trainingSize);
-        PCA pca = new PCA(new Matrix(trainingSet), true);
+        PCA pca = new PCA(new Matrix(trainingSet), centerPca);
 
         TransformationParameters params = new TransformationParameters(pca, minDimensions, minContainedVariance);
         params.printMessage(REPORT_VARIANCE);
-        Matrix transformed = pca.transform(new Matrix(dataset), TRANSFORMATION_TYPE);
+        Matrix transformed = pca.transform(new Matrix(dataset), transformationType);
         outputValues(transformed.getArray(), params.dimensions, output);
     }
 
