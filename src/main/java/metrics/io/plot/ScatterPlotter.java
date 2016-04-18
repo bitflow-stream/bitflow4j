@@ -4,24 +4,14 @@ import de.erichseifert.gral.data.DataSeries;
 import de.erichseifert.gral.data.DataTable;
 import de.erichseifert.gral.graphics.Orientation;
 import de.erichseifert.gral.plots.XYPlot;
-import de.erichseifert.gral.ui.InteractivePanel;
 
-import java.awt.*;
+import java.io.IOException;
 import java.util.Map;
 
 /**
  * Created by mwall on 14.04.16.
  */
-public class ScatterPlotter extends PlotPanel implements Plotter {
-    @Override
-    public String getTitle() {
-        return "Titel";
-    }
-
-    @Override
-    public String getDescription() {
-        return "Description";
-    }
+public class ScatterPlotter extends AbstractPlotter implements Plotter {
 
     @Override
     public String toString() {
@@ -29,7 +19,7 @@ public class ScatterPlotter extends PlotPanel implements Plotter {
     }
 
     @Override
-    public void plotResult(OutputMetricPlotter.PlotType outputType, Map<String, DataTable> map, String filename) {
+    public void plotResult(OutputMetricPlotter.PlotType outputType, Map<String, DataTable> map, String filename) throws IOException {
         XYPlot plot = new XYPlot();
         for (final String key : map.keySet()) {
             DataTable a = map.get(key);
@@ -45,11 +35,10 @@ public class ScatterPlotter extends PlotPanel implements Plotter {
         plot.getLegend().setAlignmentX(1.0);
 
         //plot.setInsets(new Insets2D.Double(20.0, 40.0, 40.0, 40.0));
-        plot.getTitle().setText(getDescription());
+        plot.getTitle().setText(toString());
 
-        // Add plot to Swing component
-        add(new InteractivePanel(plot), BorderLayout.CENTER);
-        decideOutput(plot, outputType, filename);
+        // Output plot (Swing or file)
+        showPlot(plot, outputType, filename);
     }
 
 }

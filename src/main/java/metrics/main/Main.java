@@ -23,9 +23,7 @@ public class Main {
 
 //        oldDimensionReduction.PCA.execute();
 
-//        newDR.new PlotPca(newDR.new PcaAnalysis(0.99, true, PCA.TransformationType.WHITENING), 0, 1).executeInMemory(wally131);
-
-        newDR.PCA_PLOT.execute(wally131);
+        newDR.PCA_PLOT.execute();
 
 //        oldDimensionReduction.PCA.executeCached();
 

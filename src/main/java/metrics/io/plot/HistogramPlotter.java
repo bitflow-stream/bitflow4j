@@ -8,25 +8,16 @@ import de.erichseifert.gral.data.statistics.Statistics;
 import de.erichseifert.gral.graphics.Orientation;
 import de.erichseifert.gral.plots.BarPlot;
 import de.erichseifert.gral.plots.points.PointRenderer;
-import de.erichseifert.gral.ui.InteractivePanel;
 import de.erichseifert.gral.util.GraphicsUtils;
 import de.erichseifert.gral.util.MathUtils;
 
+import java.io.IOException;
 import java.util.Map;
 
 /**
  * Created by mwall on 14.04.16.
  */
-public class HistogramPlotter extends PlotPanel implements Plotter {
-    @Override
-    public String getTitle() {
-        return null;
-    }
-
-    @Override
-    public String getDescription() {
-        return null;
-    }
+public class HistogramPlotter extends AbstractPlotter {
 
     @Override
     public String toString() {
@@ -34,7 +25,7 @@ public class HistogramPlotter extends PlotPanel implements Plotter {
     }
 
     @Override
-    public void plotResult(OutputMetricPlotter.PlotType outputType, Map<String, DataTable> map, String filename) {
+    public void plotResult(OutputMetricPlotter.PlotType outputType, Map<String, DataTable> map, String filename) throws IOException {
 
         // Create histogram from data
         //for (final String key : map.keySet()) {
@@ -69,12 +60,7 @@ public class HistogramPlotter extends PlotPanel implements Plotter {
         barRenderer.setColor(GraphicsUtils.deriveWithAlpha(this.getNextColor(), 128));
         barRenderer.setValueVisible(true);
 
-        // Add plot to Swing component
-        InteractivePanel panel = new InteractivePanel(plot);
-        panel.setPannable(true);
-        panel.setZoomable(true);
-        add(panel);
-
-        decideOutput(plot, outputType, filename);
+        showPlot(plot, outputType, filename);
     }
+
 }
