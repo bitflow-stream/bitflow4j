@@ -1,4 +1,4 @@
-package metrics.io.plot;
+package metrics.io.plotGral;
 
 import de.erichseifert.gral.data.DataSource;
 import de.erichseifert.gral.data.DataTable;
@@ -35,11 +35,11 @@ public class HistogramPlotter extends AbstractPlotter {
         // Create a second dimension (x axis) for plotting
         DataSource histogram2d = new EnumeratedData(histogram);
 
-        // Create new bar plot
+        // Create new bar plotGral
         BarPlot plot = new BarPlot(histogram2d);
 
-        // Format plot
-        //plot.setInsets(new Insets2D.Double(20.0, 65.0, 50.0, 40.0));
+        // Format plotGral
+        //plotGral.setInsets(new Insets2D.Double(20.0, 65.0, 50.0, 40.0));
         plot.getTitle().setText(
                 String.format("Distribution of %d random samples", data.getRowCount()));
         plot.setBarWidth(0.78);

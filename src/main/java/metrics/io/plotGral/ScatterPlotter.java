@@ -1,4 +1,4 @@
-package metrics.io.plot;
+package metrics.io.plotGral;
 
 import de.erichseifert.gral.data.DataSeries;
 import de.erichseifert.gral.data.DataTable;
@@ -15,7 +15,7 @@ public class ScatterPlotter extends AbstractPlotter implements Plotter {
 
     @Override
     public String toString() {
-        return "scatter plot";
+        return "scatter plotGral";
     }
 
     @Override
@@ -30,14 +30,15 @@ public class ScatterPlotter extends AbstractPlotter implements Plotter {
         }
 
         plot.getLegend().setOrientation(Orientation.VERTICAL);
+        //plotGral.setLegendDistance(2);
         plot.setLegendVisible(true);
         plot.getLegend().setAlignmentY(1.0);
         plot.getLegend().setAlignmentX(1.0);
 
-        //plot.setInsets(new Insets2D.Double(20.0, 40.0, 40.0, 40.0));
+        //plotGral.setInsets(new Insets2D.Double(20.0, 40.0, 40.0, 40.0));
         plot.getTitle().setText(toString());
 
-        // Output plot (Swing or file)
+        // Output plotGral (Swing or file)
         showPlot(plot, outputType, filename);
     }
 

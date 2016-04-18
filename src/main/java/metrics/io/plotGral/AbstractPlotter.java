@@ -1,4 +1,4 @@
-package metrics.io.plot;
+package metrics.io.plotGral;
 
 import de.erichseifert.gral.io.plots.DrawableWriter;
 import de.erichseifert.gral.io.plots.DrawableWriterFactory;
@@ -30,7 +30,7 @@ public abstract class AbstractPlotter implements Plotter {
 
     protected void showPlot(XYPlot plot, OutputMetricPlotter.PlotType outputType, String filename) throws IOException {
         String description = plot.getTitle().getText();
-        switch (outputType) {
+            switch (outputType) {
             case IN_FRAME:
                 new PlotPanel(description).showInFrame(plot);
                 break;
