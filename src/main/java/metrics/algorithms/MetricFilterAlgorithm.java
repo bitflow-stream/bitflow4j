@@ -8,7 +8,7 @@ import java.util.Set;
 
 /**
  * Created by anton on 4/11/16.
- *
+ * <p>
  * Only pass out a single metric identified by column index.
  */
 public class MetricFilterAlgorithm extends GenericAlgorithm {
@@ -17,7 +17,7 @@ public class MetricFilterAlgorithm extends GenericAlgorithm {
     private final int maxCol;
 
     // col should be sorted
-    public MetricFilterAlgorithm(int ...col) {
+    public MetricFilterAlgorithm(int... col) {
         super();
         for (int i : col)
             this.columns.add(i);

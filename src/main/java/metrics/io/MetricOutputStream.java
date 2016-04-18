@@ -5,7 +5,6 @@ import metrics.Sample;
 import java.io.IOException;
 
 /**
- *
  * @author fschmidt
  */
 public interface MetricOutputStream {

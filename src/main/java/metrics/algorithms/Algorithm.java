@@ -4,7 +4,6 @@ import metrics.io.MetricInputStream;
 import metrics.io.MetricOutputStream;
 
 /**
- *
  * @author fschmidt
  */
 public interface Algorithm {
@@ -17,5 +16,5 @@ public interface Algorithm {
      * After finishing, output.close() must be called.
      */
     void start(MetricInputStream input, MetricOutputStream output);
-    
+
 }

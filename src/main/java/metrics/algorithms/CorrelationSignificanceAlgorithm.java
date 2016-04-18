@@ -8,7 +8,7 @@ import java.util.*;
 
 /**
  * Created by anton on 4/12/16.
- *
+ * <p>
  * This analyses the output of CorrelationAlgorithm and produces a summary.
  */
 public class CorrelationSignificanceAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgorithm.MetricLog> {

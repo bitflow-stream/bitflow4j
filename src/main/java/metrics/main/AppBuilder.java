@@ -6,16 +6,15 @@ import metrics.Marshaller;
 import metrics.TextMarshaller;
 import metrics.algorithms.Algorithm;
 import metrics.io.*;
+import metrics.io.file.FileMetricPrinter;
+import metrics.io.file.FileMetricReader;
+import metrics.io.net.TcpMetricsListener;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author fschmidt
- */
 public class AppBuilder {
 
     public int pipeBuffer = 128;
@@ -56,10 +55,6 @@ public class AppBuilder {
         this(csvFileReader(csvFile, conv));
     }
 
-    public String getName() {
-        return "generic";
-    }
-
     public static FileMetricReader csvFileReader(File csvFile, FileMetricReader.NameConverter conv) throws IOException {
         FileMetricReader reader = new FileMetricReader(getMarshaller("CSV"), conv);
         reader.addFile(csvFile);
@@ -90,12 +85,12 @@ public class AppBuilder {
         setOutput(new MetricPrinter(getMarshaller(outputMarshaller)));
     }
 
-    public void setFileOutput(String path, String outputMarshaller) throws FileNotFoundException {
-        setOutput(new MetricPrinter(path, getMarshaller(outputMarshaller)));
+    public void setFileOutput(String path, String outputMarshaller) throws IOException {
+        setOutput(new FileMetricPrinter(path, getMarshaller(outputMarshaller)));
     }
 
-    public void setFileOutput(File file, String outputMarshaller) throws FileNotFoundException {
-        setOutput(new MetricPrinter(file, getMarshaller(outputMarshaller)));
+    public void setFileOutput(File file, String outputMarshaller) throws IOException {
+        setFileOutput(file.toString(), outputMarshaller);
     }
 
     public void waitForOutput() {

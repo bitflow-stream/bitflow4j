@@ -1,6 +1,10 @@
-package metrics.io;
+package metrics.io.file;
 
 import metrics.Marshaller;
+import metrics.io.InputStreamProducer;
+import metrics.io.MetricInputAggregator;
+import metrics.io.MetricInputStream;
+import metrics.io.MetricReader;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -10,10 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
@@ -69,41 +70,48 @@ public class FileMetricReader implements InputStreamProducer {
 
     public void addFiles(String directory, FileFilter filter) throws IOException {
         addFiles(directory,
-            (Path path, BasicFileAttributes attr) ->
-                attr.isDirectory() || (attr.isRegularFile() && filter.shouldInclude(path)));
+                (Path path, BasicFileAttributes attr) ->
+                        attr.isDirectory() || (attr.isRegularFile() && filter.shouldInclude(path)));
     }
 
     public void addFiles(String directory, FileVisitor visitor) throws IOException {
         Files.walkFileTree(new File(directory).toPath(),
-            new HashSet<>(Collections.singletonList(FOLLOW_LINKS)),
-            Integer.MAX_VALUE,
-            new SimpleFileVisitor<Path>() {
-                @Override
-                public FileVisitResult preVisitDirectory(Path path, BasicFileAttributes attr) throws IOException {
-                    boolean result = visitor.visitFile(path, attr);
-                    return result ? FileVisitResult.CONTINUE : FileVisitResult.SKIP_SUBTREE;
-                }
+                new HashSet<>(Collections.singletonList(FOLLOW_LINKS)),
+                Integer.MAX_VALUE,
+                new SimpleFileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult preVisitDirectory(Path path, BasicFileAttributes attr) throws IOException {
+                        boolean result = visitor.visitFile(path, attr);
+                        return result ? FileVisitResult.CONTINUE : FileVisitResult.SKIP_SUBTREE;
+                    }
 
-                @Override
-                public FileVisitResult visitFile(Path path, BasicFileAttributes attr) throws IOException {
-                    boolean result = visitor.visitFile(path, attr);
-                    if (result)
-                        addFile(path.toFile().getPath());
-                    return FileVisitResult.SKIP_SUBTREE;
-                }
-            });
+                    @Override
+                    public FileVisitResult visitFile(Path path, BasicFileAttributes attr) throws IOException {
+                        boolean result = visitor.visitFile(path, attr);
+                        if (result)
+                            addFile(path.toFile().getPath());
+                        return FileVisitResult.SKIP_SUBTREE;
+                    }
+                });
     }
 
     public void addFile(String path) throws IOException {
-        addFile(new File(path));
+        String source = converter.convert(new File(path));
+        FileGroup group = new FileGroup(path);
+        Collection<String> filenames = group.listFiles();
+        if (filenames.isEmpty())
+            throw new IOException("File not found: " + path);
+        for (String filename : filenames) {
+            File file = new File(filename);
+            files.add(file);
+            FileInputStream fileInput = new FileInputStream(file);
+            MetricInputStream input = new MetricReader(fileInput, source, marshaller);
+            inputs.add(input);
+        }
     }
 
     public void addFile(File file) throws IOException {
-        files.add(file);
-        FileInputStream fileInput = new FileInputStream(file);
-        String source = converter.convert(file);
-        MetricInputStream input = new MetricReader(fileInput, source, marshaller);
-        inputs.add(input);
+        addFile(file.toString());
     }
 
     public List<File> getFiles() {

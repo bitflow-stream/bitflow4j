@@ -1,6 +1,9 @@
-package metrics.io;
+package metrics.io.net;
 
 import metrics.Marshaller;
+import metrics.io.InputStreamProducer;
+import metrics.io.MetricInputAggregator;
+import metrics.io.MetricReader;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -46,7 +49,7 @@ public class TcpMetricsListener implements InputStreamProducer {
                     String remote = acceptConnection(socket);
                     System.err.println("Accepted connection from " + remote);
                 }
-            } catch(Exception exc) {
+            } catch (Exception exc) {
                 System.err.println("Error accepting connection: " + exc.getMessage());
                 if (socket != null) {
                     try {

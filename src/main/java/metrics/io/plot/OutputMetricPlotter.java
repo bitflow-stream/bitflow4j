@@ -1,7 +1,10 @@
-package metrics.io;
+package metrics.io.plot;
 
 import de.erichseifert.gral.data.DataTable;
 import metrics.Sample;
+import metrics.io.AbstractOutputStream;
+import metrics.io.MetricOutputStream;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -9,64 +12,54 @@ import java.util.Map;
 /**
  * Created by mwall on 14.04.16.
  */
-public class OutputMetricPlotter extends AbstractOutputStream implements MetricOutputStream{
-    private int[] columns;
+public class OutputMetricPlotter extends AbstractOutputStream implements MetricOutputStream {
 
-    private Map<String, DataTable> colorMap;
-
-    private int outputType = 0;
-
-    public static final int IN_FRAME = 0;
-    public static final int AS_FILE = 1;
-    public static final int AS_FILE_AND_IN_FRAME = 2;
-
-    private int[] color = {0, 0, 0};
-
-    private Plotter plotter;
-    private String filename = null;
-
-    public OutputMetricPlotter(int[] columns, Plotter plotter, String filename) {
-        this(columns, plotter, OutputMetricPlotter.AS_FILE, filename);
+    public enum PlotType {
+        IN_FRAME,
+        AS_FILE,
+        AS_FILE_AND_IN_FRAME
     }
 
+    private final int[] columns;
+    private final Map<String, DataTable> colorMap;
+    private final PlotType outputType;
+    private final Plotter plotter;
+    private final String filename;
 
-    public OutputMetricPlotter(int[] columns, Plotter plotter) {
-        this(columns, plotter, OutputMetricPlotter.IN_FRAME);
+    public OutputMetricPlotter(Plotter plotter, String filename, int ...columns) {
+        this(plotter, PlotType.AS_FILE, filename, columns);
     }
 
-    public OutputMetricPlotter(int[] columns, Plotter plotter, int outputType) {
-        this(columns, plotter, outputType, null);
+    public OutputMetricPlotter(Plotter plotter, int ...columns) {
+        this(plotter, PlotType.IN_FRAME, columns);
+    }
+
+    public OutputMetricPlotter(Plotter plotter, PlotType outputType, int ...columns) {
+        this(plotter, outputType, null, columns);
     }
 
     /**
-     *
      * @param columns is an array of colums used from data sheet, you also define dimensions with this variable
-     * @param plotter
-     * @param outputType
-     * @param filename
      */
-
-    private OutputMetricPlotter(int[] columns, Plotter plotter, int outputType,String filename){
-        System.err.println("Starting plot Results");
+    public OutputMetricPlotter(Plotter plotter, PlotType outputType, String filename, int ...columns) {
+        if (columns.length < 1 || columns.length > 2) {
+            throw new IllegalArgumentException("Only 1D and 2D plots are supported.");
+        }
         this.plotter = plotter;
         this.columns = columns;
         this.filename = filename;
-
         this.outputType = outputType;
-
         this.colorMap = new HashMap<>();
-
     }
 
     public void writeSample(Sample sample) throws IOException {
         String label = sample.getSource();
         double[] values = sample.getMetrics();
-        switch(columns.length){
+        switch (columns.length) {
 
             // 1D Plots
             case 1:
                 if (!this.colorMap.containsKey(label)) {
-                    System.err.println("write " + label + " to Map");
                     DataTable data1d = new DataTable(Double.class);
                     this.colorMap.put(label, data1d);
                 }
@@ -78,22 +71,19 @@ public class OutputMetricPlotter extends AbstractOutputStream implements MetricO
             // 2d Plots
             case 2:
                 if (!this.colorMap.containsKey(label)) {
-                    System.err.println("write " + label + " to Map");
                     DataTable data2d = new DataTable(Double.class, Double.class);
                     this.colorMap.put(label, data2d);
                 }
                 DataTable data2d = this.colorMap.get(label);
                 double xVal2d = getValue(values, columns[0]);
 
-                if ( columns[1] == -1) {
+                if (columns[1] == -1) {
                     data2d.add(xVal2d, xVal2d);
                 } else {
                     data2d.add(xVal2d, getValue(values, columns[1]));
                 }
                 break;
         }
-
-
     }
 
     private double getValue(double[] values, int index) {
@@ -104,7 +94,8 @@ public class OutputMetricPlotter extends AbstractOutputStream implements MetricO
     }
 
     public void close() throws IOException {
-        this.plotter.plotResult(this.outputType,this.colorMap,this.filename);
+        System.err.println("Plotting data with " + this.plotter.toString());
+        this.plotter.plotResult(this.outputType, this.colorMap, this.filename);
         super.close();
     }
 

@@ -40,7 +40,7 @@ public abstract class PostAnalysisAlgorithm<M extends PostAnalysisAlgorithm.Metr
                 if (!globalAnalysis) flushResults(output);
             }
             analyseSample(sample);
-        } catch(InputStreamClosedException closedExc) {
+        } catch (InputStreamClosedException closedExc) {
             flushResults(output);
             throw closedExc;
         }
@@ -48,7 +48,7 @@ public abstract class PostAnalysisAlgorithm<M extends PostAnalysisAlgorithm.Metr
 
     private void flushResults(MetricOutputStream output) {
         if (samples.isEmpty()) return;
-        String src = globalAnalysis && numSources > 1 ? String.valueOf(numSources)+" sources" : currentSource;
+        String src = globalAnalysis && numSources > 1 ? String.valueOf(numSources) + " sources" : currentSource;
         System.err.println(toString() + " computing " + samples.size()
                 + " samples of " + metrics.size() + " metrics from " + src + "...");
         if (globalAnalysis)
@@ -192,10 +192,16 @@ public abstract class PostAnalysisAlgorithm<M extends PostAnalysisAlgorithm.Metr
         NoNanMetricLog(String name) {
             super(name);
         }
+
         @Override
-        double defaultValue() { return 0.0; }
+        double defaultValue() {
+            return 0.0;
+        }
+
         @Override
-        double fillValue() { return 0.0; }
+        double fillValue() {
+            return 0.0;
+        }
     }
 
     static class MetricStatistics extends MetricLog {
@@ -229,7 +235,7 @@ public abstract class PostAnalysisAlgorithm<M extends PostAnalysisAlgorithm.Metr
                 double val = list.get(i);
                 if (!Double.isNaN(val)) {
                     double offset = avg - val;
-                    double stdOffset = offset*offset;
+                    double stdOffset = offset * offset;
                     stdOffsetSum += stdOffset / size;
                 }
             }

@@ -2,7 +2,7 @@ package metrics.io;
 
 /**
  * Created by anton on 4/8/16.
- *
+ * <p>
  * Inputs are read independently from readSample(), overwriting intermediate data if readSample() is not called
  * frequently enough.
  * readSample() will only block until the data changes in any way:
