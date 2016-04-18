@@ -28,8 +28,13 @@ public class DimensionReductionApp extends DataAnalyser {
 
     public final PcaAnalysis PCA = new PcaAnalysis(SCALED, "scaled", -1, 0.99, true, TRANSFORMATION_TYPE);
     public final PcaAnalysis PCA_UNSCALED = new PcaAnalysis(LABELLED, "unscaled", -1, 0.99, true, TRANSFORMATION_TYPE);
+    public final PcaAnalysis PCA_SCALED_FILTERED = new PcaAnalysis(SCALED_FILTERED, "scaledFiltered", -1, 0.99, true, TRANSFORMATION_TYPE);
+    public final PcaAnalysis PCA_FILTERED_SCALED = new PcaAnalysis(FILTERED_SCALED, "filteredScaled", -1, 0.99, true, TRANSFORMATION_TYPE);
+
     public final AnalysisStep PCA_PLOT = new PlotPca(PCA, "scaled", 0, 1);
     public final AnalysisStep PCA_PLOT_UNSCALED = new PlotPca(PCA_UNSCALED, "unscaled", 0, 1);
+    public final AnalysisStep PCA_PLOT_SCALED_FILTERED = new PlotPca(PCA_SCALED_FILTERED, "scaledFiltered", 0, 1);
+    public final AnalysisStep PCA_PLOT_FILTERED_SCALED = new PlotPca(PCA_FILTERED_SCALED, "filteredScaled", 0, 1);
 
     private static final com.mkobos.pca_transform.PCA.TransformationType TRANSFORMATION_TYPE =
             com.mkobos.pca_transform.PCA.TransformationType.ROTATION;

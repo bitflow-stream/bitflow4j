@@ -13,6 +13,7 @@ public class Main {
 
     private static final ExperimentData.Host bono = new ExperimentData.Host("bono.ims", "virtual");
     private static final ExperimentData.Host wally131 = new ExperimentData.Host("wally131", "physical");
+    private static final ExperimentData.Host wally142 = new ExperimentData.Host("wally142", "physical");
 
     private static final ExperimentData oldData = new OldExperimentData(conf, true, false, false);
     private static final ExperimentData newData = new NewExperimentData(conf, false);
@@ -23,7 +24,7 @@ public class Main {
 
 //        oldDimensionReduction.PCA.execute();
 
-        newDR.PCA_PLOT.execute();
+        newDR.PCA_PLOT_FILTERED_SCALED.execute(bono);
 
 //        oldDimensionReduction.PCA.executeCached();
 
