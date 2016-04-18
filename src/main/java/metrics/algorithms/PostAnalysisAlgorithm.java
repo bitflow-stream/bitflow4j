@@ -270,7 +270,7 @@ public abstract class PostAnalysisAlgorithm<M extends PostAnalysisAlgorithm.Metr
             super.add(val);
             if (!Double.isNaN(val)) {
                 min = Double.min(min, val);
-                max = Double.min(max, val);
+                max = Double.max(max, val);
             }
         }
 

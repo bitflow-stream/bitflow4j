@@ -24,7 +24,7 @@ public class Main {
 
 //        oldDimensionReduction.PCA.execute();
 
-        newDR.PCA_PLOT_FILTERED_SCALED.execute(bono);
+        newDR.new ScatterPlot(newDR.PCA).execute();
 
 //        oldDimensionReduction.PCA.executeCached();
 

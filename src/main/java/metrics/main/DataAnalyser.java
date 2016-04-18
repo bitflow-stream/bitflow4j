@@ -1,9 +1,15 @@
 package metrics.main;
 
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
+import metrics.io.file.FileGroup;
 import metrics.io.file.FileMetricReader;
+import org.apache.commons.codec.binary.Base32;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 /**
@@ -39,16 +45,20 @@ public abstract class DataAnalyser {
         private static final String FILE_FORMAT = "CSV";
 
         private final AnalysisStep inputStep;
-        private final String outputFilename;
+        private final String baseOutputFilename;
 
         protected AnalysisStep(String outputFilename, AnalysisStep inputStep) {
-            this.outputFilename = outputFilename;
             this.inputStep = inputStep;
+            this.baseOutputFilename = outputFilename;
         }
 
         public abstract String toString();
 
         protected abstract void addAlgorithms(AppBuilder builder);
+
+        protected void hashParameters(ByteArrayDataOutput bytes) {
+            // Must be overridden if analysis depends on parameters
+        }
 
         public void execute() throws IOException {
             List<ExperimentData.Host> hosts = data.getAllHosts();
@@ -157,11 +167,33 @@ public abstract class DataAnalyser {
         }
 
         private File getOutputFile(File outputDir) {
-            return new File(outputDir, outputFilename);
+            String hash = getParameterHash();
+            String filename = new FileGroup(baseOutputFilename).getFile(hash);
+            return new File(outputDir, filename);
         }
 
         private void message(String msg) {
             System.err.println("===================== " + msg);
+        }
+
+        private void recursiveParameterDigest(ByteArrayDataOutput bytes) {
+            bytes.writeChars(toString());
+            hashParameters(bytes);
+            if (inputStep != null)
+                inputStep.recursiveParameterDigest(bytes);
+        }
+
+        private String getParameterHash() {
+            ByteArrayDataOutput bytes = ByteStreams.newDataOutput();
+            recursiveParameterDigest(bytes);
+            try {
+                MessageDigest digest = MessageDigest.getInstance("MD5");
+                byte[] rawHash = digest.digest(bytes.toByteArray());
+                byte[] name = new Base32().encode(rawHash);
+                return new String(name).replace("=", "");
+            } catch (NoSuchAlgorithmException e) {
+                throw new IllegalStateException("Failed to get MD5 hash instance");
+            }
         }
 
     }

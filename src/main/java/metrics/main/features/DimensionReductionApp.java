@@ -1,5 +1,6 @@
 package metrics.main.features;
 
+import com.google.common.io.ByteArrayDataOutput;
 import metrics.algorithms.*;
 import metrics.io.plot.OutputMetricPlotter;
 import metrics.io.plot.ScatterPlotter;
@@ -18,23 +19,22 @@ public class DimensionReductionApp extends DataAnalyser {
 
     public final AnalysisStep LABELLED = new LabelData(2, "idle");
 
-    public final AnalysisStep FILTERED = new VarianceFilter(0.02, LABELLED, "filtered");
-    public final AnalysisStep FILTERED_SCALED = new ScaleData(FILTERED, "filteredScaled");
-    public final AnalysisStep SCALED = new ScaleData(LABELLED, "scaled");
-    public final AnalysisStep SCALED_FILTERED = new VarianceFilter(0.02, SCALED, "scaledFiltered");
+    public final AnalysisStep FILTERED = new VarianceFilter(0.02, LABELLED);
+    public final AnalysisStep FILTERED_SCALED = new ScaleData(FILTERED);
+    public final AnalysisStep SCALED = new ScaleData(LABELLED);
+    public final AnalysisStep SCALED_FILTERED = new VarianceFilter(0.02, SCALED);
+    public final AnalysisStep STANDARDIZED = new StandardizeData(LABELLED);
 
     public final AnalysisStep CORRELATION = new CorrelationAnalysis(FILTERED);
     public final AnalysisStep CORRELATION_STATS = new CorrelationStats(0.7, CORRELATION);
 
-    public final PcaAnalysis PCA = new PcaAnalysis(SCALED, "scaled", -1, 0.99, true, TRANSFORMATION_TYPE);
-    public final PcaAnalysis PCA_UNSCALED = new PcaAnalysis(LABELLED, "unscaled", -1, 0.99, true, TRANSFORMATION_TYPE);
-    public final PcaAnalysis PCA_SCALED_FILTERED = new PcaAnalysis(SCALED_FILTERED, "scaledFiltered", -1, 0.99, true, TRANSFORMATION_TYPE);
-    public final PcaAnalysis PCA_FILTERED_SCALED = new PcaAnalysis(FILTERED_SCALED, "filteredScaled", -1, 0.99, true, TRANSFORMATION_TYPE);
+    public final PcaAnalysis PCA = new PcaAnalysis(STANDARDIZED, -1, 0.99, true, TRANSFORMATION_TYPE);
+    public final PcaAnalysis PCA_SCALED = new PcaAnalysis(SCALED, -1, 0.99, true, TRANSFORMATION_TYPE);
+    public final PcaAnalysis PCA_RAW = new PcaAnalysis(LABELLED, -1, 0.99, true, TRANSFORMATION_TYPE);
+    public final PcaAnalysis PCA_SCALED_FILTERED = new PcaAnalysis(SCALED_FILTERED, -1, 0.99, true, TRANSFORMATION_TYPE);
+    public final PcaAnalysis PCA_FILTERED_SCALED = new PcaAnalysis(FILTERED_SCALED, -1, 0.99, true, TRANSFORMATION_TYPE);
 
-    public final AnalysisStep PCA_PLOT = new PlotPca(PCA, "scaled", 0, 1);
-    public final AnalysisStep PCA_PLOT_UNSCALED = new PlotPca(PCA_UNSCALED, "unscaled", 0, 1);
-    public final AnalysisStep PCA_PLOT_SCALED_FILTERED = new PlotPca(PCA_SCALED_FILTERED, "scaledFiltered", 0, 1);
-    public final AnalysisStep PCA_PLOT_FILTERED_SCALED = new PlotPca(PCA_FILTERED_SCALED, "filteredScaled", 0, 1);
+    public final AnalysisStep PCA_PLOT = new ScatterPlot(PCA);
 
     private static final com.mkobos.pca_transform.PCA.TransformationType TRANSFORMATION_TYPE =
             com.mkobos.pca_transform.PCA.TransformationType.ROTATION;
@@ -53,7 +53,7 @@ public class DimensionReductionApp extends DataAnalyser {
         private final String defaultLabel;
 
         LabelData(int warmupMins, String defaultLabel) {
-            super("1.labelled_" + warmupMins + "_" + defaultLabel + ".csv", null);
+            super("1.labelled.csv", null);
             this.warmupMins = warmupMins;
             this.defaultLabel = defaultLabel;
         }
@@ -67,40 +67,67 @@ public class DimensionReductionApp extends DataAnalyser {
         protected void addAlgorithms(AppBuilder builder) {
             builder.addAlgorithm(new ExperimentLabellingAlgorithm(warmupMins, defaultLabel));
         }
+
+        @Override
+        protected void hashParameters(ByteArrayDataOutput bytes) {
+            bytes.writeInt(warmupMins);
+            bytes.writeChars(defaultLabel);
+        }
     }
 
     public class VarianceFilter extends AnalysisStep {
         private final double minVariance;
 
-        VarianceFilter(double minVariance, AnalysisStep inputStep, String name) {
-            super("2." + name + "_" + minVariance + ".csv", inputStep);
+        VarianceFilter(double minVariance, AnalysisStep inputStep) {
+            super("2.filtered.csv", inputStep);
             this.minVariance = minVariance;
         }
 
         @Override
         public String toString() {
-            return "variance filter";
+            return "variance-filter";
         }
 
         @Override
         protected void addAlgorithms(AppBuilder builder) {
             builder.addAlgorithm(new VarianceFilterAlgorithm(minVariance, true));
         }
+
+        @Override
+        protected void hashParameters(ByteArrayDataOutput bytes) {
+            bytes.writeDouble(minVariance);
+        }
     }
 
-    public class ScaleData extends AnalysisStep {
-        ScaleData(AnalysisStep inputStep, String name) {
-            super("2." + name + ".csv", inputStep);
+    public class StandardizeData extends AnalysisStep {
+        StandardizeData(AnalysisStep inputStep) {
+            super("2.standardized.csv", inputStep);
         }
 
         @Override
         public String toString() {
-            return "feature scaling";
+            return "feature standardization";
         }
 
         @Override
         protected void addAlgorithms(AppBuilder builder) {
-            builder.addAlgorithm(new FeatureScalingAlgorithm());
+            builder.addAlgorithm(new FeatureStandardizer());
+        }
+    }
+
+    public class ScaleData extends AnalysisStep {
+        ScaleData(AnalysisStep inputStep) {
+            super("2.scaled.csv", inputStep);
+        }
+
+        @Override
+        public String toString() {
+            return "feature min-max scaling";
+        }
+
+        @Override
+        protected void addAlgorithms(AppBuilder builder) {
+            builder.addAlgorithm(new FeatureMinMaxScaler());
         }
     }
 
@@ -137,6 +164,11 @@ public class DimensionReductionApp extends DataAnalyser {
         protected void addAlgorithms(AppBuilder builder) {
             builder.addAlgorithm(new CorrelationSignificanceAlgorithm(significantCorrelation));
         }
+
+        @Override
+        protected void hashParameters(ByteArrayDataOutput bytes) {
+            bytes.writeDouble(significantCorrelation);
+        }
     }
 
     public class PcaAnalysis extends AnalysisStep {
@@ -145,10 +177,9 @@ public class DimensionReductionApp extends DataAnalyser {
         private final boolean center;
         private final com.mkobos.pca_transform.PCA.TransformationType transformationType;
 
-        public PcaAnalysis(AnalysisStep inputStep, String name,
-                           int cols, double variance,
+        public PcaAnalysis(AnalysisStep inputStep, int cols, double variance,
                            boolean center, com.mkobos.pca_transform.PCA.TransformationType transformationType) {
-            super("5.pca_" + name + "_" + cols + "_" + variance + "_" + center + "_" + transformationType + ".csv", inputStep);
+            super("5.pca.csv", inputStep);
             this.cols = cols;
             this.variance = variance;
             this.center = center;
@@ -164,19 +195,31 @@ public class DimensionReductionApp extends DataAnalyser {
         protected void addAlgorithms(AppBuilder builder) {
             builder.addAlgorithm(new PCAAlgorithm(-1, cols, variance, center, transformationType));
         }
+
+        @Override
+        protected void hashParameters(ByteArrayDataOutput bytes) {
+            bytes.writeInt(cols);
+            bytes.writeDouble(variance);
+            bytes.writeBoolean(center);
+            bytes.writeChars(transformationType.toString());
+        }
     }
 
-    public class PlotPca extends AnalysisStep {
+    public class ScatterPlot extends AnalysisStep {
         private final int[] cols;
 
-        public PlotPca(AnalysisStep inputStep, String name, int... cols) {
-            super("6.pca-plot-" + name + ".png", inputStep);
+        public ScatterPlot(AnalysisStep inputStep, int... cols) {
+            super("6.pca-plot.png", inputStep);
             this.cols = cols;
+        }
+
+        public ScatterPlot(AnalysisStep inputStep) {
+            this(inputStep, 0, 1);
         }
 
         @Override
         public String toString() {
-            return "PCA plot";
+            return "scatter plot";
         }
 
         @Override
@@ -192,6 +235,13 @@ public class DimensionReductionApp extends DataAnalyser {
         @Override
         protected void setFileOutput(AppBuilder builder, File output) throws IOException {
             builder.setOutput(new OutputMetricPlotter(new ScatterPlotter(), output.toString(), cols));
+        }
+
+        @Override
+        protected void hashParameters(ByteArrayDataOutput bytes) {
+            bytes.writeInt(cols.length);
+            for (int col : cols)
+                bytes.writeInt(col);
         }
     }
 

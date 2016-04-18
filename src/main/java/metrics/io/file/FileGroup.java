@@ -21,7 +21,7 @@ public class FileGroup {
     public final String fileStart;
     public final String fileEnd;
 
-    FileGroup(String baseFileName) {
+    public FileGroup(String baseFileName) {
         Path path = new File(baseFileName).toPath();
         folder = path.getParent();
         String filename = path.getFileName().toString();
@@ -35,7 +35,7 @@ public class FileGroup {
         }
     }
 
-    Pattern getFilePattern() {
+    public Pattern getFilePattern() {
         return Pattern.compile("^" + fileStart + "(\\-[1-9]+)?" + fileEnd + "$");
     }
 
@@ -49,14 +49,22 @@ public class FileGroup {
         );
     }
 
-    String getFile(int index) {
+    public String getFile(String indexString) {
         String filename;
-        if (index == 0) {
+        if (indexString == null || indexString.isEmpty()) {
             filename = fileStart + fileEnd;
         } else {
-            filename = fileStart + "-" + index + fileEnd;
+            filename = fileStart + "-" + indexString + fileEnd;
         }
-        return folder.resolve(filename).toString();
+        if (folder == null) {
+            return filename;
+        } else {
+            return folder.resolve(filename).toString();
+        }
+    }
+
+    public String getFile(int index) {
+        return getFile(index <= 0 ? null : String.valueOf(index));
     }
 
     public interface FileVisitor {
