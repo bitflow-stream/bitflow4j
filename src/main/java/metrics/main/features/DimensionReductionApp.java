@@ -16,12 +16,23 @@ import java.io.IOException;
  */
 public class DimensionReductionApp extends DataAnalyser {
 
-    public final AnalysisStep COMBINE_DATA = new CombineData();
-    public final AnalysisStep VARIANCE_FILTER = new VarianceFilter();
-    public final AnalysisStep CORRELATION = new CorrelationAnalysis();
-    public final AnalysisStep CORRELATION_STATS = new CorrelationStats();
-    public final PcaAnalysis PCA = new PcaAnalysis(0.99);
-    public final AnalysisStep PCA_PLOT = new PlotPca(PCA, 0, 1);
+    public final AnalysisStep LABELLED = new LabelData(2, "idle");
+
+    public final AnalysisStep FILTERED = new VarianceFilter(0.02, LABELLED, "filtered");
+    public final AnalysisStep FILTERED_SCALED = new ScaleData(FILTERED, "filteredScaled");
+    public final AnalysisStep SCALED = new ScaleData(LABELLED, "scaled");
+    public final AnalysisStep SCALED_FILTERED = new VarianceFilter(0.02, SCALED, "scaledFiltered");
+
+    public final AnalysisStep CORRELATION = new CorrelationAnalysis(FILTERED);
+    public final AnalysisStep CORRELATION_STATS = new CorrelationStats(0.7, CORRELATION);
+
+    public final PcaAnalysis PCA = new PcaAnalysis(SCALED, "scaled", -1, 0.99, true, TRANSFORMATION_TYPE);
+    public final PcaAnalysis PCA_UNSCALED = new PcaAnalysis(LABELLED, "unscaled", -1, 0.99, true, TRANSFORMATION_TYPE);
+    public final AnalysisStep PCA_PLOT = new PlotPca(PCA, "scaled", 0, 1);
+    public final AnalysisStep PCA_PLOT_UNSCALED = new PlotPca(PCA_UNSCALED, "unscaled", 0, 1);
+
+    private static final com.mkobos.pca_transform.PCA.TransformationType TRANSFORMATION_TYPE =
+            com.mkobos.pca_transform.PCA.TransformationType.ROTATION;
 
     public DimensionReductionApp(Config config, ExperimentData data) throws IOException {
         super(config, data);
@@ -32,35 +43,33 @@ public class DimensionReductionApp extends DataAnalyser {
         return "DimensionReduction";
     }
 
-    public class CombineData extends AnalysisStep {
-        private static final int WARMUP_MINS = 2;
-        private static final String DEFAULT_LABEL = "idle";
+    public class LabelData extends AnalysisStep {
+        private final int warmupMins;
+        private final String defaultLabel;
 
-        CombineData() {
-            super("1-combined.csv");
+        LabelData(int warmupMins, String defaultLabel) {
+            super("1.labelled_" + warmupMins + "_" + defaultLabel + ".csv", null);
+            this.warmupMins = warmupMins;
+            this.defaultLabel = defaultLabel;
         }
 
         @Override
         public String toString() {
-            return "combine data";
+            return "labelling";
         }
 
         @Override
         protected void addAlgorithms(AppBuilder builder) {
-            builder.addAlgorithm(new ExperimentLabellingAlgorithm(WARMUP_MINS, DEFAULT_LABEL));
-        }
-
-        @Override
-        protected AnalysisStep getInputStep() {
-            return null;
+            builder.addAlgorithm(new ExperimentLabellingAlgorithm(warmupMins, defaultLabel));
         }
     }
 
     public class VarianceFilter extends AnalysisStep {
-        private static final double MIN_VARIANCE = 0.02;
+        private final double minVariance;
 
-        VarianceFilter() {
-            super("2-variance-filtered.csv");
+        VarianceFilter(double minVariance, AnalysisStep inputStep, String name) {
+            super("2." + name + "_" + minVariance + ".csv", inputStep);
+            this.minVariance = minVariance;
         }
 
         @Override
@@ -70,18 +79,29 @@ public class DimensionReductionApp extends DataAnalyser {
 
         @Override
         protected void addAlgorithms(AppBuilder builder) {
-            builder.addAlgorithm(new VarianceFilterAlgorithm(MIN_VARIANCE, true));
+            builder.addAlgorithm(new VarianceFilterAlgorithm(minVariance, true));
+        }
+    }
+
+    public class ScaleData extends AnalysisStep {
+        ScaleData(AnalysisStep inputStep, String name) {
+            super("2." + name + ".csv", inputStep);
         }
 
         @Override
-        protected AnalysisStep getInputStep() {
-            return COMBINE_DATA;
+        public String toString() {
+            return "feature scaling";
+        }
+
+        @Override
+        protected void addAlgorithms(AppBuilder builder) {
+            builder.addAlgorithm(new FeatureScalingAlgorithm());
         }
     }
 
     public class CorrelationAnalysis extends AnalysisStep {
-        CorrelationAnalysis() {
-            super("3-correlation.csv");
+        CorrelationAnalysis(AnalysisStep inputStep) {
+            super("3.correlation.csv", inputStep);
         }
 
         @Override
@@ -93,18 +113,14 @@ public class DimensionReductionApp extends DataAnalyser {
         protected void addAlgorithms(AppBuilder builder) {
             builder.addAlgorithm(new CorrelationAlgorithm(false));
         }
-
-        @Override
-        protected AnalysisStep getInputStep() {
-            return VARIANCE_FILTER;
-        }
     }
 
     public class CorrelationStats extends AnalysisStep {
-        private static final double SIGNIFICANT_CORRELATION = 0.7;
+        private final double significantCorrelation;
 
-        CorrelationStats() {
-            super("4-correlation-stats.csv");
+        CorrelationStats(double significantCorrelation, AnalysisStep inputStep) {
+            super("4.correlation-stats.csv", inputStep);
+            this.significantCorrelation = significantCorrelation;
         }
 
         @Override
@@ -114,12 +130,7 @@ public class DimensionReductionApp extends DataAnalyser {
 
         @Override
         protected void addAlgorithms(AppBuilder builder) {
-            builder.addAlgorithm(new CorrelationSignificanceAlgorithm(SIGNIFICANT_CORRELATION));
-        }
-
-        @Override
-        protected AnalysisStep getInputStep() {
-            return CORRELATION;
+            builder.addAlgorithm(new CorrelationSignificanceAlgorithm(significantCorrelation));
         }
     }
 
@@ -129,21 +140,11 @@ public class DimensionReductionApp extends DataAnalyser {
         private final boolean center;
         private final com.mkobos.pca_transform.PCA.TransformationType transformationType;
 
-        public PcaAnalysis(int cols) {
-            super("5-pca-" + cols + "cols.csv");
+        public PcaAnalysis(AnalysisStep inputStep, String name,
+                           int cols, double variance,
+                           boolean center, com.mkobos.pca_transform.PCA.TransformationType transformationType) {
+            super("5.pca_" + name + "_" + cols + "_" + variance + "_" + center + "_" + transformationType + ".csv", inputStep);
             this.cols = cols;
-            this.variance = -1;
-            this.center = true;
-            this.transformationType = com.mkobos.pca_transform.PCA.TransformationType.WHITENING;
-        }
-
-        public PcaAnalysis(double variance) {
-            this(variance, true, com.mkobos.pca_transform.PCA.TransformationType.WHITENING);
-        }
-
-        public PcaAnalysis(double variance, boolean center, com.mkobos.pca_transform.PCA.TransformationType transformationType) {
-            super("5-pca-" + variance + "var.csv");
-            this.cols = -1;
             this.variance = variance;
             this.center = center;
             this.transformationType = transformationType;
@@ -156,22 +157,15 @@ public class DimensionReductionApp extends DataAnalyser {
 
         @Override
         protected void addAlgorithms(AppBuilder builder) {
-            builder.addAlgorithm(new PCAAlgorithm(-1, cols, variance));
-        }
-
-        @Override
-        protected AnalysisStep getInputStep() {
-            return COMBINE_DATA;
+            builder.addAlgorithm(new PCAAlgorithm(-1, cols, variance, center, transformationType));
         }
     }
 
     public class PlotPca extends AnalysisStep {
-        private final PcaAnalysis input;
         private final int[] cols;
 
-        public PlotPca(PcaAnalysis input, int ...cols) {
-            super("6-pca-plot.esv");
-            this.input = input;
+        public PlotPca(AnalysisStep inputStep, String name, int... cols) {
+            super("6.pca-plot-" + name + ".png", inputStep);
             this.cols = cols;
         }
 
@@ -183,11 +177,6 @@ public class DimensionReductionApp extends DataAnalyser {
         @Override
         protected void addAlgorithms(AppBuilder builder) {
             builder.addAlgorithm(new NoopAlgorithm());
-        }
-
-        @Override
-        protected AnalysisStep getInputStep() {
-            return input;
         }
 
         @Override

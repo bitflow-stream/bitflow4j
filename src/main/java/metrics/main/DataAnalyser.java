@@ -38,17 +38,17 @@ public abstract class DataAnalyser {
         private static final String CONSOLE_FORMAT = "CSV";
         private static final String FILE_FORMAT = "CSV";
 
+        private final AnalysisStep inputStep;
         private final String outputFilename;
 
-        protected AnalysisStep(String outputFilename) {
+        protected AnalysisStep(String outputFilename, AnalysisStep inputStep) {
             this.outputFilename = outputFilename;
+            this.inputStep = inputStep;
         }
 
         public abstract String toString();
 
         protected abstract void addAlgorithms(AppBuilder builder);
-
-        protected abstract AnalysisStep getInputStep();
 
         public void execute() throws IOException {
             List<ExperimentData.Host> hosts = data.getAllHosts();
@@ -63,9 +63,8 @@ public abstract class DataAnalyser {
         }
 
         public void execute(ExperimentData.Host host, File outputDir) throws IOException {
-            AnalysisStep input = getInputStep();
-            if (input != null) {
-                input.execute(host, outputDir);
+            if (inputStep != null) {
+                inputStep.execute(host, outputDir);
             }
             File output = getOutputFile(outputDir);
             if (output.exists()) {
@@ -88,9 +87,8 @@ public abstract class DataAnalyser {
         }
 
         public void reexecute(ExperimentData.Host host, File outputDir) throws IOException {
-            AnalysisStep input = getInputStep();
-            if (input != null) {
-                input.reexecute(host, outputDir);
+            if (inputStep != null) {
+                inputStep.reexecute(host, outputDir);
             }
             doExecute(host, outputDir);
         }
@@ -108,9 +106,8 @@ public abstract class DataAnalyser {
         }
 
         public void executeInMemory(ExperimentData.Host host, File outputDir) throws IOException {
-            AnalysisStep input = getInputStep();
-            if (input != null) {
-                input.execute(host, outputDir);
+            if (inputStep != null) {
+                inputStep.execute(host, outputDir);
             }
             AppBuilder builder = makeBuilder(host, outputDir);
             addAlgorithms(builder);
@@ -145,19 +142,17 @@ public abstract class DataAnalyser {
         }
 
         private void addAllAlgorithms(AppBuilder builder) {
-            AnalysisStep input = getInputStep();
-            if (input != null) {
-                input.addAllAlgorithms(builder);
+            if (inputStep != null) {
+                inputStep.addAllAlgorithms(builder);
             }
             addAlgorithms(builder);
         }
 
         private AppBuilder makeBuilder(ExperimentData.Host host, File outputDir) throws IOException {
-            AnalysisStep input = getInputStep();
-            if (input == null) {
+            if (inputStep == null) {
                 return data.makeBuilder(host);
             } else {
-                return new AppBuilder(input.getOutputFile(outputDir), FileMetricReader.FILE_NAME);
+                return new AppBuilder(inputStep.getOutputFile(outputDir), FileMetricReader.FILE_NAME);
             }
         }
 

@@ -256,4 +256,24 @@ public abstract class PostAnalysisAlgorithm<M extends PostAnalysisAlgorithm.Metr
 
     }
 
+    static class ExtendedMetricsStats extends MetricStatistics {
+
+        double min = Double.MAX_VALUE;
+        double max = Double.MIN_VALUE;
+
+        ExtendedMetricsStats(String name) {
+            super(name);
+        }
+
+        @Override
+        void add(double val) {
+            super.add(val);
+            if (!Double.isNaN(val)) {
+                min = Double.min(min, val);
+                max = Double.min(max, val);
+            }
+        }
+
+    }
+
 }
