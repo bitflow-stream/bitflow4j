@@ -26,8 +26,6 @@ public class FeatureMinMaxScaler extends AbstractFeatureScaler {
             } else {
                 min = max = 0;
             }
-
-            System.err.println(stats.name + ": " + min + " - " + max);
         }
 
         public double scale(double val) {
