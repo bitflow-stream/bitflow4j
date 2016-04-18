@@ -20,8 +20,8 @@ public class DimensionReductionApp extends DataAnalyser {
     public final AnalysisStep VARIANCE_FILTER = new VarianceFilter();
     public final AnalysisStep CORRELATION = new CorrelationAnalysis();
     public final AnalysisStep CORRELATION_STATS = new CorrelationStats();
-    public final AnalysisStep PCA = new PcaAnalysis();
-    public final AnalysisStep PCA_PLOT = new PlotPca();
+    public final PcaAnalysis PCA = new PcaAnalysis(0.99);
+    public final AnalysisStep PCA_PLOT = new PlotPca(PCA, 0, 1);
 
     public DimensionReductionApp(Config config, ExperimentData data) throws IOException {
         super(config, data);
@@ -124,11 +124,29 @@ public class DimensionReductionApp extends DataAnalyser {
     }
 
     public class PcaAnalysis extends AnalysisStep {
-        private static final int PCA_COLS = -1; // Can be set to 2 to force at least 2 components
-        private static final double PCA_VARIANCE = 0.99;
+        private final int cols;
+        private final double variance;
+        private final boolean center;
+        private final com.mkobos.pca_transform.PCA.TransformationType transformationType;
 
-        PcaAnalysis() {
-            super("5-pca.csv");
+        public PcaAnalysis(int cols) {
+            super("5-pca-" + cols + "cols.csv");
+            this.cols = cols;
+            this.variance = -1;
+            this.center = true;
+            this.transformationType = com.mkobos.pca_transform.PCA.TransformationType.WHITENING;
+        }
+
+        public PcaAnalysis(double variance) {
+            this(variance, true, com.mkobos.pca_transform.PCA.TransformationType.WHITENING);
+        }
+
+        public PcaAnalysis(double variance, boolean center, com.mkobos.pca_transform.PCA.TransformationType transformationType) {
+            super("5-pca-" + variance + "var.csv");
+            this.cols = -1;
+            this.variance = variance;
+            this.center = center;
+            this.transformationType = transformationType;
         }
 
         @Override
@@ -138,7 +156,7 @@ public class DimensionReductionApp extends DataAnalyser {
 
         @Override
         protected void addAlgorithms(AppBuilder builder) {
-            builder.addAlgorithm(new PCAAlgorithm(-1, PCA_COLS, PCA_VARIANCE));
+            builder.addAlgorithm(new PCAAlgorithm(-1, cols, variance));
         }
 
         @Override
@@ -148,8 +166,13 @@ public class DimensionReductionApp extends DataAnalyser {
     }
 
     public class PlotPca extends AnalysisStep {
-        PlotPca() {
+        private final PcaAnalysis input;
+        private final int[] cols;
+
+        public PlotPca(PcaAnalysis input, int ...cols) {
             super("6-pca-plot.esv");
+            this.input = input;
+            this.cols = cols;
         }
 
         @Override
@@ -164,17 +187,17 @@ public class DimensionReductionApp extends DataAnalyser {
 
         @Override
         protected AnalysisStep getInputStep() {
-            return PCA;
+            return input;
         }
 
         @Override
         protected void setInMemoryOutput(AppBuilder builder) {
-            builder.setOutput(new OutputMetricPlotter(new ScatterPlotter(), 0, 1));
+            builder.setOutput(new OutputMetricPlotter(new ScatterPlotter(), cols));
         }
 
         @Override
         protected void setFileOutput(AppBuilder builder, File output) throws IOException {
-            builder.setOutput(new OutputMetricPlotter(new ScatterPlotter(), output.toString(), 0, 1));
+            builder.setOutput(new OutputMetricPlotter(new ScatterPlotter(), output.toString(), cols));
         }
     }
 

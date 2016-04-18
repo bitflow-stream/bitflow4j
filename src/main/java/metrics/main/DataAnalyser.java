@@ -108,6 +108,10 @@ public abstract class DataAnalyser {
         }
 
         public void executeInMemory(ExperimentData.Host host, File outputDir) throws IOException {
+            AnalysisStep input = getInputStep();
+            if (input != null) {
+                input.execute(host, outputDir);
+            }
             AppBuilder builder = makeBuilder(host, outputDir);
             addAlgorithms(builder);
             setInMemoryOutput(builder);

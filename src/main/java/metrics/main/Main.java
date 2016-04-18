@@ -1,5 +1,6 @@
 package metrics.main;
 
+import com.mkobos.pca_transform.PCA;
 import metrics.algorithms.PCAAlgorithm;
 import metrics.io.plot.OutputMetricPlotter;
 import metrics.io.plot.ScatterPlotter;
@@ -21,7 +22,11 @@ public class Main {
         DimensionReductionApp oldDimensionReduction = new DimensionReductionApp(conf, oldData);
         DimensionReductionApp newDimensionReduction = new DimensionReductionApp(conf, newData);
 
-        oldDimensionReduction.PCA.execute();
+//        oldDimensionReduction.PCA.execute();
+
+        newDimensionReduction.new PlotPca(newDimensionReduction.
+                new PcaAnalysis(0.99, false, PCA.TransformationType.WHITENING), 0, -1).executeInMemory(bono);
+
 //        oldDimensionReduction.PCA.executeCached();
 
 //        new CodeApp(conf, newData.makeBuilder(bono)).runAll();
