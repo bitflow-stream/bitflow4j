@@ -2,8 +2,10 @@ package metrics.main.features;
 
 import com.google.common.io.ByteArrayDataOutput;
 import metrics.algorithms.*;
+import metrics.io.plot.AbstractPlotter;
 import metrics.io.plot.OutputMetricPlotter;
-import metrics.io.plot.ScatterPlotter;
+import metrics.io.plot.plotFX.AbstractFxPlotter;
+import metrics.io.plot.plotGral.ScatterPlotter;
 import metrics.main.AppBuilder;
 import metrics.main.Config;
 import metrics.main.DataAnalyser;
@@ -34,7 +36,7 @@ public class DimensionReductionApp extends DataAnalyser {
     public final PcaAnalysis PCA_SCALED_FILTERED = new PcaAnalysis(SCALED_FILTERED, -1, 0.99, true, TRANSFORMATION_TYPE);
     public final PcaAnalysis PCA_FILTERED_SCALED = new PcaAnalysis(FILTERED_SCALED, -1, 0.99, true, TRANSFORMATION_TYPE);
 
-    public final AnalysisStep PCA_PLOT = new ScatterPlot(PCA);
+    public final AnalysisStep PCA_PLOT = new ScatterPlot(PCA, 0, 1);
 
     private static final com.mkobos.pca_transform.PCA.TransformationType TRANSFORMATION_TYPE =
             com.mkobos.pca_transform.PCA.TransformationType.ROTATION;
@@ -205,12 +207,42 @@ public class DimensionReductionApp extends DataAnalyser {
         }
     }
 
-    public class ScatterPlot extends AnalysisStep {
-        private final int[] cols;
+    public abstract class AbstractPlot extends AnalysisStep {
+        final int[] cols;
 
-        public ScatterPlot(AnalysisStep inputStep, int... cols) {
-            super("6.pca-plot.png", inputStep);
+        public AbstractPlot(String filename, AnalysisStep inputStep, int... cols) {
+            super(filename, inputStep);
             this.cols = cols;
+        }
+
+        @Override
+        protected void addAlgorithms(AppBuilder builder) {
+            builder.addAlgorithm(new NoopAlgorithm());
+        }
+
+        @Override
+        protected void setInMemoryOutput(AppBuilder builder) {
+            builder.setOutput(new OutputMetricPlotter<>(createPlotter(), cols));
+        }
+
+        @Override
+        protected void setFileOutput(AppBuilder builder, File output) throws IOException {
+            builder.setOutput(new OutputMetricPlotter<>(createPlotter(), output.toString(), cols));
+        }
+
+        @Override
+        protected void hashParameters(ByteArrayDataOutput bytes) {
+            bytes.writeInt(cols.length);
+            for (int col : cols)
+                bytes.writeInt(col);
+        }
+
+        abstract AbstractPlotter<?> createPlotter();
+    }
+
+    public class ScatterPlot extends AbstractPlot {
+        public ScatterPlot(AnalysisStep inputStep, int... cols) {
+            super("6.plot.png", inputStep, cols);
         }
 
         public ScatterPlot(AnalysisStep inputStep) {
@@ -223,25 +255,28 @@ public class DimensionReductionApp extends DataAnalyser {
         }
 
         @Override
-        protected void addAlgorithms(AppBuilder builder) {
-            builder.addAlgorithm(new NoopAlgorithm());
+        AbstractPlotter<?> createPlotter() {
+            return new ScatterPlotter();
+        }
+    }
+
+    public class FxPlot extends AbstractPlot {
+        public FxPlot(AnalysisStep inputStep, int... cols) {
+            super("6.fx-plot.png", inputStep, cols);
+        }
+
+        public FxPlot(AnalysisStep inputStep) {
+            this(inputStep, 0, 1);
         }
 
         @Override
-        protected void setInMemoryOutput(AppBuilder builder) {
-            builder.setOutput(new OutputMetricPlotter(new ScatterPlotter(), cols));
+        public String toString() {
+            return "FX scatter plot";
         }
 
         @Override
-        protected void setFileOutput(AppBuilder builder, File output) throws IOException {
-            builder.setOutput(new OutputMetricPlotter(new ScatterPlotter(), output.toString(), cols));
-        }
-
-        @Override
-        protected void hashParameters(ByteArrayDataOutput bytes) {
-            bytes.writeInt(cols.length);
-            for (int col : cols)
-                bytes.writeInt(col);
+        AbstractPlotter<?> createPlotter() {
+            return new AbstractFxPlotter();
         }
     }
 

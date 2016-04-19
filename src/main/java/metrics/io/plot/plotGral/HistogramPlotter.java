@@ -1,4 +1,4 @@
-package metrics.io.plot;
+package metrics.io.plot.plotGral;
 
 import de.erichseifert.gral.data.DataSource;
 import de.erichseifert.gral.data.DataTable;
@@ -10,6 +10,7 @@ import de.erichseifert.gral.plots.BarPlot;
 import de.erichseifert.gral.plots.points.PointRenderer;
 import de.erichseifert.gral.util.GraphicsUtils;
 import de.erichseifert.gral.util.MathUtils;
+import metrics.io.plot.OutputMetricPlotter;
 
 import java.io.IOException;
 import java.util.Map;
@@ -17,7 +18,7 @@ import java.util.Map;
 /**
  * Created by mwall on 14.04.16.
  */
-public class HistogramPlotter extends AbstractPlotter {
+public class HistogramPlotter extends AbstractGralPlotter {
 
     @Override
     public String toString() {
@@ -25,21 +26,21 @@ public class HistogramPlotter extends AbstractPlotter {
     }
 
     @Override
-    public void plotResult(OutputMetricPlotter.PlotType outputType, Map<String, DataTable> map, String filename) throws IOException {
+    public void plotResult(OutputMetricPlotter.PlotType outputType, Map<String, GralDataContainer> map, String filename) throws IOException {
 
         // Create histogram from data
         //for (final String key : map.keySet()) {
-        DataTable data = map.get("load");
+        DataTable data = map.get("load").table;
 
         Histogram1D histogram = new Histogram1D(data, Orientation.VERTICAL, new Number[]{1000});
         // Create a second dimension (x axis) for plotting
         DataSource histogram2d = new EnumeratedData(histogram);
 
-        // Create new bar plot
+        // Create new bar plotGral
         BarPlot plot = new BarPlot(histogram2d);
 
-        // Format plot
-        //plot.setInsets(new Insets2D.Double(20.0, 65.0, 50.0, 40.0));
+        // Format plotGral
+        //plotGral.setInsets(new Insets2D.Double(20.0, 65.0, 50.0, 40.0));
         plot.getTitle().setText(
                 String.format("Distribution of %d random samples", data.getRowCount()));
         plot.setBarWidth(0.78);

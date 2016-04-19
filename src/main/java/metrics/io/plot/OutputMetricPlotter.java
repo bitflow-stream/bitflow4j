@@ -1,6 +1,5 @@
 package metrics.io.plot;
 
-import de.erichseifert.gral.data.DataTable;
 import metrics.Sample;
 import metrics.io.AbstractOutputStream;
 import metrics.io.MetricOutputStream;
@@ -12,7 +11,7 @@ import java.util.Map;
 /**
  * Created by mwall on 14.04.16.
  */
-public class OutputMetricPlotter extends AbstractOutputStream implements MetricOutputStream {
+public class OutputMetricPlotter<T extends DataContainer> extends AbstractOutputStream implements MetricOutputStream {
 
     public enum PlotType {
         IN_FRAME,
@@ -21,27 +20,27 @@ public class OutputMetricPlotter extends AbstractOutputStream implements MetricO
     }
 
     private final int[] columns;
-    private final Map<String, DataTable> colorMap;
+    private final Map<String, T> colorMap;
     private final PlotType outputType;
-    private final Plotter plotter;
+    private final AbstractPlotter<T> plotter;
     private final String filename;
 
-    public OutputMetricPlotter(Plotter plotter, String filename, int ...columns) {
+    public OutputMetricPlotter(AbstractPlotter<T> plotter, String filename, int ...columns) {
         this(plotter, PlotType.AS_FILE, filename, columns);
     }
 
-    public OutputMetricPlotter(Plotter plotter, int ...columns) {
+    public OutputMetricPlotter(AbstractPlotter<T> plotter, int ...columns) {
         this(plotter, PlotType.IN_FRAME, columns);
     }
 
-    public OutputMetricPlotter(Plotter plotter, PlotType outputType, int ...columns) {
+    public OutputMetricPlotter(AbstractPlotter<T> plotter, PlotType outputType, int ...columns) {
         this(plotter, outputType, null, columns);
     }
 
     /**
      * @param columns is an array of colums used from data sheet, you also define dimensions with this variable
      */
-    public OutputMetricPlotter(Plotter plotter, PlotType outputType, String filename, int ...columns) {
+    public OutputMetricPlotter(AbstractPlotter<T> plotter, PlotType outputType, String filename, int ...columns) {
         if (columns.length < 1 || columns.length > 2) {
             throw new IllegalArgumentException("Only 1D and 2D plots are supported.");
         }
@@ -60,10 +59,10 @@ public class OutputMetricPlotter extends AbstractOutputStream implements MetricO
             // 1D Plots
             case 1:
                 if (!this.colorMap.containsKey(label)) {
-                    DataTable data1d = new DataTable(Double.class);
+                    T data1d = plotter.createDataContainer(1);
                     this.colorMap.put(label, data1d);
                 }
-                DataTable data1d = this.colorMap.get(label);
+                T data1d = this.colorMap.get(label);
                 double xVal1d = getValue(values, columns[0]);
                 data1d.add(xVal1d);
                 break;
@@ -71,10 +70,10 @@ public class OutputMetricPlotter extends AbstractOutputStream implements MetricO
             // 2d Plots
             case 2:
                 if (!this.colorMap.containsKey(label)) {
-                    DataTable data2d = new DataTable(Double.class, Double.class);
+                    T data2d = plotter.createDataContainer(2);
                     this.colorMap.put(label, data2d);
                 }
-                DataTable data2d = this.colorMap.get(label);
+                T data2d = this.colorMap.get(label);
                 double xVal2d = getValue(values, columns[0]);
 
                 if (values.length == 1 || columns[1] < 0) {

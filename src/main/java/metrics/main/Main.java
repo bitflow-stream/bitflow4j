@@ -2,7 +2,7 @@ package metrics.main;
 
 import metrics.algorithms.PCAAlgorithm;
 import metrics.io.plot.OutputMetricPlotter;
-import metrics.io.plot.ScatterPlotter;
+import metrics.io.plot.plotGral.ScatterPlotter;
 import metrics.main.features.DimensionReductionApp;
 
 import java.io.IOException;
@@ -24,7 +24,7 @@ public class Main {
 
 //        oldDimensionReduction.PCA.execute();
 
-        newDR.new ScatterPlot(newDR.PCA_SCALED).execute();
+        newDR.new ScatterPlot(newDR.PCA).executeInMemory(wally142);
 
 //        oldDimensionReduction.PCA.executeCached();
 
@@ -51,7 +51,7 @@ public class Main {
 //        builder.addAlgorithm(new MetricCounter());
             builder.addAlgorithm(new PCAAlgorithm(0.99));
 
-            builder.setOutput(new OutputMetricPlotter(new ScatterPlotter(), 0, 1));
+            builder.setOutput(new OutputMetricPlotter<>(new ScatterPlotter(), 0, 1));
 //        builder.setConsoleOutput("CSV");
 //        builder.setFileOutput(outputFile, "CSV");
 
