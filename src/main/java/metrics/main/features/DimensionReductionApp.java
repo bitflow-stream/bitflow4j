@@ -2,7 +2,8 @@ package metrics.main.features;
 
 import metrics.algorithms.*;
 import metrics.io.plot.OutputMetricPlotter;
-import metrics.io.plot.ScatterPlotter;
+import metrics.io.plot.plotFX.AbstractFxPlotter;
+import metrics.io.plot.plotGral.ScatterPlotter;
 import metrics.main.AppBuilder;
 import metrics.main.Config;
 import metrics.main.DataAnalyser;
@@ -30,6 +31,8 @@ public class DimensionReductionApp extends DataAnalyser {
     public final PcaAnalysis PCA_UNSCALED = new PcaAnalysis(LABELLED, "unscaled", -1, 0.99, true, TRANSFORMATION_TYPE);
     public final AnalysisStep PCA_PLOT = new PlotPca(PCA, "scaled", 0, 1);
     public final AnalysisStep PCA_PLOT_UNSCALED = new PlotPca(PCA_UNSCALED, "unscaled", 0, 1);
+
+    public final AnalysisStep FX_PLOT_PCA = new FxPlotPca(PCA, "fx-scaled", 0, 1);
 
     private static final com.mkobos.pca_transform.PCA.TransformationType TRANSFORMATION_TYPE =
             com.mkobos.pca_transform.PCA.TransformationType.ROTATION;
@@ -165,13 +168,13 @@ public class DimensionReductionApp extends DataAnalyser {
         private final int[] cols;
 
         public PlotPca(AnalysisStep inputStep, String name, int... cols) {
-            super("6.pca-plot-" + name + ".png", inputStep);
+            super("6.pca-plotGral-" + name + ".png", inputStep);
             this.cols = cols;
         }
 
         @Override
         public String toString() {
-            return "PCA plot";
+            return "PCA plotGral";
         }
 
         @Override
@@ -187,6 +190,34 @@ public class DimensionReductionApp extends DataAnalyser {
         @Override
         protected void setFileOutput(AppBuilder builder, File output) throws IOException {
             builder.setOutput(new OutputMetricPlotter(new ScatterPlotter(), output.toString(), cols));
+        }
+    }
+
+    public class FxPlotPca extends AnalysisStep {
+        private final int[] cols;
+
+        public FxPlotPca(AnalysisStep inputStep, String name, int... cols) {
+            super("6.FX-pca-plotGral-" + name + ".png", inputStep);
+            this.cols = cols;
+        }
+
+        @Override
+        public String toString() {
+            return "FX PCA plotGral";
+        }
+
+        @Override
+        protected void addAlgorithms(AppBuilder builder) {
+            builder.addAlgorithm(new NoopAlgorithm());
+        }
+
+        @Override
+        protected void setInMemoryOutput(AppBuilder builder) {
+            builder.setOutput(new OutputMetricPlotter<>(new AbstractFxPlotter(), cols));
+        }
+
+        @Override
+        protected void setFileOutput(AppBuilder builder, File output) throws IOException {
         }
     }
 

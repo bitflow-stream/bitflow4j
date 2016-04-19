@@ -1,9 +1,10 @@
-package metrics.io.plotGral;
+package metrics.io.plot.plotGral;
 
 import de.erichseifert.gral.data.DataSeries;
 import de.erichseifert.gral.data.DataTable;
 import de.erichseifert.gral.graphics.Orientation;
 import de.erichseifert.gral.plots.XYPlot;
+import metrics.io.plot.OutputMetricPlotter;
 
 import java.io.IOException;
 import java.util.Map;
@@ -11,7 +12,7 @@ import java.util.Map;
 /**
  * Created by mwall on 14.04.16.
  */
-public class ScatterPlotter extends AbstractPlotter implements Plotter {
+public class ScatterPlotter extends AbstractGralPlotter {
 
     @Override
     public String toString() {
@@ -19,10 +20,10 @@ public class ScatterPlotter extends AbstractPlotter implements Plotter {
     }
 
     @Override
-    public void plotResult(OutputMetricPlotter.PlotType outputType, Map<String, DataTable> map, String filename) throws IOException {
+    public void plotResult(OutputMetricPlotter.PlotType outputType, Map<String, GralDataContainer> map, String filename) throws IOException {
         XYPlot plot = new XYPlot();
         for (final String key : map.keySet()) {
-            DataTable a = map.get(key);
+            DataTable a = map.get(key).table;
             DataSeries ds = new DataSeries(key, a);
 
             plot.add(ds);

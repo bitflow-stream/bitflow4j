@@ -1,4 +1,4 @@
-package metrics.io.plotGral;
+package metrics.io.plot.plotGral;
 
 import de.erichseifert.gral.plots.XYPlot;
 import de.erichseifert.gral.ui.InteractivePanel;

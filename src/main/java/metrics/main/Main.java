@@ -1,8 +1,12 @@
 package metrics.main;
 
+import metrics.algorithms.FeatureScalingAlgorithm;
+import metrics.algorithms.NoopAlgorithm;
 import metrics.algorithms.PCAAlgorithm;
 import metrics.io.plot.OutputMetricPlotter;
-import metrics.io.plot.ScatterPlotter;
+import metrics.io.plot.plotFX.AbstractFxPlotter;
+import metrics.io.plot.plotFX.FxDataContainer;
+import metrics.io.plot.plotGral.ScatterPlotter;
 import metrics.main.features.DimensionReductionApp;
 
 import java.io.IOException;
@@ -23,7 +27,7 @@ public class Main {
 
 //        oldDimensionReduction.PCA.execute();
 
-        newDR.PCA_PLOT.execute();
+        newDR.FX_PLOT_PCA.executeInMemory();
 
 //        oldDimensionReduction.PCA.executeCached();
 
@@ -48,9 +52,10 @@ public class Main {
 //        builder.addAlgorithm(new CorrelationAlgorithm(false));
 //        builder.addAlgorithm(new CorrelationSignificanceAlgorithm(0.7));
 //        builder.addAlgorithm(new MetricCounter());
+            builder.addAlgorithm(new FeatureScalingAlgorithm());
             builder.addAlgorithm(new PCAAlgorithm(0.99));
 
-            builder.setOutput(new OutputMetricPlotter(new ScatterPlotter(), 0, 1));
+            builder.setOutput(new OutputMetricPlotter<>(new AbstractFxPlotter(), 0, 1));
 //        builder.setConsoleOutput("CSV");
 //        builder.setFileOutput(outputFile, "CSV");
 
