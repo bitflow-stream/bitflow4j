@@ -23,12 +23,12 @@ public class ScatterPlotter extends AbstractGralPlotter {
     @Override
     public void plotResult(OutputMetricPlotter.PlotType outputType, Map<String, GralDataContainer> map, String filename) throws IOException {
         XYPlot plot = new XYPlot();
+        ColorGenerator cg = new ColorGenerator();
         for (final String key : map.keySet()) {
             DataTable a = map.get(key).table;
             DataSeries ds = new DataSeries(key, a);
 
             plot.add(ds);
-            ColorGenerator cg = new ColorGenerator();
             plot.getPointRenderers(ds).get(0).setColor(cg.getNextColor());
         }
 
@@ -37,6 +37,7 @@ public class ScatterPlotter extends AbstractGralPlotter {
         plot.setLegendVisible(true);
         plot.getLegend().setAlignmentY(1.0);
         plot.getLegend().setAlignmentX(1.0);
+        plot.setLegendDistance(2.0);
 
         //plotGral.setInsets(new Insets2D.Double(20.0, 40.0, 40.0, 40.0));
         plot.getTitle().setText(toString());

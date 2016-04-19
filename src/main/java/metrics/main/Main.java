@@ -4,6 +4,7 @@ import metrics.algorithms.PCAAlgorithm;
 import metrics.algorithms.VarianceFilterAlgorithm;
 import metrics.io.plot.JFreeChart.AbstractJFreePlotter;
 import metrics.io.plot.OutputMetricPlotter;
+import metrics.io.plot.plotGral.ScatterPlotter;
 import metrics.main.features.DimensionReductionApp;
 
 import java.io.IOException;
@@ -29,7 +30,7 @@ public class Main {
 
 //        oldDimensionReduction.PCA.executeCached();
 
-        new CodeApp(conf, newData.makeBuilder(bono)).runAll();
+        new CodeApp(conf, newData.makeBuilder(wally131)).runAll();
 //        new CodeApp(conf, new AppBuilder(9999, "BIN")).runAll();
     }
 
@@ -51,7 +52,7 @@ public class Main {
 //        builder.addAlgorithm(new CorrelationSignificanceAlgorithm(0.7));
 //        builder.addAlgorithm(new MetricCounter());
             builder.addAlgorithm(new PCAAlgorithm(0.99));
-            builder.setOutput(new OutputMetricPlotter(new AbstractJFreePlotter(), 0, 1));
+            builder.setOutput(new OutputMetricPlotter(new ScatterPlotter(), 0, 1));
 //        builder.setConsoleOutput("CSV");
 //        builder.setFileOutput(outputFile, "CSV");
 
