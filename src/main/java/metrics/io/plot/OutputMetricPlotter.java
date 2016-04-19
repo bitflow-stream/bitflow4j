@@ -59,7 +59,7 @@ public class OutputMetricPlotter<T extends DataContainer> extends AbstractOutput
             // 1D Plots
             case 1:
                 if (!this.colorMap.containsKey(label)) {
-                    T data1d = plotter.createDataContainer(1);
+                    T data1d = plotter.createDataContainer(1,label);
                     this.colorMap.put(label, data1d);
                 }
                 T data1d = this.colorMap.get(label);
@@ -70,7 +70,7 @@ public class OutputMetricPlotter<T extends DataContainer> extends AbstractOutput
             // 2d Plots
             case 2:
                 if (!this.colorMap.containsKey(label)) {
-                    T data2d = plotter.createDataContainer(2);
+                    T data2d = plotter.createDataContainer(2,label);
                     this.colorMap.put(label, data2d);
                 }
                 T data2d = this.colorMap.get(label);

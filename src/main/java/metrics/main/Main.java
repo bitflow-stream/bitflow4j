@@ -1,8 +1,9 @@
 package metrics.main;
 
+import metrics.algorithms.FeatureStandardizer;
 import metrics.algorithms.PCAAlgorithm;
+import metrics.io.plot.JFreeChart.AbstractJFreePlotter;
 import metrics.io.plot.OutputMetricPlotter;
-import metrics.io.plot.plotGral.ScatterPlotter;
 import metrics.main.features.DimensionReductionApp;
 
 import java.io.IOException;
@@ -19,16 +20,16 @@ public class Main {
     private static final ExperimentData newData = new NewExperimentData(conf, false);
 
     public static void main(String[] args) throws IOException {
-        DimensionReductionApp oldDR = new DimensionReductionApp(conf, oldData);
+        //DimensionReductionApp oldDR = new DimensionReductionApp(conf, oldData);
         DimensionReductionApp newDR = new DimensionReductionApp(conf, newData);
 
 //        oldDimensionReduction.PCA.execute();
 
-        newDR.new ScatterPlot(newDR.PCA).executeInMemory(wally142);
+//        newDR.new ScatterPlot(newDR.PCA).executeInMemory(wally142);
 
 //        oldDimensionReduction.PCA.executeCached();
 
-//        new CodeApp(conf, newData.makeBuilder(bono)).runAll();
+        new CodeApp(conf, newData.makeBuilder(bono)).runAll();
 //        new CodeApp(conf, new AppBuilder(9999, "BIN")).runAll();
     }
 
@@ -46,12 +47,13 @@ public class Main {
 //        builder.addAlgorithm(new MetricFilterAlgorithm(0, 1, 2, 3));
 //        builder.addAlgorithm(new NoopAlgorithm());
 //        builder.addAlgorithm(new VarianceFilterAlgorithm(0.02, true));
+            builder.addAlgorithm(new FeatureStandardizer());
 //        builder.addAlgorithm(new CorrelationAlgorithm(false));
 //        builder.addAlgorithm(new CorrelationSignificanceAlgorithm(0.7));
 //        builder.addAlgorithm(new MetricCounter());
             builder.addAlgorithm(new PCAAlgorithm(0.99));
 
-            builder.setOutput(new OutputMetricPlotter<>(new ScatterPlotter(), 0, 1));
+            builder.setOutput(new OutputMetricPlotter<>(new AbstractJFreePlotter(), 0, 1));
 //        builder.setConsoleOutput("CSV");
 //        builder.setFileOutput(outputFile, "CSV");
 

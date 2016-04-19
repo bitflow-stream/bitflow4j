@@ -3,6 +3,7 @@ package metrics.main.features;
 import com.google.common.io.ByteArrayDataOutput;
 import metrics.algorithms.*;
 import metrics.io.plot.AbstractPlotter;
+import metrics.io.plot.JFreeChart.AbstractJFreePlotter;
 import metrics.io.plot.OutputMetricPlotter;
 import metrics.io.plot.plotFX.AbstractFxPlotter;
 import metrics.io.plot.plotGral.ScatterPlotter;
@@ -39,6 +40,7 @@ public class DimensionReductionApp extends DataAnalyser {
     public final AnalysisStep PCA_PLOT = new ScatterPlot(PCA, 0, 1);
 
     public final AnalysisStep FX_PLOT_PCA = new FxPlotPca(PCA, "fx-scaled", 0, 1);
+    public final AnalysisStep JFREE_PLOT_PCA = new FxPlotPca(PCA, "jfree-scaled", 0, 1);
 
     private static final com.mkobos.pca_transform.PCA.TransformationType TRANSFORMATION_TYPE =
             com.mkobos.pca_transform.PCA.TransformationType.ROTATION;
@@ -286,13 +288,13 @@ public class DimensionReductionApp extends DataAnalyser {
         private final int[] cols;
 
         public FxPlotPca(AnalysisStep inputStep, String name, int... cols) {
-            super("6.FX-pca-plotGral-" + name + ".png", inputStep);
+            super("6.pca-plotFX-" + name + ".png", inputStep);
             this.cols = cols;
         }
 
         @Override
         public String toString() {
-            return "FX PCA plotGral";
+            return "PCA plotFX";
         }
 
         @Override
@@ -303,6 +305,34 @@ public class DimensionReductionApp extends DataAnalyser {
         @Override
         protected void setInMemoryOutput(AppBuilder builder) {
             builder.setOutput(new OutputMetricPlotter<>(new AbstractFxPlotter(), cols));
+        }
+
+        @Override
+        protected void setFileOutput(AppBuilder builder, File output) throws IOException {
+        }
+    }
+
+    public class JFreePlotPca extends AnalysisStep {
+        private final int[] cols;
+
+        public JFreePlotPca(AnalysisStep inputStep, String name, int... cols) {
+            super("6.pca-plotJFree-" + name + ".png", inputStep);
+            this.cols = cols;
+        }
+
+        @Override
+        public String toString() {
+            return "PCA plotJFree";
+        }
+
+        @Override
+        protected void addAlgorithms(AppBuilder builder) {
+            builder.addAlgorithm(new NoopAlgorithm());
+        }
+
+        @Override
+        protected void setInMemoryOutput(AppBuilder builder) {
+            builder.setOutput(new OutputMetricPlotter<>(new AbstractJFreePlotter(), cols));
         }
 
         @Override
