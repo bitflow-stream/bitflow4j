@@ -38,6 +38,8 @@ public class DimensionReductionApp extends DataAnalyser {
 
     public final AnalysisStep PCA_PLOT = new ScatterPlot(PCA, 0, 1);
 
+    public final AnalysisStep FX_PLOT_PCA = new FxPlotPca(PCA, "fx-scaled", 0, 1);
+
     private static final com.mkobos.pca_transform.PCA.TransformationType TRANSFORMATION_TYPE =
             com.mkobos.pca_transform.PCA.TransformationType.ROTATION;
 
@@ -277,6 +279,34 @@ public class DimensionReductionApp extends DataAnalyser {
         @Override
         AbstractPlotter<?> createPlotter() {
             return new AbstractFxPlotter();
+        }
+    }
+
+    public class FxPlotPca extends AnalysisStep {
+        private final int[] cols;
+
+        public FxPlotPca(AnalysisStep inputStep, String name, int... cols) {
+            super("6.FX-pca-plotGral-" + name + ".png", inputStep);
+            this.cols = cols;
+        }
+
+        @Override
+        public String toString() {
+            return "FX PCA plotGral";
+        }
+
+        @Override
+        protected void addAlgorithms(AppBuilder builder) {
+            builder.addAlgorithm(new NoopAlgorithm());
+        }
+
+        @Override
+        protected void setInMemoryOutput(AppBuilder builder) {
+            builder.setOutput(new OutputMetricPlotter<>(new AbstractFxPlotter(), cols));
+        }
+
+        @Override
+        protected void setFileOutput(AppBuilder builder, File output) throws IOException {
         }
     }
 
