@@ -9,24 +9,20 @@ import java.util.Collection;
 /**
  * Created by anton on 4/18/16.
  */
-public class FeatureScalingAlgorithm extends PostAnalysisAlgorithm<PostAnalysisAlgorithm.MetricStatistics> {
+public abstract class AbstractFeatureScaler extends PostAnalysisAlgorithm<PostAnalysisAlgorithm.ExtendedMetricsStats> {
 
-    public FeatureScalingAlgorithm() {
+    public AbstractFeatureScaler() {
         super(true);
     }
 
     @Override
     protected void writeResults(MetricOutputStream output) throws IOException {
-        Collection<MetricStatistics> stats = metrics.values();
-        double[] stdDeviations = new double[stats.size()];
-        double[] averages = new double[stats.size()];
+        Collection<ExtendedMetricsStats> stats = metrics.values();
+        MetricScaler scalers[] = new MetricScaler[stats.size()];
 
         int i = 0;
-        for (MetricStatistics stat : stats) {
-            averages[i] = stat.average();
-            double stdDev = stat.stdDeviation();
-            if (stdDev == 0) stdDev = 1;
-            stdDeviations[i++] = stdDev;
+        for (ExtendedMetricsStats stat : stats) {
+            scalers[i++] = createScaler(stat);
         }
 
         // Construct combined header
@@ -43,10 +39,7 @@ public class FeatureScalingAlgorithm extends PostAnalysisAlgorithm<PostAnalysisA
             i = 0;
             for (MetricStatistics stat : stats) {
                 double val = stat.getValue(sampleNr);
-
-                // The actual scaling calculation
-                double scaled = (val - averages[i]) / stdDeviations[i];
-
+                double scaled = scalers[i].scale(val);
                 metrics[i++] = scaled;
             }
             SampleMetadata meta = samples.get(sampleNr);
@@ -55,14 +48,15 @@ public class FeatureScalingAlgorithm extends PostAnalysisAlgorithm<PostAnalysisA
         }
     }
 
-    @Override
-    protected MetricStatistics createMetricStats(String name) {
-        return new MetricStatistics(name);
+    protected abstract MetricScaler createScaler(ExtendedMetricsStats stats);
+
+    interface MetricScaler {
+        double scale(double val);
     }
 
     @Override
-    public String toString() {
-        return "feature scaling";
+    protected ExtendedMetricsStats createMetricStats(String name) {
+        return new ExtendedMetricsStats(name);
     }
 
 }

@@ -10,6 +10,7 @@ import de.erichseifert.gral.plots.BarPlot;
 import de.erichseifert.gral.plots.points.PointRenderer;
 import de.erichseifert.gral.util.GraphicsUtils;
 import de.erichseifert.gral.util.MathUtils;
+import metrics.io.plot.ColorGenerator;
 import metrics.io.plot.OutputMetricPlotter;
 
 import java.io.IOException;
@@ -19,6 +20,8 @@ import java.util.Map;
  * Created by mwall on 14.04.16.
  */
 public class HistogramPlotter extends AbstractGralPlotter {
+
+    private final ColorGenerator cg = new ColorGenerator();
 
     @Override
     public String toString() {
@@ -58,7 +61,7 @@ public class HistogramPlotter extends AbstractGralPlotter {
 
         // Format bars
         PointRenderer barRenderer = plot.getPointRenderers(histogram2d).get(0);
-        barRenderer.setColor(GraphicsUtils.deriveWithAlpha(this.getNextColor(), 128));
+        barRenderer.setColor(GraphicsUtils.deriveWithAlpha(cg.getNextColor(), 128));
         barRenderer.setValueVisible(true);
 
         showPlot(plot, outputType, filename);

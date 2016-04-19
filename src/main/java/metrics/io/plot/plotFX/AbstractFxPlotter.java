@@ -1,9 +1,7 @@
 package metrics.io.plot.plotFX;
 
-import com.sun.javafx.application.LauncherImpl;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.application.Preloader;
 import javafx.scene.Scene;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.ScatterChart;
@@ -38,32 +36,34 @@ public class AbstractFxPlotter extends AbstractPlotter<FxDataContainer> {
 
     public static class App extends Application {
 
-        public App() { super(); }
+        public App() {
+            super();
+        }
 
-         @Override
-         public void start(Stage stage) throws Exception {
+        @Override
+        public void start(Stage stage) throws Exception {
 
-             Platform.setImplicitExit(false);
+            Platform.setImplicitExit(false);
 
-             final NumberAxis xAxis = new NumberAxis();
-             final NumberAxis yAxis = new NumberAxis();
-             final ScatterChart<Number,Number> sc = new ScatterChart<>(xAxis,yAxis);
-             xAxis.setLabel("Age (years)");
-             yAxis.setLabel("Returns to date");
-             sc.setTitle("Investment Overview");
+            final NumberAxis xAxis = new NumberAxis();
+            final NumberAxis yAxis = new NumberAxis();
+            final ScatterChart<Number, Number> sc = new ScatterChart<>(xAxis, yAxis);
+            xAxis.setLabel("Age (years)");
+            yAxis.setLabel("Returns to date");
+            sc.setTitle("Investment Overview");
 
-             for (Map.Entry<String, FxDataContainer> entry : map.entrySet()) {
-                 entry.getValue().series.setName(entry.getKey());
-                 sc.getData().add(entry.getValue().series);
-             }
-             Scene scene  = new Scene(sc, 500, 400);
+            for (Map.Entry<String, FxDataContainer> entry : map.entrySet()) {
+                entry.getValue().series.setName(entry.getKey());
+                sc.getData().add(entry.getValue().series);
+            }
+            Scene scene = new Scene(sc, 500, 400);
 
-             stage.setTitle("Scatter Chart Sample");
+            stage.setTitle("Scatter Chart Sample");
 
-             stage.setScene(scene);
-             stage.show();
-         }
-     }
+            stage.setScene(scene);
+            stage.show();
+        }
+    }
 
     @Override
     public FxDataContainer createDataContainer(int numDimensions) {

@@ -17,7 +17,7 @@ public class ScatterPlotter extends AbstractGralPlotter {
 
     @Override
     public String toString() {
-        return "scatter plotGral";
+        return "scatter plot Gral";
     }
 
     @Override

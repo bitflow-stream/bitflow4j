@@ -15,7 +15,7 @@ import java.io.IOException;
 /**
  * Created by mwall on 18.04.16.
  */
-public abstract class AbstractGralPlotter extends AbstractPlotter < GralDataContainer >{
+public abstract class AbstractGralPlotter extends AbstractPlotter<GralDataContainer> {
 
     protected void save(XYPlot plot, String filename) throws IOException {
 
