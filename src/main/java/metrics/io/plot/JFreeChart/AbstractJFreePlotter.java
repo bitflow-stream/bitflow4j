@@ -2,7 +2,7 @@ package metrics.io.plot.JFreeChart;
 
 import metrics.io.plot.AbstractPlotter;
 import metrics.io.plot.OutputMetricPlotter;
-import org.jfree.data.general.DefaultPieDataset;
+import org.jfree.data.xy.XYSeriesCollection;
 
 import java.io.IOException;
 import java.util.Map;
@@ -25,6 +25,6 @@ public class AbstractJFreePlotter extends AbstractPlotter<JFreeDataContainer> {
 
     @Override
     public JFreeDataContainer createDataContainer(int numDimensions) {
-        return new JFreeDataContainer(new DefaultPieDataset());
+        return new JFreeDataContainer(new XYSeriesCollection());
     }
 }
