@@ -4,6 +4,7 @@ import metrics.io.plot.DataContainer;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.data.xy.XYDataset;
+import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 /**
@@ -11,22 +12,20 @@ import org.jfree.data.xy.XYSeriesCollection;
  */
 public class JFreeDataContainer implements DataContainer {
 
-    public final XYSeriesCollection dataset;
+    public final XYSeries dataset;
 
 
 
-    public JFreeDataContainer(XYSeriesCollection dataset) {
+    public JFreeDataContainer(XYSeries dataset) {
         this.dataset = dataset;
     }
 
-    public XYSeriesCollection getChart() {
+    public XYSeries getChart() {
         return dataset;
     }
 
     @Override
     public void add(double... data) {
-
-          //  this.datas
-
+        this.dataset.add(data[0],data[1]);
     }
 }

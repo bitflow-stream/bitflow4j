@@ -20,6 +20,7 @@ public class FxDataContainer implements DataContainer {
 
     @Override
     public void add(double... data) {
+
         series.getData().add(new XYChart.Data(data[0], data[1]));
     }
 }

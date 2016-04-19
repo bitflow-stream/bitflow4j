@@ -4,6 +4,7 @@ import de.erichseifert.gral.data.DataSeries;
 import de.erichseifert.gral.data.DataTable;
 import de.erichseifert.gral.graphics.Orientation;
 import de.erichseifert.gral.plots.XYPlot;
+import metrics.io.plot.ColorGenerator;
 import metrics.io.plot.OutputMetricPlotter;
 
 import java.io.IOException;
@@ -27,7 +28,8 @@ public class ScatterPlotter extends AbstractGralPlotter {
             DataSeries ds = new DataSeries(key, a);
 
             plot.add(ds);
-            plot.getPointRenderers(ds).get(0).setColor(this.getNextColor());
+            ColorGenerator cg = new ColorGenerator();
+            plot.getPointRenderers(ds).get(0).setColor(cg.getNextColor());
         }
 
         plot.getLegend().setOrientation(Orientation.VERTICAL);

@@ -56,4 +56,8 @@ public abstract class AbstractGralPlotter extends AbstractPlotter < GralDataCont
         return new GralDataContainer(new DataTable(numDimensions, Double.class));
     }
 
+    @Override
+    public GralDataContainer createDataContainer(int numDimensions,String label){
+        return new GralDataContainer(new DataTable(numDimensions, Double.class));
+    }
 }
