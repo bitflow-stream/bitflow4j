@@ -62,7 +62,8 @@ public class LassoFit {
         int numberOfSolutions = numberOfLambdas;
         sb.append("Compression R2 values:\n");
         for (int i = 0; i < numberOfSolutions; i++) {
-            sb.append((i + 1) + "\t" + nonZeroWeights[i] + "\t" + MathUtil.getFormattedDouble(rsquared[i], 4) + "\t"
+            sb.append((i + 1) + "\t" + nonZeroWeights[i] + "\t"
+                    + MathUtil.getFormattedDouble(rsquared[i], 4) + "\t"
                     + MathUtil.getFormattedDouble(lambdas[i], 5) + "\n");
         }
         return sb.toString().trim();

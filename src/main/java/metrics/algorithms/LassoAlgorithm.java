@@ -25,6 +25,14 @@ public class LassoAlgorithm extends PostAnalysisAlgorithm<PostAnalysisAlgorithm.
 
     @Override
     protected void writeResults(MetricOutputStream output) throws IOException {
+
+        // two Lasso algorithms should be implemented: one for filtering out metrics
+        // and a second one for the actual predictive model. The first one already trains the model,
+        // the second one just needs it as input to generate predictions for future metrics.
+        // TODO
+        if (true)
+            throw new UnsupportedOperationException("Lasso algorithm is not implemented yet");
+
         int featuresCount = metrics.size();
         int numObservations = samples.size();
 
@@ -45,6 +53,7 @@ public class LassoAlgorithm extends PostAnalysisAlgorithm<PostAnalysisAlgorithm.
 
         LassoFit fit = fitGenerator.fit(maxAllowedFeatures);
 
+        // TODO
     }
 
     @Override
