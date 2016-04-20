@@ -8,17 +8,13 @@ import java.util.Set;
 
 /**
  * Created by anton on 4/11/16.
+ *
+ * This abstract MetricInputStream aggregates multiple other MetricInputStreams into one.
+ *
  */
 public abstract class MetricInputAggregator implements MetricInputStream {
 
     protected final Set<InputStreamProducer> producers = new HashSet<>();
-
-    protected String unifiedSource = null;
-
-    // Will set Sample.source on every outgoing Sample to unifiedSource.
-    public void setUnifiedSampleSource(String unifiedSource) {
-        this.unifiedSource = unifiedSource;
-    }
 
     public synchronized void producerStarting(InputStreamProducer producer) {
         producers.add(producer);

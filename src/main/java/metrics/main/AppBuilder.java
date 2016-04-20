@@ -61,10 +61,6 @@ public class AppBuilder {
         return reader;
     }
 
-    public void setUnifiedSource(String source) {
-        aggregator.setUnifiedSampleSource(source);
-    }
-
     public void addAlgorithm(Algorithm algo) {
         algorithms.add(algo);
     }

@@ -74,7 +74,7 @@ public abstract class AbstractParallelAggregator extends MetricInputAggregator {
 
             // TODO clean up code
             Set<String> labels = aggregatedHeader.hasLabel() ? new HashSet<>() : null;
-            Set<String> sources = aggregatedHeader.hasSource() && unifiedSource == null ? new HashSet<>() : null;
+            Set<String> sources = new HashSet<>();
             double[] metrics = new double[aggregatedHeader.header.length];
             Date timestamp = new Date();
             int i = 0;
@@ -87,10 +87,10 @@ public abstract class AbstractParallelAggregator extends MetricInputAggregator {
                     metrics[i++] = value;
                 }
                 if (labels != null) labels.add(thread.label);
-                if (sources != null) sources.add(thread.source);
+                sources.add(thread.source);
             }
             inputReceived();
-            String source = unifiedSource == null ? concat(sources) : unifiedSource;
+            String source = concat(sources);
             String label = concat(labels);
             return new Sample(aggregatedHeader, metrics, timestamp, source, label);
         }
@@ -113,8 +113,6 @@ public abstract class AbstractParallelAggregator extends MetricInputAggregator {
                 }
             }
             String aggregated[] = aggregatedHeaderList.toArray(new String[aggregatedHeaderList.size()]);
-            if (unifiedSource != null && specialFields < 2)
-                specialFields = 2;
             aggregatedHeader = new Sample.Header(aggregated, specialFields);
             notifyNewInput(input);
         }
