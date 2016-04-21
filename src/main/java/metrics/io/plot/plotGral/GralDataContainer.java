@@ -16,9 +16,6 @@ public class GralDataContainer implements DataContainer {
 
     @Override
     public void add(double... data) {
-        Double[] values = new Double[data.length];
-        for (int i = 0; i < data.length; i++)
-            values[i] = data[i];
-        this.table.add(values);
+        table.add(data[0],data[1]);
     }
 }
