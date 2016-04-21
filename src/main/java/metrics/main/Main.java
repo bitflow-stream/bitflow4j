@@ -1,9 +1,6 @@
 package metrics.main;
 
-import metrics.algorithms.FeatureStandardizer;
-import metrics.algorithms.PCAAlgorithm;
-import metrics.io.plot.JFreeChart.AbstractJFreePlotter;
-import metrics.io.plot.OutputMetricPlotter;
+import metrics.algorithms.NoopAlgorithm;
 import metrics.main.features.DimensionReductionApp;
 
 import java.io.IOException;
@@ -29,8 +26,8 @@ public class Main {
 
 //        oldDimensionReduction.PCA.executeCached();
 
-        new CodeApp(conf, newData.makeBuilder(bono)).runAll();
-//        new CodeApp(conf, new AppBuilder(9999, "BIN")).runAll();
+//        new CodeApp(conf, newData.makeBuilder(bono)).runAll();
+        new CodeApp(conf, new AppBuilder(9999, "BIN")).runAll();
     }
 
     static class CodeApp {
@@ -45,16 +42,16 @@ public class Main {
         public void runAll() throws IOException {
 
 //        builder.addAlgorithm(new MetricFilterAlgorithm(0, 1, 2, 3));
-//        builder.addAlgorithm(new NoopAlgorithm());
+            builder.addAlgorithm(new NoopAlgorithm());
 //        builder.addAlgorithm(new VarianceFilterAlgorithm(0.02, true));
-            builder.addAlgorithm(new FeatureStandardizer());
+//            builder.addAlgorithm(new FeatureStandardizer());
 //        builder.addAlgorithm(new CorrelationAlgorithm(false));
 //        builder.addAlgorithm(new CorrelationSignificanceAlgorithm(0.7));
 //        builder.addAlgorithm(new MetricCounter());
-            builder.addAlgorithm(new PCAAlgorithm(0.99));
+//            builder.addAlgorithm(new PCAAlgorithm(0.99));
 
-            builder.setOutput(new OutputMetricPlotter<>(new AbstractJFreePlotter(), 0, 1));
-//        builder.setConsoleOutput("CSV");
+//            builder.setOutput(new OutputMetricPlotter<>(new AbstractJFreePlotter(), 0, 1));
+            builder.setConsoleOutput("CSV");
 //        builder.setFileOutput(outputFile, "CSV");
 
             builder.runApp();

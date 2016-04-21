@@ -8,13 +8,21 @@ import java.util.Set;
 
 /**
  * Created by anton on 4/11/16.
- *
+ * <p>
  * This abstract MetricInputStream aggregates multiple other MetricInputStreams into one.
- *
+ * Every incoming Sample is
  */
 public abstract class MetricInputAggregator implements MetricInputStream {
 
-    protected final Set<InputStreamProducer> producers = new HashSet<>();
+    final Set<InputStreamProducer> producers = new HashSet<>();
+
+    public abstract boolean hasRunningInput();
+
+    public abstract int size();
+
+    protected abstract void waitForNewInput();
+
+    protected abstract Sample doReadSample() throws IOException;
 
     public synchronized void producerStarting(InputStreamProducer producer) {
         producers.add(producer);
@@ -26,39 +34,28 @@ public abstract class MetricInputAggregator implements MetricInputStream {
 
     public abstract void addInput(String name, MetricInputStream input);
 
-    public synchronized boolean isClosed() {
-        if (!producers.isEmpty()) return false;
-        if (hasRunningInput()) return false;
-        return true;
-    }
-
-    public abstract boolean hasRunningInput();
-
-    public abstract int size();
-
-    protected abstract void waitForNewInput();
-
-    protected abstract Sample doReadSample() throws IOException;
-
-    protected void inputFinished(String name, Throwable exception) {
-        if (exception != null) {
-            System.err.println("Input closed: " + name + ", error: " + exception.getMessage());
-            exception.printStackTrace();
-        } else {
-            System.err.println("Input closed: " + name);
-        }
+    synchronized boolean isClosed() {
+        return producers.isEmpty() && !hasRunningInput();
     }
 
     /**
      * This should only be read from one Thread. Possibly blocks until new input data
      * is available, depending on the subclass implementation.
-     * The aggregated timestamp will be the one of the latest received sample.
      */
     public Sample readSample() throws IOException {
         checkClosed();
         waitForNewInput();
         checkClosed();
         return doReadSample();
+    }
+
+    void inputFinished(String name, Throwable exception) {
+        if (exception != null) {
+            System.err.println("Input closed: " + name + ", error: " + exception.getMessage());
+            exception.printStackTrace();
+        } else {
+            System.err.println("Input closed: " + name);
+        }
     }
 
     private void checkClosed() throws InputStreamClosedException {

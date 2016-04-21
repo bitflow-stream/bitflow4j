@@ -8,14 +8,18 @@ import java.util.*;
 /**
  * Created by anton on 4/6/16.
  * <p>
- * TODO source and label of incoming Samples are currently discarded.
+ * Inputs are read independently from readSample(), overwriting intermediate data if readSample() is not called
+ * frequently enough.
+ * readSample() will only block until the data changes in any way:
+ * an input stream delivers data, a new input stream is added, or an input stream is closed.
  */
-public abstract class AbstractParallelAggregator extends MetricInputAggregator {
+public class ParallelAggregator extends MetricInputAggregator {
 
+    // Can be set to >0 to allow some errors in the input threads
     private static final int MAX_INPUT_ERRORS = 0;
     private static final String HEADER_SEPARATOR = "/";
 
-    // Access to this is synchronized on AbstractParallelAggregator.this
+    // Access to this is synchronized on ParallelAggregator.this
     protected final Map<String, AggregatingThread> inputs = new TreeMap<>();
 
     // Access to the following 3 is synchronized on activeInputs
@@ -23,6 +27,9 @@ public abstract class AbstractParallelAggregator extends MetricInputAggregator {
     protected final List<AggregatingThread> activeInputs = new ArrayList<>(); // Subset of inputs that have a valid header
     private ArrayList<String> aggregatedHeaderList = new ArrayList<>();
     private Sample.Header aggregatedHeader;
+
+    private final Object newInputLock = new Object();
+    private boolean newInput = false;
 
     @Override
     public synchronized void producerFinished(InputStreamProducer producer) {
@@ -89,7 +96,6 @@ public abstract class AbstractParallelAggregator extends MetricInputAggregator {
                 if (labels != null) labels.add(thread.label);
                 sources.add(thread.source);
             }
-            inputReceived();
             String source = concat(sources);
             String label = concat(labels);
             return new Sample(aggregatedHeader, metrics, timestamp, source, label);
@@ -118,14 +124,25 @@ public abstract class AbstractParallelAggregator extends MetricInputAggregator {
         }
     }
 
-    // By implementing this subclasses control the blocking & timing behaviour of all involved Threads
-    protected abstract void waitForNewInput(); // May block
+    @Override
+    protected void waitForNewInput() {
+        synchronized (newInputLock) {
+            while (!newInput) {
+                try {
+                    newInputLock.wait();
+                } catch (InterruptedException e) {
+                }
+            }
+            newInput = false;
+        }
+    }
 
-    protected abstract void inputReceived(); // Must not block
-
-    protected abstract void inputReady(AggregatingThread input); // May block
-
-    protected abstract void notifyNewInput(AggregatingThread input); // Must not block
+    protected void notifyNewInput(AggregatingThread input) {
+        synchronized (newInputLock) {
+            newInput = true;
+            newInputLock.notifyAll();
+        }
+    }
 
     private synchronized boolean inputStarting(AggregatingThread thread) {
         if (inputs.containsKey(thread.name))
@@ -195,7 +212,6 @@ public abstract class AbstractParallelAggregator extends MetricInputAggregator {
         }
 
         private void updateSample(Sample sample) {
-            inputReady(this);
             synchronized (activeInputs) {
                 timestamp = sample.getTimestamp();
                 values = sample.getMetrics();

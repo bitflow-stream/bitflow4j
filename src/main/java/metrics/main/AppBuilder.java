@@ -42,7 +42,7 @@ public class AppBuilder {
     }
 
     public AppBuilder(int port, String inputMarshaller) throws IOException {
-        this(new DecoupledMetricAggregator());
+        this(new ParallelAggregator());
         addInputProducer(new TcpMetricsListener(port, getMarshaller(inputMarshaller)));
     }
 
