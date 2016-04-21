@@ -2,6 +2,8 @@ package metrics.algorithms;
 
 import metrics.algorithms.lasso.LassoFit;
 import metrics.algorithms.lasso.LassoFitGenerator;
+import metrics.algorithms.logback.MetricLog;
+import metrics.algorithms.logback.PostAnalysisAlgorithm;
 import metrics.io.MetricOutputStream;
 
 import java.io.IOException;
@@ -9,7 +11,7 @@ import java.io.IOException;
 /**
  * Created by anton on 4/19/16.
  */
-public class LassoAlgorithm extends PostAnalysisAlgorithm<PostAnalysisAlgorithm.MetricLog> {
+public class LassoAlgorithm extends PostAnalysisAlgorithm<MetricLog> {
 
     public final int maxAllowedFeatures;
 

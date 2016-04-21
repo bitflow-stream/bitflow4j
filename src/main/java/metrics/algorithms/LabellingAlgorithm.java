@@ -1,6 +1,8 @@
 package metrics.algorithms;
 
 import metrics.Sample;
+import metrics.algorithms.logback.MetricLog;
+import metrics.algorithms.logback.PostAnalysisAlgorithm;
 import metrics.io.MetricOutputStream;
 
 import java.io.IOException;
@@ -10,7 +12,7 @@ import java.util.List;
 /**
  * Created by anton on 4/14/16.
  */
-public abstract class LabellingAlgorithm extends PostAnalysisAlgorithm<PostAnalysisAlgorithm.MetricLog> {
+public abstract class LabellingAlgorithm extends PostAnalysisAlgorithm<MetricLog> {
 
     protected List<Sample> sampleLog = new ArrayList<>();
 
@@ -19,7 +21,7 @@ public abstract class LabellingAlgorithm extends PostAnalysisAlgorithm<PostAnaly
     }
 
     @Override
-    protected void registerMetricData(Sample sample) throws IOException {
+    public void registerMetricData(Sample sample) throws IOException {
         registerSample(sample);
         sampleLog.add(sample);
     }
