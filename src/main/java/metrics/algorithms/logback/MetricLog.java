@@ -50,6 +50,7 @@ public class MetricLog {
     }
 
     public TDoubleList getLatestValues(int numSamples) {
+        // TODO avoid copy
         return values.subList(values.size() - 1 - numSamples, values.size());
     }
 
