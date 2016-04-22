@@ -1,6 +1,9 @@
 package metrics.algorithms;
 
 import metrics.Sample;
+import metrics.algorithms.logback.MetricStatistics;
+import metrics.algorithms.logback.PostAnalysisAlgorithm;
+import metrics.algorithms.logback.SampleMetadata;
 import metrics.io.MetricOutputStream;
 
 import java.io.IOException;
@@ -11,7 +14,7 @@ import java.util.Map;
 /**
  * Created by anton on 4/7/16.
  */
-public class VarianceFilterAlgorithm extends PostAnalysisAlgorithm<PostAnalysisAlgorithm.MetricStatistics> {
+public class VarianceFilterAlgorithm extends PostAnalysisAlgorithm<MetricStatistics> {
 
     private final double minNormalizedDeviation;
 

@@ -5,6 +5,9 @@ import com.mkobos.pca_transform.PCA;
 import gnu.trove.list.TDoubleList;
 import gnu.trove.list.array.TDoubleArrayList;
 import metrics.Sample;
+import metrics.algorithms.logback.NoNanMetricLog;
+import metrics.algorithms.logback.PostAnalysisAlgorithm;
+import metrics.algorithms.logback.SampleMetadata;
 import metrics.io.MetricOutputStream;
 
 import java.io.IOException;
@@ -16,7 +19,7 @@ import java.util.Arrays;
  * Perform a PCA training on the entire dataset, then apply the resulting
  * model to the entire dataset and output the results;
  */
-public class PCAAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgorithm.NoNanMetricLog> {
+public class PCAAlgorithm extends PostAnalysisAlgorithm<NoNanMetricLog> {
 
     private static final double REPORT_VARIANCE = 0.999;
 
@@ -161,8 +164,8 @@ public class PCAAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgorithm.NoN
     }
 
     @Override
-    protected CorrelationAlgorithm.NoNanMetricLog createMetricStats(String name) {
-        return new CorrelationAlgorithm.NoNanMetricLog(name);
+    protected NoNanMetricLog createMetricStats(String name) {
+        return new NoNanMetricLog(name);
     }
 
     @Override

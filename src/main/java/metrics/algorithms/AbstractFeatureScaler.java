@@ -1,6 +1,10 @@
 package metrics.algorithms;
 
 import metrics.Sample;
+import metrics.algorithms.logback.ExtendedMetricsStats;
+import metrics.algorithms.logback.MetricStatistics;
+import metrics.algorithms.logback.PostAnalysisAlgorithm;
+import metrics.algorithms.logback.SampleMetadata;
 import metrics.io.MetricOutputStream;
 
 import java.io.IOException;
@@ -9,7 +13,7 @@ import java.util.Collection;
 /**
  * Created by anton on 4/18/16.
  */
-public abstract class AbstractFeatureScaler extends PostAnalysisAlgorithm<PostAnalysisAlgorithm.ExtendedMetricsStats> {
+public abstract class AbstractFeatureScaler extends PostAnalysisAlgorithm<ExtendedMetricsStats> {
 
     public AbstractFeatureScaler() {
         super(true);

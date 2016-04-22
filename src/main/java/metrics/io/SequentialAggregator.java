@@ -16,7 +16,6 @@ public class SequentialAggregator extends MetricInputAggregator {
 
     @Override
     public synchronized void addInput(String name, MetricInputStream input) {
-        // TODO the name given here is stored but not used for result Samples
         inputs.offer(new NamedInputStream(input, name));
         notifyAll();
     }
@@ -47,11 +46,8 @@ public class SequentialAggregator extends MetricInputAggregator {
         if (currentInput == null)
             currentInput = nextInputStream();
         try {
-            Sample sample = currentInput.input.readSample();
-            if (unifiedSource != null) {
-                sample.setSource(unifiedSource);
-            }
-            return sample;
+            // TODO maybe use currentInput.name somehow?
+            return currentInput.input.readSample();
         } catch (InputStreamClosedException exc) {
             inputFinished(currentInput.name, null);
             currentInput = null;

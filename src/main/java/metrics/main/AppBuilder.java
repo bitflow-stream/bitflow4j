@@ -42,7 +42,7 @@ public class AppBuilder {
     }
 
     public AppBuilder(int port, String inputMarshaller) throws IOException {
-        this(new DecoupledMetricAggregator());
+        this(new ParallelAggregator());
         addInputProducer(new TcpMetricsListener(port, getMarshaller(inputMarshaller)));
     }
 
@@ -59,10 +59,6 @@ public class AppBuilder {
         FileMetricReader reader = new FileMetricReader(getMarshaller("CSV"), conv);
         reader.addFile(csvFile);
         return reader;
-    }
-
-    public void setUnifiedSource(String source) {
-        aggregator.setUnifiedSampleSource(source);
     }
 
     public void addAlgorithm(Algorithm algo) {

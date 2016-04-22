@@ -1,6 +1,8 @@
 package metrics.algorithms;
 
 import metrics.Sample;
+import metrics.algorithms.logback.NoNanMetricLog;
+import metrics.algorithms.logback.PostAnalysisAlgorithm;
 import metrics.io.MetricOutputStream;
 import org.apache.commons.math3.stat.correlation.KendallsCorrelation;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
@@ -13,7 +15,7 @@ import java.util.Date;
 /**
  * Created by anton on 4/11/16.
  */
-public class CorrelationAlgorithm extends PostAnalysisAlgorithm<PostAnalysisAlgorithm.NoNanMetricLog> {
+public class CorrelationAlgorithm extends PostAnalysisAlgorithm<NoNanMetricLog> {
 
     public interface Correlation {
         double correlation(double[] x, double y[]);

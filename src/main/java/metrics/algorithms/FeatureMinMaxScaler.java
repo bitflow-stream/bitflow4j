@@ -1,5 +1,7 @@
 package metrics.algorithms;
 
+import metrics.algorithms.logback.ExtendedMetricsStats;
+
 /**
  * Created by anton on 4/18/16.
  */

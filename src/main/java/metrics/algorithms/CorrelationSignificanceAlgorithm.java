@@ -1,6 +1,8 @@
 package metrics.algorithms;
 
 import metrics.Sample;
+import metrics.algorithms.logback.MetricLog;
+import metrics.algorithms.logback.PostAnalysisAlgorithm;
 import metrics.io.MetricOutputStream;
 
 import java.io.IOException;
@@ -11,7 +13,7 @@ import java.util.*;
  * <p>
  * This analyses the output of CorrelationAlgorithm and produces a summary.
  */
-public class CorrelationSignificanceAlgorithm extends PostAnalysisAlgorithm<CorrelationAlgorithm.MetricLog> {
+public class CorrelationSignificanceAlgorithm extends PostAnalysisAlgorithm<MetricLog> {
 
     private final double minCorrelationSignificance;
     private final Map<String, Results> results = new HashMap<>();
@@ -32,7 +34,7 @@ public class CorrelationSignificanceAlgorithm extends PostAnalysisAlgorithm<Corr
     }
 
     @Override
-    protected void registerMetricData(Sample sample) throws IOException {
+    public void registerMetricData(Sample sample) throws IOException {
         registerSample(sample);
         String label = sample.getLabel();
         String source = sample.getSource();
@@ -75,8 +77,8 @@ public class CorrelationSignificanceAlgorithm extends PostAnalysisAlgorithm<Corr
     }
 
     @Override
-    protected CorrelationAlgorithm.MetricLog createMetricStats(String name) {
-        return new CorrelationAlgorithm.MetricLog(name);
+    protected MetricLog createMetricStats(String name) {
+        return new MetricLog(name);
     }
 
     private static class Results implements Comparable<Results> {
