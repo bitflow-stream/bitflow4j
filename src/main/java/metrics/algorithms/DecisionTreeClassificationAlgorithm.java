@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import metrics.algorithms.logback.NoNanMetricLog;
+import metrics.algorithms.logback.PostAnalysisAlgorithm;
+import metrics.algorithms.logback.SampleMetadata;
 import metrics.io.MetricOutputStream;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
@@ -17,7 +20,7 @@ import weka.core.Instances;
  *
  * @author fschmidt
  */
-public class DecisionTreeClassificationAlgorithm extends PostAnalysisAlgorithm<PostAnalysisAlgorithm.NoNanMetricLog> {
+public class DecisionTreeClassificationAlgorithm extends PostAnalysisAlgorithm<NoNanMetricLog> {
 
     private Classifier cls;
     private Evaluation eval;
