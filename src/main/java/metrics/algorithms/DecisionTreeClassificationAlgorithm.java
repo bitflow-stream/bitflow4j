@@ -1,10 +1,5 @@
 package metrics.algorithms;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import metrics.algorithms.logback.NoNanMetricLog;
 import metrics.algorithms.logback.PostAnalysisAlgorithm;
 import metrics.algorithms.logback.SampleMetadata;
@@ -16,6 +11,12 @@ import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  *
  * @author fschmidt
@@ -25,8 +26,8 @@ public class DecisionTreeClassificationAlgorithm extends PostAnalysisAlgorithm<N
     private Classifier cls;
     private Evaluation eval;
 
-    public DecisionTreeClassificationAlgorithm(boolean globalAnalysis) {
-        super(globalAnalysis);
+    public DecisionTreeClassificationAlgorithm() {
+        super(true);
     }
 
     @Override
@@ -67,7 +68,12 @@ public class DecisionTreeClassificationAlgorithm extends PostAnalysisAlgorithm<N
         }
 
         //TODO: create outputStream
-        
+
+        System.out.println(resultsString());
+    }
+
+    public String resultsString() {
+        return eval.toSummaryString("\nResults\n======\n", false);
     }
 
     @Override
@@ -77,7 +83,7 @@ public class DecisionTreeClassificationAlgorithm extends PostAnalysisAlgorithm<N
 
     @Override
     public String toString() {
-        return eval.toSummaryString("\nResults\n======\n", false);
+        return "WEKA decision tree";
     }
 
 }

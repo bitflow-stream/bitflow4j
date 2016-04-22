@@ -340,4 +340,21 @@ public class DimensionReductionApp extends DataAnalyser {
         }
     }
 
+    public class DecisionTree extends AnalysisStep {
+
+        public DecisionTree(AnalysisStep inputStep) {
+            super("7.decision-tree.csv", inputStep);
+        }
+
+        @Override
+        public String toString() {
+            return "Decision tree algorithm";
+        }
+
+        @Override
+        protected void addAlgorithms(AppBuilder builder) {
+            builder.addAlgorithm(new DecisionTreeClassificationAlgorithm());
+        }
+    }
+
 }

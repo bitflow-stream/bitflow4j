@@ -52,7 +52,8 @@ public class FeatureAggregator extends LogbackAlgorithm<MetricLog> {
             values[i++] = metric.getLatestValue();
             for (long interval : intervals) {
                 for (Aggregation agg : aggregations) {
-                    agg.aggregate(metric.getLatestValues(interval));
+                    // TODO WIP
+                    agg.aggregate(metric.getLatestValues(0));
                 }
             }
         }

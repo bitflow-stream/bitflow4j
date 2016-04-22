@@ -1,7 +1,8 @@
 package metrics.main;
 
-import metrics.algorithms.NoopAlgorithm;
+import metrics.algorithms.DecisionTreeClassificationAlgorithm;
 import metrics.main.features.DimensionReductionApp;
+import metrics.main.features.ExperimentLabellingAlgorithm;
 
 import java.io.IOException;
 
@@ -22,11 +23,13 @@ public class Main {
 
 //        oldDimensionReduction.PCA.execute();
 
+        newDR.new DecisionTree(newDR.LABELLED).execute();
+
         //newDR.PCA_PLOT_FILTERED_SCALED.executeInMemory(bono);
 
 //        oldDimensionReduction.PCA.executeCached();
 
-        new CodeApp(conf, newData.makeBuilder(wally131)).runAll();
+//        new CodeApp(conf, newData.makeBuilder(wally131)).runAll();
 //        new CodeApp(conf, new AppBuilder(9999, "BIN")).runAll();
     }
 
@@ -42,13 +45,15 @@ public class Main {
         public void runAll() throws IOException {
 
 //        builder.addAlgorithm(new MetricFilterAlgorithm(0, 1, 2, 3));
-            builder.addAlgorithm(new NoopAlgorithm());
+//            builder.addAlgorithm(new NoopAlgorithm());
 //        builder.addAlgorithm(new VarianceFilterAlgorithm(0.02, true));
 //        builder.addAlgorithm(new FeatureStandardizer());
 //        builder.addAlgorithm(new CorrelationAlgorithm(false));
 //        builder.addAlgorithm(new CorrelationSignificanceAlgorithm(0.7));
 //        builder.addAlgorithm(new MetricCounter());
 //        builder.addAlgorithm(new PCAAlgorithm(0.99));
+            builder.addAlgorithm(new ExperimentLabellingAlgorithm(2, "idle"));
+            builder.addAlgorithm(new DecisionTreeClassificationAlgorithm());
 
 //        builder.setOutput(new OutputMetricPlotter<>(new ScatterPlotter(), 0, 1));
             builder.setConsoleOutput("CSV");
