@@ -7,18 +7,17 @@ import metrics.io.MetricOutputStream;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.trees.J48;
+import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Random;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
  * @author fschmidt
  */
 public class DecisionTreeClassificationAlgorithm extends PostAnalysisAlgorithm<NoNanMetricLog> {
@@ -33,14 +32,28 @@ public class DecisionTreeClassificationAlgorithm extends PostAnalysisAlgorithm<N
     @Override
     protected void writeResults(MetricOutputStream output) throws IOException {
         //Parse sample data to weka's Instances object
-        Instances instances = new Instances("Rel", new ArrayList(), samples
-                .size() + 1);
+
+        Set<String> allLabels = new HashSet<>(samples.size());
+        for (SampleMetadata sample : samples) {
+            allLabels.add(sample.label);
+        }
+
+        Instances instances = new Instances("Rel", new ArrayList<>(), samples.size() + 1);
+        for (String field : constructHeader(0).header) {
+            instances.insertAttributeAt(new Attribute(field), instances.numAttributes());
+        }
+
+        Attribute attr = new Attribute("label", new ArrayList<>(allLabels));
+        instances.insertAttributeAt(attr, instances.numAttributes());
+        instances.setClass(instances.attribute(instances.numAttributes() - 1));
+
         int sampleCount = 0;
         for (SampleMetadata sample : samples) {
-            String classLabel = sample.label;
             double[] values = this.getSampleValues(sampleCount);
+            values = Arrays.copyOf(values, values.length + 1);
             Instance instance = new DenseInstance(1.0, values);
-            instance.setClassValue(classLabel);
+            instance.setDataset(instances);
+            instance.setClassValue(sample.label);
             instances.add(instance);
             sampleCount++;
         }
