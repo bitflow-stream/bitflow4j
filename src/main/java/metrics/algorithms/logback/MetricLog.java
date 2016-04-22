@@ -46,12 +46,8 @@ public class MetricLog {
     }
 
     public double getLatestValue() {
+        if (values.isEmpty()) return defaultValue();
         return getValue(values.size() - 1);
-    }
-
-    public TDoubleList getLatestValues(int numSamples) {
-        // TODO avoid copy
-        return values.subList(values.size() - 1 - numSamples, values.size());
     }
 
     public double[] getVector() {

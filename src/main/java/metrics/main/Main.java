@@ -1,6 +1,7 @@
 package metrics.main;
 
-import metrics.algorithms.DecisionTreeClassificationAlgorithm;
+import metrics.algorithms.classification.DecisionTreeClassificationAlgorithm;
+import metrics.main.features.ClassificationApp;
 import metrics.main.features.DimensionReductionApp;
 import metrics.main.features.ExperimentLabellingAlgorithm;
 
@@ -20,10 +21,15 @@ public class Main {
     public static void main(String[] args) throws IOException {
         //DimensionReductionApp oldDR = new DimensionReductionApp(conf, oldData);
         DimensionReductionApp newDR = new DimensionReductionApp(conf, newData);
+        ClassificationApp newC = new ClassificationApp(conf, newData);
 
 //        oldDimensionReduction.PCA.execute();
 
-        newDR.new DecisionTree(newDR.LABELLED).execute();
+        DataAnalyser.AnalysisStep aggregator = newC.new FeatureAggregator(newC.LABELLED);
+
+//        aggregator.execute(bono);
+
+        newC.new DecisionTree(aggregator).execute(bono);
 
         //newDR.PCA_PLOT_FILTERED_SCALED.executeInMemory(bono);
 
@@ -45,7 +51,7 @@ public class Main {
         public void runAll() throws IOException {
 
 //        builder.addAlgorithm(new MetricFilterAlgorithm(0, 1, 2, 3));
-//            builder.addAlgorithm(new NoopAlgorithm());
+//        builder.addAlgorithm(new NoopAlgorithm());
 //        builder.addAlgorithm(new VarianceFilterAlgorithm(0.02, true));
 //        builder.addAlgorithm(new FeatureStandardizer());
 //        builder.addAlgorithm(new CorrelationAlgorithm(false));

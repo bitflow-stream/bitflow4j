@@ -31,7 +31,6 @@ public abstract class LogbackAlgorithm<M extends MetricLog> extends GenericAlgor
         Sample sample = input.readSample();
         registerMetricData(sample);
         Sample outputSample = executeSample(sample);
-        registerMetricData(sample);
         output.writeSample(outputSample);
     }
 
@@ -96,14 +95,29 @@ public abstract class LogbackAlgorithm<M extends MetricLog> extends GenericAlgor
      * Count how many samples came in in the last numSeconds seconds.
      */
     public int countLatestSamples(long numSeconds) {
-        Date now = new Date();
+    // TODO this must be different for live streamed values
+    //  Date now = new Date();
+
+        Date now = samples.getLast().timestamp;
         Date flushTime = new Date(now.getTime() - (numSeconds * 1000));
         int size = samples.size();
         int numSamples = 0;
+
+        Date previousTimestamp = null;
         for (; numSamples < size; numSamples++) {
             Date timestamp = samples.get(size - 1 - numSamples).timestamp;
-            if (timestamp.before(flushTime))
+            if (previousTimestamp != null) {
+                // TODO hack
+                long timediff = timestamp.getTime() - previousTimestamp.getTime();
+                if (Math.abs(timediff) > 10000) {
+                    break;
+                }
+            }
+            previousTimestamp = timestamp;
+
+            if (timestamp.before(flushTime)) {
                 break;
+            }
         }
         return numSamples;
     }

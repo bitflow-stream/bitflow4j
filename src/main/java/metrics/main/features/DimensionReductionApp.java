@@ -20,7 +20,7 @@ import java.io.IOException;
  */
 public class DimensionReductionApp extends DataAnalyser {
 
-    public final AnalysisStep LABELLED = new LabelData(2, "idle");
+    public final AnalysisStep LABELLED = new LabelData(2, "cooldown");
 
     public final AnalysisStep FILTERED = new VarianceFilter(0.02, LABELLED);
     public final AnalysisStep FILTERED_SCALED = new ScaleData(FILTERED);
@@ -71,6 +71,7 @@ public class DimensionReductionApp extends DataAnalyser {
 
         @Override
         protected void addAlgorithms(AppBuilder builder) {
+            builder.addAlgorithm(new metrics.algorithms.FeatureAggregator());
             builder.addAlgorithm(new ExperimentLabellingAlgorithm(warmupMins, defaultLabel));
         }
 
@@ -340,21 +341,22 @@ public class DimensionReductionApp extends DataAnalyser {
         }
     }
 
-    public class DecisionTree extends AnalysisStep {
+    public class FeatureAggregator extends AnalysisStep {
 
-        public DecisionTree(AnalysisStep inputStep) {
-            super("7.decision-tree.csv", inputStep);
+        public FeatureAggregator(AnalysisStep inputStep) {
+            super("aggregated.csv", inputStep);
         }
 
         @Override
         public String toString() {
-            return "Decision tree algorithm";
+            return "feature aggregator";
         }
 
         @Override
         protected void addAlgorithms(AppBuilder builder) {
-            builder.addAlgorithm(new DecisionTreeClassificationAlgorithm());
+            builder.addAlgorithm(new metrics.algorithms.FeatureAggregator());
         }
+
     }
 
 }

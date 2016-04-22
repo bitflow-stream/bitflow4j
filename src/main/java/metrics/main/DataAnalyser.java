@@ -134,7 +134,7 @@ public abstract class DataAnalyser {
             builder.runAndWait();
         }
 
-        private void doExecute(ExperimentData.Host host, File outputDir) throws IOException {
+        protected void doExecute(ExperimentData.Host host, File outputDir) throws IOException {
             AppBuilder builder = makeBuilder(host, outputDir);
             addAlgorithms(builder);
             File output = getOutputFile(outputDir);
@@ -158,7 +158,7 @@ public abstract class DataAnalyser {
             addAlgorithms(builder);
         }
 
-        private AppBuilder makeBuilder(ExperimentData.Host host, File outputDir) throws IOException {
+        protected AppBuilder makeBuilder(ExperimentData.Host host, File outputDir) throws IOException {
             if (inputStep == null) {
                 return data.makeBuilder(host);
             } else {
@@ -166,13 +166,13 @@ public abstract class DataAnalyser {
             }
         }
 
-        private File getOutputFile(File outputDir) {
+        protected File getOutputFile(File outputDir) {
             String hash = getParameterHash();
             String filename = new FileGroup(baseOutputFilename).getFile(hash);
             return new File(outputDir, filename);
         }
 
-        private void message(String msg) {
+        protected void message(String msg) {
             System.err.println("===================== " + msg);
         }
 

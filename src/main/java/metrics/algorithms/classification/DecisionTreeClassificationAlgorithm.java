@@ -1,10 +1,9 @@
-package metrics.algorithms;
+package metrics.algorithms.classification;
 
 import metrics.algorithms.logback.NoNanMetricLog;
 import metrics.algorithms.logback.PostAnalysisAlgorithm;
 import metrics.algorithms.logback.SampleMetadata;
 import metrics.io.MetricOutputStream;
-import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.trees.J48;
 import weka.core.Attribute;
@@ -14,15 +13,13 @@ import weka.core.Instances;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @author fschmidt
  */
 public class DecisionTreeClassificationAlgorithm extends PostAnalysisAlgorithm<NoNanMetricLog> {
 
-    private Classifier cls;
+    private J48 cls;
     private Evaluation eval;
 
     public DecisionTreeClassificationAlgorithm() {
@@ -37,52 +34,61 @@ public class DecisionTreeClassificationAlgorithm extends PostAnalysisAlgorithm<N
         for (SampleMetadata sample : samples) {
             allLabels.add(sample.label);
         }
+        allLabels.remove("cooldown");
 
-        Instances instances = new Instances("Rel", new ArrayList<>(), samples.size() + 1);
+        Instances trainingSet = new Instances("train", new ArrayList<>(), samples.size() + 1);
         for (String field : constructHeader(0).header) {
-            instances.insertAttributeAt(new Attribute(field), instances.numAttributes());
+            trainingSet.insertAttributeAt(new Attribute(field), trainingSet.numAttributes());
         }
-
         Attribute attr = new Attribute("label", new ArrayList<>(allLabels));
-        instances.insertAttributeAt(attr, instances.numAttributes());
-        instances.setClass(instances.attribute(instances.numAttributes() - 1));
+        trainingSet.insertAttributeAt(attr, trainingSet.numAttributes());
+        trainingSet.setClass(trainingSet.attribute(trainingSet.numAttributes() - 1));
+
+        Instances testSet = new Instances("test", new ArrayList<>(), samples.size() + 1);
+        for (String field : constructHeader(0).header) {
+            testSet.insertAttributeAt(new Attribute(field), testSet.numAttributes());
+        }
+        testSet.insertAttributeAt(attr, testSet.numAttributes());
+        testSet.setClass(testSet.attribute(testSet.numAttributes() - 1));
+
+        Random rnd = new Random();
+        double trainingSetCount = 0.8;
 
         int sampleCount = 0;
         for (SampleMetadata sample : samples) {
+            if (sample.label.equals("cooldown")) continue;
+
+            double randDouble = rnd.nextDouble();
+            Instances targetSet = randDouble < trainingSetCount ? trainingSet : testSet;
+
             double[] values = this.getSampleValues(sampleCount);
             values = Arrays.copyOf(values, values.length + 1);
             Instance instance = new DenseInstance(1.0, values);
-            instance.setDataset(instances);
+            instance.setDataset(targetSet);
             instance.setClassValue(sample.label);
-            instances.add(instance);
+            targetSet.add(instance);
             sampleCount++;
         }
 
-        //Train Model
+        // Train Model
         cls = new J48();
         try {
-            cls.buildClassifier(instances);
+            cls.buildClassifier(trainingSet);
         } catch (Exception ex) {
-            Logger.getLogger(DecisionTreeClassificationAlgorithm.class
-                    .getName()).log(Level.SEVERE, null, ex);
+            throw new IOException("Training failed", ex);
         }
 
-        //Validate model
+        // Validate model
         try {
-            eval = new Evaluation(instances);
-//            eval.evaluateModel(cls, test);
-            eval.crossValidateModel(cls, instances, 10, new Random());
-
+            eval = new Evaluation(trainingSet);
+            eval.evaluateModel(cls, testSet);
         } catch (Exception ex) {
-            Logger
-                    .getLogger(DecisionTreeClassificationAlgorithm.class
-                            .getName())
-                    .log(Level.SEVERE, null, ex);
+            throw new IOException("Evaluation failed", ex);
         }
 
-        //TODO: create outputStream
-
+        // TODO
         System.out.println(resultsString());
+        output.close();
     }
 
     public String resultsString() {
@@ -97,6 +103,14 @@ public class DecisionTreeClassificationAlgorithm extends PostAnalysisAlgorithm<N
     @Override
     public String toString() {
         return "WEKA decision tree";
+    }
+
+    public String getGraphString() throws IOException {
+        try {
+            return cls.graph();
+        } catch (Exception e) {
+            throw new IOException("Failed to create graph dot-string", e);
+        }
     }
 
 }
