@@ -10,7 +10,7 @@ import java.util.*;
 
 /**
  * Created by anton on 4/21/16.
- *
+ * <p>
  * This algorithm keeps a log of all previously received samples. The logs can be flushed periodically if necessary.
  * {@link #executeStep(MetricInputStream, MetricOutputStream)} or {@link #executeSample(Sample)} can be overridden.
  * When overriding {@link #executeStep(MetricInputStream, MetricOutputStream)}, {@link #registerSample(Sample)} must
@@ -72,6 +72,43 @@ public abstract class LogbackAlgorithm<M extends MetricLog> extends GenericAlgor
     }
 
     /**
+     * Drop all samples older than numSeconds.
+     */
+    public void flushOldSamples(long numSeconds) {
+        Date now = new Date();
+        Date flushTime = new Date(now.getTime() - (numSeconds * 1000));
+        int numSamples = 0;
+        while (!samples.isEmpty()) {
+            SampleMetadata sample = samples.peek();
+            // Also flush bogus "future" timestamps to avoid hanging on them.
+            if (sample.timestamp.before(flushTime) || sample.timestamp.after(now)) {
+                numSamples++;
+                samples.remove();
+            } else {
+                break;
+            }
+        }
+        for (M metric : metrics.values())
+            metric.flushSamples(numSamples);
+    }
+
+    /**
+     * Count how many samples came in in the last numSeconds seconds.
+     */
+    public int countLatestSamples(long numSeconds) {
+        Date now = new Date();
+        Date flushTime = new Date(now.getTime() - (numSeconds * 1000));
+        int size = samples.size();
+        int numSamples = 0;
+        for (; numSamples < size; numSamples++) {
+            Date timestamp = samples.get(size - 1 - numSamples).timestamp;
+            if (timestamp.before(flushTime))
+                break;
+        }
+        return numSamples;
+    }
+
+    /**
      * Reconstruct the feature-vector of one sample based on its index.
      */
     public double[] getSampleValues(int sampleNr) {
@@ -95,6 +132,15 @@ public abstract class LogbackAlgorithm<M extends MetricLog> extends GenericAlgor
             metrics.put(name, result);
         }
         return result;
+    }
+
+    protected Sample.Header constructHeader(int specialFields) {
+        String headerFields[] = new String[metrics.size()];
+        int i = 0;
+        for (M stat : metrics.values()) {
+            headerFields[i++] = stat.name;
+        }
+        return new Sample.Header(headerFields, specialFields);
     }
 
 }

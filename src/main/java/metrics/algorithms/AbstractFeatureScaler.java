@@ -30,16 +30,11 @@ public abstract class AbstractFeatureScaler extends PostAnalysisAlgorithm<Extend
         }
 
         // Construct combined header
-        String headerFields[] = new String[stats.size()];
-        i = 0;
-        for (MetricStatistics stat : stats) {
-            headerFields[i++] = stat.name;
-        }
-        Sample.Header header = new Sample.Header(headerFields, Sample.Header.TOTAL_SPECIAL_FIELDS);
+        Sample.Header header = constructHeader(Sample.Header.TOTAL_SPECIAL_FIELDS);
 
         // Construct samples
         for (int sampleNr = 0; sampleNr < samples.size(); sampleNr++) {
-            double metrics[] = new double[headerFields.length];
+            double metrics[] = new double[header.header.length];
             i = 0;
             for (MetricStatistics stat : stats) {
                 double val = stat.getValue(sampleNr);

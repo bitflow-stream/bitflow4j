@@ -48,7 +48,7 @@ public abstract class PostAnalysisAlgorithm<M extends MetricLog> extends Logback
 
     private void flushResults(MetricOutputStream output) {
         if (samples.isEmpty()) return;
-        String src = globalAnalysis && numSources > 1 ? String.valueOf(numSources) + " sources" : currentSource;
+        String src = globalAnalysis && numSources > 1 ? numSources + " sources" : currentSource;
         System.err.println(toString() + " computing " + samples.size()
                 + " samples of " + metrics.size() + " metrics from " + src + "...");
         if (globalAnalysis)

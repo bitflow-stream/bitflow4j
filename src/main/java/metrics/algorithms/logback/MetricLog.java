@@ -45,6 +45,14 @@ public class MetricLog {
         return val;
     }
 
+    public double getLatestValue() {
+        return getValue(values.size() - 1);
+    }
+
+    public TDoubleList getLatestValues(int numSamples) {
+        return values.subList(values.size() - 1 - numSamples, values.size());
+    }
+
     public double[] getVector() {
         if (vector == null) {
             vector = values.toArray();
