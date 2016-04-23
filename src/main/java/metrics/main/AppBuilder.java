@@ -5,6 +5,7 @@ import metrics.CsvMarshaller;
 import metrics.Marshaller;
 import metrics.TextMarshaller;
 import metrics.algorithms.Algorithm;
+import metrics.algorithms.SampleSplitter;
 import metrics.io.*;
 import metrics.io.file.FileMetricPrinter;
 import metrics.io.file.FileMetricReader;
@@ -17,12 +18,13 @@ import java.util.List;
 
 public class AppBuilder {
 
-    public int pipeBuffer = 128;
+    private static final int pipeBuffer = 128;
 
     private final List<Algorithm> algorithms = new ArrayList<>();
     private final List<InputStreamProducer> producers = new ArrayList<>();
+    private final List<AppBuilder> forkedBuilders = new ArrayList<>();
     private final MetricInputAggregator aggregator;
-    MetricOutputStream output;
+    private MetricOutputStream output;
 
     public static Marshaller getMarshaller(String format) {
         switch (format) {
@@ -61,6 +63,22 @@ public class AppBuilder {
         return reader;
     }
 
+    public AppBuilder fork() {
+        return fork(new SampleSplitter());
+    }
+
+    public AppBuilder fork(float forkedPortion) {
+        return fork(new SampleSplitter(forkedPortion));
+    }
+
+    public AppBuilder fork(SampleSplitter splitter) {
+        addAlgorithm(splitter);
+        AppBuilder newBuilder = new AppBuilder(new SequentialAggregator());
+        forkedBuilders.add(newBuilder);
+        newBuilder.addInputProducer(splitter);
+        return newBuilder;
+    }
+
     public void addAlgorithm(Algorithm algo) {
         algorithms.add(algo);
     }
@@ -89,8 +107,14 @@ public class AppBuilder {
         setFileOutput(file.toString(), outputMarshaller);
     }
 
+    public void setEmptyOutput() {
+        setOutput(new EmptyOutputStream());
+    }
+
     public void waitForOutput() {
         output.waitUntilClosed();
+        for (AppBuilder forked : forkedBuilders)
+            forked.waitForOutput();
     }
 
     public void runAndWait() {
@@ -112,6 +136,8 @@ public class AppBuilder {
     }
 
     private void doRun() {
+        for (AppBuilder forked : forkedBuilders)
+            forked.runApp();
         for (InputStreamProducer producer : producers)
             producer.start(aggregator);
 

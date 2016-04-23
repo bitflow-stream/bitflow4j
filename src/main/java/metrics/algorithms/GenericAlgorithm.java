@@ -57,7 +57,8 @@ public abstract class GenericAlgorithm implements Algorithm {
     protected void executeStep(MetricInputStream input, MetricOutputStream output) throws IOException {
         Sample sample = input.readSample();
         Sample outputSample = executeSample(sample);
-        output.writeSample(outputSample);
+        if (outputSample != null)
+            output.writeSample(outputSample);
     }
 
     protected Sample executeSample(Sample sample) throws IOException {

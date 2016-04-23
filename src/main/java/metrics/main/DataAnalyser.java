@@ -124,6 +124,7 @@ public abstract class DataAnalyser {
             setInMemoryOutput(builder);
             message("Executing " + toString() + " in-memory for " + host + "...");
             builder.runAndWait();
+            postExecute(null);
         }
 
         public void executeInMemoryUncached(ExperimentData.Host host) throws IOException {
@@ -132,15 +133,21 @@ public abstract class DataAnalyser {
             setInMemoryOutput(builder);
             message("Executing " + toString() + " uncached in-memory for " + host + "...");
             builder.runAndWait();
+            postExecute(null);
         }
 
-        protected void doExecute(ExperimentData.Host host, File outputDir) throws IOException {
+         void doExecute(ExperimentData.Host host, File outputDir) throws IOException {
             AppBuilder builder = makeBuilder(host, outputDir);
             addAlgorithms(builder);
             File output = getOutputFile(outputDir);
             setFileOutput(builder, output);
             message("Writing " + toString() + " for " + host + " to " + output.toString());
             builder.runAndWait();
+            postExecute(output);
+        }
+
+        protected void postExecute(File outputFile) throws IOException {
+            // Hook for subclasses
         }
 
         protected void setInMemoryOutput(AppBuilder builder) {

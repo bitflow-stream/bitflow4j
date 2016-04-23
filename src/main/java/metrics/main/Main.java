@@ -1,9 +1,7 @@
 package metrics.main;
 
-import metrics.algorithms.classification.DecisionTreeClassificationAlgorithm;
 import metrics.main.features.ClassificationApp;
 import metrics.main.features.DimensionReductionApp;
-import metrics.main.features.ExperimentLabellingAlgorithm;
 
 import java.io.IOException;
 
@@ -25,11 +23,11 @@ public class Main {
 
 //        oldDimensionReduction.PCA.execute();
 
-        DataAnalyser.AnalysisStep aggregator = newC.new FeatureAggregator(newC.LABELLED);
+//        DataAnalyser.AnalysisStep aggregator = newC.new FeatureAggregator(newC.LABELLED);
 
 //        aggregator.execute(bono);
 
-        newC.new DecisionTree(aggregator).execute(bono);
+        newC.new DecisionTree(newC.LABELLED).execute(bono);
 
         //newDR.PCA_PLOT_FILTERED_SCALED.executeInMemory(bono);
 
@@ -58,8 +56,8 @@ public class Main {
 //        builder.addAlgorithm(new CorrelationSignificanceAlgorithm(0.7));
 //        builder.addAlgorithm(new MetricCounter());
 //        builder.addAlgorithm(new PCAAlgorithm(0.99));
-            builder.addAlgorithm(new ExperimentLabellingAlgorithm(2, "idle"));
-            builder.addAlgorithm(new DecisionTreeClassificationAlgorithm());
+//            builder.addAlgorithm(new ExperimentLabellingAlgorithm(2, "idle"));
+//            builder.addAlgorithm(new DecisionTreeClassificationAlgorithm());
 
 //        builder.setOutput(new OutputMetricPlotter<>(new ScatterPlotter(), 0, 1));
             builder.setConsoleOutput("CSV");

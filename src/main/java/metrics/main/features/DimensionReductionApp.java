@@ -20,7 +20,7 @@ import java.io.IOException;
  */
 public class DimensionReductionApp extends DataAnalyser {
 
-    public final AnalysisStep LABELLED = new LabelData(2, "cooldown");
+    public final AnalysisStep LABELLED = new LabelData(2, "cooldown", true);
 
     public final AnalysisStep FILTERED = new VarianceFilter(0.02, LABELLED);
     public final AnalysisStep FILTERED_SCALED = new ScaleData(FILTERED);
@@ -57,11 +57,13 @@ public class DimensionReductionApp extends DataAnalyser {
     public class LabelData extends AnalysisStep {
         private final int warmupMins;
         private final String defaultLabel;
+        private final boolean removeDefaultLabel;
 
-        LabelData(int warmupMins, String defaultLabel) {
+        LabelData(int warmupMins, String defaultLabel, boolean removeDefaultLabel) {
             super("1.labelled.csv", null);
             this.warmupMins = warmupMins;
             this.defaultLabel = defaultLabel;
+            this.removeDefaultLabel = removeDefaultLabel;
         }
 
         @Override
@@ -71,14 +73,19 @@ public class DimensionReductionApp extends DataAnalyser {
 
         @Override
         protected void addAlgorithms(AppBuilder builder) {
-            builder.addAlgorithm(new metrics.algorithms.FeatureAggregator());
             builder.addAlgorithm(new ExperimentLabellingAlgorithm(warmupMins, defaultLabel));
+            if (removeDefaultLabel) {
+                builder.addAlgorithm(new SampleFilterAlgorithm(
+                        (sample) -> !defaultLabel.equals(sample.getLabel())
+                ));
+            }
         }
 
         @Override
         protected void hashParameters(ByteArrayDataOutput bytes) {
             bytes.writeInt(warmupMins);
             bytes.writeChars(defaultLabel);
+            bytes.writeBoolean(removeDefaultLabel);
         }
     }
 
@@ -310,6 +317,7 @@ public class DimensionReductionApp extends DataAnalyser {
 
         @Override
         protected void setFileOutput(AppBuilder builder, File output) throws IOException {
+            throw new UnsupportedOperationException("fx file writing not supported");
         }
     }
 
@@ -338,6 +346,7 @@ public class DimensionReductionApp extends DataAnalyser {
 
         @Override
         protected void setFileOutput(AppBuilder builder, File output) throws IOException {
+            throw new UnsupportedOperationException("jfree file writing not supported");
         }
     }
 
