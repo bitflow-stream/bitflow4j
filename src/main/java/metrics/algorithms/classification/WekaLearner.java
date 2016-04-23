@@ -35,7 +35,6 @@ public class WekaLearner<T extends Classifier & Serializable> extends AbstractWe
         } catch (Exception e) {
             throw new IOException(toString() + ": Learning failed", e);
         }
-        System.out.println("SETTING THE MODEL");
         model.setModel(classifier);
     }
 

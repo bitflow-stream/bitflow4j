@@ -28,15 +28,12 @@ public class WekaEvaluator<T extends Classifier & Serializable> extends Abstract
         try {
             // TODO testSet in Evaluation constructor must actually be a training set...
             eval = new Evaluation(testSet);
+
             T modelObj = model.getModel();
-            System.out.println("RECEIVED THE MODEL");
             eval.evaluateModel(modelObj, testSet);
         } catch (Exception ex) {
             throw new IOException(toString() + ": Evaluation failed", ex);
         }
-
-        // TODO where to output this?
-        System.out.println(resultsString());
     }
 
     public String resultsString() {

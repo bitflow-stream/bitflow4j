@@ -54,6 +54,7 @@ public class ClassificationApp extends DimensionReductionApp {
 
         @Override
         protected void postExecute(File output) throws IOException {
+            System.out.println(evaluator.resultsString());
             if (output == null) {
                 System.err.println("Not producing dot graph files.");
                 return;
