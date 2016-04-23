@@ -26,9 +26,8 @@ public class WekaEvaluator<T extends Classifier & Serializable> extends Abstract
         Instances testSet = createDataset();
         fillDataset(testSet);
         try {
-            // TODO testSet in Evaluation constructor must actually be a training set...
+            // TODO testSet in Evaluation constructor should be an extra training set?
             eval = new Evaluation(testSet);
-
             T modelObj = model.getModel();
             eval.evaluateModel(modelObj, testSet);
         } catch (Exception ex) {

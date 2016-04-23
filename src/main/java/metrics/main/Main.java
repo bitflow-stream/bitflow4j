@@ -21,17 +21,13 @@ public class Main {
         DimensionReductionApp newDR = new DimensionReductionApp(conf, newData);
         ClassificationApp newC = new ClassificationApp(conf, newData);
 
-//        oldDimensionReduction.PCA.execute();
-
 //        DataAnalyser.AnalysisStep aggregator = newC.new FeatureAggregator(newC.LABELLED);
 
 //        aggregator.execute(bono);
 
-        newC.new DecisionTree(newC.LABELLED).execute(bono);
+        newC.new DecisionTree(newC.LABELLED, 0.8f).executeInMemory(bono);
 
         //newDR.PCA_PLOT_FILTERED_SCALED.executeInMemory(bono);
-
-//        oldDimensionReduction.PCA.executeCached();
 
 //        new CodeApp(conf, newData.makeBuilder(wally131)).runAll();
 //        new CodeApp(conf, new AppBuilder(9999, "BIN")).runAll();

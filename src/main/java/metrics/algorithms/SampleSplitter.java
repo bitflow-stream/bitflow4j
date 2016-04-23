@@ -11,9 +11,11 @@ import java.util.Random;
  */
 public class SampleSplitter extends GenericAlgorithm implements InputStreamProducer {
 
+    public static final int PIPE_BUFFER = 256;
+
     private final boolean copy;
     private final float redirectedPortion;
-    private final MetricPipe pipe = new MetricPipe(200);
+    private final MetricPipe pipe = new MetricPipe(PIPE_BUFFER);
     private final Random rnd = new Random();
 
     /**
