@@ -1,25 +1,29 @@
 package metrics.algorithms;
 
+import metrics.Header;
 import metrics.Sample;
-import metrics.algorithms.logback.MetricStatistics;
-import metrics.algorithms.logback.PostAnalysisAlgorithm;
-import metrics.algorithms.logback.SampleMetadata;
 import metrics.io.MetricOutputStream;
+import metrics.io.window.AbstractSampleWindow;
+import metrics.io.window.MetricStatisticsWindow;
+import metrics.io.window.MultiHeaderWindow;
+import metrics.io.window.SampleMetadata;
+import metrics.main.misc.ParameterHash;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by anton on 4/7/16.
  */
-public class VarianceFilterAlgorithm extends PostAnalysisAlgorithm<MetricStatistics> {
+public class VarianceFilterAlgorithm extends WindowBatchAlgorithm {
 
     private final double minNormalizedDeviation;
 
-    public VarianceFilterAlgorithm(double minNormalizedDeviation, boolean globalAnalysis) {
-        super(globalAnalysis);
+    private final MultiHeaderWindow<MetricStatisticsWindow> window =
+            new MultiHeaderWindow<>(MetricStatisticsWindow.FACTORY);
+
+    public VarianceFilterAlgorithm(double minNormalizedDeviation) {
         this.minNormalizedDeviation = minNormalizedDeviation;
     }
 
@@ -29,19 +33,24 @@ public class VarianceFilterAlgorithm extends PostAnalysisAlgorithm<MetricStatist
     }
 
     @Override
-    protected MetricStatistics createMetricStats(String name) {
-        return new MetricStatistics(name);
+    public void hashParameters(ParameterHash hash) {
+        super.hashParameters(hash);
+        hash.writeDouble(minNormalizedDeviation);
     }
 
     @Override
-    protected void writeResults(MetricOutputStream output) throws IOException {
+    protected AbstractSampleWindow getWindow() {
+        return window;
+    }
+
+    @Override
+    protected void flushResults(MetricOutputStream output) throws IOException {
         double avgDeviation = 0;
 
         // Filter out low-deviation metrics
-        List<MetricStatistics> validStats = new ArrayList<>();
+        List<MetricStatisticsWindow> validStats = new ArrayList<>();
 
-        for (Map.Entry<String, MetricStatistics> metric : metrics.entrySet()) {
-            MetricStatistics stats = metric.getValue();
+        for (MetricStatisticsWindow stats : window.allMetricWindows()) {
             double stdDeviation = stats.normalizedStdDeviation();
             if (stdDeviation > minNormalizedDeviation) {
                 validStats.add(stats);
@@ -59,21 +68,21 @@ public class VarianceFilterAlgorithm extends PostAnalysisAlgorithm<MetricStatist
         for (int i = 0; i < headerFields.length; i++) {
             headerFields[i] = validStats.get(i).name;
         }
-        Sample.Header header = new Sample.Header(headerFields, Sample.Header.TOTAL_SPECIAL_FIELDS);
+        Header header = new Header(headerFields);
 
         // Construct samples from remaining metrics
-        for (int sampleNr = 0; sampleNr < samples.size(); sampleNr++) {
+        for (int sampleNr = 0; sampleNr < window.numSamples(); sampleNr++) {
             double metrics[] = new double[headerFields.length];
             for (int metricNr = 0; metricNr < headerFields.length; metricNr++) {
                 metrics[metricNr] = validStats.get(metricNr).getValue(sampleNr);
             }
-            SampleMetadata meta = samples.get(sampleNr);
+            SampleMetadata meta = window.getSampleMetadata(sampleNr);
             Sample sample = new Sample(header, metrics, meta.timestamp, meta.source, meta.label);
             output.writeSample(sample);
         }
 
         System.err.printf("%d of %d metrics passed stdDeviation filter (%d filtered out). Avg normalized variance: %f.\n",
-                validStats.size(), metrics.size(), metrics.size() - validStats.size(), avgDeviation);
+                validStats.size(), window.numMetrics(), window.numMetrics() - validStats.size(), avgDeviation);
     }
 
 }

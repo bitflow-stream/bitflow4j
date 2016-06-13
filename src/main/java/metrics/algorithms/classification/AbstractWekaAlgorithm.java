@@ -1,8 +1,9 @@
 package metrics.algorithms.classification;
 
-import metrics.algorithms.logback.NoNanMetricLog;
-import metrics.algorithms.logback.PostAnalysisAlgorithm;
-import metrics.algorithms.logback.SampleMetadata;
+import metrics.Sample;
+import metrics.algorithms.WindowBatchAlgorithm;
+import metrics.io.window.AbstractSampleWindow;
+import metrics.io.window.SampleWindow;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
@@ -16,47 +17,45 @@ import java.util.TreeSet;
 /**
  * Created by anton on 4/23/16.
  */
-public abstract class AbstractWekaAlgorithm extends PostAnalysisAlgorithm<NoNanMetricLog> {
+public abstract class AbstractWekaAlgorithm extends WindowBatchAlgorithm {
 
-    public AbstractWekaAlgorithm(boolean globalAnalysis) {
-        super(globalAnalysis);
+    final SampleWindow window = new SampleWindow();
+
+    @Override
+    protected AbstractSampleWindow getWindow() {
+        return window;
     }
 
     Instances createDataset() {
-        Instances instances = new Instances(toString() + " data", new ArrayList<>(), samples.size());
-        for (String field : constructHeader(0).header) {
+        if (window.numSamples() < 1)
+            throw new IllegalStateException("Cannot create empty dataset");
+        Instances instances = new Instances(toString() + " data", new ArrayList<>(), window.numSamples());
+        for (String field : window.getHeader().header) {
             instances.insertAttributeAt(new Attribute(field), instances.numAttributes());
         }
         Attribute attr = new Attribute("class", allClasses());
         instances.insertAttributeAt(attr, instances.numAttributes());
         instances.setClass(instances.attribute(instances.numAttributes() - 1));
-
         return instances;
     }
 
-    ArrayList<String> allClasses() {
+    public ArrayList<String> allClasses() {
         Set<String> allLabels = new TreeSet<>(); // Classes must be in deterministic order
-        for (SampleMetadata sample : samples) {
-            allLabels.add(sample.label);
+        for (Sample sample : window.samples) {
+            allLabels.add(sample.getLabel());
         }
         return new ArrayList<>(allLabels);
     }
 
-    void fillDataset(Instances instances) {
-        int sampleCount = 0;
-        for (SampleMetadata sample : samples) {
-            double[] values = getSampleValues(sampleCount++);
+    synchronized void fillDataset(Instances instances) {
+        for (Sample sample : window.samples) {
+            double[] values = sample.getMetrics();
             values = Arrays.copyOf(values, values.length + 1);
             Instance instance = new DenseInstance(1.0, values);
             instance.setDataset(instances);
-            instance.setClassValue(sample.label);
+            instance.setClassValue(sample.getLabel());
             instances.add(instance);
         }
-    }
-
-    @Override
-    protected NoNanMetricLog createMetricStats(String name) {
-        return new NoNanMetricLog(name);
     }
 
 }

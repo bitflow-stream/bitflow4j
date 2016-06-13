@@ -66,15 +66,9 @@ public class AbstractFxPlotter extends AbstractPlotter<FxDataContainer> {
     }
 
     @Override
-    public FxDataContainer createDataContainer(int numDimensions) {
-        //series2.setName("Mutual funds");
-        return new FxDataContainer(new XYChart.Series());
-    }
-
-    @Override
     public FxDataContainer createDataContainer(int numDimensions, String label) {
         XYChart.Series c = new XYChart.Series();
-                c.setName(label);
+        c.setName(label);
         return new FxDataContainer(c);
     }
 }

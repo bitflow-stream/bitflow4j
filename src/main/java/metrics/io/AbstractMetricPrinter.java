@@ -1,5 +1,6 @@
 package metrics.io;
 
+import metrics.Header;
 import metrics.Marshaller;
 import metrics.Sample;
 
@@ -13,7 +14,7 @@ public abstract class AbstractMetricPrinter extends AbstractOutputStream {
 
     private final Marshaller marshaller;
     private OutputStream output = null;
-    private Sample.Header lastHeader;
+    private Header lastHeader;
 
     public AbstractMetricPrinter(Marshaller marshaller) {
         this.marshaller = marshaller;
@@ -22,7 +23,7 @@ public abstract class AbstractMetricPrinter extends AbstractOutputStream {
     protected abstract OutputStream nextOutputStream() throws IOException;
 
     public synchronized void writeSample(Sample sample) throws IOException {
-        Sample.Header header = sample.getHeader();
+        Header header = sample.getHeader();
         if (header.numFields() <= 0) {
             return;
         }
@@ -40,9 +41,9 @@ public abstract class AbstractMetricPrinter extends AbstractOutputStream {
         OutputStream output = this.output; // Avoid race condition
         if (output != null) {
             this.output = null;
-            super.close();
             output.close();
         }
+        super.close();
     }
 
 }

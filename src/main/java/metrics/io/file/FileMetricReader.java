@@ -1,10 +1,11 @@
 package metrics.io.file;
 
 import metrics.Marshaller;
-import metrics.io.InputStreamProducer;
-import metrics.io.MetricInputAggregator;
 import metrics.io.MetricInputStream;
 import metrics.io.MetricReader;
+import metrics.io.aggregate.InputStreamProducer;
+import metrics.io.aggregate.MetricInputAggregator;
+import metrics.main.misc.ParameterHash;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -38,8 +39,8 @@ public class FileMetricReader implements InputStreamProducer {
         boolean visitFile(Path path, BasicFileAttributes basicFileAttributes);
     }
 
-    public static final NameConverter FILE_PATH = (File file) -> file.getPath();
-    public static final NameConverter FILE_NAME = (File file) -> file.getName();
+    public static final NameConverter FILE_PATH = File::getPath;
+    public static final NameConverter FILE_NAME = File::getName;
 
     private final List<MetricInputStream> inputs = new ArrayList<>();
     private final List<File> files = new ArrayList<>();
@@ -96,7 +97,7 @@ public class FileMetricReader implements InputStreamProducer {
     }
 
     public void addFile(String path) throws IOException {
-        String source = converter.convert(new File(path));
+        String source = converter == null ? null : converter.convert(new File(path));
         FileGroup group = new FileGroup(path);
         Collection<String> filenames = group.listFiles();
         if (filenames.isEmpty())
@@ -122,11 +123,19 @@ public class FileMetricReader implements InputStreamProducer {
     public void start(MetricInputAggregator aggregator) {
         aggregator.producerStarting(this);
         for (int i = 0; i < inputs.size(); i++) {
-            String name = converter.convert(files.get(i));
+            String name = converter == null ? null : converter.convert(files.get(i));
             MetricInputStream input = inputs.get(i);
             aggregator.addInput(name, input);
         }
         aggregator.producerFinished(this);
+    }
+
+    public void hashParameters(ParameterHash hash) {
+        InputStreamProducer.super.hashParameters(hash);
+        for (File file : files)
+            hash.writeChars(file.toString());
+        hash.writeClassName(marshaller);
+        hash.writeClassName(converter);
     }
 
 }

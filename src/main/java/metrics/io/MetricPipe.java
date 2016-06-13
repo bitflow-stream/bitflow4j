@@ -19,7 +19,7 @@ public class MetricPipe extends AbstractOutputStream implements MetricInputStrea
     private final BlockingQueue<Sample> values;
 
     // This is used to wake up the reading Thread when closing the pipe
-    private final Sample closedMarker = new Sample(null, null, null);
+    private final Sample closedMarker = Sample.newEmptySample();
 
     public MetricPipe() {
         values = new LinkedBlockingQueue<>();

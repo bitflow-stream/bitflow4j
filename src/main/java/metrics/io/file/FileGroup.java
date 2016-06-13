@@ -1,5 +1,7 @@
 package metrics.io.file;
 
+import com.google.common.io.ByteArrayDataOutput;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
@@ -21,6 +23,10 @@ public class FileGroup {
     public final String fileStart;
     public final String fileEnd;
 
+    public FileGroup(File file) {
+        this(file.getAbsolutePath());
+    }
+
     public FileGroup(String baseFileName) {
         Path path = new File(baseFileName).toPath();
         folder = path.getParent();
@@ -35,12 +41,19 @@ public class FileGroup {
         }
     }
 
+    public Pattern getFilePattern(String suffix) {
+        return Pattern.compile("^" + fileStart + "(\\-" + suffix + ")?" + fileEnd + "$");
+    }
+
     public Pattern getFilePattern() {
-        return Pattern.compile("^" + fileStart + "(\\-[1-9]+)?" + fileEnd + "$");
+        return getFilePattern(".*");
+    }
+
+    public Pattern getNumbersFilePattern() {
+        return getFilePattern("[1-9]+");
     }
 
     void deleteFiles() throws IOException {
-        Pattern pattern = getFilePattern();
         walkFiles(
                 (path) -> {
                     if (!path.toFile().delete())
@@ -73,11 +86,12 @@ public class FileGroup {
 
     public void walkFiles(FileVisitor visitor) throws IOException {
         Pattern pattern = getFilePattern();
+        Path folder = this.folder != null ? this.folder : new File(".").toPath();
         Files.walkFileTree(folder, EnumSet.noneOf(FileVisitOption.class), 1,
                 new SimpleFileVisitor<Path>() {
                     @Override
                     public FileVisitResult visitFile(Path path, BasicFileAttributes attr) throws IOException {
-                        if (attr.isRegularFile()) {
+                        if (attr.isSymbolicLink() || attr.isRegularFile()) {
                             String filename = path.getFileName().toString();
                             if (pattern.matcher(filename).matches()) {
                                 visitor.visit(path);
@@ -93,4 +107,11 @@ public class FileGroup {
         walkFiles((path) -> files.add(path.toString()));
         return files;
     }
+
+    public void hashParameters(ByteArrayDataOutput bytes) {
+        bytes.writeChars(folder == null ? "" : folder.toString());
+        bytes.writeChars(fileStart);
+        bytes.writeChars(fileEnd);
+    }
+
 }

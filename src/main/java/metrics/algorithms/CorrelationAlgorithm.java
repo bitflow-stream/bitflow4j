@@ -1,9 +1,12 @@
 package metrics.algorithms;
 
+import metrics.Header;
 import metrics.Sample;
-import metrics.algorithms.logback.NoNanMetricLog;
-import metrics.algorithms.logback.PostAnalysisAlgorithm;
 import metrics.io.MetricOutputStream;
+import metrics.io.window.AbstractSampleWindow;
+import metrics.io.window.MetricStatisticsWindow;
+import metrics.io.window.MultiHeaderWindow;
+import metrics.main.misc.ParameterHash;
 import org.apache.commons.math3.stat.correlation.KendallsCorrelation;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.commons.math3.stat.correlation.SpearmansCorrelation;
@@ -15,7 +18,7 @@ import java.util.Date;
 /**
  * Created by anton on 4/11/16.
  */
-public class CorrelationAlgorithm extends PostAnalysisAlgorithm<NoNanMetricLog> {
+public class CorrelationAlgorithm extends WindowBatchAlgorithm {
 
     public interface Correlation {
         double correlation(double[] x, double y[]);
@@ -51,43 +54,57 @@ public class CorrelationAlgorithm extends PostAnalysisAlgorithm<NoNanMetricLog> 
         }
     };
 
+    private final MultiHeaderWindow<MetricStatisticsWindow> window =
+            new MultiHeaderWindow<>(MetricStatisticsWindow.FACTORY);
+
     private final Correlation[] correlations;
     private static final String sourceSeparator = " <-> ";
 
-    public CorrelationAlgorithm(boolean globalAnalysis, Correlation... correlations) {
-        super(globalAnalysis);
+    public CorrelationAlgorithm(Correlation... correlations) {
         this.correlations = correlations;
     }
 
-    public CorrelationAlgorithm(boolean globalAnalysis) {
-        this(globalAnalysis, Pearson, Spearmans, Kendalls);
+    public CorrelationAlgorithm() {
+        this(Pearson, Spearmans, Kendalls);
     }
 
     public String toString() {
         return "correlation algorithm " + Arrays.toString(correlations);
     }
 
-    private Sample.Header makeHeader() {
+    @Override
+    public void hashParameters(ParameterHash hash) {
+        super.hashParameters(hash);
+        for (Correlation corr : correlations)
+            hash.writeChars(corr.toString());
+    }
+
+    private Header makeHeader() {
         String[] headerFields = new String[correlations.length];
         for (int i = 0; i < correlations.length; i++) {
             headerFields[i] = correlations[i].toString();
         }
 
         // Include the source field in the header, which will indicate the metric-combination for the correlation(S)
-        return new Sample.Header(headerFields, Sample.Header.HEADER_LABEL_IDX + 1);
+        return new Header(headerFields);
     }
 
     @Override
-    protected void writeResults(MetricOutputStream output) throws IOException {
+    protected AbstractSampleWindow getWindow() {
+        return window;
+    }
+
+    @Override
+    protected void flushResults(MetricOutputStream output) throws IOException {
         Date timestamp = new Date();
-        Sample.Header header = makeHeader();
+        Header header = makeHeader();
 
         // Iterate every combination of metrics once
-        for (String metric1 : metrics.keySet()) {
-            for (String metric2 : metrics.keySet()) {
+        for (String metric1 : window.allMetricNames()) {
+            for (String metric2 : window.allMetricNames()) {
                 if (metric1.compareTo(metric2) < 0) {
-                    double vector1[] = getStats(metric1).getVector();
-                    double vector2[] = getStats(metric2).getVector();
+                    double vector1[] = window.getWindow(metric1).getVector();
+                    double vector2[] = window.getWindow(metric2).getVector();
                     double corr[] = new double[correlations.length];
                     for (int i = 0; i < corr.length; i++) {
                         double val = correlations[i].correlation(vector1, vector2);
@@ -99,11 +116,6 @@ public class CorrelationAlgorithm extends PostAnalysisAlgorithm<NoNanMetricLog> 
                 }
             }
         }
-    }
-
-    @Override
-    protected NoNanMetricLog createMetricStats(String name) {
-        return new NoNanMetricLog(name);
     }
 
 }

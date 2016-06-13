@@ -1,6 +1,6 @@
 package metrics.algorithms;
 
-import metrics.algorithms.logback.ExtendedMetricsStats;
+import metrics.io.window.MetricStatisticsWindow;
 
 /**
  * Created by anton on 4/18/16.
@@ -13,15 +13,15 @@ public class FeatureStandardizer extends AbstractFeatureScaler {
     }
 
     @Override
-    protected MetricScaler createScaler(ExtendedMetricsStats stats) {
+    protected MetricScaler createScaler(MetricStatisticsWindow stats) {
         return new MetricStandardizer(stats);
     }
 
-    private static class MetricStandardizer implements MetricScaler {
-        private final double stdDeviation;
-        private final double average;
+    public static class MetricStandardizer implements MetricScaler {
+        public final double stdDeviation;
+        public final double average;
 
-        MetricStandardizer(ExtendedMetricsStats stats) {
+        MetricStandardizer(MetricStatisticsWindow stats) {
             average = stats.average();
             double stdDev = stats.stdDeviation();
             if (stdDev == 0) stdDev = 1;

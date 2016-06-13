@@ -1,61 +1,103 @@
 package metrics.algorithms;
 
+import metrics.Header;
 import metrics.Sample;
-import metrics.algorithms.logback.ExtendedMetricsStats;
-import metrics.algorithms.logback.MetricStatistics;
-import metrics.algorithms.logback.PostAnalysisAlgorithm;
-import metrics.algorithms.logback.SampleMetadata;
 import metrics.io.MetricOutputStream;
+import metrics.io.window.AbstractSampleWindow;
+import metrics.io.window.MetricStatisticsWindow;
+import metrics.io.window.MultiHeaderWindow;
+import metrics.io.window.SampleWindow;
 
 import java.io.IOException;
-import java.util.Collection;
+import java.util.*;
 
 /**
  * Created by anton on 4/18/16.
  */
-public abstract class AbstractFeatureScaler extends PostAnalysisAlgorithm<ExtendedMetricsStats> {
+public abstract class AbstractFeatureScaler extends TrainableWindowAlgorithm {
+
+    private Map<String, MetricScaler> scalers = new HashMap<>();
+
+    private final MultiHeaderWindow<MetricStatisticsWindow> window =
+            new MultiHeaderWindow<>(MetricStatisticsWindow.FACTORY);
+
+    // TODO have to store data twice for stable headers...
+    private final SampleWindow samples = new SampleWindow();
+
+    public AbstractFeatureScaler(int trainingInstances) {
+        super(trainingInstances);
+    }
 
     public AbstractFeatureScaler() {
-        super(true);
+        this(0);
     }
 
-    @Override
-    protected void writeResults(MetricOutputStream output) throws IOException {
-        Collection<ExtendedMetricsStats> stats = metrics.values();
-        MetricScaler scalers[] = new MetricScaler[stats.size()];
-
-        int i = 0;
-        for (ExtendedMetricsStats stat : stats) {
-            scalers[i++] = createScaler(stat);
-        }
-
-        // Construct combined header
-        Sample.Header header = constructHeader(Sample.Header.TOTAL_SPECIAL_FIELDS);
-
-        // Construct samples
-        for (int sampleNr = 0; sampleNr < samples.size(); sampleNr++) {
-            double metrics[] = new double[header.header.length];
-            i = 0;
-            for (MetricStatistics stat : stats) {
-                double val = stat.getValue(sampleNr);
-                double scaled = scalers[i].scale(val);
-                metrics[i++] = scaled;
-            }
-            SampleMetadata meta = samples.get(sampleNr);
-            Sample sample = new Sample(header, metrics, meta.timestamp, meta.source, meta.label);
-            output.writeSample(sample);
-        }
-    }
-
-    protected abstract MetricScaler createScaler(ExtendedMetricsStats stats);
-
-    interface MetricScaler {
+    public interface MetricScaler {
         double scale(double val);
     }
 
+    protected abstract MetricScaler createScaler(MetricStatisticsWindow stats);
+
+    public Collection<MetricStatisticsWindow> getAllMetrics() {
+        return window.allMetricWindows();
+    }
+
+    public Header getHeader() {
+        return window.getHeader();
+    }
+
     @Override
-    protected ExtendedMetricsStats createMetricStats(String name) {
-        return new ExtendedMetricsStats(name);
+    protected AbstractSampleWindow getWindow() {
+        return window;
+    }
+
+    public Map<String, MetricScaler> getScalers() {
+        return scalers;
+    }
+
+    private void buildScalers() {
+        Collection<MetricStatisticsWindow> stats = window.allMetricWindows();
+        scalers.clear();
+        for (MetricStatisticsWindow stat : stats) {
+            scalers.put(stat.name, createScaler(stat));
+        }
+    }
+
+    @Override
+    protected void addSample(Sample sample) {
+        super.addSample(sample);
+        samples.add(sample);
+    }
+
+    @Override
+    protected void flushResults(MetricOutputStream output) throws IOException {
+        buildScalers();
+        for (Sample sample : samples.samples) {
+            outputSingleInstance(sample, output);
+        }
+    }
+
+    @Override
+    protected void outputSingleInstance(Sample sample, MetricOutputStream output) throws IOException {
+        Header header = sample.getHeader();
+        double incoming[] = sample.getMetrics();
+        double values[] = new double[header.header.length];
+        int i = 0;
+        Set<String> missingMetrics = new HashSet<>();
+        for (String field : header.header) {
+            MetricScaler scaler = scalers.get(field);
+            if (scaler == null) {
+                missingMetrics.add(field);
+                values[i] = incoming[i];
+            } else {
+                values[i] = scaler.scale(incoming[i]);
+            }
+            i++;
+        }
+        if (!missingMetrics.isEmpty()) {
+            System.err.println("Warning: Metrics could not be scaled: " + missingMetrics);
+        }
+        output.writeSample(new Sample(header, values, sample));
     }
 
 }

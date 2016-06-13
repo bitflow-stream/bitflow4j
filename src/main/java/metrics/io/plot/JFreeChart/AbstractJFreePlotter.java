@@ -24,6 +24,7 @@ import java.util.Map;
 public class AbstractJFreePlotter extends AbstractPlotter<JFreeDataContainer> {
 
     XYSeriesCollection xyDataset;
+
     @Override
     public String toString() {
         return "JFree Plot";
@@ -33,17 +34,17 @@ public class AbstractJFreePlotter extends AbstractPlotter<JFreeDataContainer> {
     public void plotResult(OutputMetricPlotter.PlotType outputType, Map<String, JFreeDataContainer> map, String filename) throws IOException {
 
 
-        final XYSeriesCollection collection = new XYSeriesCollection( );
+        final XYSeriesCollection collection = new XYSeriesCollection();
 
         for (Map.Entry<String, JFreeDataContainer> entry : map.entrySet()) {
             //entry.getValue().dataset.setDescription(entry.getKey());
             collection.addSeries(entry.getValue().dataset);
         }
         this.xyDataset = collection;
-        XYChart chart = new XYChart("Data-analyse Chart Viewer","Chart Title");
-        chart.pack( );
-        RefineryUtilities.centerFrameOnScreen( chart );
-        chart.setVisible( true );
+        XYChart chart = new XYChart("Data-analyse Chart Viewer", "Chart Title");
+        chart.pack();
+        RefineryUtilities.centerFrameOnScreen(chart);
+        chart.setVisible(true);
     }
 
 
@@ -63,7 +64,7 @@ public class AbstractJFreePlotter extends AbstractPlotter<JFreeDataContainer> {
             final XYPlot plot = xylineChart.getXYPlot();
             XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
             ColorGenerator cg = new ColorGenerator();
-            for(int i =0; i < xyDataset.getSeries().size(); i++){
+            for (int i = 0; i < xyDataset.getSeries().size(); i++) {
                 renderer.setSeriesPaint(i, cg.getNextColor());
                 renderer.setSeriesStroke(0, new BasicStroke(i));
             }
@@ -71,12 +72,6 @@ public class AbstractJFreePlotter extends AbstractPlotter<JFreeDataContainer> {
             setContentPane(chartPanel);
         }
     }
-
-    @Override
-    public JFreeDataContainer createDataContainer(int numDimensions) {
-        return new JFreeDataContainer(new XYSeries(""));
-    }
-
 
     @Override
     public JFreeDataContainer createDataContainer(int numDimensions, String label) {

@@ -1,9 +1,9 @@
 package metrics;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by mwall on 30.03.16.
@@ -14,30 +14,57 @@ import java.util.List;
  */
 public class Sample {
 
+    public static final String TAG_SOURCE = "src";
+    public static final String TAG_LABEL = "cls";
+    public static final String TAG_EQUALS = "=";
+    public static final String TAG_SEPARATOR = " ";
+
     private final Date timestamp;
     private final Header header;
     private final double[] metrics;
-    private String source;
-    private String label;
+    private final Map<String, String> tags;
 
-    public Sample(Header header, double[] metrics, Date timestamp, String source, String label) {
+    public Sample(Header header, double[] metrics, Date timestamp, Map<String, String> tags) {
         this.header = header;
         this.timestamp = timestamp;
         this.metrics = metrics;
-        this.source = source;
-        this.label = label;
-    }
-
-    public Sample(Header header, double[] metrics, Date timestamp, String source) {
-        this(header, metrics, timestamp, source, null);
+        this.tags = tags == null ? new HashMap<>() : tags;
     }
 
     public Sample(Header header, double[] metrics, Date timestamp) {
-        this(header, metrics, timestamp, null, null);
+        this(header, metrics, timestamp, null);
     }
 
-    public Sample(Header header, double[] metrics) {
-        this(header, metrics, null, null, null);
+    public Sample(Header header, double[] metrics, Sample source) {
+        this(header, metrics, source.getTimestamp());
+        tags.putAll(source.tags);
+    }
+
+    public Sample(Header header, double[] metrics, Date timestamp, String source, String label) {
+        this(header, metrics, timestamp, null);
+        setSource(source);
+        setLabel(label);
+    }
+
+    public static Sample unmarshallSample(Header header, double[] metrics, Date timestamp, String tags) throws IOException {
+        return new Sample(header, metrics, timestamp, parseTags(tags));
+    }
+
+    public static Map<String, String> parseTags(String tags) throws IOException {
+        Map<String, String> result = new HashMap<>();
+        if (tags != null && !tags.isEmpty()) {
+            String parts[] = tags.split("[= ]");
+            if (parts.length % 2 != 0)
+                throw new IOException("Illegal tags string: " + tags);
+            for (int i = 0; i < parts.length; i += 2) {
+                result.put(parts[i], parts[i + 1]);
+            }
+        }
+        return result;
+    }
+
+    public Map<String, String> getTags() {
+        return tags;
     }
 
     public Header getHeader() {
@@ -52,24 +79,28 @@ public class Sample {
         return timestamp;
     }
 
-    public boolean hasTimestamp() {
-        return header.hasTimestamp() && timestamp != null;
+    public String getTag(String name) {
+        return tags.get(name);
+    }
+
+    public void setTag(String name, String value) {
+        tags.put(name, value);
     }
 
     public String getSource() {
-        return source;
+        return getTag(TAG_SOURCE);
     }
 
     public boolean hasSource() {
-        return header.hasSource() && source != null;
+        return getSource() != null;
     }
 
     public String getLabel() {
-        return label;
+        return getTag(TAG_LABEL);
     }
 
     public boolean hasLabel() {
-        return header.hasLabel() && label != null;
+        return getLabel() != null;
     }
 
     public boolean headerChanged(Header oldHeader) {
@@ -77,11 +108,28 @@ public class Sample {
     }
 
     public void setSource(String source) {
-        this.source = source;
+        setTag(TAG_SOURCE, source);
     }
 
     public void setLabel(String label) {
-        this.label = label;
+        setTag(TAG_LABEL, label);
+    }
+
+    public static String escapeTagString(String tag) {
+        return tag.replaceAll("[ =\n,]", "_");
+    }
+
+    public String tagString() {
+        StringBuilder s = new StringBuilder();
+        boolean started = false;
+        for (Map.Entry<String, String> tag : tags.entrySet()) {
+            String key = escapeTagString(tag.getKey());
+            String value = escapeTagString(tag.getValue());
+            if (started) s.append(TAG_SEPARATOR);
+            s.append(key).append(TAG_EQUALS).append(value);
+            started = true;
+        }
+        return s.toString();
     }
 
     public void checkConsistency() throws IOException {
@@ -89,119 +137,36 @@ public class Sample {
             throw new IOException("Sample.header is null");
         if (metrics == null)
             throw new IOException("Sample.metrics is null");
+        if (timestamp == null)
+            throw new IOException("Sample.timestamp is null");
         if (header.header.length != metrics.length)
             throw new IOException("Sample.header is size " + header.header.length +
                     ", but Sample.metrics is size " + metrics.length);
     }
 
-    public static class Header {
-
-        public static final String HEADER_TIME = "time";
-        public static final int HEADER_TIME_IDX = 0;
-        public static final String HEADER_SOURCE = "source";
-        public static final int HEADER_SOURCE_IDX = 1;
-        public static final String HEADER_LABEL = "label";
-        public static final int HEADER_LABEL_IDX = 2;
-
-        public static final int TOTAL_SPECIAL_FIELDS = 3;
-
-        public static final List<String> SPECIAL_FIELDS = Arrays.asList(
-                HEADER_TIME, HEADER_SOURCE, HEADER_LABEL
-        );
-
-        private static boolean isSpecial(String field) {
-            for (String special : SPECIAL_FIELDS) {
-                if (special.equals(field)) {
-                    return true;
-                }
-            }
-            return false;
+    public String toString() {
+        StringBuilder b = new StringBuilder();
+        b.append("Sample(");
+        boolean started = false;
+        if (header != null) {
+            b.append(header.header.length).append(" fields");
+            started = true;
         }
-
-        public final String[] header;
-        public int specialFields;
-
-        public Header(String[] fullHeader) {
-            int specialFields = 0;
-            for (int i = 0; i < SPECIAL_FIELDS.size() && i < fullHeader.length; i++) {
-                if (fullHeader[i].equals(SPECIAL_FIELDS.get(i))) {
-                    specialFields++;
-                } else {
-                    break;
-                }
-            }
-            this.specialFields = specialFields;
-            if (specialFields == 0) {
-                header = fullHeader;
-                return;
-            }
-            header = new String[fullHeader.length - specialFields];
-            System.arraycopy(fullHeader, specialFields, header, 0, header.length);
+        if (metrics != null) {
+            if (started) b.append(", ");
+            b.append(metrics.length).append(" metrics");
+            started = true;
         }
-
-        // Copy the special fields from oldHeader, but replace the regular fields with newHeader.
-        // newHeader only contains non-special fields (unlike fullHeader in the other constructur)
-        public Header(Header oldHeader, String[] newHeader) {
-            this.specialFields = oldHeader.specialFields;
-            this.header = newHeader;
+        if (timestamp != null) {
+            if (started) b.append(", ");
+            b.append(timestamp);
         }
-
-        public Header(String[] header, int numSpecialFields) {
-            this.specialFields = numSpecialFields;
-            this.header = header;
-        }
-
-        public void ensureSpecialField(int fieldIndex) {
-            if (specialFields < fieldIndex + 1) {
-                specialFields = fieldIndex + 1;
-            }
-        }
-
-        public String[] getSpecialFields() {
-            String result[] = new String[specialFields];
-            for (int i = 0; i < specialFields; i++) {
-                result[i] = SPECIAL_FIELDS.get(i);
-            }
-            return result;
-        }
-
-        public int numFields() {
-            return header.length + specialFields;
-        }
-
-        public boolean hasTimestamp() {
-            return specialFields >= HEADER_TIME_IDX + 1;
-        }
-
-        public boolean hasSource() {
-            return specialFields >= HEADER_SOURCE_IDX + 1;
-        }
-
-        public boolean hasLabel() {
-            return specialFields >= HEADER_LABEL_IDX + 1;
-        }
-
-        public boolean hasChanged(Header oldHeader) {
-            if (oldHeader == null || numFields() != oldHeader.numFields()) {
-                return true;
-            } else if (this != oldHeader) {
-                if (specialFields != oldHeader.specialFields) {
-                    return true;
-                }
-                // New instance with same length: must compare all header fields. Rare case.
-                for (int i = 0; i < header.length; i++) {
-                    if (!header[i].equals(oldHeader.header[i])) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
+        b.append(tagString());
+        return b.append(")").toString();
     }
 
     public static Sample newEmptySample() {
-        return new Sample(new Sample.Header(new String[0]), new double[0]);
+        return new Sample(new Header(new String[0], false), new double[0], new Date());
     }
 
 }

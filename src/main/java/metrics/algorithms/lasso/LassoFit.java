@@ -3,7 +3,7 @@ package metrics.algorithms.lasso;
 /**
  * This class is a container for arrays and values that
  * are computed during computation of a lasso fit. It also
- * contains the final weights of features.
+ * contains the final weights of analysis.
  *
  * @author Yasser Ganjisaffar (http://www.ics.uci.edu/~yganjisa/)
  */

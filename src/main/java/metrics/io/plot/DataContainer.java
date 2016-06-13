@@ -5,6 +5,6 @@ package metrics.io.plot;
  */
 public interface DataContainer {
 
-    void add(double ...data);
+    void add(double... data);
 
 }

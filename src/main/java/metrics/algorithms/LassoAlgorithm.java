@@ -2,21 +2,24 @@ package metrics.algorithms;
 
 import metrics.algorithms.lasso.LassoFit;
 import metrics.algorithms.lasso.LassoFitGenerator;
-import metrics.algorithms.logback.MetricLog;
-import metrics.algorithms.logback.PostAnalysisAlgorithm;
 import metrics.io.MetricOutputStream;
+import metrics.io.window.AbstractSampleWindow;
+import metrics.io.window.MetricWindow;
+import metrics.io.window.MultiHeaderWindow;
+import metrics.main.misc.ParameterHash;
 
 import java.io.IOException;
 
 /**
  * Created by anton on 4/19/16.
  */
-public class LassoAlgorithm extends PostAnalysisAlgorithm<MetricLog> {
+public class LassoAlgorithm extends WindowBatchAlgorithm {
 
     public final int maxAllowedFeatures;
 
+    private final AbstractSampleWindow window = new MultiHeaderWindow<>(MetricWindow.FACTORY);
+
     public LassoAlgorithm(int maxAllowedFeatures) {
-        super(true);
         this.maxAllowedFeatures = maxAllowedFeatures;
     }
 
@@ -26,8 +29,12 @@ public class LassoAlgorithm extends PostAnalysisAlgorithm<MetricLog> {
     }
 
     @Override
-    protected void writeResults(MetricOutputStream output) throws IOException {
+    protected AbstractSampleWindow getWindow() {
+        return window;
+    }
 
+    @Override
+    protected void flushResults(MetricOutputStream output) throws IOException {
         // two Lasso algorithms should be implemented: one for filtering out metrics
         // and a second one for the actual predictive model. The first one already trains the model,
         // the second one just needs it as input to generate predictions for future metrics.
@@ -35,8 +42,8 @@ public class LassoAlgorithm extends PostAnalysisAlgorithm<MetricLog> {
         if (true)
             throw new UnsupportedOperationException("Lasso algorithm is not implemented yet");
 
-        int featuresCount = metrics.size();
-        int numObservations = samples.size();
+        int featuresCount = window.numMetrics();
+        int numObservations = window.numSamples();
 
         // Every Observsation needs one target
         double[][] observations = new double[numObservations][];
@@ -59,8 +66,9 @@ public class LassoAlgorithm extends PostAnalysisAlgorithm<MetricLog> {
     }
 
     @Override
-    protected MetricLog createMetricStats(String name) {
-        return new MetricLog(name);
+    public void hashParameters(ParameterHash hash) {
+        super.hashParameters(hash);
+        hash.writeInt(maxAllowedFeatures);
     }
 
 }

@@ -25,22 +25,22 @@ public class OutputMetricPlotter<T extends DataContainer> extends AbstractOutput
     private final AbstractPlotter<T> plotter;
     private final String filename;
 
-    public OutputMetricPlotter(AbstractPlotter<T> plotter, String filename, int ...columns) {
+    public OutputMetricPlotter(AbstractPlotter<T> plotter, String filename, int... columns) {
         this(plotter, PlotType.AS_FILE, filename, columns);
     }
 
-    public OutputMetricPlotter(AbstractPlotter<T> plotter, int ...columns) {
+    public OutputMetricPlotter(AbstractPlotter<T> plotter, int... columns) {
         this(plotter, PlotType.IN_FRAME, columns);
     }
 
-    public OutputMetricPlotter(AbstractPlotter<T> plotter, PlotType outputType, int ...columns) {
+    public OutputMetricPlotter(AbstractPlotter<T> plotter, PlotType outputType, int... columns) {
         this(plotter, outputType, null, columns);
     }
 
     /**
      * @param columns is an array of colums used from data sheet, you also define dimensions with this variable
      */
-    public OutputMetricPlotter(AbstractPlotter<T> plotter, PlotType outputType, String filename, int ...columns) {
+    public OutputMetricPlotter(AbstractPlotter<T> plotter, PlotType outputType, String filename, int... columns) {
         if (columns.length < 1 || columns.length > 2) {
             throw new IllegalArgumentException("Only 1D and 2D plots are supported.");
         }
@@ -59,7 +59,7 @@ public class OutputMetricPlotter<T extends DataContainer> extends AbstractOutput
             // 1D Plots
             case 1:
                 if (!this.colorMap.containsKey(label)) {
-                    T data1d = plotter.createDataContainer(1,label);
+                    T data1d = plotter.createDataContainer(1, label);
                     this.colorMap.put(label, data1d);
                 }
                 T data1d = this.colorMap.get(label);
@@ -70,7 +70,7 @@ public class OutputMetricPlotter<T extends DataContainer> extends AbstractOutput
             // 2d Plots
             case 2:
                 if (!this.colorMap.containsKey(label)) {
-                    T data2d = plotter.createDataContainer(2,label);
+                    T data2d = plotter.createDataContainer(2, label);
                     this.colorMap.put(label, data2d);
                 }
                 T data2d = this.colorMap.get(label);
@@ -85,7 +85,7 @@ public class OutputMetricPlotter<T extends DataContainer> extends AbstractOutput
         }
     }
 
-    private double getValue(double[] values, int index) throws IOException{
+    private double getValue(double[] values, int index) throws IOException {
         if (index >= values.length) {
             throw new IOException("Not enough metrics in sample (need index " + index + ", have " + values.length + ")");
         }

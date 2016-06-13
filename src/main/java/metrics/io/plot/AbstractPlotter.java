@@ -1,6 +1,5 @@
 package metrics.io.plot;
 
-import java.awt.*;
 import java.io.IOException;
 import java.util.Map;
 
@@ -14,7 +13,6 @@ public abstract class AbstractPlotter<T extends DataContainer> {
 
     public abstract void plotResult(OutputMetricPlotter.PlotType outputType, Map<String, T> map, String filename) throws IOException;
 
-    public abstract T createDataContainer(int numDimensions,String label);
+    public abstract T createDataContainer(int numDimensions, String label);
 
-    public abstract T createDataContainer(int numDimensions);
 }

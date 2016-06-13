@@ -1,97 +1,107 @@
 package metrics.algorithms;
 
+import metrics.Header;
 import metrics.Sample;
-import metrics.algorithms.logback.LogbackAlgorithm;
-import metrics.algorithms.logback.MetricLog;
-import metrics.algorithms.logback.NoNanMetricLog;
+import metrics.io.window.MetricStatisticsWindow;
+import metrics.io.window.MultiHeaderWindow;
+import metrics.main.misc.ParameterHash;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by anton on 4/21/16.
  */
-public class FeatureAggregator extends LogbackAlgorithm<FeatureAggregator.AverageAggregatingLog> {
+public class FeatureAggregator extends AbstractAlgorithm {
+
+    public interface Aggregator {
+        double aggregate(MetricStatisticsWindow window);
+    }
+
+    public static final Aggregator AVG = MetricStatisticsWindow::average;
+    public static final Aggregator SLOPE = MetricStatisticsWindow::slope;
+
+    // TODO allow multiple window sizes
+    private final MultiHeaderWindow<MetricStatisticsWindow> window;
+
+    private Header incomingHeader = null;
+    private Header outgoingHeader = null;
+
+    private final List<Aggregator> aggregators = new ArrayList<>();
+    private final List<String> names = new ArrayList<>();
+
+    public FeatureAggregator(int windowSize) {
+        window = new MultiHeaderWindow<>(windowSize, MetricStatisticsWindow.FACTORY);
+    }
+
+    public FeatureAggregator(long windowTimespan) {
+        window = new MultiHeaderWindow<>(windowTimespan, MetricStatisticsWindow.FACTORY);
+    }
+
+    public FeatureAggregator addAvg() {
+        return add("avg", AVG);
+    }
+
+    public FeatureAggregator addSlope() {
+        return add("slope", SLOPE);
+    }
+
+    public FeatureAggregator add(String name, Aggregator agg) {
+        if (names.contains(name))
+            throw new IllegalArgumentException("Name '" + name + "' already present in this FeatureAggregator");
+        aggregators.add(agg);
+        names.add(name);
+        return this;
+    }
 
     public Sample executeSample(Sample sample) {
-        String headerFields[] = new String[metrics.size() * 2];
-        int i = 0;
-        for (MetricLog stat : metrics.values()) {
-            headerFields[i++] = stat.name;
-            headerFields[i++] = stat.name + "_aggregated";
-        }
-        Sample.Header header = new Sample.Header(headerFields, Sample.Header.TOTAL_SPECIAL_FIELDS);
+        window.add(sample);
+        if (sample.headerChanged(incomingHeader))
+            outgoingHeader = constructHeader();
 
         // Call every aggregation for every metric
-        double values[] = new double[headerFields.length];
+        double values[] = new double[outgoingHeader.header.length];
 
-        System.out.println("Aggregating sample nr " + samples.size());
-
-        i = 0;
-        for (AverageAggregatingLog metric : metrics.values()) {
-            values[i++] = metric.getLatestValue();
-            double aggregatedValues[] = metric.aggregateAll();
-            for (double agg : aggregatedValues) {
-                values[i++] = agg;
-            }
+        int i = 0;
+        int j = 0;
+        double incoming[] = sample.getMetrics();
+        for (MetricStatisticsWindow stat : window.allMetricWindows()) {
+            values[i++] = incoming[j++];
+            for (Aggregator agg : aggregators)
+                values[i++] = agg.aggregate(stat);
         }
-        return new Sample(header, values, sample.getTimestamp(), sample.getSource(), sample.getLabel());
+        return new Sample(outgoingHeader, values, sample);
+    }
+
+    private Header constructHeader() {
+        String headerFields[] = new String[window.numMetrics() * (1 + names.size())];
+        int i = 0;
+        for (String name : window.allMetricNames()) {
+            headerFields[i++] = name;
+            for (String aggName : names)
+                headerFields[i++] = name + "_" + aggName;
+        }
+        return new Header(headerFields);
+    }
+
+    @Override
+    public void hashParameters(ParameterHash hash) {
+        super.hashParameters(hash);
+        for (String name : names) {
+            hash.writeChars(name);
+        }
     }
 
     @Override
     public String toString() {
-        return "feature aggregator";
-    }
-
-    @Override
-    protected AverageAggregatingLog createMetricStats(String name) {
-        return new AverageAggregatingLog(name, new long[]{10}, this);
-    }
-
-    public abstract static class AggregatingLog extends NoNanMetricLog {
-
-        final long intervals[];
-        final LogbackAlgorithm<?> algo;
-
-        public AggregatingLog(String name, long intervals[], LogbackAlgorithm<?> algo) {
-            super(name);
-            this.intervals = intervals;
-            this.algo = algo;
+        String res = "aggregator [";
+        boolean added = false;
+        for (String name : names) {
+            if (added) res += ", ";
+            added = true;
+            res += name;
         }
-
-        public double[] aggregateAll() {
-            double result[] = new double[intervals.length];
-            for (int i = 0; i < result.length; i++) {
-                long interval = intervals[i];
-                int num = algo.countLatestSamples(interval);
-                double aggregated = aggregate(num);
-                result[i] = aggregated;
-            }
-            return result;
-        }
-
-        protected abstract double aggregate(int numSamples);
-
-    }
-
-    public static class AverageAggregatingLog extends AggregatingLog {
-
-        public AverageAggregatingLog(String name, long[] intervals, LogbackAlgorithm<?> algo) {
-            super(name, intervals, algo);
-        }
-
-        @Override
-        protected double aggregate(int numSamples) {
-            if (values.isEmpty()) {
-                return 0;
-            }
-
-            System.out.println("==== average over: " + numSamples);
-
-            double result = 0;
-            int size = values.size();
-            for (int i = size - 1; i >= 0 && i >= size - numSamples; i--) {
-                result += values.get(i);
-            }
-            return result / numSamples;
-        }
+        return res + "]";
     }
 
 }

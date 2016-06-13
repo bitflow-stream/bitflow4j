@@ -1,56 +1,96 @@
 package metrics.algorithms;
 
+import metrics.Header;
 import metrics.Sample;
+import metrics.main.misc.ParameterHash;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by anton on 4/11/16.
  * <p>
  * Only pass out a single metric identified by column index.
  */
-public class MetricFilterAlgorithm extends GenericAlgorithm {
+public class MetricFilterAlgorithm extends AbstractAlgorithm {
 
-    private final Set<Integer> columns = new HashSet<>();
-    private final int maxCol;
+    private final MetricFilter filter;
+    private Header lastHeader = null;
+    private Header outputHeader = null;
+    private boolean[] includedMetrics = null;
 
-    // col should be sorted
-    public MetricFilterAlgorithm(int... col) {
-        super();
-        for (int i : col)
-            this.columns.add(i);
-        this.maxCol = col.length == 0 ? 0 : col[col.length - 1];
+    public interface MetricFilter {
+        boolean shouldInclude(String name, int column);
+
+        default void hashParameters(ParameterHash hash) {
+            hash.writeClassName(this);
+        }
+    }
+
+    public MetricFilterAlgorithm(MetricFilter filter) {
+        this.filter = filter;
+    }
+
+    public MetricFilterAlgorithm(String... excludedCols) {
+        this(new MetricNameFilter(excludedCols));
+    }
+
+    public static final class MetricNameFilter implements MetricFilter {
+        private final Set<String> excluded;
+
+        public MetricNameFilter(String... excludedCols) {
+            excluded = new HashSet<>(Arrays.asList(excludedCols));
+        }
+
+        @Override
+        public boolean shouldInclude(String name, int column) {
+            return !excluded.contains(name);
+        }
+
+        public void hashParameters(ParameterHash hash) {
+            MetricFilter.super.hashParameters(hash);
+            hash.writeInt(excluded.size());
+            for (String str : excluded)
+                hash.writeChars(str);
+        }
     }
 
     @Override
     public String toString() {
-        return "metric filter " + columns.toString();
+        return "metric filter";
     }
 
     protected Sample executeSample(Sample sample) throws IOException {
-        String allFields[] = sample.getHeader().header;
-        String fields[] = new String[columns.size()];
-        double values[] = new double[columns.size()];
+        sample.checkConsistency();
+        if (sample.headerChanged(lastHeader))
+            outputHeader = buildHeader(sample.getHeader());
+
+        double values[] = new double[outputHeader.header.length];
+        double inputMetrics[] = sample.getMetrics();
         int j = 0;
-        for (int i = 0; i < allFields.length && i <= maxCol; i++) {
-            if (columns.contains(i)) {
-                fields[j] = allFields[i];
-                values[j] = sample.getMetrics()[i];
-                j++;
-            }
+        for (int i = 0; i < includedMetrics.length; i++) {
+            if (includedMetrics[i])
+                values[j++] = inputMetrics[i];
         }
-        if (j < fields.length) {
-            String all[] = fields;
-            fields = new String[j];
-            System.arraycopy(all, 0, fields, 0, j);
-            double allD[] = values;
-            values = new double[j];
-            System.arraycopy(allD, 0, values, 0, j);
+        return new Sample(outputHeader, values, sample);
+    }
+
+    private Header buildHeader(Header newHeader) {
+        List<String> fields = new ArrayList<>();
+        includedMetrics = new boolean[newHeader.header.length];
+        for (int i = 0; i < newHeader.header.length; i++) {
+            String field = newHeader.header[i];
+            boolean shouldInclude = filter.shouldInclude(field, i);
+            if (shouldInclude) fields.add(field);
+            includedMetrics[i] = shouldInclude;
         }
-        Sample.Header header = new Sample.Header(sample.getHeader(), fields);
-        return new Sample(header, values, sample.getTimestamp(), sample.getSource(), sample.getLabel());
+        return new Header(fields.toArray(new String[fields.size()]));
+    }
+
+    @Override
+    public void hashParameters(ParameterHash hash) {
+        super.hashParameters(hash);
+        filter.hashParameters(hash);
     }
 
 }

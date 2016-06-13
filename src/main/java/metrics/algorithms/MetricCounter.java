@@ -1,19 +1,22 @@
 package metrics.algorithms;
 
+import metrics.Header;
 import metrics.Sample;
 
 import java.io.IOException;
 
 /**
  * Created by anton on 4/8/16.
+ * <p>
+ * Create and output certain statistics over incoming samples and metrics.
  */
-public class MetricCounter extends GenericAlgorithm {
+public class MetricCounter extends AbstractAlgorithm {
 
     private static final String[] headerFields = new String[]{
             "metrics", "samples this header", "metrics this header", "total samples", "total metrics", "headers"};
 
-    private Sample.Header lastHeader = null;
-    private Sample.Header outputHeader = null;
+    private Header lastHeader = null;
+    private Header outputHeader = null;
 
     private long samplesThisHeader = 0;
     private long metricsThisHeader = 0;
@@ -30,7 +33,7 @@ public class MetricCounter extends GenericAlgorithm {
     public Sample executeSample(Sample sample) throws IOException {
         if (sample.headerChanged(lastHeader)) {
             lastHeader = sample.getHeader();
-            outputHeader = new Sample.Header(lastHeader, headerFields);
+            outputHeader = new Header(headerFields, lastHeader);
             samplesThisHeader = 0;
             metricsThisHeader = 0;
             headers++;

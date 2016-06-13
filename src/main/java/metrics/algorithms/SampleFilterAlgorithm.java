@@ -1,13 +1,14 @@
 package metrics.algorithms;
 
 import metrics.Sample;
+import metrics.main.misc.ParameterHash;
 
 import java.io.IOException;
 
 /**
  * Created by anton on 4/23/16.
  */
-public class SampleFilterAlgorithm extends GenericAlgorithm {
+public class SampleFilterAlgorithm extends AbstractAlgorithm {
 
     public interface Filter {
         boolean shouldInclude(Sample sample);
@@ -25,6 +26,12 @@ public class SampleFilterAlgorithm extends GenericAlgorithm {
         } else {
             return null;
         }
+    }
+
+    @Override
+    public void hashParameters(ParameterHash hash) {
+        super.hashParameters(hash);
+        hash.writeClassName(filter);
     }
 
     @Override

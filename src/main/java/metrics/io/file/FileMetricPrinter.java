@@ -3,6 +3,7 @@ package metrics.io.file;
 import metrics.Marshaller;
 import metrics.io.AbstractMetricPrinter;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -27,7 +28,11 @@ public class FileMetricPrinter extends AbstractMetricPrinter {
 
     @Override
     protected OutputStream nextOutputStream() throws IOException {
-        return new FileOutputStream(files.getFile(index++));
+        String filename = files.getFile(index++);
+        File file = new File(filename);
+        if (!file.createNewFile())
+            throw new IOException("Failed to create file " + filename);
+        return new FileOutputStream(file);
     }
 
 }

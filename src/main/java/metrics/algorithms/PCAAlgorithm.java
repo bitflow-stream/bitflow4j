@@ -4,11 +4,13 @@ import Jama.Matrix;
 import com.mkobos.pca_transform.PCA;
 import gnu.trove.list.TDoubleList;
 import gnu.trove.list.array.TDoubleArrayList;
+import metrics.Header;
 import metrics.Sample;
-import metrics.algorithms.logback.NoNanMetricLog;
-import metrics.algorithms.logback.PostAnalysisAlgorithm;
-import metrics.algorithms.logback.SampleMetadata;
 import metrics.io.MetricOutputStream;
+import metrics.io.window.AbstractSampleWindow;
+import metrics.io.window.SampleMetadata;
+import metrics.io.window.SampleWindow;
+import metrics.main.misc.ParameterHash;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -19,18 +21,21 @@ import java.util.Arrays;
  * Perform a PCA training on the entire dataset, then apply the resulting
  * model to the entire dataset and output the results;
  */
-public class PCAAlgorithm extends PostAnalysisAlgorithm<NoNanMetricLog> {
+public class PCAAlgorithm extends WindowBatchAlgorithm {
 
     private static final double REPORT_VARIANCE = 0.999;
 
     // If trainingSamples is > 0, only the beginning of the input is used for training the PCA model.
     // Afterwards, the entire data set is transformed.
     private final int trainingSamples;
-    
+
     private final double minContainedVariance;
     private final int minDimensions;
     private final boolean centerPca;
     private final PCA.TransformationType transformationType;
+
+    // TODO optionally allow MultiHeaderWindow...
+    private final AbstractSampleWindow window = new SampleWindow();
 
     public PCAAlgorithm(int minDimensions) {
         this(-1, minDimensions);
@@ -55,7 +60,6 @@ public class PCAAlgorithm extends PostAnalysisAlgorithm<NoNanMetricLog> {
     // If both minDimensions and minContainedVariance is given, then both conditions will be satisfied,
     // potentially "over-satisfying" one of them.
     public PCAAlgorithm(int trainingSamples, int minDimensions, double minContainedVariance, boolean center, PCA.TransformationType transformationType) {
-        super(true);
         if (minContainedVariance >= 1)
             throw new IllegalArgumentException("Contained variance must be < 1: " + minContainedVariance);
         this.minContainedVariance = minContainedVariance;
@@ -66,7 +70,12 @@ public class PCAAlgorithm extends PostAnalysisAlgorithm<NoNanMetricLog> {
     }
 
     @Override
-    protected void writeResults(MetricOutputStream output) throws IOException {
+    protected AbstractSampleWindow getWindow() {
+        return window;
+    }
+
+    @Override
+    protected void flushResults(MetricOutputStream output) throws IOException {
         double[][] dataset = getSampleMatrix();
         int trainingSize = trainingSamples > 0 ? trainingSamples : dataset.length;
         if (trainingSize > dataset.length) trainingSize = dataset.length;
@@ -90,19 +99,19 @@ public class PCAAlgorithm extends PostAnalysisAlgorithm<NoNanMetricLog> {
         for (int i = 0; i < numCols; i++) {
             headerFields[i] = "component" + i;
         }
-        Sample.Header header = new Sample.Header(headerFields, Sample.Header.TOTAL_SPECIAL_FIELDS);
+        Header header = new Header(headerFields);
 
         // Output values
         for (int i = 0; i < values.length; i++) {
-            SampleMetadata meta = samples.get(i);
+            SampleMetadata meta = window.getSampleMetadata(i);
             double[] vector = values[i];
             if (numCols < vector.length)
                 vector = Arrays.copyOf(vector, numCols);
-            Sample sample = new Sample(header, vector, meta.timestamp, meta.source, meta.label);
+            Sample sample = meta.newSample(header, vector);
             output.writeSample(sample);
         }
-        if (values.length != samples.size()) {
-            System.err.println("Warning: output " + values.length + " samples, but input contained " + samples.size() + " samples");
+        if (values.length != window.numSamples()) {
+            System.err.println("Warning: output " + values.length + " samples, but input contained " + window.numSamples() + " samples");
         }
     }
 
@@ -155,17 +164,22 @@ public class PCAAlgorithm extends PostAnalysisAlgorithm<NoNanMetricLog> {
     }
 
     private double[][] getSampleMatrix() {
-        int rows = samples.size();
+        int rows = window.numSamples();
         double matrix[][] = new double[rows][];
         for (int sampleNr = 0; sampleNr < rows; sampleNr++) {
-            matrix[sampleNr] = getSampleValues(sampleNr);
+            matrix[sampleNr] = window.getSampleValues(sampleNr);
         }
         return matrix;
     }
 
     @Override
-    protected NoNanMetricLog createMetricStats(String name) {
-        return new NoNanMetricLog(name);
+    public void hashParameters(ParameterHash hash) {
+        super.hashParameters(hash);
+        hash.writeInt(trainingSamples);
+        hash.writeDouble(minContainedVariance);
+        hash.writeInt(minDimensions);
+        hash.writeBoolean(centerPca);
+        hash.writeInt(transformationType.ordinal());
     }
 
     @Override

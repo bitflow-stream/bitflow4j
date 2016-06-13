@@ -5,8 +5,11 @@ import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.core.Instances;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created by anton on 4/23/16.
@@ -17,12 +20,11 @@ public class WekaEvaluator<T extends Classifier & Serializable> extends Abstract
     private Evaluation eval = null;
 
     public WekaEvaluator(Model<T> model) {
-        super(true);
         this.model = model;
     }
 
     @Override
-    protected void writeResults(MetricOutputStream output) throws IOException {
+    protected void flushResults(MetricOutputStream output) throws IOException {
         Instances testSet = createDataset();
         fillDataset(testSet);
         try {
@@ -39,7 +41,19 @@ public class WekaEvaluator<T extends Classifier & Serializable> extends Abstract
         if (eval == null) {
             return toString() + ": not yet evaluated";
         }
-        return eval.toSummaryString("\nResults\n======\n", false);
+        String result = eval.toSummaryString("\nResults\n======\n", false);
+        try {
+            result += eval.toMatrixString();
+        } catch (Exception ex) {
+            Logger.getLogger(WekaEvaluator.class.getName())
+                    .log(Level.SEVERE, null, ex);
+        }
+        return result;
+    }
+
+    public void printResults(File file) {
+        // TODO print to file
+        System.out.println(resultsString());
     }
 
     @Override

@@ -1,65 +1,167 @@
 package metrics.main;
 
-import metrics.main.features.ClassificationApp;
-import metrics.main.features.DimensionReductionApp;
+import metrics.algorithms.MetricFilterAlgorithm;
+import metrics.algorithms.TimestampSort;
+import metrics.algorithms.classification.ExternalClassifier;
+import metrics.algorithms.classification.Model;
+import metrics.algorithms.clustering.ExternalClusterer;
+import metrics.algorithms.clustering.MOAClusterer;
+import metrics.io.file.FileGroup;
+import metrics.io.fork.TwoWayFork;
+import metrics.main.analysis.ClassifierFork;
+import metrics.main.analysis.OpenStackSampleSplitter;
+import metrics.main.analysis.SourceLabellingAlgorithm;
+import metrics.main.data.*;
+import moa.clusterers.AbstractClusterer;
+import weka.classifiers.AbstractClassifier;
 
+import java.io.File;
 import java.io.IOException;
 
+@SuppressWarnings("unused")
 public class Main {
 
-    static final Config conf = new Config();
+    private static final Host bono = new Host("bono.ims", "virtual");
+    private static final Host wally131 = new Host("wally131", "physical");
+    private static final Host wally147 = new Host("wally147", "physical");
 
-    private static final ExperimentData.Host bono = new ExperimentData.Host("bono.ims", "virtual");
-    private static final ExperimentData.Host wally131 = new ExperimentData.Host("wally131", "physical");
-    private static final ExperimentData.Host wally142 = new ExperimentData.Host("wally142", "physical");
+    private static final MockDataSource mockData = new MockDataSource();
+    private static final DataSource<Host> oldData = new OldDataSource("experiments-old", true, false, false);
+    private static final DataSource<Host> newData = new NewDataSource("experiments-new-2", false);
+    private static final DataSource<Integer> tcpData = new TcpDataSource(9999, "BIN", 1);
 
-    private static final ExperimentData oldData = new OldExperimentData(conf, true, false, false);
-    private static final ExperimentData newData = new NewExperimentData(conf, false);
+    public static void main(String[] args) throws Exception {
+//        allClassifiers();
+        allClusterers();
+//        prepareData(bono);
 
-    public static void main(String[] args) throws IOException {
-        //DimensionReductionApp oldDR = new DimensionReductionApp(conf, oldData);
-        DimensionReductionApp newDR = new DimensionReductionApp(conf, newData);
-        ClassificationApp newC = new ClassificationApp(conf, newData);
+//        Host source = bono;
+//        FileGroup outputs = new FileGroup(new File(newData.makeOutputDir(source), "analysis"));
+//
+//        /*
+//        new AlgorithmPipeline(new File(outputs.getFile("tsne") + ".csv"), FileMetricReader.FILE_NAME)
+//                .step(new FeatureStandardizer())
+//                .output(new OutputMetricPlotter<>(new JMathPlotter(), 0, 1))
+//                .runAndWait();
+//        System.exit(0);
+//        */
+//
+//        // new AlgorithmPipeline(newData, source)
+//        new AlgorithmPipeline(new File(preparedDataFile(source)), FileMetricReader.FILE_NAME)
+////                    .cache(new File(outputs.getFile("cache")))
+//                .step(new MetricFilterAlgorithm("disk-usage///free", "disk-usage///used"))
+////                .step(new SampleFilterAlgorithm((sample) -> sample.getTimestamp().after(new Date(2016 - 1900, 4, 1))))
+////                .step(new SourceLabellingAlgorithm())
+//                .fork(new OpenStackSampleSplitter().fillInfo(),
+//                        (name, p) -> {
+//                            String file = outputs.getFile(name.isEmpty() ? "default" : name);
+////                            p.consoleOutput("CSV");
+////                            p.csvOutput(file + ".csv");
+////                            p.cache(new File(outputs.getFile("cache")));
+//
+////                            p
+////                                    .step(new PCAAlgorithm(0.99))
+////                                    .output(new OutputMetricPlotter<>(new ScatterPlotter(), file, 0, 1));
+//
+////                            p.step(new FeatureAggregator(10000L).addAvg().addSlope());
+////                            p.csvOutput(file + "-agg.csv");
+////                            p.fork(
+////                                    new TwoWayFork(0.8f),
+////                                    new TimeBasedTwoWayFork(0.3f),
+////                                    new SortedTimeBasedFork(0.3f, new Date(2016 - 1900, 4, 10, 9, 8, 40)),
+////                                    new ClassifierFork<>(new J48(), file + ".png"));
+//
+//                            p
+//                                    .step(new PCAAlgorithm(0.99))
+//                                    .output(new OutputMetricPlotter<>(new ScatterPlotter(), file, 0, 1));
 
-//        DataAnalyser.AnalysisStep aggregator = newC.new FeatureAggregator(newC.LABELLED);
+//                            p.step(new FeatureAggregator(10000L).addAvg().addSlope());
+//                            p.csvOutput(file + "-agg.csv");
+//                            p.fork(
+//                                    new TwoWayFork(0.8f),
+//                                    new TimeBasedTwoWayFork(0.3f),
+//                                    new SortedTimeBasedFork(0.3f, new Date(2016 - 1900, 4, 10, 9, 8, 40)),
+//                                    new ClassifierFork<>(new J48(), file + ".png"));
 
-//        aggregator.execute(bono);
+//                            p
+//                                    .step(new FeatureStandardizer())
+//                                    .step(new CobwebClusterer(0.7, false, 0, null))
+//                                    .step(new PCAAlgorithm(0.99))
+//                                    .output(new OutputMetricPlotter<>(new JMathPlotter(), 0, 1));
 
-        newC.new DecisionTree(newC.LABELLED, 0.8f).executeInMemory(bono);
+//                                    .step(new ClusterSummary(false, true))
+//                                    .consoleOutput("TXT");
 
-        //newDR.PCA_PLOT_FILTERED_SCALED.executeInMemory(bono);
-
-//        new CodeApp(conf, newData.makeBuilder(wally131)).runAll();
-//        new CodeApp(conf, new AppBuilder(9999, "BIN")).runAll();
+//                            p
+//                                    .step(new TsneAlgorithm(5.0, 50, 2, false))
+//                                    .csvOutput(outputs.getFile("tsne") + ".csv");
+//                                    .consoleOutput();
+//                        })
+//                .runAndWait();
     }
 
-    static class CodeApp {
-        final Config config;
-        final AppBuilder builder;
+    private static String preparedDataFile(Host source) throws IOException {
+        return newData.makeOutputDir(source).toString() + "/sorted.csv";
+    }
 
-        CodeApp(Config config, AppBuilder builder) {
-            this.config = config;
-            this.builder = builder;
+    private static void prepareData(Host source) throws IOException {
+        // Combine, label and sort all available data for one host
+        new AlgorithmPipeline(newData, source)
+                .step(new SourceLabellingAlgorithm())
+                .step(new TimestampSort(true))
+                .csvOutput(preparedDataFile(source))
+                .runAndWait();
+        System.exit(0);
+    }
+
+    private static void allClassifiers() throws IOException {
+        Host source = wally131;
+//        String source = "mock-source";
+        FileGroup outputs = new FileGroup(new File(newData.makeOutputDir(source), "analysis"));
+        for (ExternalClassifier classifierEnum : ExternalClassifier.values()) {
+            AbstractClassifier classifier = classifierEnum.newInstance();
+            new AlgorithmPipeline(newData, source)
+                    //                    .cache(new File(outputs.getFile("cache")))
+                    .step(new MetricFilterAlgorithm("disk-usage///free", "disk-usage///used"))
+                    .step(new SourceLabellingAlgorithm())
+                    .fork(new OpenStackSampleSplitter().fillInfo(),
+                            (name, p) -> {
+                        String file = outputs.getFile(name.isEmpty() ? "default"
+                                : name);
+//                            p.consoleOutput("CSV");
+//                            p.csvOutput(file + ".csv");
+//                            Calendar c = Calendar.getInstance();
+//                            c.set(2016, Calendar.MAY, 1);
+//                            p.cache(new File(outputs.getFile("cache")));
+
+                        p.fork(
+                                new TwoWayFork(0.8f),
+                                //                                new TimeBasedTwoWayFork(0.45f),
+                                new ClassifierFork<>(classifier, file + ".png"));
+                    })
+                    .runAndWait();
         }
+        System.exit(0);
+    }
 
-        public void runAll() throws IOException {
+    private static void allClusterers() throws IOException {
+        Host source = bono;
+        FileGroup outputs = new FileGroup(new File(newData.makeOutputDir(source), "analysis"));
 
-//        builder.addAlgorithm(new MetricFilterAlgorithm(0, 1, 2, 3));
-//        builder.addAlgorithm(new NoopAlgorithm());
-//        builder.addAlgorithm(new VarianceFilterAlgorithm(0.02, true));
-//        builder.addAlgorithm(new FeatureStandardizer());
-//        builder.addAlgorithm(new CorrelationAlgorithm(false));
-//        builder.addAlgorithm(new CorrelationSignificanceAlgorithm(0.7));
-//        builder.addAlgorithm(new MetricCounter());
-//        builder.addAlgorithm(new PCAAlgorithm(0.99));
-//            builder.addAlgorithm(new ExperimentLabellingAlgorithm(2, "idle"));
-//            builder.addAlgorithm(new DecisionTreeClassificationAlgorithm());
+        for (ExternalClusterer clustererEnum : ExternalClusterer.values()) {
+            AbstractClusterer clusterer = clustererEnum.newInstance();
 
-//        builder.setOutput(new OutputMetricPlotter<>(new ScatterPlotter(), 0, 1));
-            builder.setConsoleOutput("CSV");
-//        builder.setFileOutput(outputFile, "CSV");
-
-            builder.runApp();
+            new AlgorithmPipeline(newData, source)
+                    //                    .cache(new File(outputs.getFile("cache")))
+                    .step(new MetricFilterAlgorithm("disk-usage///free", "disk-usage///used"))
+                    .step(new SourceLabellingAlgorithm())
+                    .fork(new OpenStackSampleSplitter().fillInfo(),
+                            (name, p) -> {
+                        String file = outputs.getFile(name.isEmpty() ? "default"
+                                : name);
+                        p.step(new MOAClusterer<>(new Model<>(), clusterer));
+                    })
+                    .runAndWait();
         }
     }
 

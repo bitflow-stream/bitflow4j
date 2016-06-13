@@ -6,53 +6,40 @@ import java.io.OutputStream;
 
 /**
  * Created by anton on 4/6/16.
+ * <p>
+ * This Marshaller only Samples in a well-readable format. Intended for console-output.
  */
 public class TextMarshaller extends AbstractMarshaller implements Marshaller {
 
     private static final byte[] METRICS_SEPARATOR_BYTES = ", ".getBytes();
     private static final String equalsStr = "=";
-    public static final byte[] COMMA_BYTES = ", ".getBytes();
-    public static final byte[] SOURCE_BYTES = "source: ".getBytes();
-    public static final byte[] COLON_BYTES = ": ".getBytes();
-    public static final byte[] LABEL_BYTES = "label: ".getBytes();
+    private static final byte[] COLON_BYTES = ": ".getBytes();
+    private static final byte[] OPEN_BYTES = " (".getBytes();
+    private static final byte[] CLOSE_BYTES = ")".getBytes();
 
-    public Sample.Header unmarshallHeader(InputStream input) throws IOException {
+    public Header unmarshallHeader(InputStream input) throws IOException {
         throw new UnsupportedOperationException("TextMarshaller does not support unmarshalling");
     }
 
-    public Sample unmarshallSample(InputStream input, Sample.Header unmarshallingHeader,
-                                   Sample.Header sampleHeader) throws IOException {
+    public Sample unmarshallSample(InputStream input, Header unmarshallingHeader,
+                                   Header sampleHeader) throws IOException {
         throw new UnsupportedOperationException("TextMarshaller does not support unmarshalling");
     }
 
-    public void marshallHeader(OutputStream output, Sample.Header header) throws IOException {
+    public void marshallHeader(OutputStream output, Header header) throws IOException {
         // empty
     }
 
     public void marshallSample(OutputStream output, Sample sample) throws IOException {
         sample.checkConsistency();
 
-        boolean specialFieldWritten = false;
-        if (sample.hasTimestamp()) {
-            output.write(sample.getTimestamp().toString().getBytes());
-            specialFieldWritten = true;
+        output.write(sample.getTimestamp().toString().getBytes());
+        if (sample.getHeader().hasTags) {
+            output.write(OPEN_BYTES);
+            output.write(sample.tagString().getBytes());
+            output.write(CLOSE_BYTES);
         }
-        if (sample.hasSource()) {
-            if (specialFieldWritten)
-                output.write(COMMA_BYTES);
-            output.write(SOURCE_BYTES);
-            output.write(sample.getSource().getBytes());
-            specialFieldWritten = true;
-        }
-        if (sample.hasLabel()) {
-            if (specialFieldWritten)
-                output.write(COMMA_BYTES);
-            output.write(LABEL_BYTES);
-            output.write(sample.getLabel().getBytes());
-            specialFieldWritten = true;
-        }
-        if (specialFieldWritten)
-            output.write(COLON_BYTES);
+        output.write(COLON_BYTES);
 
         String[] header = sample.getHeader().header;
         double[] values = sample.getMetrics();

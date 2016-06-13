@@ -1,9 +1,9 @@
 package metrics.algorithms;
 
+import metrics.Header;
 import metrics.Sample;
-import metrics.algorithms.logback.MetricLog;
-import metrics.algorithms.logback.PostAnalysisAlgorithm;
 import metrics.io.MetricOutputStream;
+import metrics.main.misc.ParameterHash;
 
 import java.io.IOException;
 import java.util.*;
@@ -13,14 +13,13 @@ import java.util.*;
  * <p>
  * This analyses the output of CorrelationAlgorithm and produces a summary.
  */
-public class CorrelationSignificanceAlgorithm extends PostAnalysisAlgorithm<MetricLog> {
+public class CorrelationSignificanceAlgorithm extends BatchAlgorithm {
 
     private final double minCorrelationSignificance;
     private final Map<String, Results> results = new HashMap<>();
     private final Set<String> allAlgos = new HashSet<>();
 
     public CorrelationSignificanceAlgorithm(double minCorrelationSignificance) {
-        super(true);
         this.minCorrelationSignificance = minCorrelationSignificance;
     }
 
@@ -34,8 +33,7 @@ public class CorrelationSignificanceAlgorithm extends PostAnalysisAlgorithm<Metr
     }
 
     @Override
-    public void registerMetricData(Sample sample) throws IOException {
-        registerSample(sample);
+    public void addSample(Sample sample) {
         String label = sample.getLabel();
         String source = sample.getSource();
         Results res = getResults(label);
@@ -52,9 +50,9 @@ public class CorrelationSignificanceAlgorithm extends PostAnalysisAlgorithm<Metr
     }
 
     @Override
-    protected void writeResults(MetricOutputStream output) throws IOException {
+    protected void flushAndClearResults(MetricOutputStream output) throws IOException {
         String[] headerFields = allAlgos.toArray(new String[0]);
-        Sample.Header header = new Sample.Header(headerFields, Sample.Header.HEADER_LABEL_IDX + 1);
+        Header header = new Header(headerFields);
 
         List<Results> sortedResults = new ArrayList<>(results.values());
         Collections.sort(sortedResults);
@@ -77,8 +75,9 @@ public class CorrelationSignificanceAlgorithm extends PostAnalysisAlgorithm<Metr
     }
 
     @Override
-    protected MetricLog createMetricStats(String name) {
-        return new MetricLog(name);
+    public void hashParameters(ParameterHash hash) {
+        super.hashParameters(hash);
+        hash.writeDouble(minCorrelationSignificance);
     }
 
     private static class Results implements Comparable<Results> {

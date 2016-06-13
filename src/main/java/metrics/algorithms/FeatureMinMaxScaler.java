@@ -1,6 +1,6 @@
 package metrics.algorithms;
 
-import metrics.algorithms.logback.ExtendedMetricsStats;
+import metrics.io.window.MetricStatisticsWindow;
 
 /**
  * Created by anton on 4/18/16.
@@ -13,7 +13,7 @@ public class FeatureMinMaxScaler extends AbstractFeatureScaler {
     }
 
     @Override
-    protected MetricScaler createScaler(ExtendedMetricsStats stats) {
+    protected MetricScaler createScaler(MetricStatisticsWindow stats) {
         return new MetricMinMaxScaler(stats);
     }
 
@@ -21,10 +21,10 @@ public class FeatureMinMaxScaler extends AbstractFeatureScaler {
         private final double min;
         private final double max;
 
-        MetricMinMaxScaler(ExtendedMetricsStats stats) {
-            if (stats.min < stats.max) {
-                min = stats.min;
-                max = stats.max;
+        MetricMinMaxScaler(MetricStatisticsWindow stats) {
+            if (stats.totalMinimum < stats.totalMaximum) {
+                min = stats.totalMinimum;
+                max = stats.totalMaximum;
             } else {
                 min = max = 0;
             }

@@ -7,17 +7,19 @@ import java.io.InputStream;
 
 /**
  * Created by anton on 4/6/16.
+ * <p>
+ * Base class for Marshaller implementations, offers readLine method missing in InputStream.
  */
 public abstract class AbstractMarshaller implements Marshaller {
 
     // This is not necessarily System.getProperty("line.separator")
-    protected static String lineSepString = "\n";
-    protected static byte[] lineSepBytes = lineSepString.getBytes();
-    protected static int lineSep = lineSepString.charAt(0);
+    private static String lineSepString = "\n";
+    static byte[] lineSepBytes = lineSepString.getBytes();
+    private static int lineSep = lineSepString.charAt(0);
 
-    protected static String readLine(InputStream input) throws IOException {
+    static String readLine(InputStream input) throws IOException {
         int chr;
-        StringBuffer buffer = new StringBuffer(512);
+        StringBuilder buffer = new StringBuilder(512);
 
         while ((chr = input.read()) != lineSep) {
             if (chr < 0) {

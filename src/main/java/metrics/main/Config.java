@@ -5,25 +5,52 @@ import java.util.ResourceBundle;
 
 /**
  * Created by anton on 4/14/16.
+ * <p>
+ * Static configuration loaded from a resource file.
  */
 public class Config {
 
-    public final String experimentFolder;
-    public final String oldExperimentFolder;
-    public final String outputFolder;
-    public final String outputFile;
+    private String experimentFolder;
+    private String outputFolder;
+    private String dotPath;
+    private static Config instance;
 
-    public Config() {
-        this("config");
+    public static Config getInstance() {
+        if (instance == null) {
+            synchronized (Config.class) {
+                if (instance == null) {
+                    instance = new Config();
+                }
+            }
+        }
+        return instance;
     }
 
-    public Config(String name) throws MissingResourceException {
-        ResourceBundle resources = ResourceBundle.getBundle(name);
+    private Config() {
+        this.loadConfig("config");
+    }
 
+    private void loadConfig(String name) throws MissingResourceException {
+        ResourceBundle resources = ResourceBundle.getBundle(name);
         experimentFolder = resources.getString("experiment_dir");
-        oldExperimentFolder = resources.getString("old_experiment_dir");
         outputFolder = resources.getString("output_dir");
-        outputFile = outputFolder + "/output.csv";
+        dotPath = resources.getString("dot_path");
+    }
+
+    public String getExperimentSubfolder(String subfolder) {
+        return getExperimentFolder() + "/" + subfolder;
+    }
+
+    private String getExperimentFolder() {
+        return experimentFolder;
+    }
+
+    public String getOutputFolder() {
+        return outputFolder;
+    }
+
+    public String getDotPath() {
+        return dotPath;
     }
 
 }

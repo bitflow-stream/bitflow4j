@@ -14,9 +14,9 @@ public class LassoFitGenerator {
 
     // In order to speed up the compression, we limit the number of
     // observations,
-    // but this limit is dependent on the number of features that we should
+    // but this limit is dependent on the number of analysis that we should
     // learn
-    // their weights. In other words, for learning weights of more features, we
+    // their weights. In other words, for learning weights of more analysis, we
     // need more observations.
     private static final int MAX_OBSERVATIONS_TO_FEATURES_RATIO = 100;
 
@@ -94,7 +94,7 @@ public class LassoFitGenerator {
         double flmin = (numObservations < numFeatures ? 5e-2 : 1e-4);
 
         /********************************
-         * Standardize features and target: Center the target and features
+         * Standardize analysis and target: Center the target and analysis
          * (mean 0) and normalize their vectors to have the same standard
          * deviation
          */

@@ -16,6 +16,6 @@ public class GralDataContainer implements DataContainer {
 
     @Override
     public void add(double... data) {
-        table.add(data[0],data[1]);
+        table.add(data[0], data[1]);
     }
 }
