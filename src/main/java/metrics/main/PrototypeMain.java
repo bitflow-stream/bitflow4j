@@ -24,6 +24,7 @@ public class PrototypeMain {
 
     static final int TCP_PORT = 8899;
     static final String TCP_FORMAT = "BIN";
+    static final String TRAINING_FORMAT = "BIN";
 
     static class DataModel implements Serializable {
         public J48 model;
@@ -35,7 +36,7 @@ public class PrototypeMain {
 
     public static void main(String[] args) throws IOException {
         if (args.length != 1) {
-            System.err.println("Need 1 parameter: input CSV file");
+            System.err.println("Need 1 parameter: input BINARY file");
             return;
         }
         DataModel model = createDataModel(args[0]);
@@ -71,7 +72,7 @@ public class PrototypeMain {
         FeatureStandardizer standardizer = new FeatureStandardizer();
         WekaLearner<J48> learner = new WekaLearner<>(new Model<>(), j48);
 
-        new AlgorithmPipeline(new File(inputFile), FileMetricReader.FILE_NAME)
+        new AlgorithmPipeline(AlgorithmPipeline.fileReader(inputFile, TRAINING_FORMAT, FileMetricReader.FILE_NAME))
                 .fork(new OpenStackSampleSplitter(),
                         (name, p) -> {
                             if (!name.isEmpty()) {

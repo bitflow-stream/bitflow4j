@@ -61,6 +61,18 @@ public class AlgorithmPipeline {
         return reader;
     }
 
+    public static FileMetricReader binaryFileReader(File binFile, FileMetricReader.NameConverter conv) throws IOException {
+        FileMetricReader reader = new FileMetricReader(getMarshaller("BIN"), conv);
+        reader.addFile(binFile);
+        return reader;
+    }
+
+    public static FileMetricReader fileReader(String file, String format, FileMetricReader.NameConverter conv) throws IOException {
+        FileMetricReader reader = new FileMetricReader(getMarshaller(format), conv);
+        reader.addFile(new File(file));
+        return reader;
+    }
+
     // =========================================
     // Constructors ============================
     // =========================================

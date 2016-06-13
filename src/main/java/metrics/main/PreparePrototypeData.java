@@ -1,6 +1,8 @@
 package metrics.main;
 
+import metrics.algorithms.TimestampSort;
 import metrics.main.analysis.OpenStackSampleSplitter;
+import metrics.main.analysis.SourceLabellingAlgorithm;
 import metrics.main.data.DataSource;
 import metrics.main.data.Host;
 import metrics.main.data.NewDataSource;
@@ -32,7 +34,10 @@ public class PreparePrototypeData {
                             if (!name.isEmpty()) {
                                 throw new IllegalStateException("Received non-default fork from OpenStackSampleSplitter: " + name);
                             }
-                            p.fileOutput(target, OUTPUT_FILE_FORMAT);
+                            p
+                                    .step(new SourceLabellingAlgorithm())
+                                    .step(new TimestampSort(true))
+                                    .fileOutput(target, OUTPUT_FILE_FORMAT);
                         })
                 .runAndWait();
     }
