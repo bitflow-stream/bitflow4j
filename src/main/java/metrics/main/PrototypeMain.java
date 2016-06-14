@@ -13,7 +13,6 @@ import metrics.main.analysis.SampleClearer;
 import weka.classifiers.trees.J48;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,20 +25,12 @@ public class PrototypeMain {
     static final String TCP_FORMAT = "BIN";
     static final String TRAINING_FORMAT = "BIN";
 
-    static class DataModel implements Serializable {
-        public J48 model;
-        public Map<String, Double> averages;
-        public Map<String, Double> stddevs;
-        public String[] headerFields;
-        public ArrayList<String> allClasses;
-    }
-
     public static void main(String[] args) throws IOException {
         if (args.length != 1) {
             System.err.println("Need 1 parameter: input " + TRAINING_FORMAT + " file");
             return;
         }
-        DataModel model = createDataModel(args[0]);
+        TrainedDataModel model = getDataModel(args[0]);
         Model<J48> treeModel = new Model<>();
         treeModel.setModel(model.model);
         new AlgorithmPipeline(TCP_PORT, TCP_FORMAT)
@@ -60,14 +51,20 @@ public class PrototypeMain {
                 .runAndWait();
     }
 
-    static DataModel createDataModel(String inputFile) throws IOException {
+    static TrainedDataModel getDataModel(String inputFile) throws IOException {
         String cacheFile = inputFile + ".model";
-        DataModel dataModel = loadDataModel(cacheFile);
+        TrainedDataModel dataModel = loadDataModel(cacheFile);
         if (dataModel != null) {
             System.err.println("Loaded cached model from " + cacheFile);
             return dataModel;
         }
         System.err.println("No cached model, computing model...");
+        dataModel = createDataModel(inputFile);
+        storeDataModel(cacheFile, dataModel);
+        return dataModel;
+    }
+
+    static TrainedDataModel createDataModel(String inputFile) throws IOException {
         J48 j48 = new J48();
         FeatureStandardizer standardizer = new FeatureStandardizer();
         WekaLearner<J48> learner = new WekaLearner<>(new Model<>(), j48);
@@ -87,7 +84,7 @@ public class PrototypeMain {
                         })
                 .runAndWait();
 
-        dataModel = new DataModel();
+        TrainedDataModel dataModel = new TrainedDataModel();
         dataModel.model = j48;
         dataModel.averages = new HashMap<>();
         dataModel.stddevs = new HashMap<>();
@@ -104,11 +101,10 @@ public class PrototypeMain {
             dataModel.averages.put(name, metric.average);
             dataModel.stddevs.put(name, metric.stdDeviation);
         }
-        storeDataModel(cacheFile, dataModel);
         return dataModel;
     }
 
-    static DataModel loadDataModel(String cacheFile) throws IOException {
+    static TrainedDataModel loadDataModel(String cacheFile) throws IOException {
         if (!new File(cacheFile).exists()) return null;
         System.err.println("Trying to load model from " + cacheFile);
         FileInputStream file_in = new FileInputStream(cacheFile);
@@ -119,15 +115,15 @@ public class PrototypeMain {
         } catch (ClassNotFoundException e) {
             throw new IOException("Failed to load DataModel", e);
         }
-        if (obj instanceof DataModel) {
-            return (DataModel) obj;
+        if (obj instanceof TrainedDataModel) {
+            return (TrainedDataModel) obj;
         } else {
             throw new IOException("Object in file " + cacheFile + " was " +
                     obj.getClass().toString() + " instead of DataModel");
         }
     }
 
-    static void storeDataModel(String cacheFile, DataModel model) throws IOException {
+    static void storeDataModel(String cacheFile, TrainedDataModel model) throws IOException {
         System.err.println("Storing model to " + cacheFile);
         FileOutputStream file_out = new FileOutputStream(cacheFile);
         ObjectOutputStream obj_out = new ObjectOutputStream(file_out);
