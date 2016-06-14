@@ -36,7 +36,7 @@ public class PrototypeMain {
 
     public static void main(String[] args) throws IOException {
         if (args.length != 1) {
-            System.err.println("Need 1 parameter: input BINARY file");
+            System.err.println("Need 1 parameter: input " + TRAINING_FORMAT + " file");
             return;
         }
         DataModel model = createDataModel(args[0]);
