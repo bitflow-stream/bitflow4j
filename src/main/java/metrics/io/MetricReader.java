@@ -17,23 +17,18 @@ public class MetricReader implements MetricInputStream {
     private final Marshaller marshaller;
     private final InputStream input;
     private final String sourceName;
-    private Header unmarshallingHeader;
     private Header header;
 
     public MetricReader(InputStream input, String sourceName, Marshaller marshaller) throws IOException {
         this.marshaller = marshaller;
         this.input = input;
         this.sourceName = sourceName;
-        unmarshallingHeader = marshaller.unmarshallHeader(input);
-        if (unmarshallingHeader.hasTags)
-            header = unmarshallingHeader;
-        else
-            header = new Header(unmarshallingHeader.header);
+        header = marshaller.unmarshallHeader(input);
     }
 
     public Sample readSample() throws IOException {
         try {
-            Sample sample = marshaller.unmarshallSample(input, unmarshallingHeader, header);
+            Sample sample = marshaller.unmarshallSample(input, header);
             if (!sample.hasSource())
                 sample.setSource(sourceName);
             return sample;

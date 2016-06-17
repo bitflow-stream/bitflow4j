@@ -16,8 +16,7 @@ public interface Marshaller {
 
     Header unmarshallHeader(InputStream input) throws IOException;
 
-    Sample unmarshallSample(InputStream input, Header unmarshallingHeader,
-                            Header sampleHeader) throws IOException;
+    Sample unmarshallSample(InputStream input, Header header) throws IOException;
 
     void marshallHeader(OutputStream output, Header header) throws IOException;
 
