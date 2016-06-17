@@ -7,7 +7,10 @@ import metrics.algorithms.OnlineFeatureStandardizer;
 import metrics.algorithms.classification.Model;
 import metrics.algorithms.classification.WekaLearner;
 import metrics.algorithms.classification.WekaOnlineClassifier;
+import metrics.io.MetricPrinter;
 import metrics.io.file.FileMetricReader;
+import metrics.io.fork.TwoWayFork;
+import metrics.io.net.TcpMetricsOutput;
 import metrics.main.analysis.OpenStackSampleSplitter;
 import metrics.main.analysis.SampleClearer;
 import weka.classifiers.trees.J48;
@@ -24,13 +27,17 @@ public class PrototypeMain {
     static final int TCP_PORT = 8899;
     static final String TCP_FORMAT = "BIN";
     static final String TRAINING_FORMAT = "BIN";
+    static final String TCP_OUTPUT_FORMAT = "BIN";
 
     public static void main(String[] args) throws IOException {
-        if (args.length != 1) {
-            System.err.println("Need 1 parameter: input " + TRAINING_FORMAT + " file");
+        if (args.length != 3) {
+            System.err.println("Parameter: <" + TRAINING_FORMAT + " file> <target-host> <target-port>");
             return;
         }
+        String targetHost = args[1];
+        int targetPort = Integer.parseInt(args[2]);
         TrainedDataModel model = getDataModel(args[0]);
+
         Model<J48> treeModel = new Model<>();
         treeModel.setModel(model.model);
         new AlgorithmPipeline(TCP_PORT, TCP_FORMAT)
@@ -46,7 +53,11 @@ public class PrototypeMain {
                                     .step(new OnlineFeatureStandardizer(model.averages, model.stddevs))
                                     .step(new WekaOnlineClassifier<>(treeModel, model.headerFields, model.allClasses))
                                     .step(new SampleClearer())
-                                    .consoleOutput("CSV");
+                                    .fork(new TwoWayFork(),
+                                        (type, out) -> out.output(
+                                                type == TwoWayFork.ForkType.Primary ?
+                                                    new MetricPrinter(AlgorithmPipeline.getMarshaller("CSV")) :
+                                                    new TcpMetricsOutput(AlgorithmPipeline.getMarshaller(TCP_OUTPUT_FORMAT), targetHost, targetPort)));
                         })
                 .runAndWait();
     }

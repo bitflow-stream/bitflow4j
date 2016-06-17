@@ -13,7 +13,7 @@ import java.io.OutputStream;
 public abstract class AbstractMetricPrinter extends AbstractOutputStream {
 
     private final Marshaller marshaller;
-    private OutputStream output = null;
+    protected OutputStream output = null;
     private Header lastHeader;
 
     public AbstractMetricPrinter(Marshaller marshaller) {

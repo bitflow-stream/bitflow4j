@@ -47,6 +47,11 @@ public class TwoWayFork extends AbstractFork<TwoWayFork.ForkType> {
         this(null);
     }
 
+    public TwoWayFork(MetricOutputStream output1, MetricOutputStream output2) {
+        this(null);
+        setOutputs(output1, output2);
+    }
+
     public void setOutputs(MetricOutputStream output1, MetricOutputStream output2) {
         setOutputFactory((type) -> type == ForkType.Primary ? output1 : output2);
     }
