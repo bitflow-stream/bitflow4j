@@ -1,4 +1,4 @@
-package metrics.main;
+package metrics.main.prototype;
 
 import metrics.algorithms.AbstractFeatureScaler;
 import metrics.algorithms.FeatureAggregator;
@@ -11,6 +11,8 @@ import metrics.io.MetricPrinter;
 import metrics.io.file.FileMetricReader;
 import metrics.io.fork.TwoWayFork;
 import metrics.io.net.TcpMetricsOutput;
+import metrics.main.AlgorithmPipeline;
+import metrics.main.TrainedDataModel;
 import metrics.main.analysis.OpenStackSampleSplitter;
 import metrics.main.analysis.SampleClearer;
 import weka.classifiers.trees.J48;
@@ -22,25 +24,25 @@ import java.util.Map;
 /**
  * Created by anton on 6/9/16.
  */
-public class PrototypeMain {
+public class Analyse {
 
-    static final int TCP_PORT = 8899;
     static final String TCP_FORMAT = "BIN";
     static final String TRAINING_FORMAT = "BIN";
     static final String TCP_OUTPUT_FORMAT = "BIN";
 
     public static void main(String[] args) throws IOException {
         if (args.length != 3) {
-            System.err.println("Parameter: <" + TRAINING_FORMAT + " file> <target-host> <target-port>");
+            System.err.println("Parameters: <receive-port> <" + TRAINING_FORMAT + " file> <target-host> <target-port>");
             return;
         }
-        String targetHost = args[1];
-        int targetPort = Integer.parseInt(args[2]);
-        TrainedDataModel model = getDataModel(args[0]);
+        int receivePort = Integer.parseInt(args[0]);
+        TrainedDataModel model = getDataModel(args[1]);
+        String targetHost = args[2];
+        int targetPort = Integer.parseInt(args[3]);
 
         Model<J48> treeModel = new Model<>();
         treeModel.setModel(model.model);
-        new AlgorithmPipeline(TCP_PORT, TCP_FORMAT)
+        new AlgorithmPipeline(receivePort, TCP_FORMAT)
                 .fork(new OpenStackSampleSplitter(),
                         (name, p) -> {
                             if (!name.isEmpty()) {

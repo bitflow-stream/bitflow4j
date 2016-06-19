@@ -1,7 +1,7 @@
-package metrics.main;
+package metrics.main.prototype;
 
 @SuppressWarnings("unused")
-public class EmptyMain {
+public class HelloWorld {
 
     public static void main(String[] args) {
         System.out.println("Hello World");

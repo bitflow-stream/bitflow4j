@@ -1,6 +1,7 @@
-package metrics.main;
+package metrics.main.prototype;
 
 import metrics.algorithms.TimestampSort;
+import metrics.main.AlgorithmPipeline;
 import metrics.main.analysis.OpenStackSampleSplitter;
 import metrics.main.analysis.SourceLabellingAlgorithm;
 import metrics.main.data.DataSource;
@@ -12,7 +13,7 @@ import java.io.IOException;
 /**
  * Created by anton on 6/13/16.
  */
-public class PreparePrototypeData {
+public class PrepareTrainingData {
 
     private static final DataSource<Host> data = new NewDataSource("experiments-new-2", false);
 

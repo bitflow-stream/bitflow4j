@@ -1,4 +1,4 @@
-package metrics.main;
+package metrics.main.prototype;
 
 import metrics.io.file.FileMetricReader;
 import metrics.main.data.DataSource;
@@ -11,7 +11,7 @@ import java.io.IOException;
 /**
  * Created by anton on 6/13/16.
  */
-public class MainListFiles {
+public class ListFiles {
 
     private static final DataSource<Host> data = new NewDataSource("experiments-new-2", false);
 
