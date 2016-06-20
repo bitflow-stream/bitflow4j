@@ -28,7 +28,8 @@ public class TcpMetricsOutput extends AbstractMetricPrinter {
             super.writeSample(sample);
         } catch(IOException exc) {
             System.err.println("Failed to send sample to " + targetHost + ":" + targetPort + ": " + exc);
-            socket.close();
+            if (socket != null)
+                socket.close();
             output = null;
         }
     }
