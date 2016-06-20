@@ -31,7 +31,7 @@ public class Analyse {
     static final String TCP_OUTPUT_FORMAT = "BIN";
 
     public static void main(String[] args) throws IOException {
-        if (args.length != 3) {
+        if (args.length != 4) {
             System.err.println("Parameters: <receive-port> <" + TRAINING_FORMAT + " file> <target-host> <target-port>");
             return;
         }
