@@ -14,11 +14,11 @@ import metrics.io.net.TcpMetricsOutput;
 import metrics.main.AlgorithmPipeline;
 import metrics.main.TrainedDataModel;
 import metrics.main.analysis.OpenStackSampleSplitter;
-import metrics.main.analysis.SampleClearer;
 import weka.classifiers.trees.J48;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 /**
@@ -31,14 +31,15 @@ public class Analyse {
     static final String TCP_OUTPUT_FORMAT = "BIN";
 
     public static void main(String[] args) throws IOException {
-        if (args.length != 4) {
-            System.err.println("Parameters: <receive-port> <" + TRAINING_FORMAT + " file> <target-host> <target-port>");
+        if (args.length != 5) {
+            System.err.println("Parameters: <receive-port> <" + TRAINING_FORMAT + " file> <target-host> <target-port> <local hostname>");
             return;
         }
         int receivePort = Integer.parseInt(args[0]);
         TrainedDataModel model = getDataModel(args[1]);
         String targetHost = args[2];
         int targetPort = Integer.parseInt(args[3]);
+        String hostname = args[4];
 
         Model<J48> treeModel = new Model<>();
         treeModel.setModel(model.model);
@@ -53,7 +54,7 @@ public class Analyse {
                                     .step(new FeatureAggregator(10000L).addAvg().addSlope())
                                     .step(new OnlineFeatureStandardizer(model.averages, model.stddevs))
                                     .step(new WekaOnlineClassifier<>(treeModel, model.headerFields, model.allClasses))
-                                    .step(new SampleClearer())
+                                    .step(new SampleAnalysisOutput(new HashSet<>(model.allClasses), hostname))
                                     .fork(new TwoWayFork(),
                                         (type, out) -> out.output(
                                                 type == TwoWayFork.ForkType.Primary ?
