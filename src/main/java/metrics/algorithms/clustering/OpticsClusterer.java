@@ -1,21 +1,16 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package metrics.algorithms.clustering;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import metrics.Header;
 import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
-import org.apache.commons.math3.ml.clustering.DBSCANClusterer;
 import weka.clusterers.OPTICS;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
+
+import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  *

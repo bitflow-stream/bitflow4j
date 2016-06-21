@@ -32,6 +32,7 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 //        allClassifiers();
+
         allClusterers();
 //        prepareData(bono);
 
@@ -82,6 +83,7 @@ public class Main {
 //                                    new TimeBasedTwoWayFork(0.3f),
 //                                    new SortedTimeBasedFork(0.3f, new Date(2016 - 1900, 4, 10, 9, 8, 40)),
 //                                    new ClassifierFork<>(new J48(), file + ".png"));
+
 
 //                            p
 //                                    .step(new FeatureStandardizer())
@@ -163,6 +165,7 @@ public class Main {
                     })
                     .runAndWait();
         }
+        System.exit(0);
     }
 
 }

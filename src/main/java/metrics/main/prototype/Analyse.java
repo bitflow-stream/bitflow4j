@@ -49,7 +49,6 @@ public class Analyse {
                                 System.err.println("Error: received hostname from OpenstackSampleSplitter: " + name);
                                 return;
                             }
-
                             p
                                     .step(new FeatureAggregator(10000L).addAvg().addSlope())
                                     .step(new OnlineFeatureStandardizer(model.averages, model.stddevs))
