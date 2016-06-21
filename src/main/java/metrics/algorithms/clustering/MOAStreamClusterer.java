@@ -3,19 +3,9 @@ package metrics.algorithms.clustering;
 import com.github.javacliparser.FloatOption;
 import com.github.javacliparser.IntOption;
 import com.yahoo.labs.samoa.instances.WekaToSamoaInstanceConverter;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.stream.Stream;
 import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
+import moa.cluster.Clustering;
 import moa.clusterers.AbstractClusterer;
 import moa.clusterers.clustream.Clustream;
 import moa.clusterers.clustree.ClusTree;
@@ -27,14 +17,23 @@ import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
 
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.*;
+import java.util.stream.Stream;
+
 /**
  *
  * @author fschmidt
  */
 public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> extends AbstractAlgorithm {
 
+    public static final String UNCLASSIFIED_CLUSTER = "Unclassified";
+    public static final String UNKNOWN_LABEL = "unknown";
+
     private final T clusterer;
-    private final Map<Integer, Map<String, Integer>> clusterLabelMaps;
+    public final Map<Integer, ClusterCounters> clusterLabelMaps = new HashMap<>();
+    public final Map<String, ClusterCounters> stringLabelMaps = new HashMap<>();
     private int sampleCount = 0;
     private int printClusterDetails = 0;
 
@@ -46,8 +45,21 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
 
         this.printClustererParameters();
 
-        this.clusterLabelMaps = new HashMap<>();
         this.printClusterDetails = printClusterDetails;
+    }
+
+    public static class ClusterCounters {
+        public final Map<String, Integer> counters = new HashMap<>();
+        public int total;
+
+        public void increment(String label) {
+            if (counters.containsKey(label)) {
+                counters.put(label, counters.get(label) + 1);
+            } else {
+                counters.put(label, 1);
+            }
+            total++;
+        }
     }
 
     @Override
@@ -57,115 +69,70 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
 
         clusterer.trainOnInstance(instance);
 
-        //Testing specific output parameters for DenStream clusterer
-        if (clusterer instanceof WithDBSCAN || clusterer instanceof StreamKM) {
-
-            //prints all micro-clusters
-            double inclusionProbability = 0.0;
-            int bestFitCluster = -1;
-            int clusterNum = 0;
-            for (moa.cluster.Cluster c : this.clusterer.getClusteringResult().getClustering()) {
-                double clusterInclusionProbability = c.getInclusionProbability(instance);
-                if (inclusionProbability < clusterInclusionProbability) {
-                    inclusionProbability = clusterInclusionProbability;
-                    bestFitCluster = clusterNum;
-                }
-                clusterNum++;
+        //prints all micro-clusters
+        double inclusionProbability = 0.0;
+        int bestFitCluster = -1;
+        int clusterNum = 0;
+        for (moa.cluster.Cluster c : this.getClusteringResult().getClustering()) {
+            double clusterInclusionProbability = c.getInclusionProbability(instance);
+            if (inclusionProbability < clusterInclusionProbability) {
+                inclusionProbability = clusterInclusionProbability;
+                bestFitCluster = clusterNum;
             }
-
-            //Evaluate Clusters
-            if (clusterLabelMaps.containsKey(bestFitCluster)) {
-                Map<String, Integer> labelCountMap = clusterLabelMaps.get(bestFitCluster);
-                if (labelCountMap.containsKey(sample.getLabel())) {
-                    labelCountMap.put(sample.getLabel(), labelCountMap.get(sample.getLabel()) + 1);
-                } else {
-                    labelCountMap.put(sample.getLabel(), 1);
-                }
-            } else {
-                Map<String, Integer> labelCountMap = new HashMap<>();
-                labelCountMap.put(sample.getLabel(), 1);
-                clusterLabelMaps.put(bestFitCluster, labelCountMap);
-            }
-            //Print Evaluation
-            if (printClusterDetails > 0) {
-                if (sampleCount % printClusterDetails == 0) {
-                    System.out.println("##########MAP-COUNT##############");
-                    List<Integer> clusterIds = new ArrayList<>(clusterLabelMaps.keySet());
-                    Collections.sort(clusterIds);
-
-                    for (Integer clusterId : clusterIds) {
-                        System.out.println("----------------------");
-                        System.out.println("cluster id: " + clusterId);
-                        Map<String, Integer> scenarioCount = clusterLabelMaps.get(clusterId);
-                        Stream<Map.Entry<String, Integer>> sorted = scenarioCount.entrySet().stream().sorted(Collections.reverseOrder(
-                                Map.Entry
-                                .comparingByValue()));
-                        sorted.forEach(System.out::println);
-                    }
-                    System.out.println("##########END##############");
-                    System.out.println("Sample: " + Arrays.toString(sample.getMetrics()));
-                }
-                sampleCount++;
-            }
-
-            String label = "Cluster-" + clusterNum;
-            return new Sample(sample.getHeader(), sample.getMetrics(),
-                    sample.getTimestamp(), sample.getSource(), label);
-
-        }else{
-            //prints all micro-clusters
-            double inclusionProbability = 0.0;
-            int bestFitCluster = -1;
-            int clusterNum = 0;
-            for (moa.cluster.Cluster c : clusterer.getMicroClusteringResult().getClustering()) {
-                double clusterInclusionProbability = c.getInclusionProbability(instance);
-                if (inclusionProbability < clusterInclusionProbability) {
-                    inclusionProbability = clusterInclusionProbability;
-                    bestFitCluster = clusterNum;
-                }
-                clusterNum++;
-            }
-
-            //Evaluate Clusters
-            if (clusterLabelMaps.containsKey(bestFitCluster)) {
-                Map<String, Integer> labelCountMap = clusterLabelMaps.get(bestFitCluster);
-                if (labelCountMap.containsKey(sample.getLabel())) {
-                    labelCountMap.put(sample.getLabel(), labelCountMap.get(sample.getLabel()) + 1);
-                } else {
-                    labelCountMap.put(sample.getLabel(), 1);
-                }
-            } else {
-                Map<String, Integer> labelCountMap = new HashMap<>();
-                labelCountMap.put(sample.getLabel(), 1);
-                clusterLabelMaps.put(bestFitCluster, labelCountMap);
-            }
-            //Print Evaluation
-            if (printClusterDetails > 0) {
-                if (sampleCount % printClusterDetails == 0) {
-                    System.out.println("##########MAP-COUNT##############");
-                    List<Integer> clusterIds = new ArrayList<>(clusterLabelMaps.keySet());
-                    Collections.sort(clusterIds);
-
-                    for (Integer clusterId : clusterIds) {
-                        System.out.println("----------------------");
-                        System.out.println("cluster id: " + clusterId);
-                        Map<String, Integer> scenarioCount = clusterLabelMaps.get(clusterId);
-                        Stream<Map.Entry<String, Integer>> sorted = scenarioCount.entrySet().stream().sorted(Collections.reverseOrder(
-                                Map.Entry
-                                .comparingByValue()));
-                        sorted.forEach(System.out::println);
-                    }
-                    System.out.println("##########END##############");
-                    System.out.println("Sample: " + Arrays.toString(sample.getMetrics()));
-                }
-                sampleCount++;
-            }
-
-            String label = "Cluster-" + clusterNum;
-            return new Sample(sample.getHeader(), sample.getMetrics(),
-                    sample.getTimestamp(), sample.getSource(), label);
+            clusterNum++;
         }
 
+        //Evaluate Clusters
+        String clusterLabel = bestFitCluster < 0 ? UNCLASSIFIED_CLUSTER : "Cluster-" + bestFitCluster;
+        String label = getLabel(sample);
+        ClusterCounters counters = clusterLabelMaps.get(bestFitCluster);
+        if (counters == null) {
+            counters = new ClusterCounters();
+            clusterLabelMaps.put(bestFitCluster, counters);
+            stringLabelMaps.put(clusterLabel, counters);
+        }
+        counters.increment(label);
+
+        //Print Evaluation
+        if (printClusterDetails > 0) {
+            if (sampleCount % printClusterDetails == 0) {
+                System.out.println("##########MAP-COUNT##############");
+                List<Integer> clusterIds = new ArrayList<>(clusterLabelMaps.keySet());
+                Collections.sort(clusterIds);
+
+                for (Integer clusterId : clusterIds) {
+                    System.out.println("----------------------");
+                    System.out.println("cluster id: " + clusterId);
+                    ClusterCounters scenarioCount = clusterLabelMaps.get(clusterId);
+                    Stream<Map.Entry<String, Integer>> sorted = scenarioCount.counters.entrySet().stream().sorted(Collections.reverseOrder(
+                            Map.Entry
+                            .comparingByValue()));
+                    sorted.forEach(System.out::println);
+                }
+                System.out.println("##########END##############");
+                System.out.println("Sample: " + Arrays.toString(sample.getMetrics()));
+            }
+            sampleCount++;
+        }
+
+        return new Sample(sample.getHeader(), sample.getMetrics(),
+                sample.getTimestamp(), sample.getSource(), clusterLabel);
+    }
+
+    private String getLabel(Sample sample) {
+        String label = sample.getLabel();
+        if (label == null || label.isEmpty()) {
+            label = UNKNOWN_LABEL;
+        }
+        return label;
+    }
+
+    private Clustering getClusteringResult() {
+        if (clusterer instanceof WithDBSCAN || clusterer instanceof StreamKM) {
+            return clusterer.getClusteringResult();
+        } else {
+            return clusterer.getMicroClusteringResult();
+        }
     }
 
     @Override
@@ -178,11 +145,10 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
         values = Arrays.copyOf(values, values.length + 1);
         Instance instance = new DenseInstance(1.0, values);
         instance.setDataset(instances);
-        instance.setClassValue(sample.getLabel());
+        instance.setClassValue(getLabel(sample));
 
         WekaToSamoaInstanceConverter converter = new WekaToSamoaInstanceConverter();
-        com.yahoo.labs.samoa.instances.Instance samoaInstance = converter.samoaInstance(instance);
-        return samoaInstance;
+        return converter.samoaInstance(instance);
     }
 
     private Instances createInstances(Sample sample) {
@@ -198,7 +164,11 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
 
     private ArrayList<String> allClasses(Sample sample) {
         Set<String> allLabels = new TreeSet<>(); // Classes must be in deterministic order
-        allLabels.add(sample.getLabel());
+        String label = getLabel(sample);
+        if (label == null || label.isEmpty()) {
+            label = UNKNOWN_LABEL;
+        }
+        allLabels.add(label);
         return new ArrayList<>(allLabels);
     }
     
@@ -316,4 +286,5 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
             ((StreamKM) this.clusterer).randomSeedOption = randomSeedOption;
         }
     }
+
 }

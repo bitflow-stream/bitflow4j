@@ -4,7 +4,6 @@ import moa.clusterers.AbstractClusterer;
 import moa.clusterers.clustream.Clustream;
 import moa.clusterers.clustree.ClusTree;
 import moa.clusterers.denstream.WithDBSCAN;
-import moa.clusterers.kmeanspm.BICO;
 import moa.clusterers.streamkm.StreamKM;
 
 /**
@@ -15,7 +14,7 @@ public enum ExternalClusterer {
     CLUSTREAM(Clustream::new),
     CLUSTREE(ClusTree::new),
     DENSTREAM(WithDBSCAN::new),
-    KMEANSPM(BICO::new),
+    BICO(moa.clusterers.kmeanspm.BICO::new),
     STREAM_KMEANS(StreamKM::new);
 
     private final ClustererFactory clusterer;

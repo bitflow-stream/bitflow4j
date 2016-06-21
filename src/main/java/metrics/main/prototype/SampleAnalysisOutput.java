@@ -21,9 +21,9 @@ public class SampleAnalysisOutput extends AbstractAlgorithm {
 
     public static final String TAG_HOSTNAME = "host";
 
-    private final Set<String> allClasses;
-    private final String hostname;
-    private final Header header;
+    final Set<String> allClasses;
+    final String hostname;
+    final Header header;
     Map<String, Integer> fieldIndices;
 
     public SampleAnalysisOutput(Set<String> allClasses, String hostname) {
@@ -65,6 +65,6 @@ public class SampleAnalysisOutput extends AbstractAlgorithm {
 
     @Override
     public String toString() {
-        return "sample clearer";
+        return "decision-tree classified sample output";
     }
 }
