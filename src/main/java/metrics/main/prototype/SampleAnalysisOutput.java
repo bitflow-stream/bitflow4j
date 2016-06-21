@@ -6,9 +6,9 @@ import metrics.algorithms.AbstractAlgorithm;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Remove the sample data, only keep timestamp and tags.
@@ -21,13 +21,11 @@ public class SampleAnalysisOutput extends AbstractAlgorithm {
 
     public static final String TAG_HOSTNAME = "host";
 
-    final Set<String> allClasses;
     final String hostname;
     final Header header;
     Map<String, Integer> fieldIndices;
 
-    public SampleAnalysisOutput(Set<String> allClasses, String hostname) {
-        this.allClasses = allClasses;
+    public SampleAnalysisOutput(Collection<String> allClasses, String hostname) {
         this.hostname = hostname;
 
         String fields[] = allClasses.toArray(new String[allClasses.size()]);

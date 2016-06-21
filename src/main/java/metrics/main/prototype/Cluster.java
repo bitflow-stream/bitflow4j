@@ -13,9 +13,10 @@ import metrics.main.analysis.OpenStackSampleSplitter;
 import moa.clusterers.AbstractClusterer;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by anton on 6/21/16.
@@ -59,18 +60,19 @@ public class Cluster {
     private static class SampleOutput extends SampleAnalysisOutput {
 
         private static final String OTHER_LABEL = "other";
-
         private final MOAStreamClusterer<AbstractClusterer> clusterer;
 
-        public SampleOutput(Set<String> allClasses, String hostname, MOAStreamClusterer<AbstractClusterer> clusterer) {
+        public SampleOutput(Collection<String> allClasses, String hostname, MOAStreamClusterer<AbstractClusterer> clusterer) {
             super(fillAllClasses(allClasses), hostname);
             this.clusterer = clusterer;
         }
 
-        private static Set<String> fillAllClasses(Set<String> allClasses) {
-            // allClasses.add(MOAStreamClusterer.UNKNOWN_LABEL);
-            allClasses.add(OTHER_LABEL);
-            return allClasses;
+        private static Collection<String> fillAllClasses(Collection<String> allClasses) {
+            ArrayList<String> classes = new ArrayList<>(allClasses);
+            classes.sort(String.CASE_INSENSITIVE_ORDER);
+            classes.add(OTHER_LABEL);
+            classes.add(MOAStreamClusterer.UNKNOWN_LABEL);
+            return classes;
         }
 
         @SuppressWarnings("StringEquality")
@@ -95,6 +97,12 @@ public class Cluster {
                 }
                 values[index] = probability;
             }
+            double unknownPercentage = 0;
+            Integer unknowns = counts.counters.get(MOAStreamClusterer.UNKNOWN_LABEL);
+            if (unknowns != null) {
+                unknownPercentage = unknowns.doubleValue() / (double) (counts.total + unknowns);
+            }
+            values[fieldIndices.get(MOAStreamClusterer.UNKNOWN_LABEL)] = unknownPercentage;
 
             Map<String, String> tags = sample.getTags();
             tags.put(SampleAnalysisOutput.TAG_HOSTNAME, hostname);

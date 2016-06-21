@@ -3,8 +3,10 @@ package metrics.algorithms.clustering;
 import com.github.javacliparser.FloatOption;
 import com.github.javacliparser.IntOption;
 import com.yahoo.labs.samoa.instances.WekaToSamoaInstanceConverter;
+import metrics.Header;
 import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
+import metrics.algorithms.SampleConverger;
 import moa.cluster.Clustering;
 import moa.clusterers.AbstractClusterer;
 import moa.clusterers.clustream.Clustream;
@@ -36,36 +38,46 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
     public final Map<String, ClusterCounters> stringLabelMaps = new HashMap<>();
     private int sampleCount = 0;
     private int printClusterDetails = 0;
+    private final SampleConverger converger = new SampleConverger(); // No predefined expected header
 
     public MOAStreamClusterer(T clusterer, int printClusterDetails) {
         this.clusterer = clusterer;
-        this.setupClustererParameter();
-
-        this.clusterer.resetLearning();
-
-        this.printClustererParameters();
-
         this.printClusterDetails = printClusterDetails;
+    }
+
+    private void initalizeClusterer(Sample firstSample) {
+        this.setupClustererParameter(firstSample);
+        this.clusterer.resetLearning();
+        this.printClustererParameters();
     }
 
     public static class ClusterCounters {
         public final Map<String, Integer> counters = new HashMap<>();
         public int total;
 
+        @SuppressWarnings("StringEquality")
         public void increment(String label) {
             if (counters.containsKey(label)) {
                 counters.put(label, counters.get(label) + 1);
             } else {
                 counters.put(label, 1);
             }
-            total++;
+            if (label != UNKNOWN_LABEL)
+                total++;
         }
     }
 
     @Override
     protected Sample executeSample(Sample sample) throws IOException {
-        Instances instances = createInstances(sample);
-        com.yahoo.labs.samoa.instances.Instance instance = makeInstance(sample, instances);
+        if (converger.getExpectedHeader() == null) {
+            initalizeClusterer(sample);
+        }
+        String label = getLabel(sample);
+        double values[] = converger.getValues(sample);
+
+        Header expectedHeader = converger.getExpectedHeader();
+        Instances instances = createInstances(expectedHeader, label);
+        com.yahoo.labs.samoa.instances.Instance instance = makeInstance(values, label, instances);
 
         clusterer.trainOnInstance(instance);
 
@@ -84,7 +96,6 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
 
         //Evaluate Clusters
         String clusterLabel = bestFitCluster < 0 ? UNCLASSIFIED_CLUSTER : "Cluster-" + bestFitCluster;
-        String label = getLabel(sample);
         ClusterCounters counters = clusterLabelMaps.get(bestFitCluster);
         if (counters == null) {
             counters = new ClusterCounters();
@@ -115,8 +126,7 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
             sampleCount++;
         }
 
-        return new Sample(sample.getHeader(), sample.getMetrics(),
-                sample.getTimestamp(), sample.getSource(), clusterLabel);
+        return new Sample(expectedHeader, values, sample.getTimestamp(), sample.getSource(), clusterLabel);
     }
 
     private String getLabel(Sample sample) {
@@ -140,34 +150,29 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
         return "moa clusterer";
     }
 
-    private com.yahoo.labs.samoa.instances.Instance makeInstance(Sample sample, Instances instances) {
-        double[] values = sample.getMetrics();
+    private com.yahoo.labs.samoa.instances.Instance makeInstance(double values[], String label, Instances instances) {
         values = Arrays.copyOf(values, values.length + 1);
         Instance instance = new DenseInstance(1.0, values);
         instance.setDataset(instances);
-        instance.setClassValue(getLabel(sample));
-
+        instance.setClassValue(label);
         WekaToSamoaInstanceConverter converter = new WekaToSamoaInstanceConverter();
         return converter.samoaInstance(instance);
     }
 
-    private Instances createInstances(Sample sample) {
+    private Instances createInstances(Header header, String label) {
         Instances instances = new Instances(toString() + " data", new ArrayList<>(), 0);
-        for (String field : sample.getHeader().header) {
+        for (String field : header.header) {
             instances.insertAttributeAt(new Attribute(field), instances.numAttributes());
         }
-        Attribute attr = new Attribute("class", allClasses(sample));
+        Attribute attr = new Attribute("class", allClasses(label));
         instances.insertAttributeAt(attr, instances.numAttributes());
         instances.setClass(instances.attribute(instances.numAttributes() - 1));
         return instances;
     }
 
-    private ArrayList<String> allClasses(Sample sample) {
+    private ArrayList<String> allClasses(String label) {
+        // TODO is this necessary?
         Set<String> allLabels = new TreeSet<>(); // Classes must be in deterministic order
-        String label = getLabel(sample);
-        if (label == null || label.isEmpty()) {
-            label = UNKNOWN_LABEL;
-        }
         allLabels.add(label);
         return new ArrayList<>(allLabels);
     }
@@ -203,7 +208,10 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
         }
     }
     
-    private void setupClustererParameter(){
+    private void setupClustererParameter(Sample firstSample){
+        int numMetrics = firstSample.getHeader().header.length;
+        numMetrics++; // The class/label attribute is added
+
         //Testing specific parameters for DenStream clusterer
         if (this.clusterer instanceof WithDBSCAN) {
             IntOption horizonOption = new IntOption("horizon", 'h',
@@ -256,7 +264,7 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
             IntOption numClustersOption = new IntOption("Cluster", 'k',
                     "Number of desired centers.", 100, 1, Integer.MAX_VALUE);
             IntOption numDimensionsOption = new IntOption("Dimensions", 'd',
-                    "Number of the dimensions of the input points.", 122, 1,
+                    "Number of the dimensions of the input points.", numMetrics, 1,
                     Integer.MAX_VALUE);
             IntOption maxNumClusterFeaturesOption = new IntOption(
                     "MaxClusterFeatures", 'n', "Maximum size of the coreset.", 5 * 250, 1,
