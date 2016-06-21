@@ -23,7 +23,6 @@ import java.util.Map;
 public class Train {
 
     static final String TRAINING_INPUT_FORMAT = "BIN";
-    static final String TRAINING_FORMAT = "BIN";
 
     public static void main(String[] args) throws IOException {
         if (args.length != 2) {
@@ -39,7 +38,7 @@ public class Train {
         FeatureStandardizer standardizer = new FeatureStandardizer();
         WekaLearner<J48> learner = new WekaLearner<>(new Model<>(), j48);
 
-        new AlgorithmPipeline(AlgorithmPipeline.fileReader(inputFile, TRAINING_FORMAT, FileMetricReader.FILE_NAME))
+        new AlgorithmPipeline(AlgorithmPipeline.fileReader(inputFile, TRAINING_INPUT_FORMAT, FileMetricReader.FILE_NAME))
                 .fork(new OpenStackSampleSplitter(),
                         (name, p) -> {
                             if (!name.isEmpty()) {
@@ -81,6 +80,5 @@ public class Train {
         obj_out.writeObject(model);
         obj_out.close();
     }
-
 
 }

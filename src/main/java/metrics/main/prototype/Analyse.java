@@ -25,6 +25,7 @@ public class Analyse {
 
     static final String TCP_FORMAT = "BIN";
     static final String TCP_OUTPUT_FORMAT = "BIN";
+    static final String CONSOLE_OUTPUT = "CSV";
 
     public static void main(String[] args) throws IOException {
         if (args.length != 5) {
@@ -54,7 +55,7 @@ public class Analyse {
                                     .fork(new TwoWayFork(),
                                         (type, out) -> out.output(
                                                 type == TwoWayFork.ForkType.Primary ?
-                                                    new MetricPrinter(AlgorithmPipeline.getMarshaller("CSV")) :
+                                                    new MetricPrinter(AlgorithmPipeline.getMarshaller(CONSOLE_OUTPUT)) :
                                                     new TcpMetricsOutput(AlgorithmPipeline.getMarshaller(TCP_OUTPUT_FORMAT), targetHost, targetPort)));
                         })
                 .runAndWait();
