@@ -3,7 +3,6 @@ package metrics.main;
 import metrics.algorithms.MetricFilterAlgorithm;
 import metrics.algorithms.TimestampSort;
 import metrics.algorithms.classification.ExternalClassifier;
-import metrics.algorithms.classification.Model;
 import metrics.algorithms.clustering.ExternalClusterer;
 import metrics.io.file.FileGroup;
 import metrics.io.fork.TwoWayFork;
@@ -18,8 +17,8 @@ import java.io.File;
 import java.io.IOException;
 import metrics.algorithms.FeatureMinMaxScaler;
 import metrics.algorithms.FeatureStandardizer;
-import metrics.algorithms.OnlineFeatureStandardizer;
 import metrics.algorithms.clustering.MOAStreamClusterer;
+import metrics.io.file.FileMetricReader;
 
 @SuppressWarnings("unused")
 public class Main {
@@ -36,11 +35,10 @@ public class Main {
     public static void main(String[] args) throws Exception {
 //        allClassifiers();
 
-        allClusterers();
+//        allClusterers();
 //        prepareData(bono);
-
-//        Host source = bono;
-//        FileGroup outputs = new FileGroup(new File(newData.makeOutputDir(source), "analysis"));
+        Host source = bono;
+        FileGroup outputs = new FileGroup(new File(newData.makeOutputDir(source), "analysis"));
 //
 //        /*
 //        new AlgorithmPipeline(new File(outputs.getFile("tsne") + ".csv"), FileMetricReader.FILE_NAME)
@@ -86,23 +84,32 @@ public class Main {
 //                                    new TimeBasedTwoWayFork(0.3f),
 //                                    new SortedTimeBasedFork(0.3f, new Date(2016 - 1900, 4, 10, 9, 8, 40)),
 //                                    new ClassifierFork<>(new J48(), file + ".png"));
-
-
 //                            p
 //                                    .step(new FeatureStandardizer())
 //                                    .step(new CobwebClusterer(0.7, false, 0, null))
 //                                    .step(new PCAAlgorithm(0.99))
 //                                    .output(new OutputMetricPlotter<>(new JMathPlotter(), 0, 1));
-
 //                                    .step(new ClusterSummary(false, true))
 //                                    .consoleOutput("TXT");
-
 //                            p
 //                                    .step(new TsneAlgorithm(5.0, 50, 2, false))
 //                                    .csvOutput(outputs.getFile("tsne") + ".csv");
 //                                    .consoleOutput();
 //                        })
 //                .runAndWait();
+        new AlgorithmPipeline(new File(preparedDataFile(source)), FileMetricReader.FILE_NAME)
+                .step(new MetricFilterAlgorithm("disk-usage///free", "disk-usage///used"))
+                .fork(new OpenStackSampleSplitter(),
+                        (name, p) -> {
+                    String file = outputs.getFile(name.isEmpty() ? "default" : name);
+
+                    p
+                            .step(new FeatureStandardizer())
+                            .step(new SourceLabellingAlgorithm())
+                            .step(new MOAStreamClusterer(ExternalClusterer.BICO.newInstance(), 100));
+
+                })
+                .runAndWait();
     }
 
     private static String preparedDataFile(Host source) throws IOException {
@@ -153,21 +160,21 @@ public class Main {
         Host source = bono;
         FileGroup outputs = new FileGroup(new File(newData.makeOutputDir(source), "analysis"));
 
-        //for (ExternalClusterer clustererEnum : ExternalClusterer.values()) {
-            AbstractClusterer clusterer = ExternalClusterer.BICO.newInstance();//clustererEnum.newInstance();
+        for (ExternalClusterer clustererEnum : ExternalClusterer.values()) {
+            AbstractClusterer clusterer = clustererEnum.newInstance();
 
             new AlgorithmPipeline(newData, source)
-                                        .cache(new File(outputs.getFile("cache")))
+                    .cache(new File(outputs.getFile("cache")))
                     .step(new MetricFilterAlgorithm("disk-usage///free", "disk-usage///used"))
                     .step(new TimestampSort(false))
                     .step(new SourceLabellingAlgorithm())
                     .step(new FeatureStandardizer())
                     .fork(new OpenStackSampleSplitter().fillInfo(),
                             (name, p) -> {
-                        p.step(new MOAStreamClusterer<>(clusterer,100));
+                        p.step(new MOAStreamClusterer<>(clusterer, 100));
                     })
                     .runAndWait();
-//        }
+        }
         System.exit(0);
     }
 
