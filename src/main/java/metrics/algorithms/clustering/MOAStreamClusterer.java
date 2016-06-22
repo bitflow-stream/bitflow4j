@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Stream;
+import weka.clusterers.ClusterEvaluation;
 
 /**
  *
@@ -107,21 +108,23 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
         //Print Evaluation
         if (printClusterDetails > 0) {
             if (sampleCount % printClusterDetails == 0) {
-                System.out.println("##########MAP-COUNT##############");
-                List<Integer> clusterIds = new ArrayList<>(clusterLabelMaps.keySet());
-                Collections.sort(clusterIds);
-
-                for (Integer clusterId : clusterIds) {
-                    System.out.println("----------------------");
-                    System.out.println("cluster id: " + clusterId);
-                    ClusterCounters scenarioCount = clusterLabelMaps.get(clusterId);
-                    Stream<Map.Entry<String, Integer>> sorted = scenarioCount.counters.entrySet().stream().sorted(Collections.reverseOrder(
-                            Map.Entry
-                            .comparingByValue()));
-                    sorted.forEach(System.out::println);
-                }
-                System.out.println("##########END##############");
-                System.out.println("Sample: " + Arrays.toString(sample.getMetrics()));
+//                System.out.println("##########MAP-COUNT##############");
+//                List<Integer> clusterIds = new ArrayList<>(clusterLabelMaps.keySet());
+//                Collections.sort(clusterIds);
+//
+//                for (Integer clusterId : clusterIds) {
+//                    System.out.println("----------------------");
+//                    System.out.println("cluster id: " + clusterId);
+//                    ClusterCounters scenarioCount = clusterLabelMaps.get(clusterId);
+//                    Stream<Map.Entry<String, Integer>> sorted = scenarioCount.counters.entrySet().stream().sorted(Collections.reverseOrder(
+//                            Map.Entry
+//                            .comparingByValue()));
+//                    sorted.forEach(System.out::println);
+//                }
+//                System.out.println("##########END##############");
+//                System.out.println("Sample: " + Arrays.toString(sample.getMetrics()));
+                ClusterEvaluator eval = new ClusterEvaluator(clusterLabelMaps, 0.0);
+                System.out.println("Precision: "+eval.getOverallPrecision());
             }
             sampleCount++;
         }
@@ -267,7 +270,7 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
                     "Number of the dimensions of the input points.", numMetrics, 1,
                     Integer.MAX_VALUE);
             IntOption maxNumClusterFeaturesOption = new IntOption(
-                    "MaxClusterFeatures", 'n', "Maximum size of the coreset.", 5 * 250, 1,
+                    "MaxClusterFeatures", 'n', "Maximum size of the coreset.", 15 * 200, 1,
                     Integer.MAX_VALUE);
             IntOption numProjectionsOption = new IntOption("Projections", 'p',
                     "Number of random projections used for the nearest neighbour search.",

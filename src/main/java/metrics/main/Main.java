@@ -5,7 +5,6 @@ import metrics.algorithms.TimestampSort;
 import metrics.algorithms.classification.ExternalClassifier;
 import metrics.algorithms.classification.Model;
 import metrics.algorithms.clustering.ExternalClusterer;
-import metrics.algorithms.clustering.MOAClusterer;
 import metrics.io.file.FileGroup;
 import metrics.io.fork.TwoWayFork;
 import metrics.main.analysis.ClassifierFork;
@@ -17,6 +16,10 @@ import weka.classifiers.AbstractClassifier;
 
 import java.io.File;
 import java.io.IOException;
+import metrics.algorithms.FeatureMinMaxScaler;
+import metrics.algorithms.FeatureStandardizer;
+import metrics.algorithms.OnlineFeatureStandardizer;
+import metrics.algorithms.clustering.MOAStreamClusterer;
 
 @SuppressWarnings("unused")
 public class Main {
@@ -150,21 +153,21 @@ public class Main {
         Host source = bono;
         FileGroup outputs = new FileGroup(new File(newData.makeOutputDir(source), "analysis"));
 
-        for (ExternalClusterer clustererEnum : ExternalClusterer.values()) {
-            AbstractClusterer clusterer = clustererEnum.newInstance();
+        //for (ExternalClusterer clustererEnum : ExternalClusterer.values()) {
+            AbstractClusterer clusterer = ExternalClusterer.BICO.newInstance();//clustererEnum.newInstance();
 
             new AlgorithmPipeline(newData, source)
-                    //                    .cache(new File(outputs.getFile("cache")))
+                                        .cache(new File(outputs.getFile("cache")))
                     .step(new MetricFilterAlgorithm("disk-usage///free", "disk-usage///used"))
+                    .step(new TimestampSort(false))
                     .step(new SourceLabellingAlgorithm())
+                    .step(new FeatureStandardizer())
                     .fork(new OpenStackSampleSplitter().fillInfo(),
                             (name, p) -> {
-                        String file = outputs.getFile(name.isEmpty() ? "default"
-                                : name);
-                        p.step(new MOAClusterer<>(new Model<>(), clusterer));
+                        p.step(new MOAStreamClusterer<>(clusterer,100));
                     })
                     .runAndWait();
-        }
+//        }
         System.exit(0);
     }
 
