@@ -16,7 +16,7 @@ public class OnlineFeatureStandardizer extends AbstractAlgorithm {
     }
 
     protected boolean canStandardize(String name) {
-        return !averages.containsKey(name) || !stddevs.containsKey(name);
+        return averages.containsKey(name) && stddevs.containsKey(name);
     }
 
     protected double standardize(String name, double val) {

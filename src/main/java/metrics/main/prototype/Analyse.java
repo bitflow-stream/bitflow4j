@@ -2,6 +2,7 @@ package metrics.main.prototype;
 
 import metrics.algorithms.Algorithm;
 import metrics.algorithms.FeatureAggregator;
+import metrics.algorithms.OnlineFeatureMinMaxScaler;
 import metrics.algorithms.OnlineFeatureStandardizer;
 import metrics.algorithms.classification.Model;
 import metrics.algorithms.classification.WekaOnlineClassifier;
@@ -24,6 +25,9 @@ import java.util.HashSet;
  */
 public class Analyse {
 
+    // This is also used in main-class Train
+    public static final boolean USE_MIN_MAX_SCALING = false;
+
     static final String TCP_FORMAT = "BIN";
     static final String TCP_OUTPUT_FORMAT = "BIN";
     static final String CONSOLE_OUTPUT = "CSV";
@@ -42,9 +46,12 @@ public class Analyse {
         Model<J48> treeModel = new Model<>();
         treeModel.setModel(model.model);
 
-        Algorithm standardizer = new OnlineFeatureStandardizer(model.averages, model.stddevs);
-//        Algorithm standardizer = new OnlineFeatureMinMaxScaler(((TrainedDataModel2) model).mins, ((TrainedDataModel2) model).maxs);
-
+        Algorithm standardizer;
+        if (USE_MIN_MAX_SCALING) {
+            standardizer = new OnlineFeatureMinMaxScaler(((TrainedDataModel2) model).mins, ((TrainedDataModel2) model).maxs);
+        } else {
+            standardizer = new OnlineFeatureStandardizer(model.averages, model.stddevs);
+        }
         new AlgorithmPipeline(receivePort, TCP_FORMAT)
                 .fork(new OpenStackSampleSplitter(),
                         (name, p) -> {

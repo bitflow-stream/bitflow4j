@@ -2,6 +2,7 @@ package metrics.main.prototype;
 
 import metrics.algorithms.AbstractFeatureScaler;
 import metrics.algorithms.FeatureAggregator;
+import metrics.algorithms.FeatureMinMaxScaler;
 import metrics.algorithms.FeatureStandardizer;
 import metrics.algorithms.classification.Model;
 import metrics.algorithms.classification.WekaLearner;
@@ -36,12 +37,16 @@ public class Train {
     static TrainedDataModel createDataModel(String inputFile) throws IOException {
         J48 j48 = new J48();
 
-        j48.setConfidenceFactor(0.5f);
-        j48.setReducedErrorPruning(true);
+        j48.setConfidenceFactor(0.65f);
+        j48.setMinNumObj(50);
+//        j48.setReducedErrorPruning(true);
 
-        FeatureStandardizer standardizer = new FeatureStandardizer();
-//        FeatureMinMaxScaler standardizer = new FeatureMinMaxScaler();
-
+        AbstractFeatureScaler standardizer;
+        if (Analyse.USE_MIN_MAX_SCALING) {
+            standardizer = new FeatureMinMaxScaler();
+        } else {
+            standardizer = new FeatureStandardizer();
+        }
         WekaLearner<J48> learner = new WekaLearner<>(new Model<>(), j48);
 
         new AlgorithmPipeline(AlgorithmPipeline.fileReader(inputFile, TRAINING_INPUT_FORMAT, FileMetricReader.FILE_NAME))

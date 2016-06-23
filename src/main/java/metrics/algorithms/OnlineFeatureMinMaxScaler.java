@@ -16,7 +16,7 @@ public class OnlineFeatureMinMaxScaler extends OnlineAbstractFeatureScaler {
     }
 
     protected boolean canStandardize(String name) {
-        return !mins.containsKey(name) || !maxs.containsKey(name);
+        return mins.containsKey(name) && maxs.containsKey(name);
     }
 
     protected double standardize(String name, double val) {
