@@ -35,6 +35,10 @@ public class Train {
 
     static TrainedDataModel createDataModel(String inputFile) throws IOException {
         J48 j48 = new J48();
+
+        j48.setConfidenceFactor(0.5f);
+        j48.setReducedErrorPruning(true);
+
         FeatureStandardizer standardizer = new FeatureStandardizer();
         WekaLearner<J48> learner = new WekaLearner<>(new Model<>(), j48);
 
@@ -47,8 +51,8 @@ public class Train {
                             }
 
                             p
-                                    .step(new FeatureAggregator(10000L).addAvg().addSlope())
                                     .step(standardizer)
+                                    .step(new FeatureAggregator(10000L).addAvg().addSlope())
                                     .step(learner);
                         })
                 .runAndWait();

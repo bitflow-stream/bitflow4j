@@ -48,8 +48,8 @@ public class Analyse {
                                 return;
                             }
                             p
-                                    .step(new FeatureAggregator(10000L).addAvg().addSlope())
                                     .step(new OnlineFeatureStandardizer(model.averages, model.stddevs))
+                                    .step(new FeatureAggregator(10000L).addAvg().addSlope())
                                     .step(new WekaOnlineClassifier<>(treeModel, model.headerFields, model.allClasses))
                                     .step(new SampleAnalysisOutput(new HashSet<>(model.allClasses), hostname))
                                     .fork(new TwoWayFork(),
