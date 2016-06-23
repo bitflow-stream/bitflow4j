@@ -17,17 +17,9 @@ public class FeatureMinMaxScaler extends AbstractFeatureScaler {
         return new MetricMinMaxScaler(stats);
     }
 
-    private static class MetricMinMaxScaler implements MetricScaler {
-        private final double min;
-        private final double max;
-
+    private static class MetricMinMaxScaler extends AbstractMetricScaler {
         MetricMinMaxScaler(MetricStatisticsWindow stats) {
-            if (stats.totalMinimum < stats.totalMaximum) {
-                min = stats.totalMinimum;
-                max = stats.totalMaximum;
-            } else {
-                min = max = 0;
-            }
+            super(stats);
         }
 
         public double scale(double val) {
@@ -36,7 +28,6 @@ public class FeatureMinMaxScaler extends AbstractFeatureScaler {
                 return val;
             return (val - min) / range;
         }
-
     }
 
 }

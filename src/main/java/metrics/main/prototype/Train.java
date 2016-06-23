@@ -40,6 +40,8 @@ public class Train {
         j48.setReducedErrorPruning(true);
 
         FeatureStandardizer standardizer = new FeatureStandardizer();
+//        FeatureMinMaxScaler standardizer = new FeatureMinMaxScaler();
+
         WekaLearner<J48> learner = new WekaLearner<>(new Model<>(), j48);
 
         new AlgorithmPipeline(AlgorithmPipeline.fileReader(inputFile, TRAINING_INPUT_FORMAT, FileMetricReader.FILE_NAME))
@@ -57,22 +59,26 @@ public class Train {
                         })
                 .runAndWait();
 
-        TrainedDataModel dataModel = new TrainedDataModel();
+        TrainedDataModel2 dataModel = new TrainedDataModel2();
         dataModel.model = j48;
         dataModel.averages = new HashMap<>();
         dataModel.stddevs = new HashMap<>();
+        dataModel.mins = new HashMap<>();
+        dataModel.maxs = new HashMap<>();
         dataModel.allClasses = learner.allFlushedClasses;
         dataModel.headerFields = learner.flushedHeader.header;
         for (Map.Entry<String, AbstractFeatureScaler.MetricScaler> entry : standardizer.getScalers().entrySet()) {
             String name = entry.getKey();
             AbstractFeatureScaler.MetricScaler scaler = entry.getValue();
-            if (!(scaler instanceof FeatureStandardizer.MetricStandardizer)) {
-                throw new IllegalStateException("MetricScaler was not FeatureStandardizer.MetricStandardizer, but " +
+            if (!(scaler instanceof AbstractFeatureScaler.AbstractMetricScaler)) {
+                throw new IllegalStateException("MetricScaler was not FeatureStandardizer.AbstractMetricScaler, but " +
                         scaler.getClass().toString());
             }
-            FeatureStandardizer.MetricStandardizer metric = (FeatureStandardizer.MetricStandardizer) scaler;
+            AbstractFeatureScaler.AbstractMetricScaler  metric = (AbstractFeatureScaler.AbstractMetricScaler) scaler;
             dataModel.averages.put(name, metric.average);
             dataModel.stddevs.put(name, metric.stdDeviation);
+            dataModel.mins.put(name, metric.min);
+            dataModel.maxs.put(name, metric.max);
         }
         return dataModel;
     }

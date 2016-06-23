@@ -1,5 +1,6 @@
 package metrics.main.prototype;
 
+import metrics.algorithms.Algorithm;
 import metrics.algorithms.FeatureAggregator;
 import metrics.algorithms.OnlineFeatureStandardizer;
 import metrics.algorithms.classification.Model;
@@ -40,6 +41,10 @@ public class Analyse {
 
         Model<J48> treeModel = new Model<>();
         treeModel.setModel(model.model);
+
+        Algorithm standardizer = new OnlineFeatureStandardizer(model.averages, model.stddevs);
+//        Algorithm standardizer = new OnlineFeatureMinMaxScaler(((TrainedDataModel2) model).mins, ((TrainedDataModel2) model).maxs);
+
         new AlgorithmPipeline(receivePort, TCP_FORMAT)
                 .fork(new OpenStackSampleSplitter(),
                         (name, p) -> {
@@ -48,7 +53,7 @@ public class Analyse {
                                 return;
                             }
                             p
-                                    .step(new OnlineFeatureStandardizer(model.averages, model.stddevs))
+                                    .step(standardizer)
                                     .step(new FeatureAggregator(10000L).addAvg().addSlope())
                                     .step(new WekaOnlineClassifier<>(treeModel, model.headerFields, model.allClasses))
                                     .step(new SampleAnalysisOutput(new HashSet<>(model.allClasses), hostname))
