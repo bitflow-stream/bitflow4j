@@ -1,9 +1,6 @@
 package metrics.main.prototype;
 
-import metrics.algorithms.AbstractFeatureScaler;
-import metrics.algorithms.FeatureAggregator;
-import metrics.algorithms.FeatureMinMaxScaler;
-import metrics.algorithms.FeatureStandardizer;
+import metrics.algorithms.*;
 import metrics.algorithms.classification.Model;
 import metrics.algorithms.classification.WekaLearner;
 import metrics.io.file.FileMetricReader;
@@ -58,6 +55,7 @@ public class Train {
                             }
 
                             p
+                                    .step(new MetricFilterAlgorithm("disk-usage///free", "disk-usage///used", "num_procs"))
                                     .step(standardizer)
                                     .step(new FeatureAggregator(10000L).addAvg().addSlope())
                                     .step(learner);
