@@ -12,8 +12,11 @@ public class ClusterEvaluator {
     private final String UNCLASSIFIED_CLUSTER = "unclassified";
     private final Map<Integer, MOAStreamClusterer.ClusterCounters> clusterLabelMaps;
     private final double thresholdToClassifyCluster;
-    private double overallPrecision;
-    private Map<String, Double> labelPrecisionMap;
+    private double overallPrecision, overalRecall;
+    private Map<String, Double> labelPrecisionMap, labelRecalMap;
+    private int truePositives, falsePositives, trueNegatives, falseNegatives;
+
+
 
     public ClusterEvaluator(Map<Integer, MOAStreamClusterer.ClusterCounters> clusterLabelMaps, double thresholdToClassifyCluster) {
         this.clusterLabelMaps = clusterLabelMaps;
@@ -73,22 +76,26 @@ public class ClusterEvaluator {
         });
 
         //Now the precision per label is calculated. The precision for a single label states the percentage of correct recommended samples in contrats to all incoming samples of the given label.
+        labelRecalMap = new HashMap<>();
         labelPrecisionMap = new HashMap<>();
-        int positiveOverallCout = 0;
+        int positiveOverallCount = 0;
+        int falseOverallCount = 0;
         int totalOverallCount = 0;
         for (Map.Entry<String, Integer> positiveCounts : labelPositiveCountMap.entrySet()) {
             int positiveCount = positiveCounts.getValue();
-            positiveOverallCout += positiveCount;
+            positiveOverallCount += positiveCount;
             int negativeCount = 0;
             if (labelNegativeCountMap.containsKey(positiveCounts.getKey())) {
                 negativeCount = labelNegativeCountMap.get(positiveCounts.getKey());
+                falseOverallCount += negativeCount;
             }
             int totalCount = positiveCount + negativeCount;
             totalOverallCount += totalCount;
             labelPrecisionMap.put(positiveCounts.getKey(), (double) positiveCount / (double) totalCount);
         }
         //Overall Precision states the percentage of all correct classified samples in contrast to all samples.
-        overallPrecision = (double) positiveOverallCout / (double) totalOverallCount;
+        overallPrecision = (double) positiveOverallCount / (double) totalOverallCount;
+        overalRecall = (double) positiveOverallCount / (double) totalOverallCount;
         //TODO: UNCLASSIFIED_CLUSTER and unclassified samples or check recall
     }
 
@@ -107,5 +114,7 @@ public class ClusterEvaluator {
     public Map<String, Double> getLabelPrecisionMap() {
         return labelPrecisionMap;
     }
+
+    public double getOveralRecall() { return overalRecall; }
 
 }
