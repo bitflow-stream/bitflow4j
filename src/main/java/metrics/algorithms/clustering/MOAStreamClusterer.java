@@ -69,6 +69,7 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
 
     @Override
     protected Sample executeSample(Sample sample) throws IOException {
+
         if (converger.getExpectedHeader() == null) {
             initalizeClusterer(sample);
         }
@@ -122,9 +123,8 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
                 }
                 System.out.println("##########END##############");
 //                System.out.println("Sample: " + Arrays.toString(sample.getMetrics()));
-                ClusterEvaluator eval = new ClusterEvaluator(clusterLabelMaps, 0.0);
-                System.out.println("Precision: "+eval.getOverallPrecision());
-                System.out.println("Recall: "+eval.getOveralRecall());
+                ClusterEvaluator eval = new ClusterEvaluator(clusterLabelMaps, 0.0, sampleCount+1);
+                System.out.println(eval.toString());
             }
             sampleCount++;
         }
@@ -179,7 +179,7 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
         allLabels.add(label);
         return new ArrayList<>(allLabels);
     }
-    
+
     private void printClustererParameters(){
         //Sysout Parameter
         if (this.clusterer instanceof WithDBSCAN) {
@@ -210,7 +210,7 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
             System.out.println("randomSeedOption: " + ((StreamKM) this.clusterer).randomSeedOption.getValue());
         }
     }
-    
+
     private void setupClustererParameter(Sample firstSample){
         int numMetrics = firstSample.getHeader().header.length;
         numMetrics++; // The class/label attribute is added
@@ -270,7 +270,7 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
                     "Number of the dimensions of the input points.", numMetrics, 1,
                     Integer.MAX_VALUE);
             IntOption maxNumClusterFeaturesOption = new IntOption(
-                    "MaxClusterFeatures", 'n', "Maximum size of the coreset.", 5 * 250, 1,
+                    "MaxClusterFeatures", 'n', "Maximum size of the coreset.", 1000, 1,
                     Integer.MAX_VALUE);
             IntOption numProjectionsOption = new IntOption("Projections", 'p',
                     "Number of random projections used for the nearest neighbour search.",

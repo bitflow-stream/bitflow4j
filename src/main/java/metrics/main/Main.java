@@ -104,7 +104,7 @@ public class Main {
                     String file = outputs.getFile(name.isEmpty() ? "default" : name);
 
                     p
-                            .step(new FeatureStandardizer())
+//                            .step(new FeatureStandardizer())
                             .step(new SourceLabellingAlgorithm())
                             .step(new MOAStreamClusterer(ExternalClusterer.BICO.newInstance(), 100));
 
