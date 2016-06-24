@@ -34,8 +34,8 @@ public class Train {
     static TrainedDataModel createDataModel(String inputFile) throws IOException {
         J48 j48 = new J48();
 
-        j48.setConfidenceFactor(0.65f);
-        j48.setMinNumObj(50);
+        j48.setConfidenceFactor(0.55f);
+        j48.setMinNumObj(750);
 //        j48.setReducedErrorPruning(true);
 
         AbstractFeatureScaler standardizer;
@@ -55,7 +55,7 @@ public class Train {
                             }
 
                             p
-                                    .step(new MetricFilterAlgorithm("disk-usage///free", "disk-usage///used", "num_procs"))
+                                    .step(new MetricFilterAlgorithm("disk-usage///free", "disk-usage///used", "num_procs", "proc/vnf/num"))
                                     .step(standardizer)
                                     .step(new FeatureAggregator(10000L).addAvg().addSlope())
                                     .step(learner);
