@@ -122,7 +122,7 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
                 }
                 System.out.println("##########END##############");
 //                System.out.println("Sample: " + Arrays.toString(sample.getMetrics()));
-                ClusterEvaluator eval = new ClusterEvaluator(clusterLabelMaps, 0.0);
+                ClusterEvaluator eval = new ClusterEvaluator(clusterLabelMaps, 0.3);
                 System.out.println("Precision: "+eval.getOverallPrecision());
             }
             sampleCount++;
