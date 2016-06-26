@@ -17,7 +17,7 @@ import java.io.IOException;
 public class TrainAggregated {
 
     public static void main(String[] args) throws IOException {
-        if (args.length != 2) {
+        if (args.length != 3) {
             System.err.println("Need 3 parameters: <input " + Train.TRAINING_INPUT_FORMAT + " file> <ini-file> <output file>");
             return;
         }
