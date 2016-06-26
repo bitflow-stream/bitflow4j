@@ -85,8 +85,12 @@ public class FeatureStatistics {
         return features.get(name);
     }
 
-    public Collection<String> allFeatures() {
+    public Collection<String> allFeatureNames() {
         return features.keySet();
+    }
+
+    public Collection<Feature> allFeatures() {
+        return features.values();
     }
 
     private void fillFromIni(Ini ini) {
@@ -106,8 +110,7 @@ public class FeatureStatistics {
         String file = args[0];
         FeatureStatistics stats = new FeatureStatistics(file);
         System.err.println("Number of features: " + stats.allFeatures().size());
-        for (String featureName : stats.allFeatures()) {
-            Feature feature = stats.getFeature(featureName);
+        for (Feature feature : stats.allFeatures()) {
             System.err.println(feature);
         }
     }

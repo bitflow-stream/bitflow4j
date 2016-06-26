@@ -31,12 +31,18 @@ public class Train {
         storeDataModel(args[1], model);
     }
 
-    static TrainedDataModel createDataModel(String inputFile) throws IOException {
+    static J48 createClassifier() {
         J48 j48 = new J48();
 
         j48.setConfidenceFactor(0.55f);
         j48.setMinNumObj(750);
 //        j48.setReducedErrorPruning(true);
+
+        return j48;
+    }
+
+    static TrainedDataModel createDataModel(String inputFile) throws IOException {
+        J48 classifier = createClassifier();
 
         AbstractFeatureScaler standardizer;
         if (Analyse.USE_MIN_MAX_SCALING) {
@@ -44,7 +50,7 @@ public class Train {
         } else {
             standardizer = new FeatureStandardizer();
         }
-        WekaLearner<J48> learner = new WekaLearner<>(new Model<>(), j48);
+        WekaLearner<J48> learner = new WekaLearner<>(new Model<>(), classifier);
 
         new AlgorithmPipeline(AlgorithmPipeline.fileReader(inputFile, TRAINING_INPUT_FORMAT, FileMetricReader.FILE_NAME))
                 .fork(new OpenStackSampleSplitter(),
@@ -63,7 +69,7 @@ public class Train {
                 .runAndWait();
 
         TrainedDataModel2 dataModel = new TrainedDataModel2();
-        dataModel.model = j48;
+        dataModel.model = classifier;
         dataModel.averages = new HashMap<>();
         dataModel.stddevs = new HashMap<>();
         dataModel.mins = new HashMap<>();
