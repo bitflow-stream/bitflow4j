@@ -2,110 +2,308 @@ package metrics.algorithms.clustering;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
- *
- * @author fschmidt
+ * @author fschmidt, mbyfield
+ *         This class provides basic evaluation methods for the MOAStreamClusterer.
  */
 public class ClusterEvaluator {
-    
-    private final String UNCLASSIFIED_CLUSTER = "unclassified";
+    /**
+     * Label for an unclassified cluster.
+     */
+    public final static String UNCLASSIFIED_CLUSTER = "unclassified";
+    /**
+     * label for a noise cluster
+     */
+    public final static String NOISE_CLUSTER = "noise";
+    /**
+     * Static String declarations
+     */
+    private final static String LINE = "----------------------------------------------";
+    private final static String HASH = "##############################################";
+    private final static String NEW_LINE = System.getProperty("line.separator");
+    /**
+     * Map of clusterIndexes to cluster counters
+     */
     private final Map<Integer, MOAStreamClusterer.ClusterCounters> clusterLabelMaps;
+    /**
+     * The provided threshold to label a cluster
+     */
     private final double thresholdToClassifyCluster;
-    private double overallPrecision;
-    private Map<String, Double> labelPrecisionMap;
+    /**
+     * maps for tp, fp, tn, fn per label
+     */
+    private Map<String, Integer> labelFalsePositives, labelTruePositives, labelFalseNegatives, labelTrueNegatives;
+    /**
+     * map holding the label assignment for each cluster id
+     */
+    private Map<Integer, String> classifiedClusters;
+    /**
+     * sum of all tp / fp / tn / fn over all labels
+     */
+    private long truePositives, trueNegatives, falseNegatives, falsePositives;
+    /**
+     * sum of all points provided to the evaluator
+     */
+    private int numberOfPoints;
 
-    public ClusterEvaluator(Map<Integer, MOAStreamClusterer.ClusterCounters> clusterLabelMaps, double thresholdToClassifyCluster) {
+    /**
+     * Constructor. When called, the evaluation on the provided cluster data is started immediately. When the constructor returns, the evaluation is finished.
+     *
+     * @param clusterLabelMaps           A Map of clusterIndexes to cluster counters. Used for the evaluation. Must ot be null or empty.
+     * @param thresholdToClassifyCluster The threshold used to label a cluster. Must be between 0 and 1. A cluster must fulfill the following equation or it will be marked as unclassified: threshodToClassifyCluster <
+     * @param numberOfPoints             The sum of points for all MOAStreamClusterer.ClusterCounters in the clusterLabelMaps. Must be > 0. If the wrong number of points is provided, the evaluation might be incorrect.
+     * @throws IllegalArgumentException If number of points is 0 or clusterLabelMas isEmpty or the nullpointer.
+     */
+    public ClusterEvaluator(Map<Integer, MOAStreamClusterer.ClusterCounters> clusterLabelMaps, double thresholdToClassifyCluster, int numberOfPoints) throws IllegalArgumentException {
+        /** integrity check */
+        if (thresholdToClassifyCluster < 0 || thresholdToClassifyCluster > 1)
+            throw new IllegalArgumentException("thresholdToClassify should be between 0 and 1, but " + thresholdToClassifyCluster + " was provided!");
+        if (clusterLabelMaps == null || clusterLabelMaps.isEmpty() || numberOfPoints == 0)
+            throw new IllegalArgumentException("The cannot evaluate empty cluster.");
+        //field assignment
         this.clusterLabelMaps = clusterLabelMaps;
         this.thresholdToClassifyCluster = thresholdToClassifyCluster;
+        this.numberOfPoints = numberOfPoints;
+        initEmptyFields();
+        //start evaluation
         this.evaluate();
     }
 
+    /*
+     * Helper method for the evaluation. Contains all steps required for evaluation. private fields must be set and initialized.
+     * Sets the fields: truePositives, trueNegatives, falseNegatives, falsePositives, classifiedClusters, labelFalsePositives,
+     * labelTruePositives, labelFalseNegatives and labelTrueNegatives
+     */
     private void evaluate() {
-        //Find labels, which represent a given cluster best (better than given threshold-thresholdToClassifyCluster). If no best label was found, it is labeld as unclassified_cluster.
-        Map<Integer, String> classifiedClusters = new HashMap<>();
-        clusterLabelMaps.keySet().stream().forEach((clusterId) -> {
-            MOAStreamClusterer.ClusterCounters clusterCounts = clusterLabelMaps.get(clusterId);
-            String bestLabel = clusterCounts.counters.entrySet().stream().max((entry1, entry2) -> entry1.getValue() > entry2
-                    .getValue() ? 1 : -1).get().getKey();
-            double bestChance = (double) clusterCounts.counters.get(bestLabel) / (double) clusterCounts.total;
-            if (bestChance >= thresholdToClassifyCluster) {
-                classifiedClusters.put(clusterId, bestLabel);
-            } else {
-                classifiedClusters.put(clusterId, UNCLASSIFIED_CLUSTER);
-            }
-        });
-
-        //Count for each label the correct recommended sample counts by counting all representative cluster label counts.
-        Map<String, Integer> labelPositiveCountMap = new HashMap<>();
-        classifiedClusters.keySet().stream().forEach((clusterId) -> {
-            //Cluster ID == -1 must be skipped, because those are outlier and not classified in any cluster by the online clustering algorithm. Also unclassified_clusters need to be skipped, because we do not know, which label we have as representative here for positive countings.
-            if (clusterId != -1 && !classifiedClusters.get(clusterId).equals(UNCLASSIFIED_CLUSTER)) {
-                //Add counts to labelPositiveCountMap
-                if (labelPositiveCountMap.containsKey(classifiedClusters.get(clusterId))) {
-                    Integer positiveCount = clusterLabelMaps.get(clusterId).counters.get(classifiedClusters.get(clusterId));
-                    labelPositiveCountMap.put(classifiedClusters.get(clusterId), labelPositiveCountMap
-                            .get(classifiedClusters.get(clusterId)) + positiveCount);
-                } else {
-                    Integer positiveCount = clusterLabelMaps.get(clusterId).counters.get(classifiedClusters.get(clusterId));
-                    labelPositiveCountMap.put(classifiedClusters.get(clusterId), positiveCount);
-                }
-            }
-        });
-        //Negative counts are counts, where samples with other labels are included in any cluster, which has another labeling (classification) for samples in a given cluster. Such counts are sumed up with respect to each given label. 
-        Map<String, Integer> labelNegativeCountMap = new HashMap<>();
-        clusterLabelMaps.keySet().stream().forEach((clusterId) -> {
-            for (Map.Entry<String, Integer> labelCounts : clusterLabelMaps.get(clusterId).counters.entrySet()) {
-                //Check cluster with ID == -1, because it contains outliers, which where not classified by the clusterer. Also check all clusters, where we are unsure which label this cluster represents. And check for all other labels accept the representative cluster-label, because such labels appear in a not suited cluster.
-                if (classifiedClusters.get(clusterId).equals(UNCLASSIFIED_CLUSTER) || 
-                        clusterId == -1 || 
-                        !labelCounts.getKey().equals(classifiedClusters.get(clusterId))) {
-                    if (labelNegativeCountMap.containsKey(labelCounts.getKey())) {
-                        Integer negativeCount = labelCounts.getValue();
-                        labelNegativeCountMap.put(labelCounts.getKey(), labelNegativeCountMap
-                                .get(labelCounts.getKey()) + negativeCount);
-                    } else {
-                        Integer negativeCount = labelCounts.getValue();
-                        labelNegativeCountMap.put(labelCounts.getKey(), negativeCount);
-                    }
-                }
-            }
-        });
-
-        //Now the precision per label is calculated. The precision for a single label states the percentage of correct recommended samples in contrats to all incoming samples of the given label.
-        labelPrecisionMap = new HashMap<>();
-        int positiveOverallCout = 0;
-        int totalOverallCount = 0;
-        for (Map.Entry<String, Integer> positiveCounts : labelPositiveCountMap.entrySet()) {
-            int positiveCount = positiveCounts.getValue();
-            positiveOverallCout += positiveCount;
-            int negativeCount = 0;
-            if (labelNegativeCountMap.containsKey(positiveCounts.getKey())) {
-                negativeCount = labelNegativeCountMap.get(positiveCounts.getKey());
-            }
-            int totalCount = positiveCount + negativeCount;
-            totalOverallCount += totalCount;
-            labelPrecisionMap.put(positiveCounts.getKey(), (double) positiveCount / (double) totalCount);
-        }
-        //Overall Precision states the percentage of all correct classified samples in contrast to all samples.
-        overallPrecision = (double) positiveOverallCout / (double) totalOverallCount;
-        //TODO: UNCLASSIFIED_CLUSTER and unclassified samples or check recall
+        //find labels
+        calculateAllBestLabels();
+        //fill label maps with tp, fp, etc.
+        calculateLabelQuality();
+        //sum up results from maps
+        calculateOverallQuality();
     }
 
+    /**
+     * Sums up results from maps. Fills the fields truePositives, trueNegatives, falseNegatives and falsePositives.
+     */
+    private void calculateOverallQuality() {
+        //building sums over the values for each label
+        truePositives = labelTruePositives.values().stream().mapToInt(i -> i.intValue()).sum();
+        trueNegatives = labelTrueNegatives.values().stream().mapToInt(i -> i.intValue()).sum();
+        falsePositives = labelFalsePositives.values().stream().mapToInt(i -> i.intValue()).sum();
+        falseNegatives = labelFalseNegatives.values().stream().mapToInt(i -> i.intValue()).sum();
+    }
+
+    /**
+     * Calculates tp, fp, etc. for all labels and stores the results in the corresponding fields: labelFalsePositives, labelTruePositives, labelFalseNegatives and labelTrueNegatives.
+     */
+    private void calculateLabelQuality() {
+        //fill maps with labels as keys and initial 0's as value
+        initLabelMaps();
+        //loop over all clusters
+        classifiedClusters.entrySet().forEach((labeledClusterId) -> {
+            //id of current cluster
+            int clusterId = labeledClusterId.getKey();
+            //label of current cluster
+            String clusterLabel = labeledClusterId.getValue();
+            //iterate over all counters of the current cluster (Map<String, Integer>; Label,pointcount)
+            clusterLabelMaps.get(clusterId).counters.entrySet().forEach(countersEntry -> {
+                //current Label of points
+                String pointLabel = countersEntry.getKey();
+                //current count
+                int pointCount = countersEntry.getValue();
+                //all points with the same label as the cluster are true positives for this label.
+                if (pointLabel.equals(clusterLabel)) {
+                    //add pointcount to map
+                    labelTruePositives.replace(clusterLabel, labelTruePositives
+                            .get(clusterLabel) + pointCount);
+                } else {
+                    //if its not noise or an unclassified cluster, all other points in this cluster are false positives for this label.
+                    //TODO: double check, that including noise and unclassified clusters wont change evaluation result
+                    if ((!pointLabel.equals(NOISE_CLUSTER)) && !pointLabel.equals(UNCLASSIFIED_CLUSTER)) {
+                        //add pointcount to map
+                        labelFalsePositives.replace(clusterLabel, labelFalsePositives.containsKey(clusterLabel) ? labelFalsePositives
+                                .get(clusterLabel) + pointCount : pointCount);
+                    }
+                    //all points with the wrong label are FalseNegatives for this label, because they wont be represented in any other cluster with the correct label,
+                    // add pointcount to map
+                    labelFalseNegatives.replace(pointLabel, labelFalseNegatives.containsKey(clusterLabel) ? labelFalseNegatives
+                            .get(clusterLabel) + pointCount : pointCount);
+                }//end else
+            });//end loop over clustercounters
+        });//end loop over clusters
+        //tn = numberOfPoints - (tp + fp + fn)
+        //iterate over all labels and calculate tn, add count to map
+        labelTruePositives.entrySet().forEach(entry -> labelTrueNegatives.replace(entry.getKey(), numberOfPoints - (entry.getValue() + labelFalseNegatives.get(entry.getKey()) + labelFalsePositives.get(entry.getKey()))));
+    }
+
+    /**
+     * Fill maps with labels as keys and initial 0's as value.
+     */
+    private void initLabelMaps() {
+        //iterate over disting labels
+        classifiedClusters.values().stream().distinct().forEach(label -> {
+            labelFalseNegatives.put(label, 0);
+            labelFalsePositives.put(label, 0);
+            labelTruePositives.put(label, 0);
+            labelTrueNegatives.put(label, 0);
+        });
+    }
+
+    /**
+     * initializes empty fields
+     */
+    private void initEmptyFields() {
+        labelFalseNegatives = new HashMap<>();
+        labelFalsePositives = new HashMap<>();
+        labelTrueNegatives = new HashMap<>();
+        labelTruePositives = new HashMap<>();
+        classifiedClusters = new HashMap<>();
+    }
+
+    /**
+     * Calculates the best label for all clusters, by finding the label that represents most points. Uses local field threshodToClassifyCluster.
+     * Clusters that acnnot be classified are marked as "unclassified", the noise cluster gets the label "noise"
+     * Can currently not find equal labels.
+     */
+    private void calculateAllBestLabels() {
+        //iterate over cluster ids
+        clusterLabelMaps.keySet().stream().forEach((clusterId) -> {
+            //not noise cluster
+            if (clusterId != -1) {
+                //counters for the current cluster
+                MOAStreamClusterer.ClusterCounters clusterCounts = clusterLabelMaps.get(clusterId);
+                //iterate over counters and find best label by using the max of each labels count
+                //TODO: allow multilabel clusters
+                String bestLabel = clusterCounts.counters.entrySet().stream().max((entry1, entry2) -> entry1.getValue() > entry2
+                        .getValue() ? 1 : -1).get().getKey();
+                //the chance for the best label
+                double bestChance = (double) clusterCounts.counters.get(bestLabel) / (double) clusterCounts.total;
+                //check quality requirement and label
+                if (bestChance >= thresholdToClassifyCluster) {
+                    classifiedClusters.put(clusterId, bestLabel);
+                } else {
+                    classifiedClusters.put(clusterId, UNCLASSIFIED_CLUSTER);
+                }
+            } else {
+                //if clusterId == -1, its noise
+                classifiedClusters.put(clusterId, NOISE_CLUSTER);
+            }
+        });//end iteration over clusterids
+    }
+
+    /**
+     * Getter for the provided Map of cluster id's to ClusterCounters.
+     * @return The provided map. Mutable, not threadsafe.
+     */
     public Map<Integer, MOAStreamClusterer.ClusterCounters> getClusterLabelMaps() {
         return clusterLabelMaps;
     }
 
+    /**
+     * Getter for the provided threshodToClassifyCluster.
+     * @return The provided threshodToClassifyCluster.
+     */
     public double getThresholdToClassifyCluster() {
         return thresholdToClassifyCluster;
     }
 
+    /**
+     * Calculate the overall precision for the Clustering
+     * @return the precision of the clustering
+     */
     public double getOverallPrecision() {
-        return overallPrecision;
+        return (double) truePositives / (truePositives + falsePositives);
+    }
+    /**
+     * Calculate the overall recall for the Clustering
+     * @return the recall of the clustering
+     */
+    public double getOverallRecall() {
+        return (double) truePositives / (truePositives + falseNegatives);
+    }
+    /**
+     * Calculate the recall for a label
+     * @param label the label
+     * @return the recall of the label
+     */
+    public double getRecall(String label) {
+        return (double) labelTruePositives.get(label) / (labelTruePositives.get(label) + labelFalseNegatives.get(label));
     }
 
-    public Map<String, Double> getLabelPrecisionMap() {
-        return labelPrecisionMap;
+    /**
+     * Calculate the precision for a label
+     * @param label the label
+     * @return the precision of the label
+     */
+    public double getPrecision(String label) {
+        return (double) labelTruePositives.get(label) / (labelTruePositives.get(label) + labelFalsePositives.get(label));
+    }
+
+    /**
+     * Gets a Set containing all Labels
+     * @return A Set containing all Labels
+     */
+    public Set<String> getLabels() {
+        return labelTruePositives.keySet();
+    }
+
+    @Override
+    /**
+     * A String representation of the evaluation for log or console output.
+     */
+    public String toString() {
+
+        StringBuilder builder = new StringBuilder();
+        builder.append(HASH);
+        builder.append(NEW_LINE);
+        builder.append("CLUSTER EVALUATION");
+        builder.append(NEW_LINE);
+        builder.append("Number of Points: ");
+        builder.append(numberOfPoints);
+        builder.append(NEW_LINE);
+        builder.append("Overall precision: ");
+        builder.append(getOverallPrecision());
+        builder.append(NEW_LINE);
+        builder.append("Overal recall: ");
+        builder.append(getOverallRecall());
+        builder.append(NEW_LINE);
+        builder.append(LINE);
+        builder.append(NEW_LINE);
+        builder.append("Label Values");
+        labelsToString(builder);
+        return builder.toString();
+    }
+
+    private void labelsToString(StringBuilder builder) {
+        getLabels().forEach(label -> {
+            builder.append(NEW_LINE);
+            builder.append(LINE);
+            builder.append(NEW_LINE);
+            builder.append("Label: ");
+            builder.append(label);
+            builder.append(NEW_LINE);
+            builder.append("Precision: ");
+            builder.append(getPrecision(label));
+            builder.append(NEW_LINE);
+            builder.append("Recall: ");
+            builder.append(getRecall((label)));
+            builder.append(NEW_LINE);
+            builder.append("true positives: ");
+            builder.append(labelTruePositives.get(label));
+            builder.append(NEW_LINE);
+            builder.append("false positives: ");
+            builder.append(labelFalsePositives.get(label));
+            builder.append(NEW_LINE);
+            builder.append("true negatives: ");
+            builder.append(labelTrueNegatives.get(label));
+            builder.append(NEW_LINE);
+            builder.append("false negatives: ");
+            builder.append(labelFalseNegatives.get(label));
+            builder.append(NEW_LINE);
+        });
     }
 
 }
