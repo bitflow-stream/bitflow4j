@@ -30,17 +30,16 @@ import java.util.stream.Stream;
  */
 public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> extends AbstractAlgorithm {
 
-    public static final String UNCLASSIFIED_CLUSTER = "Unclassified";
-    public static final String UNKNOWN_LABEL = "unknown";
-
-    private final T clusterer;
     public final Map<Integer, ClusterCounters> clusterLabelMaps = new HashMap<>();
     public final Map<String, ClusterCounters> stringLabelMaps = new HashMap<>();
+    private final T clusterer;
+    private final SampleConverger converger = new SampleConverger(); // No predefined expected header
     private int sampleCount = 0;
     private int printClusterDetails = 0;
-    private final SampleConverger converger = new SampleConverger(); // No predefined expected header
+    private boolean tagForEvaluation;
 
-    public MOAStreamClusterer(T clusterer, int printClusterDetails) {
+    public MOAStreamClusterer(T clusterer, int printClusterDetails, boolean tagForEvaluation) {
+        this.tagForEvaluation = tagForEvaluation;
         this.clusterer = clusterer;
         this.printClusterDetails = printClusterDetails;
     }
@@ -49,22 +48,6 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
         this.setupClustererParameter(firstSample);
         this.clusterer.resetLearning();
         this.printClustererParameters();
-    }
-
-    public static class ClusterCounters {
-        public final Map<String, Integer> counters = new HashMap<>();
-        public int total;
-
-        @SuppressWarnings("StringEquality")
-        public void increment(String label) {
-            if (counters.containsKey(label)) {
-                counters.put(label, counters.get(label) + 1);
-            } else {
-                counters.put(label, 1);
-            }
-            if (label != UNKNOWN_LABEL)
-                total++;
-        }
     }
 
     @Override
@@ -95,11 +78,12 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
             clusterNum++;
         }
 
-        //Evaluate Clusters
-        String clusterLabel = bestFitCluster < 0 ? UNCLASSIFIED_CLUSTER : "Cluster-" + bestFitCluster;
+//        Evaluate Clusters
+        //TODO refector: better refactor everything
+        String clusterLabel = bestFitCluster < 0 ? ClusterConstants.UNCLASSIFIED_CLUSTER : clusterer.getClass().getName() + "Cluster" + ClusterConstants.LABEL_SEPARATOR + bestFitCluster;
         ClusterCounters counters = clusterLabelMaps.get(bestFitCluster);
         if (counters == null) {
-            counters = new ClusterCounters();
+            counters = new ClusterCounters(bestFitCluster, -1);
             clusterLabelMaps.put(bestFitCluster, counters);
             stringLabelMaps.put(clusterLabel, counters);
         }
@@ -116,7 +100,7 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
                     System.out.println("----------------------");
                     System.out.println("cluster id: " + clusterId);
                     ClusterCounters scenarioCount = clusterLabelMaps.get(clusterId);
-                    Stream<Map.Entry<String, Integer>> sorted = scenarioCount.counters.entrySet().stream().sorted(Collections.reverseOrder(
+                    Stream<Map.Entry<String, Integer>> sorted = scenarioCount.getCounters().entrySet().stream().sorted(Collections.reverseOrder(
                             Map.Entry
                             .comparingByValue()));
                     sorted.forEach(System.out::println);
@@ -129,13 +113,33 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
             sampleCount++;
         }
 
-        return new Sample(expectedHeader, values, sample.getTimestamp(), sample.getSource(), clusterLabel);
+        Sample sampleToReturn = new Sample(expectedHeader, values, sample.getTimestamp(), sample.getSource(), clusterLabel);
+        if (tagForEvaluation) {
+            sampleToReturn.setTag(ClusterConstants.ORIGINAL_LABEL_TAG, label);
+            sampleToReturn.setTag(ClusterConstants.CLUSTER_TAG, String.valueOf(clusterNum));
+        }
+        return sampleToReturn;
+//        return new Sample(expectedHeader, values, sample.getTimestamp(), sample.getSource(), makeLabel(clusterLabel,sample, clusterNum));
     }
+
+//    private String makeLabel(String clusterLabel, Sample sample, int clusterId){
+//        //TODO: wating for response from Anton concerning tags, tags are used for now
+//        StringBuilder sb= new StringBuilder();
+//        sb.append(getLabel(sample));
+//        sb.append(LABEL_SEPARATOR);
+//        sb.append(clusterLabel);
+//        if (tagForEvaluation){
+//            sb.append(LABEL_SEPARATOR);
+//            sb.append(clusterId);
+//        }
+//        return sb.toString();
+//    }
+
 
     private String getLabel(Sample sample) {
         String label = sample.getLabel();
         if (label == null || label.isEmpty()) {
-            label = UNKNOWN_LABEL;
+            label = ClusterConstants.UNKNOWN_LABEL;
         }
         return label;
     }

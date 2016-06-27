@@ -2,6 +2,8 @@ package metrics.main.prototype;
 
 import metrics.Sample;
 import metrics.algorithms.OnlineFeatureStandardizer;
+import metrics.algorithms.clustering.ClusterConstants;
+import metrics.algorithms.clustering.ClusterCounters;
 import metrics.algorithms.clustering.ExternalClusterer;
 import metrics.algorithms.clustering.MOAStreamClusterer;
 import metrics.io.MetricPrinter;
@@ -35,7 +37,7 @@ public class Cluster {
         String hostname = args[4];
 
         AbstractClusterer clusterer = ExternalClusterer.BICO.newInstance();
-        MOAStreamClusterer<AbstractClusterer> moaClusterer = new MOAStreamClusterer<>(clusterer, 0);
+        MOAStreamClusterer<AbstractClusterer> moaClusterer = new MOAStreamClusterer<>(clusterer, 0, false);
 
         new AlgorithmPipeline(receivePort, Analyse.TCP_FORMAT)
                 .fork(new OpenStackSampleSplitter(),
@@ -71,24 +73,24 @@ public class Cluster {
             ArrayList<String> classes = new ArrayList<>(allClasses);
             classes.sort(String.CASE_INSENSITIVE_ORDER);
             classes.add(OTHER_LABEL);
-            classes.add(MOAStreamClusterer.UNKNOWN_LABEL);
+            classes.add(ClusterConstants.UNKNOWN_LABEL);
             return classes;
         }
 
         @SuppressWarnings("StringEquality")
         protected Sample executeSample(Sample sample) throws IOException {
-            MOAStreamClusterer.ClusterCounters counts = clusterer.stringLabelMaps.get(sample.getLabel());
+            ClusterCounters counts = clusterer.stringLabelMaps.get(sample.getLabel());
             if (counts == null) {
                 System.err.println("Warning: Failed to get cluster counts for sample with label " + sample.getLabel());
                 return null;
             }
 
             double values[] = new double[header.header.length];
-            for (Map.Entry<String, Integer> entry : counts.counters.entrySet()) {
-                if (entry.getKey() == MOAStreamClusterer.UNKNOWN_LABEL) {
+            for (Map.Entry<String, Integer> entry : counts.getCounters().entrySet()) {
+                if (entry.getKey() == ClusterConstants.UNKNOWN_LABEL) {
                     continue;
                 }
-                double probability = entry.getValue().doubleValue() / (double) counts.total;
+                double probability = entry.getValue().doubleValue() / (double) counts.getTotal();
                 int index;
                 if (fieldIndices.containsKey(entry.getKey())) {
                     index = fieldIndices.get(entry.getKey());
@@ -98,11 +100,11 @@ public class Cluster {
                 values[index] = probability;
             }
             double unknownPercentage = 0;
-            Integer unknowns = counts.counters.get(MOAStreamClusterer.UNKNOWN_LABEL);
+            Integer unknowns = counts.getCounters().get(ClusterConstants.UNKNOWN_LABEL);
             if (unknowns != null) {
-                unknownPercentage = unknowns.doubleValue() / (double) (counts.total + unknowns);
+                unknownPercentage = unknowns.doubleValue() / (double) (counts.getTotal() + unknowns);
             }
-            values[fieldIndices.get(MOAStreamClusterer.UNKNOWN_LABEL)] = unknownPercentage;
+            values[fieldIndices.get(ClusterConstants.UNKNOWN_LABEL)] = unknownPercentage;
 
             Map<String, String> tags = sample.getTags();
             tags.put(SampleAnalysisOutput.TAG_HOSTNAME, hostname);

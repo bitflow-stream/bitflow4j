@@ -12,11 +12,6 @@ public class ClusterEvaluator {
     /**
      * Label for an unclassified cluster.
      */
-    public final static String UNCLASSIFIED_CLUSTER = "unclassified";
-    /**
-     * label for a noise cluster
-     */
-    public final static String NOISE_CLUSTER = "noise";
     /**
      * Static String declarations
      */
@@ -26,7 +21,7 @@ public class ClusterEvaluator {
     /**
      * Map of clusterIndexes to cluster counters
      */
-    private final Map<Integer, MOAStreamClusterer.ClusterCounters> clusterLabelMaps;
+    private final Map<Integer, ClusterCounters> clusterLabelMaps;
     /**
      * The provided threshold to label a cluster
      */
@@ -56,7 +51,7 @@ public class ClusterEvaluator {
      * @param numberOfPoints             The sum of points for all MOAStreamClusterer.ClusterCounters in the clusterLabelMaps. Must be > 0. If the wrong number of points is provided, the evaluation might be incorrect.
      * @throws IllegalArgumentException If number of points is 0 or clusterLabelMas isEmpty or the nullpointer.
      */
-    public ClusterEvaluator(Map<Integer, MOAStreamClusterer.ClusterCounters> clusterLabelMaps, double thresholdToClassifyCluster, int numberOfPoints) throws IllegalArgumentException {
+    public ClusterEvaluator(Map<Integer, ClusterCounters> clusterLabelMaps, double thresholdToClassifyCluster, int numberOfPoints) throws IllegalArgumentException {
         /** integrity check */
         if (thresholdToClassifyCluster < 0 || thresholdToClassifyCluster > 1)
             throw new IllegalArgumentException("thresholdToClassify should be between 0 and 1, but " + thresholdToClassifyCluster + " was provided!");
@@ -109,7 +104,7 @@ public class ClusterEvaluator {
             //label of current cluster
             String clusterLabel = labeledClusterId.getValue();
             //iterate over all counters of the current cluster (Map<String, Integer>; Label,pointcount)
-            clusterLabelMaps.get(clusterId).counters.entrySet().forEach(countersEntry -> {
+            clusterLabelMaps.get(clusterId).getCounters().entrySet().forEach(countersEntry -> {
                 //current Label of points
                 String pointLabel = countersEntry.getKey();
                 //current count
@@ -122,7 +117,7 @@ public class ClusterEvaluator {
                 } else {
                     //if its not noise or an unclassified cluster, all other points in this cluster are false positives for this label.
                     //TODO: double check, that including noise and unclassified clusters wont change evaluation result
-                    if ((!pointLabel.equals(NOISE_CLUSTER)) && !pointLabel.equals(UNCLASSIFIED_CLUSTER)) {
+                    if ((!pointLabel.equals(ClusterConstants.NOISE_CLUSTER)) && !pointLabel.equals(ClusterConstants.UNCLASSIFIED_CLUSTER)) {
                         //add pointcount to map
                         labelFalsePositives.replace(clusterLabel, labelFalsePositives.containsKey(clusterLabel) ? labelFalsePositives
                                 .get(clusterLabel) + pointCount : pointCount);
@@ -174,22 +169,22 @@ public class ClusterEvaluator {
             //not noise cluster
             if (clusterId != -1) {
                 //counters for the current cluster
-                MOAStreamClusterer.ClusterCounters clusterCounts = clusterLabelMaps.get(clusterId);
+                ClusterCounters clusterCounts = clusterLabelMaps.get(clusterId);
                 //iterate over counters and find best label by using the max of each labels count
                 //TODO: allow multilabel clusters
-                String bestLabel = clusterCounts.counters.entrySet().stream().max((entry1, entry2) -> entry1.getValue() > entry2
+                String bestLabel = clusterCounts.getCounters().entrySet().stream().max((entry1, entry2) -> entry1.getValue() > entry2
                         .getValue() ? 1 : -1).get().getKey();
                 //the chance for the best label
-                double bestChance = (double) clusterCounts.counters.get(bestLabel) / (double) clusterCounts.total;
+                double bestChance = (double) clusterCounts.getCounters().get(bestLabel) / (double) clusterCounts.getTotal();
                 //check quality requirement and label
                 if (bestChance >= thresholdToClassifyCluster) {
                     classifiedClusters.put(clusterId, bestLabel);
                 } else {
-                    classifiedClusters.put(clusterId, UNCLASSIFIED_CLUSTER);
+                    classifiedClusters.put(clusterId, ClusterConstants.UNCLASSIFIED_CLUSTER);
                 }
             } else {
                 //if clusterId == -1, its noise
-                classifiedClusters.put(clusterId, NOISE_CLUSTER);
+                classifiedClusters.put(clusterId, ClusterConstants.NOISE_CLUSTER);
             }
         });//end iteration over clusterids
     }
@@ -198,7 +193,7 @@ public class ClusterEvaluator {
      * Getter for the provided Map of cluster id's to ClusterCounters.
      * @return The provided map. Mutable, not threadsafe.
      */
-    public Map<Integer, MOAStreamClusterer.ClusterCounters> getClusterLabelMaps() {
+    public Map<Integer, ClusterCounters> getClusterLabelMaps() {
         return clusterLabelMaps;
     }
 
