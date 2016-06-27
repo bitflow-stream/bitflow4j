@@ -62,7 +62,7 @@ public class BinaryMarshaller extends AbstractMarshaller {
         DataOutputStream data = new DataOutputStream(output);
         Header header = sample.getHeader();
         Date timestamp = sample.getTimestamp();
-        data.writeLong(timestamp == null ? 0 : timestamp.getTime());
+        data.writeLong(timestamp == null ? 0 : timestamp.getTime() * 1000000);
         if (header.hasTags) {
             String tags = sample.tagString();
             if (tags == null) tags = "";
