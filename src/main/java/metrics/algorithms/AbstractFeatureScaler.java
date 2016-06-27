@@ -36,6 +36,26 @@ public abstract class AbstractFeatureScaler extends TrainableWindowAlgorithm {
         double scale(double val);
     }
 
+    public static abstract class AbstractMetricScaler implements MetricScaler {
+        public final double stdDeviation;
+        public final double average;
+        public final double min;
+        public final double max;
+
+        public AbstractMetricScaler(MetricStatisticsWindow stats) {
+            average = stats.average();
+            double stdDev = stats.stdDeviation();
+            if (stdDev == 0) stdDev = 1;
+            stdDeviation = stdDev;
+            if (stats.totalMinimum < stats.totalMaximum) {
+                min = stats.totalMinimum;
+                max = stats.totalMaximum;
+            } else {
+                min = max = 0;
+            }
+        }
+    }
+
     protected abstract MetricScaler createScaler(MetricStatisticsWindow stats);
 
     public Collection<MetricStatisticsWindow> getAllMetrics() {

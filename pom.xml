@@ -6,7 +6,7 @@
 
     <groupId>cit.dataanalysis</groupId>
     <artifactId>data-analysis</artifactId>
-    <version>0.1</version>
+    <version>0.2</version>
     <build>
         <plugins>
             <plugin>
@@ -161,6 +161,11 @@
             <groupId>nz.ac.waikato.cms.moa</groupId>
             <artifactId>moa</artifactId>
             <version>2016.04</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ini4j</groupId>
+            <artifactId>ini4j</artifactId>
+            <version>0.5.4</version>
         </dependency>
     </dependencies>
 </project>

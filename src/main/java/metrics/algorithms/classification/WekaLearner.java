@@ -58,6 +58,10 @@ public class WekaLearner<T extends Classifier & Serializable> extends AbstractWe
             System.err.println("Not producing dot graph files.");
             return;
         }
+        createPng(file, classifier);
+    }
+
+    public static void createPng(File file, Classifier classifier) {
         if (classifier instanceof Drawable) {
             try {
                 String graph = ((Drawable) classifier).graph();

@@ -17,15 +17,9 @@ public class FeatureStandardizer extends AbstractFeatureScaler {
         return new MetricStandardizer(stats);
     }
 
-    public static class MetricStandardizer implements MetricScaler {
-        public final double stdDeviation;
-        public final double average;
-
+    public static class MetricStandardizer extends AbstractMetricScaler {
         MetricStandardizer(MetricStatisticsWindow stats) {
-            average = stats.average();
-            double stdDev = stats.stdDeviation();
-            if (stdDev == 0) stdDev = 1;
-            stdDeviation = stdDev;
+            super(stats);
         }
 
         public double scale(double val) {
