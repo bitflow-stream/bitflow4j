@@ -80,6 +80,8 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
         } else {
             wrongPredictions++;
             //if labels dont match, increment counter by 1 for labelToFP(predictedLabe) and labelTOFN(originalLabel)
+            if (!(predictedLabel.equals(ClusterConstants.NOISE_CLUSTER) || predictedLabel.equals(ClusterConstants.UNCLASSIFIED_CLUSTER))) {
+            }
             labelToFP.put(predictedLabel, labelToFP.containsKey(predictedLabel) ? labelToFP.get(predictedLabel) + 1 : 1);
             labelToFN.put(originalLabel, labelToFN.containsKey(originalLabel) ? labelToFN.get(originalLabel) + 1 : 1);
         }
