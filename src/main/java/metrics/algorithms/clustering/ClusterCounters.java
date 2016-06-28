@@ -40,7 +40,6 @@ public class ClusterCounters {
         this.clusterId = clusterId;
     }
 
-    @SuppressWarnings("StringEquality")
     public String increment(String label) {
         total++;
         if (counters.containsKey(label)) {

@@ -1,9 +1,6 @@
 package metrics.algorithms.clustering;
 
 import com.yahoo.labs.samoa.instances.WekaToSamoaInstanceConverter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import metrics.Header;
 import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
@@ -12,6 +9,10 @@ import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -45,9 +46,10 @@ public class CluStreamClusterer extends AbstractAlgorithm {
             System.out.println(value);
 //            double[] votes = cluster.getVotesForInstance(instance);
 //            System.out.println(Arrays.toString(votes));
-            String label = "Cluster-";// + clusterNum;
-            return new Sample(sample.getHeader(), sample.getMetrics(),
-                    sample.getTimestamp(), sample.getSource(), label);
+            int clusterNum = -1; // TODO get cluster id for instance
+            Sample outSample = new Sample(sample.getHeader(), sample.getMetrics(), sample);
+            outSample.setTag(ClusterConstants.CLUSTER_TAG, String.valueOf(clusterNum));
+            return outSample;
         } catch (Exception e) {
             throw new IOException("Clustering failed", e);
         }
