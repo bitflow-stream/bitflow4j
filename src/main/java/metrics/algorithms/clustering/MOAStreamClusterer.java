@@ -30,6 +30,7 @@ import java.util.stream.Stream;
  */
 public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> extends AbstractAlgorithm {
 
+    public static final String CLUSTER_LABEL = "cluster";
     public static final String UNCLASSIFIED_CLUSTER = "Unclassified";
     public static final String UNKNOWN_LABEL = "unknown";
 
@@ -129,7 +130,9 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
             sampleCount++;
         }
 
-        return new Sample(expectedHeader, values, sample.getTimestamp(), sample.getSource(), clusterLabel);
+        Sample outSample = new Sample(expectedHeader, values, sample);
+        outSample.setTag(CLUSTER_LABEL, clusterLabel);
+        return outSample;
     }
 
     private String getLabel(Sample sample) {

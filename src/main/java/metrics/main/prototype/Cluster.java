@@ -77,9 +77,10 @@ public class Cluster {
 
         @SuppressWarnings("StringEquality")
         protected Sample executeSample(Sample sample) throws IOException {
-            MOAStreamClusterer.ClusterCounters counts = clusterer.stringLabelMaps.get(sample.getLabel());
+            String cluster = sample.getTag(MOAStreamClusterer.CLUSTER_LABEL);
+            MOAStreamClusterer.ClusterCounters counts = clusterer.stringLabelMaps.get(cluster);
             if (counts == null) {
-                System.err.println("Warning: Failed to get cluster counts for sample with label " + sample.getLabel());
+                System.err.println("Warning: Failed to get cluster counts for sample with cluster " + cluster);
                 return null;
             }
 
