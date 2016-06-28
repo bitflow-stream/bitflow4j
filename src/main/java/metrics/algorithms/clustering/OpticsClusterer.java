@@ -41,9 +41,9 @@ public class OpticsClusterer extends AbstractAlgorithm {
 
         try {
             int clusterNum = cluster.clusterInstance(instance);
-            String label = "Cluster-" + clusterNum;
-            return new Sample(sample.getHeader(), sample.getMetrics(),
-                    sample.getTimestamp(), sample.getSource(), label);
+            Sample outSample = new Sample(sample.getHeader(), sample.getMetrics(), sample);
+            outSample.setTag(ClusterConstants.CLUSTER_TAG, String.valueOf(clusterNum));
+            return outSample;
         } catch (Exception e) {
             throw new IOException("Clustering failed", e);
         }

@@ -1,12 +1,6 @@
 package metrics.algorithms.clustering;
 
 import com.yahoo.labs.samoa.instances.WekaToSamoaInstanceConverter;
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import metrics.algorithms.classification.Model;
 import metrics.io.MetricOutputStream;
 import metrics.main.Config;
@@ -16,6 +10,13 @@ import moa.core.AutoExpandVector;
 import weka.core.Drawable;
 import weka.core.Instance;
 import weka.core.Instances;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -94,6 +95,7 @@ public class MOABatchClusterer<T extends AbstractClusterer & Serializable> exten
             throw io;
         }
         model.setModel(clusterer);
+        // TODO write Samples from window into output, set CLUSTER_TAG tag
     }
 
     public void printResults(File file) {

@@ -36,10 +36,8 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
     private final SampleConverger converger = new SampleConverger(); // No predefined expected header
     private int sampleCount = 0;
     private int printClusterDetails = 0;
-    private boolean tagForEvaluation;
 
-    public MOAStreamClusterer(T clusterer, int printClusterDetails, boolean tagForEvaluation) {
-        this.tagForEvaluation = tagForEvaluation;
+    public MOAStreamClusterer(T clusterer, int printClusterDetails) {
         this.clusterer = clusterer;
         this.printClusterDetails = printClusterDetails;
     }
@@ -80,7 +78,7 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
 
 //        Evaluate Clusters
         //TODO refector: better refactor everything
-        String clusterLabel = bestFitCluster < 0 ? ClusterConstants.UNCLASSIFIED_CLUSTER : clusterer.getClass().getName() + "Cluster" + ClusterConstants.LABEL_SEPARATOR + bestFitCluster;
+        String clusterLabel = bestFitCluster < 0 ? ClusterConstants.UNCLASSIFIED_CLUSTER : String.valueOf(bestFitCluster);
         ClusterCounters counters = clusterLabelMaps.get(bestFitCluster);
         if (counters == null) {
             counters = new ClusterCounters(bestFitCluster, -1);
@@ -114,26 +112,10 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
         }
 
         Sample sampleToReturn = new Sample(expectedHeader, values, sample);
-        if (tagForEvaluation) {
-            sampleToReturn.setTag(ClusterConstants.ORIGINAL_LABEL_TAG, label);
-            sampleToReturn.setTag(ClusterConstants.CLUSTER_TAG, String.valueOf(clusterNum));
-        }
+        sampleToReturn.setTag(ClusterConstants.CLUSTERER_CLASS_TAG, clusterer.getClass().getName());
+        sampleToReturn.setTag(ClusterConstants.CLUSTER_TAG, String.valueOf(clusterNum));
         return sampleToReturn;
     }
-
-//    private String makeLabel(String clusterLabel, Sample sample, int clusterId){
-//        //TODO: wating for response from Anton concerning tags, tags are used for now
-//        StringBuilder sb= new StringBuilder();
-//        sb.append(getLabel(sample));
-//        sb.append(LABEL_SEPARATOR);
-//        sb.append(clusterLabel);
-//        if (tagForEvaluation){
-//            sb.append(LABEL_SEPARATOR);
-//            sb.append(clusterId);
-//        }
-//        return sb.toString();
-//    }
-
 
     private String getLabel(Sample sample) {
         String label = sample.getLabel();

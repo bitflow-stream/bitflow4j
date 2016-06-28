@@ -1,10 +1,6 @@
 package metrics.algorithms.clustering;
 
 import com.yahoo.labs.samoa.instances.WekaToSamoaInstanceConverter;
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.Arrays;
 import metrics.algorithms.classification.Model;
 import metrics.io.MetricOutputStream;
 import metrics.main.Config;
@@ -15,10 +11,16 @@ import weka.core.Drawable;
 import weka.core.Instance;
 import weka.core.Instances;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.Arrays;
+
 /**
  *
  * @author fschmidt
  */
+// TODO is this class obsolete?
 public class MOAClusterer<T extends AbstractClusterer & Serializable> extends AbstractMOAClusterer {
 
     private final Model<T> model;
@@ -55,6 +57,7 @@ public class MOAClusterer<T extends AbstractClusterer & Serializable> extends Ab
             throw io;
         }
         model.setModel(clusterer);
+        // TODO write Samples from window into output, set CLUSTER_TAG tag
     }
 
     public void printResults(File file) {
