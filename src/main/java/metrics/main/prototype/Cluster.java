@@ -109,6 +109,7 @@ public class Cluster {
 
             Map<String, String> tags = sample.getTags();
             tags.put(SampleAnalysisOutput.TAG_HOSTNAME, hostname);
+            tags.remove(ClusterConstants.CLUSTERER_CLASS_TAG);
             return new Sample(header, values, sample.getTimestamp(), tags);
         }
 
