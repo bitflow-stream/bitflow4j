@@ -112,7 +112,6 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
         }
 
         Sample sampleToReturn = new Sample(expectedHeader, values, sample);
-        sampleToReturn.setTag(ClusterConstants.CLUSTERER_CLASS_TAG, clusterer.getClass().getName());
         sampleToReturn.setTag(ClusterConstants.CLUSTER_TAG, clusterLabel);
         return sampleToReturn;
     }
