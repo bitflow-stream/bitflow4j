@@ -1,5 +1,6 @@
 package metrics.algorithms.clustering;
 
+import metrics.algorithms.evaluation.ClusterEvaluator;
 import com.github.javacliparser.FloatOption;
 import com.github.javacliparser.IntOption;
 import com.yahoo.labs.samoa.instances.WekaToSamoaInstanceConverter;
@@ -274,7 +275,7 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
                     "Number of the dimensions of the input points.", numMetrics, 1,
                     Integer.MAX_VALUE);
             IntOption maxNumClusterFeaturesOption = new IntOption(
-                    "MaxClusterFeatures", 'n', "Maximum size of the coreset.", 1000, 1,
+                    "MaxClusterFeatures", 'n', "Maximum size of the coreset.", 1400, 1,
                     Integer.MAX_VALUE);
             IntOption numProjectionsOption = new IntOption("Projections", 'p',
                     "Number of random projections used for the nearest neighbour search.",

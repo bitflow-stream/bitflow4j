@@ -19,7 +19,7 @@ public class MetricWindow {
         this.name = name;
     }
 
-    void flushSamples(int numSamples) {
+    public void flushSamples(int numSamples) {
         if (numSamples >= values.size())
             values.clear();
         else
@@ -55,7 +55,7 @@ public class MetricWindow {
         addImpl(val);
     }
 
-    void addImpl(double val) {
+    public void addImpl(double val) {
         values.add(val);
         vector = null;
     }

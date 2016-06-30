@@ -1,8 +1,10 @@
-package metrics.algorithms.clustering;
+package metrics.algorithms.evaluation;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import metrics.algorithms.clustering.ClusterConstants;
+import metrics.algorithms.clustering.ClusterCounters;
 
 /**
  * @author fschmidt, mbyfield

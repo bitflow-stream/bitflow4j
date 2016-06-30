@@ -1,4 +1,4 @@
-package metrics.algorithms.clustering;
+package metrics.algorithms.evaluation;
 
 import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import metrics.algorithms.clustering.ClusterConstants;
 
 /**
  * Created by Malcolm-X on 27.06.2016.
@@ -16,7 +17,8 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
     private final static String LINE = "----------------------------------------------";
     private final static String HASH = "##############################################";
     private final static String NEW_LINE = System.getProperty("line.separator");
-    private static final String INCORRECT_HEADERS = "Incorrect headers found. Try adding a MOAStreamClusterer to the Algorithm pipeline and set setEvaluationTags to true.";
+    private static final String INCORRECT_HEADERS
+            = "Incorrect headers found. Try adding a MOAStreamClusterer to the Algorithm pipeline and set setEvaluationTags to true.";
     //    private ExternalClusterer clusterer;
     private boolean removeEvaluationTag;
     private long sampleInterval;
@@ -71,21 +73,29 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
 //        } catch (NumberFormatException e){
 //            throw new IOException(INCORRECT_HEADERS);
 //        }
-        if (predictedLabel == null || originalLabel == null)
+        if (predictedLabel == null || originalLabel == null) {
             throw new IOException(INCORRECT_HEADERS);
-        if (predictedLabel.equals(originalLabel)) {
-            //if labels match, increment counter by 1 for labelToTP
-            correctPredictions++;
-            labelToTP.put(originalLabel, labelToTP.containsKey(originalLabel) ? labelToTP.get(originalLabel) + 1 : 1);
-        } else {
-            wrongPredictions++;
-            //if labels dont match, increment counter by 1 for labelToFP(predictedLabe) and labelTOFN(originalLabel)
-            labelToFP.put(predictedLabel, labelToFP.containsKey(predictedLabel) ? labelToFP.get(predictedLabel) + 1 : 1);
-            labelToFN.put(originalLabel, labelToFN.containsKey(originalLabel) ? labelToFN.get(originalLabel) + 1 : 1);
         }
-        if (checkRecalculationRequirement()) recalculate();
+        if (!originalLabel.equals(ClusterConstants.UNKNOWN_LABEL) && !predictedLabel.equals(ClusterConstants.NOISE_CLUSTER)
+                && !predictedLabel.equals(ClusterConstants.UNCLASSIFIED_CLUSTER)) {
+            if (predictedLabel.equals(originalLabel)) {
+                //if labels match, increment counter by 1 for labelToTP
+                correctPredictions++;
+                labelToTP.put(originalLabel, labelToTP.containsKey(originalLabel) ? labelToTP.get(originalLabel) + 1 : 1);
 
-        Sample sampleToReturn = new Sample(sample.getHeader(), sample.getMetrics(), sample.getTimestamp(), sample.getSource(), sample.getLabel());
+            } else {
+                wrongPredictions++;
+                //if labels dont match, increment counter by 1 for labelToFP(predictedLabe) and labelTOFN(originalLabel)
+                labelToFP.put(predictedLabel, labelToFP.containsKey(predictedLabel) ? labelToFP.get(predictedLabel) + 1 : 1);
+                labelToFN.put(originalLabel, labelToFN.containsKey(originalLabel) ? labelToFN.get(originalLabel) + 1 : 1);
+            }
+        }
+        if (checkRecalculationRequirement()) {
+            recalculate();
+        }
+
+        Sample sampleToReturn = new Sample(sample.getHeader(), sample.getMetrics(), sample.getTimestamp(), sample.getSource(), sample
+                .getLabel());
         if (!removeEvaluationTag) {
             sampleToReturn.setTag(ClusterConstants.ORIGINAL_LABEL_TAG, sample.getTag(ClusterConstants.ORIGINAL_LABEL_TAG));
             sampleToReturn.setTag(ClusterConstants.CLUSTER_TAG, sample.getTag(ClusterConstants.CLUSTER_TAG));
@@ -97,19 +107,27 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
         truePostivesSum = labelToTP.values().stream().mapToInt(i -> i.intValue()).sum();
         falsePositivesSum = labelToFP.values().stream().mapToInt(i -> i.intValue()).sum();
         falseNegativesSum = labelToFN.values().stream().mapToInt(i -> i.intValue()).sum();
-        overallRecall = (double) truePostivesSum / (truePostivesSum + falsePositivesSum);
-        overallPrecision = (double) truePostivesSum / (truePostivesSum + falseNegativesSum);
+        overallRecall = (double) truePostivesSum / (double) (truePostivesSum + falsePositivesSum);
+        overallPrecision = (double) truePostivesSum / (double) (truePostivesSum + falseNegativesSum);
         labels.forEach(label -> {
-            if (labelToTP.get(label) == null) labelToTP.put(label, 0L);
-            if (labelToFP.get(label) == null) labelToFP.put(label, 0L);
-            if (labelToFN.get(label) == null) labelToFN.put(label, 0L);
-            labelToPrecision.put(label, (double) labelToTP.get(label) / (labelToTP.get(label) + labelToFP.get(label)));
-            labelToRecall.put(label, (double) labelToTP.get(label) / (labelToTP.get(label) + labelToFN.get(label)));
+            if (labelToTP.get(label) == null) {
+                labelToTP.put(label, 0L);
+            }
+            if (labelToFP.get(label) == null) {
+                labelToFP.put(label, 0L);
+            }
+            if (labelToFN.get(label) == null) {
+                labelToFN.put(label, 0L);
+            }
+            labelToPrecision.put(label, (double) labelToTP.get(label) / (double) (labelToTP.get(label) + labelToFP.get(label)));
+            labelToRecall.put(label, (double) labelToTP.get(label) / (double) (labelToTP.get(label) + labelToFN.get(label)));
         });
         averagePrecision = labelToPrecision.values().stream().mapToDouble(d -> d.doubleValue()).average().getAsDouble();
-        weightedAveragePrecision = labelToPrecision.entrySet().stream().mapToDouble(d -> d.getValue().doubleValue() * (labelToTP.get(d.getKey()) + labelToFP.get(d.getKey()))).average().getAsDouble() * labels.size() / sampleCount;
+        weightedAveragePrecision = labelToPrecision.entrySet().stream().mapToDouble(d -> d.getValue().doubleValue() * (labelToTP.get(d
+                .getKey()) + labelToFP.get(d.getKey()))).average().getAsDouble() * labels.size() / sampleCount;
         averageRecall = labelToRecall.values().stream().mapToDouble(d -> d.doubleValue()).average().getAsDouble();
-        weightedAverageRecall = labelToRecall.entrySet().stream().mapToDouble(d -> d.getValue().doubleValue() * (labelToTP.get(d.getKey()) + labelToFP.get(d.getKey()))).average().getAsDouble() * labels.size() / sampleCount;
+        weightedAverageRecall = labelToRecall.entrySet().stream().mapToDouble(d -> d.getValue().doubleValue() * (labelToTP.get(d.getKey())
+                + labelToFP.get(d.getKey()))).average().getAsDouble() * labels.size() / (double) sampleCount;
         double[] temp = labelToPrecision.values().stream().mapToDouble(d -> d.doubleValue()).sorted().toArray();
         medianPrecision = temp[temp.length / 2];
         temp = labelToRecall.values().stream().mapToDouble(d -> d.doubleValue()).sorted().toArray();
@@ -118,7 +136,9 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
         maxRecall = labelToRecall.values().stream().mapToDouble(d -> d.doubleValue()).max().getAsDouble();
         minPrecision = labelToPrecision.values().stream().mapToDouble(d -> d.doubleValue()).min().getAsDouble();
         minRecall = labelToRecall.values().stream().mapToDouble(d -> d.doubleValue()).min().getAsDouble();
-        if (printOnRecalculation) printEvaluation();
+        if (printOnRecalculation) {
+            printEvaluation();
+        }
     }
 
     private void printEvaluation() {
