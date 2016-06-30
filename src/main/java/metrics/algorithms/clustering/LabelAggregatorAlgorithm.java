@@ -36,6 +36,7 @@ public class LabelAggregatorAlgorithm extends AbstractAlgorithm {
         for (String metricName : window.allMetricNames()) {
             if (metricName.startsWith(AdvancedClusterLabelingAlgorithm.INC_PROB_PREFIX)) {
                 String normalMetricName = metricName.replace(AdvancedClusterLabelingAlgorithm.INC_PROB_PREFIX, "");
+
                 LabelInclusionProbabilityPredictionWindow stat = window.getWindow(metricName);
                 labelInclusionAvgProbabilities.put(normalMetricName, stat.labelInclusionProbabilityAverage());
             }
@@ -43,7 +44,7 @@ public class LabelAggregatorAlgorithm extends AbstractAlgorithm {
         //Sort Map by value and recommend best value (except of unknown)
         List<Map.Entry<String, Double>> sortedLabelInclusionAvgProbabilities = labelInclusionAvgProbabilities.entrySet().stream()
                 .sorted(Collections.reverseOrder(Map.Entry.comparingByValue())).collect(Collectors.toList());
-        System.out.println(sortedLabelInclusionAvgProbabilities);
+//        System.out.println(sortedLabelInclusionAvgProbabilities);
         String recommendedLabel = ClusterConstants.UNKNOWN_LABEL;
         for (Map.Entry<String, Double> labelInclusionAvgProbability : sortedLabelInclusionAvgProbabilities) {
             if (!labelInclusionAvgProbability.getKey().equals(ClusterConstants.UNKNOWN_LABEL)) {
@@ -68,7 +69,7 @@ public class LabelAggregatorAlgorithm extends AbstractAlgorithm {
         sampleToReturn.setTag(ClusterConstants.ORIGINAL_LABEL_TAG, originalLabel);
         sampleToReturn.setTag(ClusterConstants.CLUSTER_TAG, String.valueOf(labelClusterId));
         
-        System.out.println("###########------    org: "+ originalLabel+ "   rec: "+recommendedLabel+"      ---------------##########");
+//        System.out.println("###########------    org: "+ originalLabel+ "   rec: "+recommendedLabel+"      ---------------##########");
         return sampleToReturn;
     }
 

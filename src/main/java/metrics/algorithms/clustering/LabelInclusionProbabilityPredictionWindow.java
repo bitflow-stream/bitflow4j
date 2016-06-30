@@ -40,6 +40,13 @@ public class LabelInclusionProbabilityPredictionWindow extends MetricWindow {
         }
         prod *= val;
     }
+    
+    @Override
+    public void fill(int num) {
+        for (int i = 0; i < num; i++) {
+            addImpl(0.0);
+        }
+    }
 
     public double start() {
         if (values.isEmpty()) {

@@ -62,6 +62,8 @@ public class AdvancedClusterLabelingAlgorithm extends AbstractAlgorithm {
         sampleToReturn.setTag(ClusterConstants.ORIGINAL_LABEL_TAG, originalLabel);
         sampleToReturn.setTag(ClusterConstants.CLUSTER_TAG, String.valueOf(labelClusterId));
         
+//        System.out.println(Arrays.toString(sampleToReturn.getHeader().header));
+//        System.out.println(Arrays.toString(sampleToReturn.getMetrics()));
         return sampleToReturn;
     }
 

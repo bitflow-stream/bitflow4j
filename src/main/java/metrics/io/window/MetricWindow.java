@@ -41,7 +41,7 @@ public class MetricWindow {
         return values.isEmpty() ? 0 : values.get(values.size() - 1);
     }
 
-    void fill(int num) {
+    public void fill(int num) {
         double previous = fillValue();
         for (int i = 0; i < num; i++) {
             addImpl(previous);

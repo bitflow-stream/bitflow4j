@@ -67,10 +67,11 @@ public class ClusterCounters {
     
     public Map<String, Double> getLabelInclusionProbability(){
         Map<String, Double> inclusionProbability = new HashMap<>();
-        counters.entrySet().stream()
-                .forEach((entry) -> {
-                    inclusionProbability.put(entry.getKey(), (double)entry.getValue()/(double)total);
+        counters.keySet().stream()
+                .forEach((key) -> {
+                    inclusionProbability.put(key, (double)counters.get(key)/(double)total);
         });
+//        System.out.println(inclusionProbability);
         return inclusionProbability;
     }
 }

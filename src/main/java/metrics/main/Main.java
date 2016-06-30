@@ -111,7 +111,7 @@ public class Main {
                             .step(new SourceLabellingAlgorithm())
                             .step(new MOAStreamClusterer(ExternalClusterer.BICO.newInstance(), -1))
                             .step(new AdvancedClusterLabelingAlgorithm(0.0))
-                            .step(new LabelAggregatorAlgorithm(20))
+                            .step(new LabelAggregatorAlgorithm(10))
                             .step(new MOAStreamEvaluator(true, 1000, true));
 
                 })
