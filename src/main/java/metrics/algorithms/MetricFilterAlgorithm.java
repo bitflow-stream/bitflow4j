@@ -35,7 +35,7 @@ public class MetricFilterAlgorithm extends AbstractAlgorithm {
         this(new MetricNameFilter(excludedCols));
     }
 
-    public static final class MetricNameFilter implements MetricFilter {
+    public static class MetricNameFilter implements MetricFilter {
         private final Set<String> excluded;
 
         public MetricNameFilter(String... excludedCols) {
@@ -53,6 +53,19 @@ public class MetricFilterAlgorithm extends AbstractAlgorithm {
             for (String str : excluded)
                 hash.writeChars(str);
         }
+    }
+
+    public static final class MetricNameIncludeFilter extends MetricNameFilter {
+
+        public MetricNameIncludeFilter(String... excludedCols) {
+            super(excludedCols);
+        }
+
+        @Override
+        public boolean shouldInclude(String name, int column) {
+            return !super.shouldInclude(name, column);
+        }
+
     }
 
     @Override

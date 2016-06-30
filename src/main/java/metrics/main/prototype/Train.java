@@ -23,11 +23,11 @@ public class Train {
     static final String TRAINING_INPUT_FORMAT = "BIN";
 
     public static void main(String[] args) throws IOException {
-        if (args.length != 2) {
-            System.err.println("Need 2 parameters: <input " + TRAINING_INPUT_FORMAT + " file> <output file>");
+        if (args.length != 3) {
+            System.err.println("Parameters: <input " + TRAINING_INPUT_FORMAT + " file> <output file> <filter>");
             return;
         }
-        TrainedDataModel model = createDataModel(args[0]);
+        TrainedDataModel model = createDataModel(args[0], args[2]);
         storeDataModel(args[1], model);
     }
 
@@ -41,8 +41,9 @@ public class Train {
         return j48;
     }
 
-    static TrainedDataModel createDataModel(String inputFile) throws IOException {
+    static TrainedDataModel createDataModel(String inputFile, String filter) throws IOException {
         J48 classifier = createClassifier();
+        Algorithm filterAlgo = getFilter(filter);
 
         AbstractFeatureScaler standardizer;
         if (Analyse.USE_MIN_MAX_SCALING) {
@@ -61,7 +62,7 @@ public class Train {
                             }
 
                             p
-                                    .step(new MetricFilterAlgorithm("disk-usage///free", "disk-usage///used", "num_procs", "proc/vnf/num"))
+                                    .step(filterAlgo)
                                     .step(standardizer)
                                     .step(new FeatureAggregator(10000L).addAvg().addSlope())
                                     .step(learner);
@@ -99,5 +100,33 @@ public class Train {
         obj_out.writeObject(model);
         obj_out.close();
     }
+
+    static MetricFilterAlgorithm getFilter(String name) {
+        if (name.equals("small")) {
+            return new MetricFilterAlgorithm(new MetricFilterAlgorithm.MetricNameIncludeFilter(SMALL_FILTER));
+        } else if (name.equals("medium")) {
+            return new MetricFilterAlgorithm(new MetricFilterAlgorithm.MetricNameIncludeFilter(MEDIUM_FILTER));
+        } else if (name.equals("none")) {
+            return new MetricFilterAlgorithm(BAD_METRICS); // Just exclude a few bad metrics.
+        } else {
+            throw new IllegalArgumentException("Illegal filter name: " + name + ", available: 'small', 'medium', 'none'");
+        }
+    }
+
+    // These metrics will STAY when using "small"
+    static final String[] SMALL_FILTER = new String[] {
+            "cpu", "mem/percent", "net-io/bytes",
+            "disk-io/vda/ioTime", "disk-io/sda/ioTime",
+            "proc/vnf/cpu", "proc/vnf/net-io/bytes"
+    };
+
+    // These metrics will STAY when using "medium"
+    static final String[] MEDIUM_FILTER = new String[] {
+            "", ""
+    };
+
+    static final String[] BAD_METRICS = new String[] {
+            "disk-usage///free", "disk-usage///used", "num_procs", "proc/vnf/num"
+    };
 
 }

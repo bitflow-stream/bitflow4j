@@ -1,6 +1,6 @@
 package metrics.main.prototype;
 
-import metrics.algorithms.MetricFilterAlgorithm;
+import metrics.algorithms.Algorithm;
 import metrics.algorithms.classification.Model;
 import metrics.algorithms.classification.WekaLearner;
 import metrics.io.file.FileMetricReader;
@@ -17,22 +17,24 @@ import java.io.IOException;
 public class TrainAggregated {
 
     public static void main(String[] args) throws IOException {
-        if (args.length != 3) {
-            System.err.println("Need 3 parameters: <input " + Train.TRAINING_INPUT_FORMAT + " file> <ini-file> <output file>");
+        if (args.length != 4) {
+            System.err.println("Parameters: <input " + Train.TRAINING_INPUT_FORMAT + " file> <ini-file> <output file> <filter>");
             return;
         }
         String input = args[0];
         String iniFile = args[1];
         String target = args[2];
+        String filter = args[3];
 
         FeatureStatistics stats = new FeatureStatistics(iniFile);
-        TrainedDataModel model = createDataModel(input, stats);
+        TrainedDataModel model = createDataModel(input, stats, filter);
         Train.storeDataModel(target, model);
     }
 
-    static TrainedDataModel createDataModel(String inputFile, FeatureStatistics stats) throws IOException {
+    static TrainedDataModel createDataModel(String inputFile, FeatureStatistics stats, String filter) throws IOException {
         J48 classifier = Train.createClassifier();
         WekaLearner<J48> learner = new WekaLearner<>(new Model<>(), classifier);
+        Algorithm filterAlgo = Train.getFilter(filter);
 
         new AlgorithmPipeline(AlgorithmPipeline.fileReader(inputFile, Train.TRAINING_INPUT_FORMAT, FileMetricReader.FILE_NAME))
                 .fork(new OpenStackSampleSplitter(),
@@ -43,12 +45,7 @@ public class TrainAggregated {
                             }
 
                             p
-                                    .step(new MetricFilterAlgorithm(
-                                            "disk-usage///free", "disk-usage///free_avg", "disk-usage///free_slope",
-                                            "disk-usage///used", "disk-usage///used_avg", "disk-usage///used_slope",
-                                            "num_procs", "num_procs_avg", "num_procs_slope",
-                                            "proc/vnf/num", "proc/vnf/num_avg", "proc/vnf/num_slope",
-                                            "proc/vnf/threads", "proc/vnf/threads_avg", "proc/vnf/threads_slope"))
+                                    .step(filterAlgo)
                                     .step(learner);
                         })
                 .runAndWait();
