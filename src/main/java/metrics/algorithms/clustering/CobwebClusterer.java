@@ -1,25 +1,19 @@
 package metrics.algorithms.clustering;
 
-import java.io.File;
 import metrics.Header;
 import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
+import metrics.main.Config;
 import weka.clusterers.Cobweb;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
 
+import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Stream;
-import metrics.main.Config;
 
 /**
  * Created by anton on 5/13/16.
@@ -106,9 +100,9 @@ public class CobwebClusterer extends AbstractAlgorithm {
 
         try {
             int clusterNum = cluster.clusterInstance(instance);
-            String label = "Cluster-" + clusterNum;
-            return new Sample(sample.getHeader(), sample.getMetrics(),
-                    sample.getTimestamp(), sample.getSource(), label);
+            Sample outSample = new Sample(sample.getHeader(), sample.getMetrics(), sample);
+            outSample.setTag(ClusterConstants.CLUSTER_TAG, String.valueOf(clusterNum));
+            return outSample;
         } catch (Exception e) {
             throw new IOException("Clustering failed", e);
         }

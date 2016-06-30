@@ -17,8 +17,8 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
     private final static String LINE = "----------------------------------------------";
     private final static String HASH = "##############################################";
     private final static String NEW_LINE = System.getProperty("line.separator");
-    private static final String INCORRECT_HEADERS
-            = "Incorrect headers found. Try adding a MOAStreamClusterer to the Algorithm pipeline and set setEvaluationTags to true.";
+    private static final String INCORRECT_HEADERS = "Incorrect headers found. Try adding a MOAStreamClusterer to the Algorithm pipeline.";
+
     //    private ExternalClusterer clusterer;
     private boolean removeEvaluationTag;
     private long sampleInterval;
@@ -61,7 +61,7 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
 
         sampleCount++;
 //        String[] parsedLabels = sample.getLabel().split(MOAStreamClusterer.LABEL_SEPARATOR);
-//        if (parsedLabels == null || parsedLabels.length != 3) throw new IOException("Incompatible Label dound for sample; missing separators for predicted label and cluster, consider adding a MOAStreamClusterer to the Algorithm pipeline and set ");
+//        if (parsedLabels == null || parsedLabels.length != 3) throw new IOException("Incompatible Label found for sample; missing separators for predicted label and cluster, consider adding a MOAStreamClusterer to the Algorithm pipeline and set ");
 //        String originalLabel = parsedLabels[0];
         //get Original Label and clusterid from tags if available
         String predictedLabel = sample.getLabel();
@@ -94,11 +94,11 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
             recalculate();
         }
 
-        Sample sampleToReturn = new Sample(sample.getHeader(), sample.getMetrics(), sample.getTimestamp(), sample.getSource(), sample
-                .getLabel());
-        if (!removeEvaluationTag) {
-            sampleToReturn.setTag(ClusterConstants.ORIGINAL_LABEL_TAG, sample.getTag(ClusterConstants.ORIGINAL_LABEL_TAG));
-            sampleToReturn.setTag(ClusterConstants.CLUSTER_TAG, sample.getTag(ClusterConstants.CLUSTER_TAG));
+        Sample sampleToReturn = new Sample(sample.getHeader(), sample.getMetrics(), sample);
+        if (removeEvaluationTag) {
+            sampleToReturn.deleteTag(ClusterConstants.ORIGINAL_LABEL_TAG);
+            sampleToReturn.deleteTag(ClusterConstants.CLUSTER_TAG);
+
         }
         return sampleToReturn;
     }

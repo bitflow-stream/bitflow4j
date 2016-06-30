@@ -4,11 +4,10 @@ package metrics.algorithms.clustering;
  * Created by Malcolm-X on 27.06.2016.
  */
 public class ClusterConstants {
-    public static final java.lang.String LABEL_SEPARATOR = ":";
     public static final String UNCLASSIFIED_CLUSTER = "unclassified";
     public static final String UNKNOWN_LABEL = "unknown";
-    public static final String ORIGINAL_LABEL_TAG = "MOA_ORIGINAL_LABEL";
-    public static final String CLUSTER_TAG = "MOA_CLUSTER_ID";
+    public static final String ORIGINAL_LABEL_TAG = "cls-input";
+    public static final String CLUSTER_TAG = "cluster";
     /**
      * label for a noise cluster
      */

@@ -1,9 +1,5 @@
 package metrics.algorithms.clustering;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.TreeSet;
 import metrics.Sample;
 import metrics.algorithms.WindowBatchAlgorithm;
 import metrics.io.window.AbstractSampleWindow;
@@ -13,11 +9,16 @@ import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.TreeSet;
+
 /**
  *
  * @author fschmidt
  */
-public abstract class AbstractMOAClusterer extends WindowBatchAlgorithm{
+public abstract class AbstractMOAClusterer extends WindowBatchAlgorithm {
     final SampleWindow window = new SampleWindow();
 
     @Override

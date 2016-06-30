@@ -83,6 +83,10 @@ public class Sample {
         return tags.get(name);
     }
 
+    public void deleteTag(String name) {
+        tags.remove(name);
+    }
+
     public void setTag(String name, String value) {
         tags.put(name, value);
     }
