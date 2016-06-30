@@ -4,10 +4,9 @@ import metrics.algorithms.FeatureStandardizer;
 import metrics.algorithms.MetricFilterAlgorithm;
 import metrics.algorithms.TimestampSort;
 import metrics.algorithms.classification.ExternalClassifier;
-import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
 import metrics.algorithms.clustering.ExternalClusterer;
 import metrics.algorithms.clustering.MOAStreamClusterer;
-import metrics.algorithms.clustering.MOAStreamEvaluator;
+import metrics.algorithms.evaluation.MOAStreamEvaluator;
 import metrics.io.file.FileGroup;
 import metrics.io.file.FileMetricReader;
 import metrics.io.fork.TwoWayFork;
@@ -20,6 +19,9 @@ import weka.classifiers.AbstractClassifier;
 
 import java.io.File;
 import java.io.IOException;
+import metrics.algorithms.FeatureMinMaxScaler;
+import metrics.algorithms.clustering.AdvancedClusterLabelingAlgorithm;
+import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
 
 @SuppressWarnings("unused")
 public class Main {
@@ -105,10 +107,11 @@ public class Main {
                     String file = outputs.getFile(name.isEmpty() ? "default" : name);
 
                     p
-//                            .step(new FeatureStandardizer())
+                            .step(new FeatureStandardizer())
                             .step(new SourceLabellingAlgorithm())
                             .step(new MOAStreamClusterer(ExternalClusterer.BICO.newInstance(), -1))
-                            .step(new ClusterLabelingAlgorithm(0.0))
+                            .step(new AdvancedClusterLabelingAlgorithm(0.0))
+                            .step(new LabelAggregatorAlgorithm(20))
                             .step(new MOAStreamEvaluator(true, 1000, true));
 
                 })

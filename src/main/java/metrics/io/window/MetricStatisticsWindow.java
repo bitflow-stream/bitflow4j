@@ -18,7 +18,7 @@ public class MetricStatisticsWindow extends MetricWindow {
     }
 
     @Override
-    void flushSamples(int numSamples) {
+    public void flushSamples(int numSamples) {
         for (int i = 0; i < numSamples; i++) {
             if (i >= values.size()) break;
             double val = values.get(i);

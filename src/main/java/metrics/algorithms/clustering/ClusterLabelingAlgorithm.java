@@ -33,11 +33,9 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
         } catch (NullPointerException | ArrayIndexOutOfBoundsException | NumberFormatException e) {
             throw new IOException("Sample not prepared for labeling, add a clusterer to the pipeline or fix current clusterer (failed to extract cluster id from point label or original label not found).");
         }
+        clusterCounter.increment(labelClusterId, originalLabel);
+        Sample sampleToReturn = new Sample(sample.getHeader(), sample.getMetrics(), sample.getTimestamp(), sample.getSource(), clusterCounter.calculateLabel(labelClusterId));
 
-        String outLabel = clusterCounter.increment(labelClusterId, originalLabel);
-
-        Sample sampleToReturn = new Sample(sample.getHeader(), sample.getMetrics(), sample);
-        sampleToReturn.setLabel(outLabel);
         sampleToReturn.setTag(ClusterConstants.ORIGINAL_LABEL_TAG, originalLabel);
         return sampleToReturn;
     }

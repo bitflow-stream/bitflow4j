@@ -15,13 +15,22 @@ public class ClusterCounter {
         this.thresholdToClassifyCluster = thresholdToClassifyCluster;
         clusterIdToCounters = new HashMap<>();
     }
-
-    public String increment(int id, String label) {
-        if (clusterIdToCounters.containsKey(id)) return clusterIdToCounters.get(id).increment(label);
-        else {
+    
+    public void increment(int id, String label) {
+        if (clusterIdToCounters.containsKey(id)) {
+            clusterIdToCounters.get(id).increment(label);
+        } else {
             ClusterCounters cc = new ClusterCounters(id, thresholdToClassifyCluster);
             clusterIdToCounters.put(id, cc);
-            return cc.increment(label);
+            cc.increment(label);
         }
+    }
+    
+    public String calculateLabel(int id){
+        return clusterIdToCounters.get(id).calculateLabel();
+    }
+    
+    public Map<String,Double> getLabelInclusionProbability(int id){
+        return clusterIdToCounters.get(id).getLabelInclusionProbability();
     }
 }

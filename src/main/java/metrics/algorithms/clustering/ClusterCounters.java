@@ -18,7 +18,6 @@ public class ClusterCounters {
     }
 
     public long getTotal() {
-
         return total;
     }
 
@@ -27,12 +26,10 @@ public class ClusterCounters {
     }
 
     public Map<String, Integer> getCounters() {
-
         return counters;
     }
 
     public int getClusterId() {
-
         return clusterId;
     }
 
@@ -40,17 +37,16 @@ public class ClusterCounters {
         this.clusterId = clusterId;
     }
 
-    public String increment(String label) {
+    public void increment(String label) {
         total++;
         if (counters.containsKey(label)) {
             counters.put(label, counters.get(label) + 1);
         } else {
             counters.put(label, 1);
         }
-        return thresholdToClassifyCluster < 0 ? null : calculateLabel();
     }
 
-    private String calculateLabel() {
+    public String calculateLabel() {
         if (clusterId != -1) {
             //TODO: allow multilabel clusters
             String bestLabel = counters.entrySet().stream().max((entry1, entry2) -> entry1.getValue() > entry2
@@ -67,5 +63,14 @@ public class ClusterCounters {
             //if clusterId == -1, its noise
             return ClusterConstants.NOISE_CLUSTER;
         }
+    }
+    
+    public Map<String, Double> getLabelInclusionProbability(){
+        Map<String, Double> inclusionProbability = new HashMap<>();
+        counters.entrySet().stream()
+                .forEach((entry) -> {
+                    inclusionProbability.put(entry.getKey(), (double)entry.getValue()/(double)total);
+        });
+        return inclusionProbability;
     }
 }
