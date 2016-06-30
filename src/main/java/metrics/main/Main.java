@@ -19,6 +19,7 @@ import weka.classifiers.AbstractClassifier;
 
 import java.io.File;
 import java.io.IOException;
+import metrics.algorithms.FeatureMinMaxScaler;
 import metrics.algorithms.clustering.AdvancedClusterLabelingAlgorithm;
 import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
 
@@ -106,7 +107,7 @@ public class Main {
                     String file = outputs.getFile(name.isEmpty() ? "default" : name);
 
                     p
-//                            .step(new FeatureStandardizer())
+                            .step(new FeatureStandardizer())
                             .step(new SourceLabellingAlgorithm())
                             .step(new MOAStreamClusterer(ExternalClusterer.BICO.newInstance(), -1))
                             .step(new AdvancedClusterLabelingAlgorithm(0.0))
