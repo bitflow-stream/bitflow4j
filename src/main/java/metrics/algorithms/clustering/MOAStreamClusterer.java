@@ -99,14 +99,15 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
                     System.out.println("----------------------");
                     System.out.println("cluster id: " + clusterId);
                     ClusterCounters scenarioCount = clusterLabelMaps.get(clusterId);
-                    Stream<Map.Entry<String, Integer>> sorted = scenarioCount.getCounters().entrySet().stream().sorted(Collections.reverseOrder(
-                            Map.Entry
-                            .comparingByValue()));
+                    Stream<Map.Entry<String, Integer>> sorted = scenarioCount.getCounters().entrySet().stream().sorted(Collections
+                            .reverseOrder(
+                                    Map.Entry
+                                    .comparingByValue()));
                     sorted.forEach(System.out::println);
                 }
                 System.out.println("##########END##############");
 //                System.out.println("Sample: " + Arrays.toString(sample.getMetrics()));
-                ClusterEvaluator eval = new ClusterEvaluator(clusterLabelMaps, 0.0, sampleCount+1);
+                ClusterEvaluator eval = new ClusterEvaluator(clusterLabelMaps, 0.0, sampleCount + 1);
                 System.out.println(eval.toString());
             }
             sampleCount++;
@@ -114,6 +115,7 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
 
         Sample sampleToReturn = new Sample(expectedHeader, values, sample);
         sampleToReturn.setLabel(clusterLabel);
+//        sampleToReturn.setLabel(clusterLabelMaps.get(bestFitCluster).calculateLabel());
         sampleToReturn.setTag(ClusterConstants.CLUSTER_TAG, Integer.toString(bestFitCluster));
         sampleToReturn.setTag(ClusterConstants.ORIGINAL_LABEL_TAG, sample.getLabel());
         return sampleToReturn;
@@ -167,7 +169,7 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
         return new ArrayList<>(allLabels);
     }
 
-    private void printClustererParameters(){
+    private void printClustererParameters() {
         //Sysout Parameter
         if (this.clusterer instanceof WithDBSCAN) {
             System.out.println("horizonOption: " + ((WithDBSCAN) this.clusterer).horizonOption.getValue());
@@ -198,7 +200,7 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
         }
     }
 
-    private void setupClustererParameter(Sample firstSample){
+    private void setupClustererParameter(Sample firstSample) {
         int numMetrics = firstSample.getHeader().header.length;
         numMetrics++; // The class/label attribute is added
 
