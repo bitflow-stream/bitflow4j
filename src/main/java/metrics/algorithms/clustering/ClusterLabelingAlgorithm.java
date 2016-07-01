@@ -25,13 +25,14 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
     protected Sample executeSample(Sample sample) throws IOException {
         int labelClusterId = sample.getClusterId();
         String originalLabel = sample.getLabel();
-        clusterCounter.increment(labelClusterId, originalLabel);
+        if (originalLabel != null)
+            clusterCounter.increment(labelClusterId, originalLabel);
         String newLabel = clusterCounter.calculateLabel(labelClusterId);
 
         Sample sampleToReturn;
         if (includeProbabilities) {
             // Extend Header
-            String allAnomalies[] = clusterCounter.getLabelInclusionProbability(labelClusterId).keySet().toArray(new String[0]);
+            String allAnomalies[] = clusterCounter.getAllLabels().toArray(new String[0]);
             for (int i = 0; i < allAnomalies.length; i++) {
                 allAnomalies[i] = INC_PROB_PREFIX + allAnomalies[i];
             }
@@ -52,7 +53,8 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
         }
 
         sampleToReturn.setLabel(newLabel);
-        sampleToReturn.setTag(ClusterConstants.ORIGINAL_LABEL_TAG, originalLabel);
+        if (originalLabel != null)
+            sampleToReturn.setTag(ClusterConstants.ORIGINAL_LABEL_TAG, originalLabel);
         return sampleToReturn;
     }
 

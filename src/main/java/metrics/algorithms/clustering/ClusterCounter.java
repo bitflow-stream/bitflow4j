@@ -1,13 +1,13 @@
 package metrics.algorithms.clustering;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by Malcolm-X on 27.06.2016.
  */
 public class ClusterCounter {
 
+    private Set<String> allLabels = new TreeSet<>();
     private Map<Integer, ClusterCounters> clusterIdToCounters;
     private double thresholdToClassifyCluster;
 
@@ -17,6 +17,7 @@ public class ClusterCounter {
     }
     
     public void increment(int id, String label) {
+        allLabels.add(label);
         if (clusterIdToCounters.containsKey(id)) {
             clusterIdToCounters.get(id).increment(label);
         } else {
@@ -27,10 +28,27 @@ public class ClusterCounter {
     }
     
     public String calculateLabel(int id){
-        return clusterIdToCounters.get(id).calculateLabel();
+        ClusterCounters counters = clusterIdToCounters.get(id);
+        if (counters == null) {
+            return ClusterConstants.UNKNOWN_LABEL;
+        } else {
+            return counters.calculateLabel();
+        }
     }
-    
-    public Map<String,Double> getLabelInclusionProbability(int id){
-        return clusterIdToCounters.get(id).getLabelInclusionProbability();
+
+    private static final Map<String, Double> empty_map = new HashMap<>();
+
+    public Map<String, Double> getLabelInclusionProbability(int id) {
+        ClusterCounters counters = clusterIdToCounters.get(id);
+        if (counters == null) {
+            return empty_map;
+        } else {
+            return counters.getLabelInclusionProbability();
+        }
     }
+
+    public Collection<String> getAllLabels() {
+        return allLabels;
+    }
+
 }
