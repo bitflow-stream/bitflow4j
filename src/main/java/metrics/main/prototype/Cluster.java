@@ -1,11 +1,13 @@
 package metrics.main.prototype;
 
 import metrics.Sample;
+import metrics.algorithms.AbstractAlgorithm;
 import metrics.algorithms.OnlineFeatureStandardizer;
-import metrics.algorithms.clustering.ClusterConstants;
-import metrics.algorithms.clustering.ClusterCounters;
+import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
 import metrics.algorithms.clustering.ExternalClusterer;
+import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
 import metrics.algorithms.clustering.MOAStreamClusterer;
+import metrics.algorithms.evaluation.MOAStreamEvaluator;
 import metrics.io.MetricPrinter;
 import metrics.io.fork.TwoWayFork;
 import metrics.io.net.TcpMetricsOutput;
@@ -15,15 +17,14 @@ import metrics.main.analysis.OpenStackSampleSplitter;
 import moa.clusterers.AbstractClusterer;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
 
 /**
  * Created by anton on 6/21/16.
  */
 public class Cluster {
+
+    private static final double classifiedClusterThreshold = 0.1;
+    private static final long labelAggregationWindow = 2; // Seconds
 
     public static void main(String[] args) throws IOException {
         if (args.length != 5) {
@@ -37,7 +38,7 @@ public class Cluster {
         String hostname = args[4];
 
         AbstractClusterer clusterer = ExternalClusterer.BICO.newInstance();
-        MOAStreamClusterer<AbstractClusterer> moaClusterer = new MOAStreamClusterer<>(clusterer, 0);
+        MOAStreamClusterer<AbstractClusterer> moaClusterer = new MOAStreamClusterer<>(clusterer);
 
         new AlgorithmPipeline(receivePort, Analyse.TCP_FORMAT)
                 .fork(new OpenStackSampleSplitter(),
@@ -49,7 +50,10 @@ public class Cluster {
                             p
                                     .step(new OnlineFeatureStandardizer(model.averages, model.stddevs))
                                     .step(moaClusterer)
-                                    .step(new SampleOutput(new HashSet<>(model.allClasses), hostname, moaClusterer))
+                                    .step(new ClusterLabelingAlgorithm(classifiedClusterThreshold, true))
+                                    .step(new LabelAggregatorAlgorithm(labelAggregationWindow))
+                                    .step(new MOAStreamEvaluator(1, false, true))
+                                    .step(new SampleOutput(hostname))
                                     .fork(new TwoWayFork(),
                                             (type, out) -> out.output(
                                                     type == TwoWayFork.ForkType.Primary ?
@@ -59,62 +63,23 @@ public class Cluster {
                 .runAndWait();
     }
 
-    private static class SampleOutput extends SampleAnalysisOutput {
+    private static class SampleOutput extends AbstractAlgorithm {
 
-        private static final String OTHER_LABEL = "other";
-        private final MOAStreamClusterer<AbstractClusterer> clusterer;
+        private final String hostname;
 
-        public SampleOutput(Collection<String> allClasses, String hostname, MOAStreamClusterer<AbstractClusterer> clusterer) {
-            super(fillAllClasses(allClasses), hostname);
-            this.clusterer = clusterer;
+        public SampleOutput(String hostname) {
+            this.hostname = hostname;
         }
 
-        private static Collection<String> fillAllClasses(Collection<String> allClasses) {
-            ArrayList<String> classes = new ArrayList<>(allClasses);
-            classes.sort(String.CASE_INSENSITIVE_ORDER);
-            classes.add(OTHER_LABEL);
-            classes.add(ClusterConstants.UNKNOWN_LABEL);
-            return classes;
-        }
-
-        @SuppressWarnings("StringEquality")
         protected Sample executeSample(Sample sample) throws IOException {
-            String cluster = sample.getTag(ClusterConstants.CLUSTER_TAG);
-            ClusterCounters counts = clusterer.stringLabelMaps.get(cluster);
-            if (counts == null) {
-                System.err.println("Warning: Failed to get cluster counts for sample with cluster " + cluster);
-                return null;
-            }
-
-            double values[] = new double[header.header.length];
-            for (Map.Entry<String, Integer> entry : counts.getCounters().entrySet()) {
-                if (entry.getKey() == ClusterConstants.UNKNOWN_LABEL) {
-                    continue;
-                }
-                double probability = entry.getValue().doubleValue() / (double) counts.getTotal();
-                int index;
-                if (fieldIndices.containsKey(entry.getKey())) {
-                    index = fieldIndices.get(entry.getKey());
-                } else {
-                    index = fieldIndices.get(OTHER_LABEL);
-                }
-                values[index] = probability;
-            }
-            double unknownPercentage = 0;
-            Integer unknowns = counts.getCounters().get(ClusterConstants.UNKNOWN_LABEL);
-            if (unknowns != null) {
-                unknownPercentage = unknowns.doubleValue() / (double) (counts.getTotal() + unknowns);
-            }
-            values[fieldIndices.get(ClusterConstants.UNKNOWN_LABEL)] = unknownPercentage;
-
-            Map<String, String> tags = sample.getTags();
-            tags.put(SampleAnalysisOutput.TAG_HOSTNAME, hostname);
-            return new Sample(header, values, sample.getTimestamp(), tags);
+            Sample output = new Sample(sample);
+            output.setTag(SampleAnalysisOutput.TAG_HOSTNAME, hostname);
+            return output;
         }
 
         @Override
         public String toString() {
-            return "clustered sample output";
+            return "hostname tagger";
         }
     }
 

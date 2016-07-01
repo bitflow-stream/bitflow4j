@@ -1,6 +1,5 @@
 package metrics.algorithms.clustering;
 
-import metrics.algorithms.evaluation.ClusterEvaluator;
 import com.github.javacliparser.FloatOption;
 import com.github.javacliparser.IntOption;
 import com.yahoo.labs.samoa.instances.WekaToSamoaInstanceConverter;
@@ -22,8 +21,10 @@ import weka.core.Instances;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.*;
-import java.util.stream.Stream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  *
@@ -31,16 +32,11 @@ import java.util.stream.Stream;
  */
 public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> extends AbstractAlgorithm {
 
-    public final Map<Integer, ClusterCounters> clusterLabelMaps = new HashMap<>();
-    public final Map<String, ClusterCounters> stringLabelMaps = new HashMap<>();
     private final T clusterer;
     private final SampleConverger converger = new SampleConverger(); // No predefined expected header
-    private int sampleCount = 0;
-    private int printClusterDetails = 0;
 
-    public MOAStreamClusterer(T clusterer, int printClusterDetails) {
+    public MOAStreamClusterer(T clusterer) {
         this.clusterer = clusterer;
-        this.printClusterDetails = printClusterDetails;
     }
 
     private void initalizeClusterer(Sample firstSample) {
@@ -77,47 +73,8 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
             clusterNum++;
         }
 
-//        Evaluate Clusters
-        //TODO refector: better refactor everything
-        String clusterLabel = bestFitCluster < 0 ? ClusterConstants.UNCLASSIFIED_CLUSTER : String.valueOf(bestFitCluster);
-        ClusterCounters counters = clusterLabelMaps.get(bestFitCluster);
-        if (counters == null) {
-            counters = new ClusterCounters(bestFitCluster, -1);
-            clusterLabelMaps.put(bestFitCluster, counters);
-            stringLabelMaps.put(clusterLabel, counters);
-        }
-        counters.increment(label);
-
-        //Print Evaluation
-        if (printClusterDetails > 0) {
-            if (sampleCount % printClusterDetails == 0) {
-                System.out.println("##########MAP-COUNT##############");
-                List<Integer> clusterIds = new ArrayList<>(clusterLabelMaps.keySet());
-                Collections.sort(clusterIds);
-
-                for (Integer clusterId : clusterIds) {
-                    System.out.println("----------------------");
-                    System.out.println("cluster id: " + clusterId);
-                    ClusterCounters scenarioCount = clusterLabelMaps.get(clusterId);
-                    Stream<Map.Entry<String, Integer>> sorted = scenarioCount.getCounters().entrySet().stream().sorted(Collections
-                            .reverseOrder(
-                                    Map.Entry
-                                    .comparingByValue()));
-                    sorted.forEach(System.out::println);
-                }
-                System.out.println("##########END##############");
-//                System.out.println("Sample: " + Arrays.toString(sample.getMetrics()));
-                ClusterEvaluator eval = new ClusterEvaluator(clusterLabelMaps, 0.0, sampleCount + 1);
-                System.out.println(eval.toString());
-            }
-            sampleCount++;
-        }
-
         Sample sampleToReturn = new Sample(expectedHeader, values, sample);
-        sampleToReturn.setLabel(clusterLabel);
-//        sampleToReturn.setLabel(clusterLabelMaps.get(bestFitCluster).calculateLabel());
         sampleToReturn.setTag(ClusterConstants.CLUSTER_TAG, Integer.toString(bestFitCluster));
-        sampleToReturn.setTag(ClusterConstants.ORIGINAL_LABEL_TAG, sample.getLabel());
         return sampleToReturn;
     }
 

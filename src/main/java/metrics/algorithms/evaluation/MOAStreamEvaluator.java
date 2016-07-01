@@ -2,17 +2,19 @@ package metrics.algorithms.evaluation;
 
 import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
+import metrics.algorithms.clustering.ClusterConstants;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-import metrics.algorithms.clustering.ClusterConstants;
 
 /**
  * Created by Malcolm-X on 27.06.2016.
  */
 public class MOAStreamEvaluator extends AbstractAlgorithm {
+
+    public static final String PRECISION_METRIC = "_overall_precision_";
 
     private final static String LINE = "----------------------------------------------";
     private final static String HASH = "##############################################";
@@ -20,7 +22,6 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
     private static final String INCORRECT_HEADERS = "Incorrect headers found. Try adding a MOAStreamClusterer to the Algorithm pipeline.";
 
     //    private ExternalClusterer clusterer;
-    private boolean removeEvaluationTag;
     private long sampleInterval;
     private long truePostivesSum, falsePositivesSum, falseNegativesSum;
     private Set<String> labels;
@@ -36,12 +37,13 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
     private double medianRecall;
     private double medianPrecision;
     private boolean printOnRecalculation;
+    private final boolean extendSample;
 
-    public MOAStreamEvaluator(boolean removeEvaluationTag, long sampleInterval, boolean printOnRecalculation) {
-        this.removeEvaluationTag = removeEvaluationTag;
+    // If extendSample is true, the overall precision will be added to outgoing samples
+    public MOAStreamEvaluator(long sampleInterval, boolean printOnRecalculation, boolean extendSample) {
+        this.extendSample = extendSample;
         this.sampleInterval = sampleInterval;
         this.printOnRecalculation = printOnRecalculation;
-//        this.clusterer = clusterer;
         sampleCount = 0;
         labelToFN = new HashMap<>();
         labelToFP = new HashMap<>();
@@ -58,49 +60,38 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
 
     @Override
     protected Sample executeSample(Sample sample) throws IOException {
-
-        sampleCount++;
-//        String[] parsedLabels = sample.getLabel().split(MOAStreamClusterer.LABEL_SEPARATOR);
-//        if (parsedLabels == null || parsedLabels.length != 3) throw new IOException("Incompatible Label found for sample; missing separators for predicted label and cluster, consider adding a MOAStreamClusterer to the Algorithm pipeline and set ");
-//        String originalLabel = parsedLabels[0];
-        //get Original Label and clusterid from tags if available
         String predictedLabel = sample.getLabel();
         String originalLabel = sample.getTag(ClusterConstants.ORIGINAL_LABEL_TAG);
-        labels.add(predictedLabel);
-        labels.add(originalLabel);
-//        try {
-//            int clusterId = Integer.parseInt(sample.getTag(MOAStreamClusterer.CLUSTER_TAG));
-//        } catch (NumberFormatException e){
-//            throw new IOException(INCORRECT_HEADERS);
-//        }
-        if (predictedLabel == null || originalLabel == null) {
-            throw new IOException(INCORRECT_HEADERS);
-        }
-        if (!originalLabel.equals(ClusterConstants.UNKNOWN_LABEL) && !predictedLabel.equals(ClusterConstants.NOISE_CLUSTER)
-                && !predictedLabel.equals(ClusterConstants.UNCLASSIFIED_CLUSTER)) {
-            if (predictedLabel.equals(originalLabel)) {
-                //if labels match, increment counter by 1 for labelToTP
-                correctPredictions++;
-                labelToTP.put(originalLabel, labelToTP.containsKey(originalLabel) ? labelToTP.get(originalLabel) + 1 : 1);
 
-            } else {
-                wrongPredictions++;
-                //if labels dont match, increment counter by 1 for labelToFP(predictedLabe) and labelTOFN(originalLabel)
-                labelToFP.put(predictedLabel, labelToFP.containsKey(predictedLabel) ? labelToFP.get(predictedLabel) + 1 : 1);
-                labelToFN.put(originalLabel, labelToFN.containsKey(originalLabel) ? labelToFN.get(originalLabel) + 1 : 1);
+        if (predictedLabel != null && originalLabel != null) {
+            // Cannot evaluate sample without both predicted and original label.
+            sampleCount++;
+            labels.add(predictedLabel);
+            labels.add(originalLabel);
+            if (!originalLabel.equals(ClusterConstants.UNKNOWN_LABEL) && !predictedLabel.equals(ClusterConstants.NOISE_CLUSTER)
+                    && !predictedLabel.equals(ClusterConstants.UNCLASSIFIED_CLUSTER)) {
+                if (predictedLabel.equals(originalLabel)) {
+                    //if labels match, increment counter by 1 for labelToTP
+                    correctPredictions++;
+                    labelToTP.put(originalLabel, labelToTP.containsKey(originalLabel) ? labelToTP.get(originalLabel) + 1 : 1);
+
+                } else {
+                    wrongPredictions++;
+                    //if labels dont match, increment counter by 1 for labelToFP(predictedLabe) and labelTOFN(originalLabel)
+                    labelToFP.put(predictedLabel, labelToFP.containsKey(predictedLabel) ? labelToFP.get(predictedLabel) + 1 : 1);
+                    labelToFN.put(originalLabel, labelToFN.containsKey(originalLabel) ? labelToFN.get(originalLabel) + 1 : 1);
+                }
+            }
+            if (checkRecalculationRequirement()) {
+                recalculate();
             }
         }
-        if (checkRecalculationRequirement()) {
-            recalculate();
-        }
 
-        Sample sampleToReturn = new Sample(sample.getHeader(), sample.getMetrics(), sample);
-        if (removeEvaluationTag) {
-            sampleToReturn.deleteTag(ClusterConstants.ORIGINAL_LABEL_TAG);
-            sampleToReturn.deleteTag(ClusterConstants.CLUSTER_TAG);
-
+        if (extendSample) {
+            return sample.extend(new String[] { PRECISION_METRIC }, new double[] { overallPrecision });
+        } else {
+            return sample;
         }
-        return sampleToReturn;
     }
 
     private void recalculate() {
@@ -110,15 +101,9 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
         overallRecall = (double) truePostivesSum / (double) (truePostivesSum + falsePositivesSum);
         overallPrecision = (double) truePostivesSum / (double) (truePostivesSum + falseNegativesSum);
         labels.forEach(label -> {
-            if (labelToTP.get(label) == null) {
-                labelToTP.put(label, 0L);
-            }
-            if (labelToFP.get(label) == null) {
-                labelToFP.put(label, 0L);
-            }
-            if (labelToFN.get(label) == null) {
-                labelToFN.put(label, 0L);
-            }
+            labelToTP.putIfAbsent(label, 0L);
+            labelToFP.putIfAbsent(label, 0L);
+            labelToFN.putIfAbsent(label, 0L);
             labelToPrecision.put(label, (double) labelToTP.get(label) / (double) (labelToTP.get(label) + labelToFP.get(label)));
             labelToRecall.put(label, (double) labelToTP.get(label) / (double) (labelToTP.get(label) + labelToFN.get(label)));
         });

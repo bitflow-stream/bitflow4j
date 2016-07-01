@@ -111,7 +111,8 @@ public class CorrelationAlgorithm extends WindowBatchAlgorithm {
                         if (Double.isNaN(val)) val = 0;
                         corr[i] = val;
                     }
-                    Sample sample = new Sample(header, corr, timestamp, currentSource, metric1 + sourceSeparator + metric2);
+                    Sample sample = new Sample(header, corr, timestamp);
+                    sample.setLabel(metric1 + sourceSeparator + metric2);
                     output.writeSample(sample);
                 }
             }

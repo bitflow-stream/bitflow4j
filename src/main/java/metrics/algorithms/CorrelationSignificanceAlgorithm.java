@@ -64,7 +64,8 @@ public class CorrelationSignificanceAlgorithm extends BatchAlgorithm {
                 int num = sources == null ? 0 : sources.size();
                 values[i] = (double) num;
             }
-            Sample sample = new Sample(header, values, timestamp, null, res.metrics);
+            Sample sample = new Sample(header, values, timestamp);
+            sample.setLabel(res.metrics);
             output.writeSample(sample);
         }
     }

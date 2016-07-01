@@ -4,6 +4,7 @@ import metrics.Header;
 import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
 import metrics.algorithms.SampleConverger;
+import metrics.algorithms.clustering.ClusterConstants;
 import weka.classifiers.Classifier;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
@@ -14,7 +15,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import metrics.algorithms.clustering.ClusterConstants;
 
 /**
  * Created by anton on 4/23/16.
@@ -55,10 +55,10 @@ public class WekaOnlineClassifier<T extends Classifier & Serializable> extends A
         try {
             double result = model.getModel().classifyInstance(instance);
             String label = dataset.classAttribute().value((int) result);
-            Sample sampleToReturn = new Sample(sample.getHeader(),
-                    sample.getMetrics(), sample.getTimestamp(), sample.getSource(), label);
-            sampleToReturn.setTag(ClusterConstants.ORIGINAL_LABEL_TAG, sample.getLabel());
-            sampleToReturn.setTag(ClusterConstants.CLUSTER_TAG, Integer.toString((int)result));
+            String oldLabel = sample.getLabel();
+            Sample sampleToReturn = new Sample(sample.getHeader(), sample.getMetrics(), sample);
+            sampleToReturn.setTag(ClusterConstants.ORIGINAL_LABEL_TAG, oldLabel);
+            sampleToReturn.setLabel(label);
             return sampleToReturn;
         } catch (Exception e) {
             throw new IOException(toString() + "Classification failed", e);

@@ -1,6 +1,9 @@
 package metrics;
 
+import metrics.algorithms.clustering.ClusterConstants;
+
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +27,7 @@ public class Sample {
     private final double[] metrics;
     private final Map<String, String> tags;
 
+    // Do not use this constructor to copy another sample, only to create artificial new samples.
     public Sample(Header header, double[] metrics, Date timestamp, Map<String, String> tags) {
         this.header = header;
         this.timestamp = timestamp;
@@ -31,19 +35,21 @@ public class Sample {
         this.tags = tags == null ? new HashMap<>() : tags;
     }
 
+    // Do not use this constructor to copy another sample, only to create artificial new samples.
     public Sample(Header header, double[] metrics, Date timestamp) {
         this(header, metrics, timestamp, null);
     }
 
+    // Create a copy of the source Sample: the meta data will be copied with a new header and new metrics.
     public Sample(Header header, double[] metrics, Sample source) {
-        this(header, metrics, source.getTimestamp());
-        tags.putAll(source.tags);
+        this(header, metrics, source.getTimestamp(), null);
+        if (source.tags != null)
+            tags.putAll(source.tags);
     }
 
-    public Sample(Header header, double[] metrics, Date timestamp, String source, String label) {
-        this(header, metrics, timestamp, null);
-        setSource(source);
-        setLabel(label);
+    // Create a complete copy of source (reuse the metrics array)
+    public Sample(Sample source) {
+        this(source.getHeader(), source.getMetrics(), source);
     }
 
     public static Sample unmarshallSample(Header header, double[] metrics, Date timestamp, String tags) throws IOException {
@@ -119,7 +125,22 @@ public class Sample {
         setTag(TAG_LABEL, label);
     }
 
+    public int getClusterId() throws IOException {
+        int labelClusterId;
+        try {
+            labelClusterId = Integer.parseInt(getTag(ClusterConstants.CLUSTER_TAG));
+        } catch (NullPointerException | ArrayIndexOutOfBoundsException | NumberFormatException e) {
+            throw new IOException(
+                    "Sample not prepared for labeling, add a clusterer to the pipeline or fix current clusterer"+
+                            " (failed to extract cluster id from point label or original label not found).");
+        }
+        return labelClusterId;
+    }
+
     public static String escapeTagString(String tag) {
+        if (tag == null) {
+            return "NULL";
+        }
         return tag.replaceAll("[ =\n,]", "_");
     }
 
@@ -171,6 +192,24 @@ public class Sample {
 
     public static Sample newEmptySample() {
         return new Sample(new Header(new String[0], false), new double[0], new Date());
+    }
+
+    public Sample extend(String[] newFields, double newValues[]) {
+        if (newFields.length != newValues.length) {
+            throw new IllegalArgumentException("Need equal number of new fields and values");
+        }
+
+        // Extend Header
+        int incomingFields = getHeader().header.length;
+        String[] headerNames = Arrays.copyOf(getHeader().header, incomingFields + newFields.length);
+        System.arraycopy(newFields, 0, headerNames, incomingFields, newFields.length);
+        Header outHeader = new Header(headerNames, getHeader());
+
+        // Extend Metrics
+        double[] outMetrics = Arrays.copyOf(getMetrics(), headerNames.length);
+        System.arraycopy(newValues, 0, outMetrics, incomingFields, newValues.length);
+
+        return new Sample(outHeader, outMetrics, this);
     }
 
 }

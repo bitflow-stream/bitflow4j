@@ -45,7 +45,7 @@ public class MetricCounter extends AbstractAlgorithm {
         totalMetrics += num;
         metricsThisHeader += num;
         double[] values = new double[]{num, samplesThisHeader, metricsThisHeader, totalSamples, totalMetrics, headers};
-        return new Sample(outputHeader, values, sample.getTimestamp());
+        return new Sample(outputHeader, values, sample);
     }
 
 }

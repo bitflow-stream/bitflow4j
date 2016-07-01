@@ -4,7 +4,9 @@ import metrics.algorithms.FeatureStandardizer;
 import metrics.algorithms.MetricFilterAlgorithm;
 import metrics.algorithms.TimestampSort;
 import metrics.algorithms.classification.ExternalClassifier;
+import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
 import metrics.algorithms.clustering.ExternalClusterer;
+import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
 import metrics.algorithms.clustering.MOAStreamClusterer;
 import metrics.algorithms.evaluation.MOAStreamEvaluator;
 import metrics.io.file.FileGroup;
@@ -19,8 +21,6 @@ import weka.classifiers.AbstractClassifier;
 
 import java.io.File;
 import java.io.IOException;
-import metrics.algorithms.clustering.AdvancedClusterLabelingAlgorithm;
-import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
 
 @SuppressWarnings("unused")
 public class Main {
@@ -108,10 +108,10 @@ public class Main {
                     p
                             .step(new FeatureStandardizer())
                             .step(new SourceLabellingAlgorithm())
-                            .step(new MOAStreamClusterer(ExternalClusterer.BICO.newInstance(), -1))
-                            .step(new AdvancedClusterLabelingAlgorithm(0.0))
+                            .step(new MOAStreamClusterer<>(ExternalClusterer.BICO.newInstance()))
+                            .step(new ClusterLabelingAlgorithm(0.0, false))
                             .step(new LabelAggregatorAlgorithm(10))
-                            .step(new MOAStreamEvaluator(true, 1000, true));
+                            .step(new MOAStreamEvaluator(1000, true, false));
 
                 })
                 .runAndWait();
@@ -176,7 +176,7 @@ public class Main {
                     .step(new FeatureStandardizer())
                     .fork(new OpenStackSampleSplitter().fillInfo(),
                             (name, p) -> {
-                                p.step(new MOAStreamClusterer<>(clusterer, 100));
+                                p.step(new MOAStreamClusterer<>(clusterer));
                     })
                     .runAndWait();
         }

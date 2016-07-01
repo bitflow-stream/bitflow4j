@@ -1,7 +1,6 @@
 package metrics.algorithms;
 
 import metrics.Header;
-import metrics.Sample;
 import metrics.io.MetricOutputStream;
 import metrics.io.window.AbstractSampleWindow;
 import metrics.io.window.MetricStatisticsWindow;
@@ -77,8 +76,7 @@ public class VarianceFilterAlgorithm extends WindowBatchAlgorithm {
                 metrics[metricNr] = validStats.get(metricNr).getValue(sampleNr);
             }
             SampleMetadata meta = window.getSampleMetadata(sampleNr);
-            Sample sample = new Sample(header, metrics, meta.timestamp, meta.source, meta.label);
-            output.writeSample(sample);
+            output.writeSample(meta.newSample(header, metrics));
         }
 
         System.err.printf("%d of %d metrics passed stdDeviation filter (%d filtered out). Avg normalized variance: %f.\n",

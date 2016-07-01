@@ -28,8 +28,7 @@ public abstract class BatchLabellingAlgorithm extends WindowBatchAlgorithm {
             if (sample.getHeader().hasChanged(header)) {
                 header = new Header(sample.getHeader().header);
             }
-            Sample clone = new Sample(header, sample.getMetrics(),
-                    sample.getTimestamp(), sample.getSource(), label);
+            Sample clone = new Sample(header, sample.getMetrics(), sample);
             output.writeSample(clone);
         }
     }

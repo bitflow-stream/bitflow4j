@@ -4,38 +4,54 @@ import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+
+import static metrics.algorithms.clustering.ClusterConstants.INC_PROB_PREFIX;
 
 /**
- * Created by Malcolm-X on 27.06.2016.
+ * This labeling algorithm extends the metrics with the inclusion probability to given labels. 
+ * Created by fschmidt on 29.06.2016.
  */
 public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
 
-    private Map<String, Integer> labelToClusterId;
-    private Map<Integer, ClusterCounters> clusterIdToCounter;
-    private ClusterCounter clusterCounter;
+    private final ClusterCounter clusterCounter;
+    private final boolean includeProbabilities;
 
-    public ClusterLabelingAlgorithm(double thresholdToClassify) {
-        this.labelToClusterId = new HashMap<>();
-        this.clusterIdToCounter = new HashMap<>();
+    public ClusterLabelingAlgorithm(double thresholdToClassify, boolean includeProbabilities) {
         this.clusterCounter = new ClusterCounter(thresholdToClassify);
+        this.includeProbabilities = includeProbabilities;
     }
 
     @Override
     protected Sample executeSample(Sample sample) throws IOException {
-        int labelClusterId;
-        String originalLabel;
-        try {
-            labelClusterId = Integer.parseInt(sample.getTag(ClusterConstants.CLUSTER_TAG));
-            originalLabel = sample.getLabel();
-            if (originalLabel == null) throw new NullPointerException();
-        } catch (NullPointerException | ArrayIndexOutOfBoundsException | NumberFormatException e) {
-            throw new IOException("Sample not prepared for labeling, add a clusterer to the pipeline or fix current clusterer (failed to extract cluster id from point label or original label not found).");
-        }
+        int labelClusterId = sample.getClusterId();
+        String originalLabel = sample.getLabel();
         clusterCounter.increment(labelClusterId, originalLabel);
-        Sample sampleToReturn = new Sample(sample.getHeader(), sample.getMetrics(), sample.getTimestamp(), sample.getSource(), clusterCounter.calculateLabel(labelClusterId));
+        String newLabel = clusterCounter.calculateLabel(labelClusterId);
 
+        Sample sampleToReturn;
+        if (includeProbabilities) {
+            // Extend Header
+            String allAnomalies[] = clusterCounter.getLabelInclusionProbability(labelClusterId).keySet().toArray(new String[0]);
+            for (int i = 0; i < allAnomalies.length; i++) {
+                allAnomalies[i] = INC_PROB_PREFIX + allAnomalies[i];
+            }
+
+            // Extend Metrics
+            double[] anomalyProbs = new double[allAnomalies.length];
+            for (int i = 0; i < allAnomalies.length; i++) {
+                String anomaly = allAnomalies[i];
+                Double inclusionProbability = clusterCounter.getLabelInclusionProbability(labelClusterId).get(anomaly);
+                if (inclusionProbability == null)
+                    anomalyProbs[i] = 0;
+                else
+                    anomalyProbs[i] = inclusionProbability;
+            }
+            sampleToReturn = sample.extend(allAnomalies, anomalyProbs);
+        } else {
+            sampleToReturn = new Sample(sample);
+        }
+
+        sampleToReturn.setLabel(newLabel);
         sampleToReturn.setTag(ClusterConstants.ORIGINAL_LABEL_TAG, originalLabel);
         return sampleToReturn;
     }

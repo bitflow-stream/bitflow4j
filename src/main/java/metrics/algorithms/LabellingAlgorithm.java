@@ -16,8 +16,9 @@ public abstract class LabellingAlgorithm extends AbstractAlgorithm {
     protected Sample executeSample(Sample sample) throws IOException {
         String label = newLabel(sample);
         Header header = new Header(sample.getHeader().header);
-        return new Sample(header, sample.getMetrics(),
-                sample.getTimestamp(), sample.getSource(), label);
+        Sample outSample = new Sample(header, sample.getMetrics(), sample);
+        outSample.setLabel(label);
+        return outSample;
     }
 
     protected abstract String newLabel(Sample sample);

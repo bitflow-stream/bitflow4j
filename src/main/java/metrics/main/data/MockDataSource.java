@@ -17,8 +17,15 @@ public class MockDataSource extends DataSource<String> {
 
     private void fillSampleQueue(Queue<Sample> samples) {
         Header hdr = new Header(new String[]{"field1", "libvirt/instance-0000061d/field"});
-        samples.offer(new Sample(hdr, new double[]{1, 2}, new Date(), "source1", "label1"));
-        samples.offer(new Sample(hdr, new double[]{3, 4}, new Date(), "source2", "label2"));
+        Sample sample1 = new Sample(hdr, new double[]{1, 2}, new Date());
+        sample1.setLabel("label1");
+        sample1.setSource("source1");
+        Sample sample2 = new Sample(hdr, new double[]{3, 4}, new Date());
+        sample1.setLabel("label2");
+        sample1.setSource("source2");
+
+        samples.offer(sample1);
+        samples.offer(sample2);
     }
 
     @Override

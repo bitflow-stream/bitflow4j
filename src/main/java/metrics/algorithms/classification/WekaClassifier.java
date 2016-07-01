@@ -40,8 +40,8 @@ public class WekaClassifier<T extends Classifier & Serializable> extends Abstrac
                 // TODO convert the result double back to the label string classAttribute().value(result)
                 String label = instance.classAttribute().value((int) result);
 
-                Sample classified = new Sample(header,
-                        sample.getMetrics(), sample.getTimestamp(), sample.getSource(), label);
+                Sample classified = new Sample(header, sample.getMetrics(), sample);
+                classified.setLabel(label);
                 output.writeSample(classified);
             } catch (Exception e) {
                 throw new IOException(toString() + "Classification failed", e);
