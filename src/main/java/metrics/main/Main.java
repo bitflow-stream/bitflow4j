@@ -19,7 +19,6 @@ import weka.classifiers.AbstractClassifier;
 
 import java.io.File;
 import java.io.IOException;
-import metrics.algorithms.FeatureMinMaxScaler;
 import metrics.algorithms.clustering.AdvancedClusterLabelingAlgorithm;
 import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
 
