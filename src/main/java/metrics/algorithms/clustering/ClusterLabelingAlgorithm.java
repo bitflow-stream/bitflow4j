@@ -1,5 +1,6 @@
 package metrics.algorithms.clustering;
 
+import metrics.Header;
 import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
 
@@ -15,10 +16,12 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
 
     private final ClusterCounter clusterCounter;
     private final boolean includeProbabilities;
+    private final boolean stripData;
 
-    public ClusterLabelingAlgorithm(double thresholdToClassify, boolean includeProbabilities) {
+    public ClusterLabelingAlgorithm(double thresholdToClassify, boolean includeProbabilities, boolean stripData) {
         this.clusterCounter = new ClusterCounter(thresholdToClassify);
         this.includeProbabilities = includeProbabilities;
+        this.stripData = stripData;
     }
 
     @Override
@@ -47,9 +50,16 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
                 else
                     anomalyProbs[i] = inclusionProbability;
             }
-            sampleToReturn = sample.extend(allAnomalies, anomalyProbs);
+
+            if (stripData)
+                sampleToReturn = new Sample(new Header(allAnomalies, sample.getHeader()), anomalyProbs, sample);
+            else
+                sampleToReturn = sample.extend(allAnomalies, anomalyProbs);
         } else {
-            sampleToReturn = new Sample(sample);
+            if (stripData)
+                sampleToReturn = new Sample(Header.EMPTY_HEADER, new double[0], sample);
+            else
+                sampleToReturn = new Sample(sample);
         }
 
         sampleToReturn.setLabel(newLabel);
