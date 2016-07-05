@@ -34,13 +34,10 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
 
         Sample sampleToReturn;
         if (includeProbabilities) {
-            // Extend Header
+            // New header
             String allAnomalies[] = clusterCounter.getAllLabels().toArray(new String[0]);
-            for (int i = 0; i < allAnomalies.length; i++) {
-                allAnomalies[i] = INC_PROB_PREFIX + allAnomalies[i];
-            }
 
-            // Extend Metrics
+            // New metrics
             double[] anomalyProbs = new double[allAnomalies.length];
             for (int i = 0; i < allAnomalies.length; i++) {
                 String anomaly = allAnomalies[i];
@@ -51,10 +48,14 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
                     anomalyProbs[i] = inclusionProbability;
             }
 
-            if (stripData)
+            for (int i = 0; i < allAnomalies.length; i++) {
+                allAnomalies[i] = INC_PROB_PREFIX + allAnomalies[i];
+            }
+            if (stripData) {
                 sampleToReturn = new Sample(new Header(allAnomalies, sample.getHeader()), anomalyProbs, sample);
-            else
+            } else {
                 sampleToReturn = sample.extend(allAnomalies, anomalyProbs);
+            }
         } else {
             if (stripData)
                 sampleToReturn = new Sample(Header.EMPTY_HEADER, new double[0], sample);
