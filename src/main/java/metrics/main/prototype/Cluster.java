@@ -24,7 +24,7 @@ import java.io.IOException;
 public class Cluster {
 
     private static final double classifiedClusterThreshold = 0.1;
-    private static final long labelAggregationWindow = 2; // Seconds
+    private static final long labelAggregationWindow = 4000; // Milliseconds
 
     public static void main(String[] args) throws IOException {
         if (args.length != 5) {

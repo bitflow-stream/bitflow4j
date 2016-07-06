@@ -1,6 +1,7 @@
 package metrics.algorithms.clustering;
 
-import metrics.io.window.*;
+import metrics.io.window.MetricWindow;
+import metrics.io.window.MetricWindowFactory;
 
 /**
  * Created by fschmidt on 29.06.16.
@@ -9,9 +10,9 @@ public class LabelInclusionProbabilityPredictionWindow extends MetricWindow {
 
     public static final MetricWindowFactory<LabelInclusionProbabilityPredictionWindow> FACTORY
             = LabelInclusionProbabilityPredictionWindow::new;
-    private final double SMALL_VALUE = 0.0000000000001;
+    private final double SMALL_VALUE = 0; // 0.0000000000001;
 
-    public double prod = 1.0;
+    public double runningSum = 0.0;
 
     public LabelInclusionProbabilityPredictionWindow(String name) {
         super(name);
@@ -27,7 +28,7 @@ public class LabelInclusionProbabilityPredictionWindow extends MetricWindow {
             if (val == 0.0) {
                 val = SMALL_VALUE;
             }
-            prod /= val;
+            runningSum -= val;
         }
         super.flushSamples(numSamples);
     }
@@ -38,7 +39,7 @@ public class LabelInclusionProbabilityPredictionWindow extends MetricWindow {
         if (val == 0.0) {
             val = SMALL_VALUE;
         }
-        prod *= val;
+        runningSum += val;
     }
     
     @Override
@@ -66,16 +67,12 @@ public class LabelInclusionProbabilityPredictionWindow extends MetricWindow {
         if (values.isEmpty()) {
             return 0.0;
         }
-        double inclusionProbability = (double) prod / (double) values.size();
-//        System.out.println(values);
-//        System.out.println(prod);
-//        System.out.println(values.size());
-        return inclusionProbability;
+        return runningSum / (double) values.size();
     }
 
     @Override
     public void clear() {
         super.clear();
-        prod = 0.0;
+        runningSum = 0.0;
     }
 }
