@@ -28,7 +28,7 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
     protected Sample executeSample(Sample sample) throws IOException {
         int labelClusterId = sample.getClusterId();
         String originalLabel = sample.getLabel();
-        if (originalLabel != null)
+        if (originalLabel != null && labelClusterId >= 0)
             clusterCounter.increment(labelClusterId, originalLabel);
         String newLabel = clusterCounter.calculateLabel(labelClusterId);
 
