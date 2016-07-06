@@ -59,7 +59,7 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
         Instances instances = createInstances(expectedHeader, label);
         com.yahoo.labs.samoa.instances.Instance instance = makeInstance(values, label, instances);
 
-        if (alwaysTrain || label == null || label.isEmpty())
+        if (alwaysTrain || (label != null && !label.isEmpty()))
             clusterer.trainOnInstance(instance);
 
         //prints all micro-clusters
