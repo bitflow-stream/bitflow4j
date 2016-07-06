@@ -25,6 +25,7 @@ public class Cluster {
 
     private static final double classifiedClusterThreshold = 0.1;
     private static final long labelAggregationWindow = 4000; // Milliseconds
+    private static final int labelAggregationWindow_number = 20;
 
     public static void main(String[] args) throws IOException {
         if (args.length != 5) {
@@ -51,7 +52,8 @@ public class Cluster {
                                     .step(new OnlineFeatureStandardizer(model.averages, model.stddevs))
                                     .step(moaClusterer)
                                     .step(new ClusterLabelingAlgorithm(classifiedClusterThreshold, true, true))
-                                    .step(new LabelAggregatorAlgorithm(labelAggregationWindow))
+                                    // .step(new LabelAggregatorAlgorithm(labelAggregationWindow))
+                                    .step(new LabelAggregatorAlgorithm(labelAggregationWindow_number))
                                     .step(new MOAStreamEvaluator(1, false, true))
                                     .step(new SampleOutput(hostname))
                                     .fork(new TwoWayFork(),
