@@ -34,9 +34,11 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
 
     private final T clusterer;
     private final SampleConverger converger = new SampleConverger(); // No predefined expected header
+    private final boolean alwaysTrain;
 
-    public MOAStreamClusterer(T clusterer) {
+    public MOAStreamClusterer(T clusterer, boolean alwaysTrain) {
         this.clusterer = clusterer;
+        this.alwaysTrain = alwaysTrain;
     }
 
     private void initalizeClusterer(Sample firstSample) {
@@ -47,7 +49,6 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
 
     @Override
     protected Sample executeSample(Sample sample) throws IOException {
-
         if (converger.getExpectedHeader() == null) {
             initalizeClusterer(sample);
         }
@@ -58,7 +59,8 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
         Instances instances = createInstances(expectedHeader, label);
         com.yahoo.labs.samoa.instances.Instance instance = makeInstance(values, label, instances);
 
-        clusterer.trainOnInstance(instance);
+        if (alwaysTrain || label == null || label.isEmpty())
+            clusterer.trainOnInstance(instance);
 
         //prints all micro-clusters
         double inclusionProbability = 0.0;
@@ -216,7 +218,7 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
                     "Number of the dimensions of the input points.", numMetrics, 1,
                     Integer.MAX_VALUE);
             IntOption maxNumClusterFeaturesOption = new IntOption(
-                    "MaxClusterFeatures", 'n', "Maximum size of the coreset.", 3000, 1,
+                    "MaxClusterFeatures", 'n', "Maximum size of the coreset.", 500, 1,
                     Integer.MAX_VALUE);
             IntOption numProjectionsOption = new IntOption("Projections", 'p',
                     "Number of random projections used for the nearest neighbour search.",

@@ -39,7 +39,7 @@ public class Cluster {
         String hostname = args[4];
 
         AbstractClusterer clusterer = ExternalClusterer.BICO.newInstance();
-        MOAStreamClusterer<AbstractClusterer> moaClusterer = new MOAStreamClusterer<>(clusterer);
+        MOAStreamClusterer<AbstractClusterer> moaClusterer = new MOAStreamClusterer<>(clusterer, false);
 
         new AlgorithmPipeline(receivePort, Analyse.TCP_FORMAT)
                 .fork(new OpenStackSampleSplitter(),

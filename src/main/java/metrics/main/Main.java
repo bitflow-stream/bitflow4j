@@ -108,7 +108,7 @@ public class Main {
                     p
                             .step(new FeatureStandardizer())
                             .step(new SourceLabellingAlgorithm())
-                            .step(new MOAStreamClusterer<>(ExternalClusterer.BICO.newInstance()))
+                            .step(new MOAStreamClusterer<>(ExternalClusterer.BICO.newInstance(), true))
                             .step(new ClusterLabelingAlgorithm(0.0, false, false))
                             .step(new LabelAggregatorAlgorithm(10))
                             .step(new MOAStreamEvaluator(1000, true, false));
@@ -176,7 +176,7 @@ public class Main {
                     .step(new FeatureStandardizer())
                     .fork(new OpenStackSampleSplitter().fillInfo(),
                             (name, p) -> {
-                                p.step(new MOAStreamClusterer<>(clusterer));
+                                p.step(new MOAStreamClusterer<>(clusterer, true));
                     })
                     .runAndWait();
         }
