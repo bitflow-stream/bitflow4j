@@ -3,7 +3,7 @@ package metrics.main.prototype;
 import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
 import metrics.algorithms.Algorithm;
-import metrics.algorithms.OnlineFeatureStandardizer;
+import metrics.algorithms.OnlineAutoFeatureStandardizer;
 import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
 import metrics.algorithms.clustering.ExternalClusterer;
 import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
@@ -58,8 +58,8 @@ public class Cluster {
                             }
                             p
                                     .step(filterAlgo)
-                                    .step(new OnlineFeatureStandardizer(model.averages, model.stddevs))
-                                    // .step(new OnlineAutoFeatureStandardizer())
+                                    // .step(new OnlineFeatureStandardizer(model.averages, model.stddevs))
+                                    .step(new OnlineAutoFeatureStandardizer())
                                     .step(moaClusterer)
                                     .step(new ClusterLabelingAlgorithm(classifiedClusterThreshold, true, true, trainedLabels))
                                     // .step(new LabelAggregatorAlgorithm(labelAggregationWindow))
