@@ -37,12 +37,14 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
     private final boolean alwaysTrain;
     private final Set<String> trainedLabels;
 
+    // false -> train on all VALID labels (not empty)
     public MOAStreamClusterer(T clusterer, boolean alwaysTrain) {
         this.clusterer = clusterer;
         this.alwaysTrain = alwaysTrain;
         this.trainedLabels = null;
     }
 
+    // Train cluster only for certain labels (or give null-set to train on all VALID labels)
     public MOAStreamClusterer(T clusterer, Set<String> trainedLabels) {
         this.clusterer = clusterer;
         this.alwaysTrain = false;

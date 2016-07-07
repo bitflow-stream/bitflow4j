@@ -5,6 +5,7 @@ import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
 
 import java.io.IOException;
+import java.util.Set;
 
 import static metrics.algorithms.clustering.ClusterConstants.INC_PROB_PREFIX;
 
@@ -17,18 +18,24 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
     private final ClusterCounter clusterCounter;
     private final boolean includeProbabilities;
     private final boolean stripData;
+    private final Set<String> trainedLabels;
 
     public ClusterLabelingAlgorithm(double thresholdToClassify, boolean includeProbabilities, boolean stripData) {
+        this(thresholdToClassify, includeProbabilities, stripData, null);
+    }
+
+    public ClusterLabelingAlgorithm(double thresholdToClassify, boolean includeProbabilities, boolean stripData, Set<String> trainedLabels) {
         this.clusterCounter = new ClusterCounter(thresholdToClassify);
         this.includeProbabilities = includeProbabilities;
         this.stripData = stripData;
+        this.trainedLabels = trainedLabels;
     }
 
     @Override
     protected Sample executeSample(Sample sample) throws IOException {
         int labelClusterId = sample.getClusterId();
         String originalLabel = sample.getLabel();
-        if (originalLabel != null && labelClusterId >= 0)
+        if (originalLabel != null && labelClusterId >= 0 && (trainedLabels == null || trainedLabels.contains(originalLabel)))
             clusterCounter.increment(labelClusterId, originalLabel);
         String newLabel = clusterCounter.calculateLabel(labelClusterId);
 

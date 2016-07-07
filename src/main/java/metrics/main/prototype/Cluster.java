@@ -55,7 +55,7 @@ public class Cluster {
                             p
                                     .step(new OnlineFeatureStandardizer(model.averages, model.stddevs))
                                     .step(moaClusterer)
-                                    .step(new ClusterLabelingAlgorithm(classifiedClusterThreshold, true, true))
+                                    .step(new ClusterLabelingAlgorithm(classifiedClusterThreshold, true, true, trainedLabels))
                                     // .step(new LabelAggregatorAlgorithm(labelAggregationWindow))
                                     .step(new LabelAggregatorAlgorithm(labelAggregationWindow_number))
                                     // .step(new MOAStreamEvaluator(1, false, true))
