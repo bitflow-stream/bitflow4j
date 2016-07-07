@@ -32,8 +32,8 @@ public class Cluster {
     private static final int labelAggregationWindow_number = 20;
 
     public static void main(String[] args) throws IOException {
-        if (args.length != 6) {
-            System.err.println("Parameters: <receive-port> <trained model file> <target-host> <target-port> <local hostname> <filter>");
+        if (args.length != 7) {
+            System.err.println("Parameters: <receive-port> <trained model file> <target-host> <target-port> <local hostname> <filter> <num_clusters>");
             return;
         }
         int receivePort = Integer.parseInt(args[0]);
@@ -42,11 +42,12 @@ public class Cluster {
         int targetPort = Integer.parseInt(args[3]);
         String hostname = args[4];
         String filter = args[5];
+        int num_clusters = Integer.valueOf(args[6]);
         Algorithm filterAlgo = Train.getFilter(filter);
 
         AbstractClusterer clusterer = ExternalClusterer.BICO.newInstance();
         Set<String> trainedLabels = new HashSet<>(Arrays.asList(new String[] { "idle", "load" }));
-        MOAStreamClusterer<AbstractClusterer> moaClusterer = new MOAStreamClusterer<>(clusterer, trainedLabels);
+        MOAStreamClusterer<AbstractClusterer> moaClusterer = new MOAStreamClusterer<>(clusterer, trainedLabels, num_clusters);
 
         new AlgorithmPipeline(receivePort, Analyse.TCP_FORMAT)
                 .fork(new OpenStackSampleSplitter(),
@@ -58,8 +59,9 @@ public class Cluster {
                             p
                                     .step(filterAlgo)
                                     .step(new OnlineFeatureStandardizer(model.averages, model.stddevs))
+                                    // .step(new OnlineAutoFeatureStandardizer())
                                     .step(moaClusterer)
-                                    .step(new ClusterLabelingAlgorithm(classifiedClusterThreshold, true, true, trainedLabels))
+                                    .step(new ClusterLabelingAlgorithm(classifiedClusterThreshold, true, false, trainedLabels))
                                     // .step(new LabelAggregatorAlgorithm(labelAggregationWindow))
                                     .step(new LabelAggregatorAlgorithm(labelAggregationWindow_number))
                                     // .step(new MOAStreamEvaluator(1, false, true))

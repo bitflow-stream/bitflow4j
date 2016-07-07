@@ -21,7 +21,7 @@ public abstract class OnlineAbstractFeatureScaler extends AbstractAlgorithm {
         for (int i = 0; i < inMetrics.length; i++) {
             metrics[i] = doStandardize(fields[i], inMetrics[i]);
         }
-        return new Sample(sample.getHeader(), metrics, sample.getTimestamp(), sample.getTags());
+        return new Sample(sample.getHeader(), metrics, sample);
     }
 
     private double doStandardize(String name, double val) {

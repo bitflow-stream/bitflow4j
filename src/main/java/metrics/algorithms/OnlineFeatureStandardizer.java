@@ -5,7 +5,7 @@ import java.util.Map;
 /**
  * Created by anton on 6/9/16.
  */
-public class OnlineFeatureStandardizer extends AbstractAlgorithm {
+public class OnlineFeatureStandardizer extends OnlineAbstractFeatureScaler {
 
     private final Map<String, Double> averages;
     private final Map<String, Double> stddevs;
