@@ -2,6 +2,7 @@ package metrics.main.prototype;
 
 import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
+import metrics.algorithms.Algorithm;
 import metrics.algorithms.OnlineFeatureStandardizer;
 import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
 import metrics.algorithms.clustering.ExternalClusterer;
@@ -32,7 +33,7 @@ public class Cluster {
 
     public static void main(String[] args) throws IOException {
         if (args.length != 5) {
-            System.err.println("Parameters: <receive-port> <trained model file> <target-host> <target-port> <local hostname>");
+            System.err.println("Parameters: <receive-port> <trained model file> <target-host> <target-port> <local hostname> <filter>");
             return;
         }
         int receivePort = Integer.parseInt(args[0]);
@@ -40,6 +41,8 @@ public class Cluster {
         String targetHost = args[2];
         int targetPort = Integer.parseInt(args[3]);
         String hostname = args[4];
+        String filter = args[5];
+        Algorithm filterAlgo = Train.getFilter(filter);
 
         AbstractClusterer clusterer = ExternalClusterer.BICO.newInstance();
         Set<String> trainedLabels = new HashSet<>(Arrays.asList(new String[] { "idle", "load" }));
@@ -53,6 +56,7 @@ public class Cluster {
                                 return;
                             }
                             p
+                                    .step(filterAlgo)
                                     .step(new OnlineFeatureStandardizer(model.averages, model.stddevs))
                                     .step(moaClusterer)
                                     .step(new ClusterLabelingAlgorithm(classifiedClusterThreshold, true, true, trainedLabels))

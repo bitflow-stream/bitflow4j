@@ -122,11 +122,25 @@ public class Train {
 
     // These metrics will STAY when using "medium"
     static final String[] MEDIUM_FILTER = new String[] {
-            "cpu","disk-io/vda/ioTime","disk-io/vda/read","disk-io/vda/readBytes","disk-io/vda/readTime","disk-io/vda/write","disk-io/vda/writeBytes","disk-io/vda/writeTime","disk-usage///used","mem/percent","net-io/bytes","net-io/dropped","net-io/errors","net-io/packets","net-io/rx","bytes","net-io/rx","packets","net-io/tx","bytes","net-io/tx","packets","num","procs","proc/vnf/cpu","proc/vnf/ctxSwitch/involuntary","proc/vnf/ctxSwitch/voluntary","proc/vnf/disk/read","proc/vnf/disk/readBytes","proc/vnf/disk/write","proc/vnf/disk/writeBytes","proc/vnf/fds","proc/vnf/mem/rss","proc/vnf/mem/swap","proc/vnf/mem/vms","proc/vnf/net-io/bytes","proc/vnf/net-io/dropped","proc/vnf/net-io/errors","proc/vnf/net-io/packets","proc/vnf/net-io/rx","bytes","proc/vnf/net-io/rx","packets","proc/vnf/net-io/tx","bytes","proc/vnf/net-io/tx","packets","proc/vnf/num","proc/vnf/threads"
+            "cpu","disk-io/vda/ioTime","disk-io/vda/read","disk-io/vda/readBytes",
+            "disk-io/vda/readTime","disk-io/vda/write","disk-io/vda/writeBytes",
+            "disk-io/vda/writeTime","disk-usage///used","mem/percent","net-io/bytes",
+            "net-io/dropped","net-io/errors","net-io/packets","net-io/rx_bytes",
+            "net-io/rx_packets","net-io/tx_bytes","net-io/tx_packets","proc/vnf/cpu",
+            "proc/vnf/ctxSwitch/involuntary","proc/vnf/ctxSwitch/voluntary",
+            "proc/vnf/disk/read","proc/vnf/disk/readBytes","proc/vnf/disk/write","proc/vnf/disk/writeBytes",
+            "proc/vnf/fds","proc/vnf/mem/rss","proc/vnf/mem/vms","proc/vnf/net-io/bytes",
+            "proc/vnf/net-io/dropped","proc/vnf/net-io/errors","proc/vnf/net-io/packets",
+            "proc/vnf/net-io/rx_bytes","proc/vnf/net-io/rx_packets","proc/vnf/net-io/tx_bytes","proc/vnf/net-io/tx_packets"
+
+            // "proc/vnf/num", "proc/vnf/threads"
+            // "proc/vnf/mem/swap"
+            // "num_procs"
     };
 
     static final String[] BAD_METRICS = new String[] {
-            "disk-usage///free", "disk-usage///used", "num_procs", "proc/vnf/num"
+            "disk-usage///free", "disk-usage///used", "num_procs", "proc/vnf/num",
+            "proc/vnf/mem/swap", "proc/vnf/threads"
     };
 
 }
