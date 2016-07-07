@@ -32,7 +32,7 @@ public class Cluster {
     private static final int labelAggregationWindow_number = 20;
 
     public static void main(String[] args) throws IOException {
-        if (args.length != 5) {
+        if (args.length != 6) {
             System.err.println("Parameters: <receive-port> <trained model file> <target-host> <target-port> <local hostname> <filter>");
             return;
         }

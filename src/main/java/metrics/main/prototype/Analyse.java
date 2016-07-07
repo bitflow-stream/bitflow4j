@@ -33,8 +33,8 @@ public class Analyse {
     static final String CONSOLE_OUTPUT = "CSV";
 
     public static void main(String[] args) throws IOException {
-        if (args.length != 5) {
-            System.err.println("Parameters: <receive-port> <trained model file> <target-host> <target-port> <local hostname>");
+        if (args.length != 6) {
+            System.err.println("Parameters: <receive-port> <trained model file> <target-host> <target-port> <local hostname> <filter>");
             return;
         }
         int receivePort = Integer.parseInt(args[0]);
@@ -42,6 +42,8 @@ public class Analyse {
         String targetHost = args[2];
         int targetPort = Integer.parseInt(args[3]);
         String hostname = args[4];
+        String filter = args[5];
+        Algorithm filterAlgo = Train.getFilter(filter);
 
         Model<J48> treeModel = new Model<>();
         treeModel.setModel(model.model);
@@ -60,6 +62,7 @@ public class Analyse {
                                 return;
                             }
                             p
+                                    .step(filterAlgo)
                                     .step(standardizer)
                                     .step(new FeatureAggregator(10000L).addAvg().addSlope())
                                     .step(new WekaOnlineClassifier<>(treeModel, model.headerFields, model.allClasses))

@@ -124,7 +124,7 @@ public class Train {
     static final String[] MEDIUM_FILTER = new String[] {
             "cpu","disk-io/vda/ioTime","disk-io/vda/read","disk-io/vda/readBytes",
             "disk-io/vda/readTime","disk-io/vda/write","disk-io/vda/writeBytes",
-            "disk-io/vda/writeTime","disk-usage///used","mem/percent","net-io/bytes",
+            "disk-io/vda/writeTime","mem/percent","net-io/bytes",
             "net-io/dropped","net-io/errors","net-io/packets","net-io/rx_bytes",
             "net-io/rx_packets","net-io/tx_bytes","net-io/tx_packets","proc/vnf/cpu",
             "proc/vnf/ctxSwitch/involuntary","proc/vnf/ctxSwitch/voluntary",
@@ -136,6 +136,7 @@ public class Train {
             // "proc/vnf/num", "proc/vnf/threads"
             // "proc/vnf/mem/swap"
             // "num_procs"
+            // "disk-usage///used"
     };
 
     static final String[] BAD_METRICS = new String[] {
