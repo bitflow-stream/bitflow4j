@@ -7,7 +7,7 @@ import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
 import metrics.algorithms.clustering.ExternalClusterer;
 import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
 import metrics.algorithms.clustering.MOAStreamClusterer;
-import metrics.algorithms.evaluation.MOAStreamEvaluator;
+import metrics.algorithms.evaluation.MOAStreamAnomalyDetectionEvaluator;
 import metrics.io.MetricPrinter;
 import metrics.io.fork.TwoWayFork;
 import metrics.io.net.TcpMetricsOutput;
@@ -19,6 +19,7 @@ import moa.clusterers.AbstractClusterer;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by anton on 6/21/16.
@@ -41,8 +42,8 @@ public class Cluster {
         String hostname = args[4];
 
         AbstractClusterer clusterer = ExternalClusterer.BICO.newInstance();
-        MOAStreamClusterer<AbstractClusterer> moaClusterer =
-                new MOAStreamClusterer<>(clusterer, new HashSet<>(Arrays.asList(new String[] { "idle", "load" })));
+        Set<String> trainedLabels = new HashSet<>(Arrays.asList(new String[] { "idle", "load" }));
+        MOAStreamClusterer<AbstractClusterer> moaClusterer = new MOAStreamClusterer<>(clusterer, trainedLabels);
 
         new AlgorithmPipeline(receivePort, Analyse.TCP_FORMAT)
                 .fork(new OpenStackSampleSplitter(),
@@ -57,7 +58,8 @@ public class Cluster {
                                     .step(new ClusterLabelingAlgorithm(classifiedClusterThreshold, true, true))
                                     // .step(new LabelAggregatorAlgorithm(labelAggregationWindow))
                                     .step(new LabelAggregatorAlgorithm(labelAggregationWindow_number))
-                                    .step(new MOAStreamEvaluator(1, false, true))
+                                    // .step(new MOAStreamEvaluator(1, false, true))
+                                    .step(new MOAStreamAnomalyDetectionEvaluator(1, false, true, trainedLabels))
                                     .step(new SampleOutput(hostname))
                                     .fork(new TwoWayFork(),
                                             (type, out) -> out.output(
