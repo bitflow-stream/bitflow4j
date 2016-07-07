@@ -59,7 +59,7 @@ public class Cluster {
                                     // .step(new LabelAggregatorAlgorithm(labelAggregationWindow))
                                     .step(new LabelAggregatorAlgorithm(labelAggregationWindow_number))
                                     // .step(new MOAStreamEvaluator(1, false, true))
-                                    .step(new MOAStreamAnomalyDetectionEvaluator(1, false, true, trainedLabels))
+                                    .step(new MOAStreamAnomalyDetectionEvaluator(1, false, true, trainedLabels, "normal"))
                                     .step(new SampleOutput(hostname))
                                     .fork(new TwoWayFork(),
                                             (type, out) -> out.output(

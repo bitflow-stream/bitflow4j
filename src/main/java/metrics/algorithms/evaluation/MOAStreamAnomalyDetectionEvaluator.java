@@ -40,10 +40,11 @@ public class MOAStreamAnomalyDetectionEvaluator extends AbstractAlgorithm {
     private final boolean extendSample;
 
     private final Set<String> trainedLabels;
+    private final String normalState;
 
     // If extendSample is true, the overall precision will be added to outgoing samples
     public MOAStreamAnomalyDetectionEvaluator(long sampleInterval, boolean printOnRecalculation, boolean extendSample,
-            Set<String> trainedLabels) {
+            Set<String> trainedLabels, String normalState) {
         this.extendSample = extendSample;
         this.sampleInterval = sampleInterval;
         this.printOnRecalculation = printOnRecalculation;
@@ -55,6 +56,7 @@ public class MOAStreamAnomalyDetectionEvaluator extends AbstractAlgorithm {
         labelToRecall = new HashMap<>();
         labels = new HashSet<>();
         this.trainedLabels = trainedLabels;
+        this.normalState = normalState;
     }
 
     @Override
@@ -74,7 +76,8 @@ public class MOAStreamAnomalyDetectionEvaluator extends AbstractAlgorithm {
             labels.add(originalLabel);
 
             if ((trainedLabels.contains(originalLabel) && trainedLabels.contains(predictedLabel)) || (!trainedLabels
-                    .contains(predictedLabel) && !trainedLabels.contains(originalLabel))) {
+                    .contains(predictedLabel) && !trainedLabels.contains(originalLabel)) ||
+                    (normalState.equals(originalLabel) && trainedLabels.contains(predictedLabel))) {
                 correctPredictions++;
                 labelToTP.put(originalLabel, labelToTP.containsKey(originalLabel) ? labelToTP.get(originalLabel) + 1 : 1);
 
