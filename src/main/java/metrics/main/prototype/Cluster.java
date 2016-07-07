@@ -17,6 +17,8 @@ import metrics.main.analysis.OpenStackSampleSplitter;
 import moa.clusterers.AbstractClusterer;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
 
 /**
  * Created by anton on 6/21/16.
@@ -39,7 +41,8 @@ public class Cluster {
         String hostname = args[4];
 
         AbstractClusterer clusterer = ExternalClusterer.BICO.newInstance();
-        MOAStreamClusterer<AbstractClusterer> moaClusterer = new MOAStreamClusterer<>(clusterer, false);
+        MOAStreamClusterer<AbstractClusterer> moaClusterer =
+                new MOAStreamClusterer<>(clusterer, new HashSet<>(Arrays.asList(new String[] { "idle", "load" })));
 
         new AlgorithmPipeline(receivePort, Analyse.TCP_FORMAT)
                 .fork(new OpenStackSampleSplitter(),

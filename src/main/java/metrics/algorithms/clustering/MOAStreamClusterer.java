@@ -35,10 +35,18 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
     private final T clusterer;
     private final SampleConverger converger = new SampleConverger(); // No predefined expected header
     private final boolean alwaysTrain;
+    private final Set<String> trainedLabels;
 
     public MOAStreamClusterer(T clusterer, boolean alwaysTrain) {
         this.clusterer = clusterer;
         this.alwaysTrain = alwaysTrain;
+        this.trainedLabels = null;
+    }
+
+    public MOAStreamClusterer(T clusterer, Set<String> trainedLabels) {
+        this.clusterer = clusterer;
+        this.alwaysTrain = false;
+        this.trainedLabels = trainedLabels;
     }
 
     private void initalizeClusterer(Sample firstSample) {
@@ -59,7 +67,7 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
         Instances instances = createInstances(expectedHeader, label);
         com.yahoo.labs.samoa.instances.Instance instance = makeInstance(values, label, instances);
 
-        if (alwaysTrain || (label != null && !label.isEmpty()))
+        if (alwaysTrain || (label != null && !label.isEmpty() && (trainedLabels == null || trainedLabels.contains(label))))
             clusterer.trainOnInstance(instance);
 
         //prints all micro-clusters
