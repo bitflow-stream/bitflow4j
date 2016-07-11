@@ -32,7 +32,7 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
     }
 
     @Override
-    protected Sample executeSample(Sample sample) throws IOException {
+    protected synchronized Sample executeSample(Sample sample) throws IOException {
         int labelClusterId = sample.getClusterId();
         String originalLabel = sample.getLabel();
         if (originalLabel != null && labelClusterId >= 0 && (trainedLabels == null || trainedLabels.contains(originalLabel)))
@@ -74,6 +74,10 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
         if (originalLabel != null)
             sampleToReturn.setTag(ClusterConstants.ORIGINAL_LABEL_TAG, originalLabel);
         return sampleToReturn;
+    }
+
+    public synchronized void resetCounters() {
+        clusterCounter.reset();
     }
 
     @Override

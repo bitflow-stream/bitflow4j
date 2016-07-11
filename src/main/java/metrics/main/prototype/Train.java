@@ -106,6 +106,8 @@ public class Train {
             return new MetricFilterAlgorithm(new MetricFilterAlgorithm.MetricNameIncludeFilter(SMALL_FILTER));
         } else if (name.equals("medium")) {
             return new MetricFilterAlgorithm(new MetricFilterAlgorithm.MetricNameIncludeFilter(MEDIUM_FILTER));
+        } else if (name.equals("good")) {
+            return new MetricFilterAlgorithm(new MetricFilterAlgorithm.MetricNameIncludeFilter(GOOD_FILTER));
         } else if (name.equals("none")) {
             return new MetricFilterAlgorithm(BAD_METRICS); // Just exclude a few bad metrics.
         } else {
@@ -117,26 +119,64 @@ public class Train {
     static final String[] SMALL_FILTER = new String[] {
             "cpu", "mem/percent", "net-io/bytes",
             "disk-io/vda/ioTime", "disk-io/sda/ioTime",
-            "proc/vnf/cpu", "proc/vnf/net-io/bytes"
+            "proc/vnf/cpu", "proc/vnf/mem/rss", "proc/vnf/net-io/bytes"
     };
 
     // These metrics will STAY when using "medium"
     static final String[] MEDIUM_FILTER = new String[] {
-            "cpu","disk-io/vda/ioTime","disk-io/vda/read","disk-io/vda/readBytes",
-            "disk-io/vda/readTime","disk-io/vda/write","disk-io/vda/writeBytes",
-            "disk-io/vda/writeTime","mem/percent","net-io/bytes",
-            "net-io/dropped","net-io/errors","net-io/packets","net-io/rx_bytes",
-            "net-io/rx_packets","net-io/tx_bytes","net-io/tx_packets","proc/vnf/cpu",
+            // cpu and mem
+            "cpu","mem/percent",
+
+            // disk io: vda or sda
+            "disk-io/vda/ioTime","disk-io/vda/io","disk-io/vda/ioBytes",
+            "disk-io/vda/readTime","disk-io/vda/writeTime",
+            "disk-io/vda/write","disk-io/vda/writeBytes",
+            "disk-io/vda/read","disk-io/vda/readBytes",
+            "disk-io/sda/ioTime","disk-io/sda/io","disk-io/sda/ioBytes",
+            "disk-io/sda/readTime","disk-io/sda/writeTime",
+            "disk-io/sda/write","disk-io/sda/writeBytes",
+            "disk-io/sda/read","disk-io/sda/readBytes",
+
+            // network
+            "net-io/bytes","net-io/dropped","net-io/errors","net-io/packets","net-io/rx_bytes",
+            "net-io/rx_packets","net-io/tx_bytes","net-io/tx_packets",
+
+            // Processes: cpu, mem, disk, net
+            "proc/vnf/cpu",
             "proc/vnf/ctxSwitch/involuntary","proc/vnf/ctxSwitch/voluntary",
+            "proc/vnf/mem/rss","proc/vnf/mem/vms",
+            "proc/vnf/disk/io","proc/vnf/disk/ioBytes",
             "proc/vnf/disk/read","proc/vnf/disk/readBytes","proc/vnf/disk/write","proc/vnf/disk/writeBytes",
-            "proc/vnf/fds","proc/vnf/mem/rss","proc/vnf/mem/vms","proc/vnf/net-io/bytes",
-            "proc/vnf/net-io/dropped","proc/vnf/net-io/errors","proc/vnf/net-io/packets",
+            "proc/vnf/net-io/bytes","proc/vnf/net-io/dropped","proc/vnf/net-io/errors","proc/vnf/net-io/packets",
             "proc/vnf/net-io/rx_bytes","proc/vnf/net-io/rx_packets","proc/vnf/net-io/tx_bytes","proc/vnf/net-io/tx_packets"
 
-            // "proc/vnf/num", "proc/vnf/threads"
-            // "proc/vnf/mem/swap"
-            // "num_procs"
-            // "disk-usage///used"
+            // These are not suitable
+            // "num_procs", "proc/vnf/num", "proc/vnf/threads", "proc/vnf/fds"
+            // "proc/vnf/mem/swap", "disk-usage///used"
+    };
+
+    // These metrics will STAY when using "good"
+    // It's like "medium", but with more redundant metrics removed and without CPU context switches
+    static final String[] GOOD_FILTER = new String[] {
+            // cpu and mem
+            "cpu","mem/percent",
+
+            // disk io: vda or sda
+            "disk-io/vda/ioTime","disk-io/vda/io","disk-io/vda/ioBytes",
+            "disk-io/sda/ioTime","disk-io/sda/io","disk-io/sda/ioBytes",
+
+            // network
+            "net-io/bytes","net-io/packets","net-io/dropped","net-io/errors",
+
+            // Processes: cpu, mem, disk, net
+            "proc/vnf/cpu","proc/vnf/mem/rss",
+            "proc/vnf/disk/io","proc/vnf/disk/ioBytes",
+            "proc/vnf/net-io/bytes","proc/vnf/net-io/packets","proc/vnf/net-io/dropped","proc/vnf/net-io/errors",
+
+            // These are not suitable
+            // "proc/vnf/ctxSwitch/involuntary","proc/vnf/ctxSwitch/voluntary",
+            // "num_procs", "proc/vnf/num", "proc/vnf/threads", "proc/vnf/fds"
+            // "proc/vnf/mem/swap", "disk-usage///used"
     };
 
     static final String[] BAD_METRICS = new String[] {

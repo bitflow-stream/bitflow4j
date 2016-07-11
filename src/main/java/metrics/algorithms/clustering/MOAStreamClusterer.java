@@ -62,7 +62,7 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
     }
 
     @Override
-    protected Sample executeSample(Sample sample) throws IOException {
+    protected synchronized Sample executeSample(Sample sample) throws IOException {
         if (converger.getExpectedHeader() == null) {
             initalizeClusterer(sample);
         }
@@ -92,6 +92,10 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
         Sample sampleToReturn = new Sample(expectedHeader, values, sample);
         sampleToReturn.setTag(ClusterConstants.CLUSTER_TAG, Integer.toString(bestFitCluster));
         return sampleToReturn;
+    }
+
+    public synchronized void resetClusters() {
+        clusterer.resetLearning();
     }
 
     private String getLabel(Sample sample) {

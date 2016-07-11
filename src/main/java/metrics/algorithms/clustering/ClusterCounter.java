@@ -7,9 +7,9 @@ import java.util.*;
  */
 public class ClusterCounter {
 
-    private Set<String> allLabels = new TreeSet<>();
-    private Map<Integer, ClusterCounters> clusterIdToCounters;
-    private double thresholdToClassifyCluster;
+    private final Set<String> allLabels = new TreeSet<>();
+    private final Map<Integer, ClusterCounters> clusterIdToCounters;
+    private final double thresholdToClassifyCluster;
 
     public ClusterCounter(double thresholdToClassifyCluster) {
         this.thresholdToClassifyCluster = thresholdToClassifyCluster;
@@ -34,6 +34,10 @@ public class ClusterCounter {
         } else {
             return counters.calculateLabel();
         }
+    }
+
+    public void reset() {
+        clusterIdToCounters.clear();
     }
 
     private static final Map<String, Double> empty_map = new HashMap<>();

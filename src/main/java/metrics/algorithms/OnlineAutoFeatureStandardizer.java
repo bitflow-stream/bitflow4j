@@ -35,5 +35,4 @@ public class OnlineAutoFeatureStandardizer extends OnlineAbstractFeatureScaler {
         return "auto online feature standardizer";
     }
 
-
 }
