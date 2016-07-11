@@ -36,7 +36,8 @@ public class Cluster {
             return;
         }
         int receivePort = Integer.parseInt(args[0]);
-        FeatureStatistics stats = new FeatureStatistics(args[1]);
+        String statsFile = args[1];
+        FeatureStatistics stats = new FeatureStatistics(statsFile);
         String targetHost = args[2];
         int targetPort = Integer.parseInt(args[3]);
         String hostname = args[4];
@@ -53,6 +54,17 @@ public class Cluster {
             OnlineAutoMinMaxScaler.Feature ft = handler.features.get(feature);
             System.err.println("New value range of " + feature + ": " + ft.min + " - " + ft.max);
 
+            FeatureStatistics.Feature statsFt = stats.getFeature(feature);
+            statsFt.min = ft.min;
+            statsFt.max = ft.max;
+
+            try {
+                stats.writeFile(statsFile);
+            } catch (IOException e) {
+                System.err.println("Error storing new feature stats file: " + e.getMessage());
+                e.printStackTrace();
+            }
+
             moaClusterer.resetClusters();
             labeling.resetCounters();
         };
@@ -68,7 +80,7 @@ public class Cluster {
                                     .step(filterAlgo)
                                     // .step(new OnlineFeatureStandardizer(model.averages, model.stddevs))
                                     // .step(new OnlineAutoFeatureStandardizer())
-                                    .step(new OnlineAutoMinMaxScaler(0.2, conceptChangeHandler, stats))
+                                    .step(new OnlineAutoMinMaxScaler(0.5, conceptChangeHandler, stats))
                                     .step(moaClusterer)
                                     .step(labeling)
                                     .step(new LabelAggregatorAlgorithm(labelAggregationWindow))

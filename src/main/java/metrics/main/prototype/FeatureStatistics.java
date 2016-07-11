@@ -16,8 +16,8 @@ public class FeatureStatistics {
 
     public static class Feature {
         public final String name;
-        public final double min;
-        public final double max;
+        public double min;
+        public double max;
         public final double avg;
         public final double stddev;
         public final int count;
@@ -66,6 +66,14 @@ public class FeatureStatistics {
             }
         }
 
+        public void fillMap(Map<String, String> target) {
+            target.put("min", String.valueOf(min));
+            target.put("max", String.valueOf(max));
+            target.put("avg", String.valueOf(avg));
+            target.put("stddev", String.valueOf(stddev));
+            target.put("count", String.valueOf(count));
+        }
+
         public String toString() {
             return name + " (min: " + min + ", max: " + max + ", avg: " + avg +
                     ", stddev: " + stddev + ", count: " + count + ")";
@@ -82,7 +90,12 @@ public class FeatureStatistics {
     }
 
     public Feature getFeature(String name) {
-        return features.get(name);
+        Feature ft = features.get(name);
+        if (ft == null) {
+            ft = new Feature(name, 0, 0, 0, 0, 0);
+            features.put(name, ft);
+        }
+        return ft;
     }
 
     public Collection<String> allFeatureNames() {
@@ -93,12 +106,31 @@ public class FeatureStatistics {
         return features.values();
     }
 
+    public void writeFile(String iniFile) throws IOException {
+        Ini ini = new Ini();
+        ini.getConfig().setTree(false);
+        File file = new File(iniFile);
+        ini.load(file);
+        fillIni(ini);
+        ini.store(file);
+    }
+
     private void fillFromIni(Ini ini) {
         features.clear();
         for (Map.Entry<String, Profile.Section> entry : ini.entrySet()) {
             String featureName = entry.getKey();
             Feature feature = new Feature(featureName, entry.getValue());
             features.put(featureName, feature);
+        }
+    }
+
+    private void fillIni(Ini ini) {
+        for (Feature ft : features.values()) {
+            Profile.Section sec = ini.get(ft.name);
+            if (sec == null) {
+                sec = ini.add(ft.name);
+            }
+            ft.fillMap(sec);
         }
     }
 
