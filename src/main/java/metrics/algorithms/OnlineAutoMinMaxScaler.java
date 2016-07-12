@@ -11,12 +11,13 @@ import java.util.Map;
 public class OnlineAutoMinMaxScaler extends OnlineAbstractFeatureScaler {
 
     public interface ConceptChangeHandler {
-        void conceptChanged(OnlineAutoMinMaxScaler scaler, String feature);
+        // Return false -> ignore this concept-change
+        boolean conceptChanged(OnlineAutoMinMaxScaler scaler, String feature);
     }
 
     public final Map<String, Feature> features = new HashMap<>();
 
-    // In percent: how much must min/max values change before a concept change is fired
+    // In percent: how much must scalingMin/scalingMax values change before a concept change is fired
     private final double conceptChangeThreshold;
 
     private final ConceptChangeHandler handler;
@@ -59,16 +60,17 @@ public class OnlineAutoMinMaxScaler extends OnlineAbstractFeatureScaler {
             features.put(name, stat);
         }
         if (stat.push(val)) {
-            if (handler != null)
-                handler.conceptChanged(this, name);
+            if (handler == null || handler.conceptChanged(this, name)) {
+                stat.flushScalingValues();
+            }
         }
         return stat.standardize(val);
     }
 
     public static class Feature {
         Feature(String name, double min, double max, double threshold) {
-            this.min = this.newMin = min;
-            this.max = this.newMax = max;
+            this.scalingMin = this.reportedMin = this.observedMin = min;
+            this.scalingMax = this.reportedMax = this.observedMax = max;
             this.name = name;
             this.threshold = threshold;
         }
@@ -76,48 +78,55 @@ public class OnlineAutoMinMaxScaler extends OnlineAbstractFeatureScaler {
         final double threshold;
         final String name;
 
-        public double min;
-        public double max;
+        // Used for actual scaling
+        public double scalingMin;
+        public double scalingMax;
 
-        double newMin;
-        double newMax;
+        // Have been reported as concept change
+        // Returning false from ConceptChangeHandler.conceptChanged() prevents this from being used as scalingMin/scalingMax
+        public double reportedMin;
+        public double reportedMax;
 
-        double range() {
-            double range = Math.abs(max - min);
-            if (range == 0) range = max; // TODO not really correct
-            return range;
-        }
+        // The actual reportedMin/reportedMax values from all the observed values so far
+        private double observedMin;
+        private double observedMax;
 
         // return true upon concept change
         boolean push(double val) {
-            if (val < newMin) newMin = val;
-            if (val > newMax) newMax = val;
+            if (val < observedMin) observedMin = val;
+            if (val > observedMax) observedMax = val;
             if (threshold <= 0) {
-                // Fast path: immediately adjust min/max for all future scalings
-                boolean changed = min > newMin || max < newMax;
-                min = newMin;
-                max = newMax;
+                // Fast path: immediately adjust scalingMin/scalingMax for all future scalings
+                boolean changed = reportedMin > observedMin || reportedMax < observedMax;
+                reportedMin = observedMin;
+                reportedMax = observedMax;
                 return changed;
             }
-            double range = range();
+
+            double range = Math.abs(reportedMax - reportedMin);
+            if (range == 0) range = reportedMax; // TODO not really correct
             if (range == 0) range = 1;
-            double diffMin = Math.abs(min - newMin);
-            double diffMax = Math.abs(max - newMax);
+
+            double diffMin = Math.abs(reportedMin - observedMin);
+            double diffMax = Math.abs(reportedMax - observedMax);
             if (diffMin / range > threshold || diffMax / range > threshold) {
-                min = newMin;
-                max = newMax;
+                reportedMin = observedMin;
+                reportedMax = observedMax;
                 return true;
             }
             return false;
         }
 
+        void flushScalingValues() {
+            scalingMin = reportedMin;
+            scalingMax = reportedMax;
+        }
+
         double standardize(double val) {
-            double range = range();
-            if (range == 0) {
-                // There is no correct value here, but return something in the 0-1 range.
-                return 0;
-            }
-            return (val - min) / range;
+            double range = Math.abs(scalingMax - scalingMin);
+            if (range == 0) range = scalingMax; // TODO not really correct
+            if (range == 0) return 0; // There is no correct value here, but return something in the 0-1 range.
+            return (val - scalingMin) / range;
         }
     }
 

@@ -31,8 +31,8 @@ public class Cluster {
     private static final int labelAggregationWindow_number = 20;
 
     public static void main(String[] args) throws IOException {
-        if (args.length != 7) {
-            System.err.println("Parameters: <receive-port> <feature ini file> <target-host> <target-port> <local hostname> <filter> <num_clusters>");
+        if (args.length != 8) {
+            System.err.println("Parameters: <receive-port> <feature ini file> <target-host> <target-port> <local hostname> <filter> <num_clusters> <concept-change-enabled>");
             return;
         }
         int receivePort = Integer.parseInt(args[0]);
@@ -43,20 +43,27 @@ public class Cluster {
         String hostname = args[4];
         String filter = args[5];
         int num_clusters = Integer.valueOf(args[6]);
+        boolean conceptChangeEnabled = Boolean.valueOf(args[7]);
         Algorithm filterAlgo = Train.getFilter(filter);
 
         AbstractClusterer clusterer = ExternalClusterer.BICO.newInstance();
         Set<String> trainedLabels = new HashSet<>(Arrays.asList(new String[] { "idle", "load" }));
         MOAStreamClusterer<AbstractClusterer> moaClusterer = new MOAStreamClusterer<>(clusterer, trainedLabels, num_clusters);
         ClusterLabelingAlgorithm labeling = new ClusterLabelingAlgorithm(classifiedClusterThreshold, true, false, trainedLabels);
+        HostnameTagger hostnameTagger = new HostnameTagger(hostname);
 
         OnlineAutoMinMaxScaler.ConceptChangeHandler conceptChangeHandler = (handler, feature) -> {
             OnlineAutoMinMaxScaler.Feature ft = handler.features.get(feature);
-            System.err.println("New value range of " + feature + ": " + ft.min + " - " + ft.max);
+            if (!conceptChangeEnabled)
+                System.err.print("IGNORED: ");
+            System.err.println("New value range of " + feature + ": " + ft.reportedMin + " - " + ft.reportedMax);
 
             FeatureStatistics.Feature statsFt = stats.getFeature(feature);
-            statsFt.min = ft.min;
-            statsFt.max = ft.max;
+            statsFt.min = ft.reportedMin;
+            statsFt.max = ft.reportedMax;
+            // for (FeatureStatistics.Feature f : stats.allFeatures()) {
+            //     if (f.scalingMin < 0) f.scalingMin = 0;
+            // }
 
             try {
                 stats.writeFile(statsFile);
@@ -65,8 +72,12 @@ public class Cluster {
                 e.printStackTrace();
             }
 
-            moaClusterer.resetClusters();
-            labeling.resetCounters();
+            if (conceptChangeEnabled) {
+                hostnameTagger.samples_since_concept_change = 0; // Reset
+                moaClusterer.resetClusters();
+                labeling.resetCounters();
+            }
+            return conceptChangeEnabled;
         };
 
         new AlgorithmPipeline(receivePort, Analyse.TCP_FORMAT)
@@ -87,7 +98,7 @@ public class Cluster {
                                     // .step(new LabelAggregatorAlgorithm(labelAggregationWindow_number))
                                     // .step(new MOAStreamEvaluator(1, false, true))
                                     .step(new MOAStreamAnomalyDetectionEvaluator(1, false, true, trainedLabels, "normal"))
-                                    .step(new HostnameTagger(hostname))
+                                    .step(hostnameTagger)
                                     .fork(new TwoWayFork(),
                                             (type, out) -> out.output(
                                                     type == TwoWayFork.ForkType.Primary ?
@@ -100,6 +111,7 @@ public class Cluster {
     private static class HostnameTagger extends AbstractAlgorithm {
 
         private final String hostname;
+        public int samples_since_concept_change = 0;
 
         public HostnameTagger(String hostname) {
             this.hostname = hostname;
@@ -108,6 +120,8 @@ public class Cluster {
         protected Sample executeSample(Sample sample) throws IOException {
             Sample output = new Sample(sample);
             output.setTag(SampleAnalysisOutput.TAG_HOSTNAME, hostname);
+            output.setTag("sscc", String.valueOf(samples_since_concept_change));
+            samples_since_concept_change++;
             return output;
         }
 
@@ -115,44 +129,6 @@ public class Cluster {
         public String toString() {
             return "hostname tagger";
         }
-    }
-
-    private static class ConceptChangeHandler extends AbstractAlgorithm implements OnlineAutoMinMaxScaler.ConceptChangeHandler {
-
-        // Purpose: drop a few samples after a concept change, because we expect
-        // many concept changes within a few seconds.
-
-        private final int smoothingSamples;
-        private boolean conceptChanged = false;
-        private int samplesToWait = 0;
-
-        public ConceptChangeHandler(int smoothingSamples) {
-            this.smoothingSamples = smoothingSamples;
-        }
-
-        protected Sample executeSample(Sample sample) throws IOException {
-            if (conceptChanged) {
-                samplesToWait = smoothingSamples;
-                conceptChanged = false;
-                return null;
-            }
-            if (samplesToWait > 0) {
-                samplesToWait--;
-                return null;
-            }
-            return sample;
-        }
-
-        @Override
-        public void conceptChanged(OnlineAutoMinMaxScaler scaler, String feature) {
-            conceptChanged = true; // Regardless which feature.
-        }
-
-        @Override
-        public String toString() {
-            return "concept change handler";
-        }
-
     }
 
 }
