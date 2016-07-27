@@ -3,6 +3,7 @@ package metrics.main.prototype;
 import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
 import metrics.algorithms.Algorithm;
+import metrics.algorithms.FeatureCalculationsAlgorithm;
 import metrics.algorithms.OnlineAutoMinMaxScaler;
 import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
 import metrics.algorithms.clustering.ExternalClusterer;
@@ -17,9 +18,7 @@ import metrics.main.analysis.OpenStackSampleSplitter;
 import moa.clusterers.AbstractClusterer;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by anton on 6/21/16.
@@ -80,6 +79,8 @@ public class Cluster {
             return conceptChangeEnabled;
         };
 
+        FeatureCalculationsAlgorithm extraFeatures = getExtraFeatures();
+
         new AlgorithmPipeline(receivePort, Analyse.TCP_FORMAT)
                 .fork(new OpenStackSampleSplitter(),
                         (name, p) -> {
@@ -92,6 +93,7 @@ public class Cluster {
                                     // .step(new OnlineFeatureStandardizer(model.averages, model.stddevs))
                                     // .step(new OnlineAutoFeatureStandardizer())
                                     .step(new OnlineAutoMinMaxScaler(0.5, conceptChangeHandler, stats))
+                                    .step(extraFeatures)
                                     .step(moaClusterer)
                                     .step(labeling)
                                     .step(new LabelAggregatorAlgorithm(labelAggregationWindow))
@@ -106,6 +108,31 @@ public class Cluster {
                                                             new TcpMetricsOutput(AlgorithmPipeline.getMarshaller(Analyse.TCP_OUTPUT_FORMAT), targetHost, targetPort)));
                         })
                 .runAndWait();
+    }
+
+    private static FeatureCalculationsAlgorithm getExtraFeatures() {
+        Map<String, FeatureCalculationsAlgorithm.FeatureCalculation> calculations = new HashMap<>();
+        calculations.put("extra/cpu-per-net", access -> calculateDiff(access.getFeature("net-io/bytes"), access.getFeature("cpu")));
+        calculations.put("extra/cpu-per-disk", access -> calculateDiff(getDisk(access), access.getFeature("cpu")));
+        calculations.put("extra/net-packet-size", access -> calculateDiff(access.getFeature("net-io/packets"), access.getFeature("net-io/bytes")));
+        return new FeatureCalculationsAlgorithm(calculations);
+    }
+
+    private static double getDisk(FeatureCalculationsAlgorithm.FeatureAccess access) {
+        double disk;
+        try {
+            disk = access.getFeature("disk-io/vda/ioTime");
+        } catch(IllegalArgumentException e) {
+            disk = access.getFeature("disk-io/sda/ioTime");
+        }
+        return disk;
+    }
+
+    private static double calculateDiff(double val1, double val2) {
+        // val1 and val2 already are in range 0..1 (mostly)
+        // Try to also place the result in 0..1
+        // Due to the value range, we can use subtraction instead of division
+        return (val2 - val1) / 2 + 0.5;
     }
 
     private static class HostnameTagger extends AbstractAlgorithm {
