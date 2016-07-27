@@ -114,13 +114,14 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
 
         sample.setTag(ClusterConstants.CLUSTER_TAG, Integer.toString(bestFitCluster));
         if (distance != null) {
-            String newHeader[] = new String[distance.getValue().length];
-            double newValues[] = new double[newHeader.length];
-            sample.setTag(ClusterConstants.DISTANCE_PREFIX + "overall", String.valueOf(distance.getKey()));
-            for (int i = 0; i < newHeader.length; i++) {
+            String newHeader[] = new String[distance.getValue().length + 1];
+            double newValues[] = new double[newHeader.length + 1];
+            for (int i = 0; i < newHeader.length - 1; i++) {
                 newHeader[i] = ClusterConstants.DISTANCE_PREFIX + sample.getHeader().header[i];
                 newValues[i] = distance.getValue()[i];
             }
+            newHeader[newHeader.length - 1] = ClusterConstants.DISTANCE_PREFIX + "overall";
+            newValues[newValues.length - 1] = distance.getKey();
             sample = sample.extend(newHeader, newValues);
         }
         return sample;
