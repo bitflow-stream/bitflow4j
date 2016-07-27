@@ -93,7 +93,7 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
         AutoExpandVector<moa.cluster.Cluster> clustering = clusteringResult.getClustering();
         boolean matchingClusterFound = true;
         if (!trained) {
-            matchingClusterFound = clusteringResult.getMaxInclusionProbability(instance) == 0 ? false : true;
+            matchingClusterFound = clusteringResult.getMaxInclusionProbability(instance) != 0;
         }
         if (matchingClusterFound) {
             for (moa.cluster.Cluster c : clustering) {
@@ -105,114 +105,39 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
                 clusterNum++;
             }
         } else if (calculateDistance) {
-            System.out.println("calculating distance");
             //TODO: handle optional
-            Optional<Map.Entry<Double, double[]>> distanceT = clustering.stream().map(cluster -> {
-//                Map<Double, double[]> result = new TreeMap<Double, double[]>();
-                Map.Entry<Double, double[]> entry = distance(cluster.getCenter(), instance.toDoubleArray());
-//                result.put(e
-                return entry;
-            }).min((entry1, entry2) -> {
-                return Double.compare(entry1.getKey().doubleValue(), entry2.getKey().doubleValue());
-            });
-//            subclassCallback(clusteringResult);
+            Optional<Map.Entry<Double, double[]>> distanceT = clustering.stream().map(cluster ->
+                distance(cluster.getCenter(), instance.toDoubleArray())
+            ).min((entry1, entry2) -> Double.compare(entry1.getKey(), entry2.getKey()));
             if (distanceT.isPresent()) distance = distanceT.get();
         }
 
-        Sample sampleToReturn = new Sample(expectedHeader, values, sample);
-        sampleToReturn.setTag(ClusterConstants.CLUSTER_TAG, Integer.toString(bestFitCluster));
-//        if(trained) sampleToReturn.setTag(ClusterConstants.TRAINING_TAG, "");
+        sample.setTag(ClusterConstants.CLUSTER_TAG, Integer.toString(bestFitCluster));
         if (distance != null) {
-            sampleToReturn.setTag(ClusterConstants.DISTANCE_PREFIX + "overall", String.valueOf(distance.getKey()));
-//            for (double d : distance.getValue())
-            for (int i = 0; i < distance.getValue().length; i++) {
-                //extra iteration so convert array to single tags
-                String distancePrefix = ClusterConstants.DISTANCE_PREFIX + sampleToReturn.getHeader().header[i];
-                String tag = String.valueOf(distance.getValue()[i]);
-                sampleToReturn.setTag(distancePrefix, tag);
-                System.out.println("added tag: " + distancePrefix + " : " + tag);
+            String newHeader[] = new String[distance.getValue().length];
+            double newValues[] = new double[newHeader.length];
+            sample.setTag(ClusterConstants.DISTANCE_PREFIX + "overall", String.valueOf(distance.getKey()));
+            for (int i = 0; i < newHeader.length; i++) {
+                newHeader[i] = ClusterConstants.DISTANCE_PREFIX + sample.getHeader().header[i];
+                newValues[i] = distance.getValue()[i];
             }
+            sample = sample.extend(newHeader, newValues);
         }
-        return sampleToReturn;
+        return sample;
     }
 
     private Map.Entry<Double, double[]> distance(double[] center, double[] doubles) {
         if (center.length != doubles.length || center.length == 0) {
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
-            System.out.println("BIEP BIEP BIEP");
+            throw new IllegalStateException("THIS SHOULD NOT HAPPEN: " + center.length + " vs " + doubles.length);
         }
-        Double distance = null;
-        double[] distances = new double[center.length];
-        for (int i = 0; i < center.length; i++) {
+        Double distance;
+        double[] distances = new double[center.length - 1];
+        for (int i = 0; i < distances.length; i++) {
             distances[i] = Math.abs(center[i] - doubles[i]);
         }
-        distance = Math.sqrt(DoubleStream.of(distances).map(dist -> {
-            return dist * dist;
-        }).sum());
-        System.out.println("Distance: " + distance);
-        System.out.println("Distances: " + Arrays.toString(distances));
-        Map.Entry<Double, double[]> result = new TreeMap.SimpleEntry<>(distance, distances);
-        return result;
+        distance = Math.sqrt(DoubleStream.of(distances).map(dist -> dist * dist).sum());
+        return new TreeMap.SimpleEntry<>(distance, distances);
     }
-
-//    protected void subclassCallback(Clustering clusteringResult) {
-//        System.out.println("wrong callback");
-//        //bad hack goes here
-//    }
 
     public synchronized void resetClusters() {
         clusterer.resetLearning();
