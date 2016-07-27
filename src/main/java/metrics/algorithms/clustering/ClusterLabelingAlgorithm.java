@@ -12,6 +12,7 @@ import static metrics.algorithms.clustering.ClusterConstants.INC_PROB_PREFIX;
 /**
  * This labeling algorithm extends the metrics with the inclusion probability to given labels. 
  * Created by fschmidt on 29.06.2016.
+ * @author mbyfield, fschmidt
  */
 public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
 

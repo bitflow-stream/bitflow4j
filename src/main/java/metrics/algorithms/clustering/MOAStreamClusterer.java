@@ -14,6 +14,7 @@ import moa.clusterers.clustree.ClusTree;
 import moa.clusterers.denstream.WithDBSCAN;
 import moa.clusterers.kmeanspm.BICO;
 import moa.clusterers.streamkm.StreamKM;
+import moa.core.AutoExpandVector;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
@@ -21,38 +22,39 @@ import weka.core.Instances;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
+import java.util.stream.DoubleStream;
 
 /**
  *
- * @author fschmidt
+ * @author fschmidt, mbyfield
  */
 public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> extends AbstractAlgorithm {
 
-    private final T clusterer;
-    private final SampleConverger converger = new SampleConverger(); // No predefined expected header
-    private final boolean alwaysTrain;
-    private final Set<String> trainedLabels;
+    protected final T clusterer;
+    protected final SampleConverger converger = new SampleConverger(); // No predefined expected header
+    protected final boolean alwaysTrain;
+    protected final Set<String> trainedLabels;
 
-    private final int bico_num_clusters;
+    protected final int bico_num_clusters;
+    private boolean calculateDistance;
 
     // false -> train on all VALID labels (not empty)
-    public MOAStreamClusterer(T clusterer, boolean alwaysTrain) {
+    public MOAStreamClusterer(T clusterer, boolean alwaysTrain, boolean calculateDistance) {
         this.clusterer = clusterer;
         this.alwaysTrain = alwaysTrain;
-        this.trainedLabels = null;
+        this.trainedLabels = alwaysTrain ? null : new HashSet<>(Arrays.asList(new String[]{"idle"}));
         bico_num_clusters = 500;
+        this.calculateDistance = calculateDistance;
     }
 
     // Train cluster only for certain labels (or give null-set to train on all VALID labels)
-    public MOAStreamClusterer(T clusterer, Set<String> trainedLabels, int bico_num_clusters) {
+    public MOAStreamClusterer(T clusterer, Set<String> trainedLabels, int bico_num_clusters, boolean calculateDistance) {
         this.clusterer = clusterer;
         this.alwaysTrain = false;
         this.trainedLabels = trainedLabels;
         this.bico_num_clusters = bico_num_clusters;
+        this.calculateDistance = calculateDistance;
     }
 
     private void initalizeClusterer(Sample firstSample) {
@@ -73,32 +75,150 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
         Instances instances = createInstances(expectedHeader, label);
         com.yahoo.labs.samoa.instances.Instance instance = makeInstance(values, label, instances);
 
-        if (alwaysTrain || (label != null && !label.isEmpty() && (trainedLabels == null || trainedLabels.contains(label))))
+        boolean trained = false;
+        if (alwaysTrain || (label != null && !label.isEmpty() && (trainedLabels == null || trainedLabels.contains(label)))) {
             clusterer.trainOnInstance(instance);
+            trained = true;
+        }
 
+        //BEGIN: super bad hack
+        /*TODO do we have to calculate the inclusion probability manually for trained instances?
+         if not, add else statement, remove boolean and move distance calculation to else statement */
         //prints all micro-clusters
+        Map.Entry<Double, double[]> distance = null;
         double inclusionProbability = 0.0;
         int bestFitCluster = -1;
         int clusterNum = 0;
-        for (moa.cluster.Cluster c : this.getClusteringResult().getClustering()) {
-            double clusterInclusionProbability = c.getInclusionProbability(instance);
-            if (inclusionProbability < clusterInclusionProbability) {
-                inclusionProbability = clusterInclusionProbability;
-                bestFitCluster = clusterNum;
+        Clustering clusteringResult = this.getClusteringResult();
+        AutoExpandVector<moa.cluster.Cluster> clustering = clusteringResult.getClustering();
+        boolean matchingClusterFound = true;
+        if (!trained) {
+            matchingClusterFound = clusteringResult.getMaxInclusionProbability(instance) == 0 ? false : true;
+        }
+        if (matchingClusterFound) {
+            for (moa.cluster.Cluster c : clustering) {
+                double clusterInclusionProbability = c.getInclusionProbability(instance);
+                if (inclusionProbability < clusterInclusionProbability) {
+                    inclusionProbability = clusterInclusionProbability;
+                    bestFitCluster = clusterNum;
+                }
+                clusterNum++;
             }
-            clusterNum++;
+        } else if (calculateDistance) {
+            System.out.println("calculating distance");
+            //TODO: handle optional
+            Optional<Map.Entry<Double, double[]>> distanceT = clustering.stream().map(cluster -> {
+//                Map<Double, double[]> result = new TreeMap<Double, double[]>();
+                Map.Entry<Double, double[]> entry = distance(cluster.getCenter(), instance.toDoubleArray());
+//                result.put(e
+                return entry;
+            }).min((entry1, entry2) -> {
+                return Double.compare(entry1.getKey().doubleValue(), entry2.getKey().doubleValue());
+            });
+//            subclassCallback(clusteringResult);
+            if (distanceT.isPresent()) distance = distanceT.get();
         }
 
         Sample sampleToReturn = new Sample(expectedHeader, values, sample);
         sampleToReturn.setTag(ClusterConstants.CLUSTER_TAG, Integer.toString(bestFitCluster));
+//        if(trained) sampleToReturn.setTag(ClusterConstants.TRAINING_TAG, "");
+        if (distance != null) {
+            sampleToReturn.setTag(ClusterConstants.DISTANCE_PREFIX + "overall", String.valueOf(distance.getKey()));
+//            for (double d : distance.getValue())
+            for (int i = 0; i < distance.getValue().length; i++) {
+                //extra iteration so convert array to single tags
+                String distancePrefix = ClusterConstants.DISTANCE_PREFIX + sampleToReturn.getHeader().header[i];
+                String tag = String.valueOf(distance.getValue()[i]);
+                sampleToReturn.setTag(distancePrefix, tag);
+                System.out.println("added tag: " + distancePrefix + " : " + tag);
+            }
+        }
         return sampleToReturn;
     }
+
+    private Map.Entry<Double, double[]> distance(double[] center, double[] doubles) {
+        if (center.length != doubles.length || center.length == 0) {
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+            System.out.println("BIEP BIEP BIEP");
+        }
+        Double distance = null;
+        double[] distances = new double[center.length];
+        for (int i = 0; i < center.length; i++) {
+            distances[i] = Math.abs(center[i] - doubles[i]);
+        }
+        distance = Math.sqrt(DoubleStream.of(distances).map(dist -> {
+            return dist * dist;
+        }).sum());
+        System.out.println("Distance: " + distance);
+        System.out.println("Distances: " + Arrays.toString(distances));
+        Map.Entry<Double, double[]> result = new TreeMap.SimpleEntry<>(distance, distances);
+        return result;
+    }
+
+//    protected void subclassCallback(Clustering clusteringResult) {
+//        System.out.println("wrong callback");
+//        //bad hack goes here
+//    }
 
     public synchronized void resetClusters() {
         clusterer.resetLearning();
     }
 
-    private String getLabel(Sample sample) {
+    protected String getLabel(Sample sample) {
         String label = sample.getLabel();
         if (label == null || label.isEmpty()) {
             label = ClusterConstants.UNKNOWN_LABEL;
@@ -119,7 +239,7 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
         return "moa clusterer";
     }
 
-    private com.yahoo.labs.samoa.instances.Instance makeInstance(double values[], String label, Instances instances) {
+    protected com.yahoo.labs.samoa.instances.Instance makeInstance(double values[], String label, Instances instances) {
         values = Arrays.copyOf(values, values.length + 1);
         Instance instance = new DenseInstance(1.0, values);
         instance.setDataset(instances);
@@ -128,7 +248,7 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
         return converter.samoaInstance(instance);
     }
 
-    private Instances createInstances(Header header, String label) {
+    protected Instances createInstances(Header header, String label) {
         Instances instances = new Instances(toString() + " data", new ArrayList<>(), 0);
         for (String field : header.header) {
             instances.insertAttributeAt(new Attribute(field), instances.numAttributes());

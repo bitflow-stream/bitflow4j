@@ -16,4 +16,8 @@ public class ClusterConstants {
      * label for a noise cluster
      */
     public final static String NOISE_CLUSTER = "noise";
+    //label for trained samples
+    public static final String TRAINING_TAG = "trained";
+    // TODO move prefix
+    public static String DISTANCE_PREFIX = "_distance_";
 }

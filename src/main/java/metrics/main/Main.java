@@ -8,6 +8,7 @@ import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
 import metrics.algorithms.clustering.ExternalClusterer;
 import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
 import metrics.algorithms.clustering.MOAStreamClusterer;
+import metrics.algorithms.evaluation.DistancePrinter;
 import metrics.algorithms.evaluation.MOAStreamEvaluator;
 import metrics.io.file.FileGroup;
 import metrics.io.file.FileMetricReader;
@@ -108,7 +109,8 @@ public class Main {
                     p
                             .step(new FeatureStandardizer())
                             .step(new SourceLabellingAlgorithm())
-                            .step(new MOAStreamClusterer<>(ExternalClusterer.BICO.newInstance(), true))
+                            .step(new MOAStreamClusterer<>(ExternalClusterer.BICO.newInstance(), false, true))
+                            .step(new DistancePrinter())
                             .step(new ClusterLabelingAlgorithm(0.0, false, false))
                             .step(new LabelAggregatorAlgorithm(10))
                             .step(new MOAStreamEvaluator(1000, true, false));
@@ -176,7 +178,7 @@ public class Main {
                     .step(new FeatureStandardizer())
                     .fork(new OpenStackSampleSplitter().fillInfo(),
                             (name, p) -> {
-                                p.step(new MOAStreamClusterer<>(clusterer, true));
+                                p.step(new MOAStreamClusterer<>(clusterer, true, true));
                     })
                     .runAndWait();
         }
