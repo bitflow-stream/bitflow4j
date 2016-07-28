@@ -127,23 +127,21 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
 
         sample.setTag(ClusterConstants.CLUSTER_TAG, Integer.toString(bestFitCluster));
         if (distance != null) {
-            System.out.println("Distance: " + distance.getKey());
-            int c = 0;
-            for (double d : distance.getValue()) {
-                System.out.println("distance-" + c++ + " : " + d);
-            }
-//we can change this again once general functionality has been established, same for performance optimization:
-// make it work first, then make it better
-
-//            String newHeader[] = new String[distance.getValue().length + 1];
-//            double newValues[] = new double[newHeader.length + 1];
-//            for (int i = 0; i < newHeader.length - 1; i++) {
-//                newHeader[i] = ClusterConstants.DISTANCE_PREFIX + sample.getHeader().header[i];
-//                newValues[i] = distance.getValue()[i];
+//            System.out.println("Distance: " + distance.getKey());
+//            int c = 0;
+//            for (double d : distance.getValue()) {
+//                System.out.println("distance-" + c++ + " : " + d);
 //            }
-//            newHeader[newHeader.length - 1] = ClusterConstants.DISTANCE_PREFIX + "overall";
-//            newValues[newValues.length - 1] = distance.getKey();
-//            sample = sample.extend(newHeader, newValues);
+
+            String newHeader[] = new String[distance.getValue().length + 1];
+            double newValues[] = new double[newHeader.length + 1];
+            for (int i = 0; i < newHeader.length - 1; i++) {
+                newHeader[i] = ClusterConstants.DISTANCE_PREFIX + sample.getHeader().header[i];
+                newValues[i] = distance.getValue()[i];
+            }
+            newHeader[newHeader.length - 1] = ClusterConstants.DISTANCE_PREFIX + "overall";
+            newValues[newValues.length - 1] = distance.getKey();
+            sample = sample.extend(newHeader, newValues);
         }
         return sample;
     }
@@ -159,8 +157,8 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
         Double distance;
         double[] distances = new double[center.length - 1];
         for (int i = 0; i < distances.length; i++) {
-//            distances[i] = Math.abs(center[i] - doubles[i]);
-            distances[i] = center[i] - doubles[i];
+            distances[i] = Math.abs(center[i] - doubles[i]);
+//            distances[i] = center[i] - doubles[i];
         }
         distanceCenter = Math.sqrt(DoubleStream.of(distances).map(dist -> dist * dist).sum());
         distance = distanceCenter - radius;
