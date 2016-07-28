@@ -106,35 +106,28 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
                 clusterNum++;
             }
         } else if (calculateDistance) {
-            //TODO: handle optional
-
-            Optional<Map.Entry<Double, double[]>> distanceT = clustering.stream().map(cluster -> {
-                Field field = null;
-                double radius = 0;
-                try {
-                    field = cluster.getClass().getDeclaredField("radius");
-                    field.setAccessible(true);
-                    radius = field.getDouble(cluster);
-                } catch (NoSuchFieldException e) {
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
-                return distance(cluster.getCenter(), instance.toDoubleArray(), radius);
-            }).min((entry1, entry2) -> Double.compare(entry1.getKey(), entry2.getKey()));
+            Optional<Map.Entry<Double, double[]>> distanceT;
+            try {
+                distanceT = clustering.stream().map(cluster -> {
+                    try {
+                        Field field = cluster.getClass().getDeclaredField("radius");
+                        field.setAccessible(true);
+                        double radius = field.getDouble(cluster);
+                        return distance(cluster.getCenter(), instance.toDoubleArray(), radius);
+                    } catch (NoSuchFieldException | IllegalAccessException e) {
+                        throw new IllegalStateException(e);
+                    }
+                }).min((entry1, entry2) -> Double.compare(entry1.getKey(), entry2.getKey()));
+            } catch (IllegalStateException e) {
+                throw new IOException(e);
+            }
             if (distanceT.isPresent()) distance = distanceT.get();
         }
 
         sample.setTag(ClusterConstants.CLUSTER_TAG, Integer.toString(bestFitCluster));
         if (distance != null) {
-//            System.out.println("Distance: " + distance.getKey());
-//            int c = 0;
-//            for (double d : distance.getValue()) {
-//                System.out.println("distance-" + c++ + " : " + d);
-//            }
-
             String newHeader[] = new String[distance.getValue().length + 1];
-            double newValues[] = new double[newHeader.length + 1];
+            double newValues[] = new double[newHeader.length];
             for (int i = 0; i < newHeader.length - 1; i++) {
                 newHeader[i] = ClusterConstants.DISTANCE_PREFIX + sample.getHeader().header[i];
                 newValues[i] = distance.getValue()[i];
