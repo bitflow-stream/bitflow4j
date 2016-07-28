@@ -22,6 +22,7 @@ import weka.core.Instances;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.DoubleStream;
 
@@ -106,37 +107,67 @@ public class MOAStreamClusterer<T extends AbstractClusterer & Serializable> exte
             }
         } else if (calculateDistance) {
             //TODO: handle optional
-            Optional<Map.Entry<Double, double[]>> distanceT = clustering.stream().map(cluster ->
-                distance(cluster.getCenter(), instance.toDoubleArray())
-            ).min((entry1, entry2) -> Double.compare(entry1.getKey(), entry2.getKey()));
+
+            Optional<Map.Entry<Double, double[]>> distanceT = clustering.stream().map(cluster -> {
+                Field field = null;
+                double radius = 0;
+                try {
+                    field = cluster.getClass().getDeclaredField("radius");
+                    field.setAccessible(true);
+                    radius = field.getDouble(cluster);
+                } catch (NoSuchFieldException e) {
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+                return distance(cluster.getCenter(), instance.toDoubleArray(), radius);
+            }).min((entry1, entry2) -> Double.compare(entry1.getKey(), entry2.getKey()));
             if (distanceT.isPresent()) distance = distanceT.get();
         }
 
         sample.setTag(ClusterConstants.CLUSTER_TAG, Integer.toString(bestFitCluster));
         if (distance != null) {
-            String newHeader[] = new String[distance.getValue().length + 1];
-            double newValues[] = new double[newHeader.length + 1];
-            for (int i = 0; i < newHeader.length - 1; i++) {
-                newHeader[i] = ClusterConstants.DISTANCE_PREFIX + sample.getHeader().header[i];
-                newValues[i] = distance.getValue()[i];
+            System.out.println("Distance: " + distance.getKey());
+            int c = 0;
+            for (double d : distance.getValue()) {
+                System.out.println("distance-" + c++ + " : " + d);
             }
-            newHeader[newHeader.length - 1] = ClusterConstants.DISTANCE_PREFIX + "overall";
-            newValues[newValues.length - 1] = distance.getKey();
-            sample = sample.extend(newHeader, newValues);
+//we can change this again once general functionality has been established, same for performance optimization:
+// make it work first, then make it better
+
+//            String newHeader[] = new String[distance.getValue().length + 1];
+//            double newValues[] = new double[newHeader.length + 1];
+//            for (int i = 0; i < newHeader.length - 1; i++) {
+//                newHeader[i] = ClusterConstants.DISTANCE_PREFIX + sample.getHeader().header[i];
+//                newValues[i] = distance.getValue()[i];
+//            }
+//            newHeader[newHeader.length - 1] = ClusterConstants.DISTANCE_PREFIX + "overall";
+//            newValues[newValues.length - 1] = distance.getKey();
+//            sample = sample.extend(newHeader, newValues);
         }
         return sample;
     }
 
-    private Map.Entry<Double, double[]> distance(double[] center, double[] doubles) {
+    //abstand mittelpunkt p
+    //sub radius
+    //
+    private Map.Entry<Double, double[]> distance(double[] center, double[] doubles, double radius) {
         if (center.length != doubles.length || center.length == 0) {
             throw new IllegalStateException("THIS SHOULD NOT HAPPEN: " + center.length + " vs " + doubles.length);
         }
+        double distanceCenter;
         Double distance;
         double[] distances = new double[center.length - 1];
         for (int i = 0; i < distances.length; i++) {
-            distances[i] = Math.abs(center[i] - doubles[i]);
+//            distances[i] = Math.abs(center[i] - doubles[i]);
+            distances[i] = center[i] - doubles[i];
         }
-        distance = Math.sqrt(DoubleStream.of(distances).map(dist -> dist * dist).sum());
+        distanceCenter = Math.sqrt(DoubleStream.of(distances).map(dist -> dist * dist).sum());
+        distance = distanceCenter - radius;
+        double factor = distance / distanceCenter;
+        for (int i = 0; i < distances.length; i++) {
+            distances[i] = distances[i] * factor;
+        }
         return new TreeMap.SimpleEntry<>(distance, distances);
     }
 
