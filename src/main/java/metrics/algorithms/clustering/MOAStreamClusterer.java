@@ -56,6 +56,7 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
     protected void initalizeClusterer(Sample firstSample) {
         this.setupClustererParameter(firstSample);
         this.clusterer.resetLearning();
+        this.clusteringResult = this.getClusteringResult();
         this.printClustererParameters();
     }
 
