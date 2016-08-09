@@ -1,24 +1,17 @@
 package metrics.algorithms.clustering;
 
-import com.yahoo.labs.samoa.instances.WekaToSamoaInstanceConverter;
-import metrics.Header;
+import com.github.javacliparser.IntOption;
 import metrics.Sample;
-import metrics.algorithms.AbstractAlgorithm;
 import moa.clusterers.clustream.Clustream;
-import weka.core.Attribute;
-import weka.core.DenseInstance;
-import weka.core.Instance;
-import weka.core.Instances;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
  * @author fschmidt
  */
-public class CluStreamClusterer extends AbstractAlgorithm {
+/*public class CluStreamClusterer extends AbstractAlgorithm {
 
     private Clustream cluster;
     private Instances instances = null;
@@ -97,4 +90,32 @@ public class CluStreamClusterer extends AbstractAlgorithm {
         return "clustream moa";
     }
 
+}*/
+
+public class CluStreamClusterer extends MOASphereClusterer<Clustream> {
+
+    public CluStreamClusterer(boolean alwaysTrain, boolean calculateDistance) {
+        super((Clustream) ExternalClusterer.CLUSTREAM.newInstance(), alwaysTrain, calculateDistance);
+    }
+
+    public CluStreamClusterer(Set<String> trainedLabels, Map<String, Object> parameters, boolean calculateDistance) throws IllegalArgumentException {
+        super((Clustream) ExternalClusterer.CLUSTREAM.newInstance(), trainedLabels, calculateDistance);
+    }
+
+    @Override
+    protected void setupClustererParameter(Sample firstSample) {
+        int numMetrics = firstSample.getHeader().header.length;
+        numMetrics++; // The class/label attribute is added
+        IntOption timeWindowOption = new IntOption("horizon",
+                'h', "Rang of the window.", 1000);
+        IntOption maxNumKernelsOption = new IntOption(
+                "maxNumKernels", 'k',
+                "Maximum number of micro kernels to use.", 100);
+        IntOption kernelRadiFactorOption = new IntOption(
+                "kernelRadiFactor", 't',
+                "Multiplier for the kernel radius", 2);
+        this.clusterer.timeWindowOption = timeWindowOption;
+        this.clusterer.maxNumKernelsOption = maxNumKernelsOption;
+        this.clusterer.kernelRadiFactorOption = kernelRadiFactorOption;
+    }
 }

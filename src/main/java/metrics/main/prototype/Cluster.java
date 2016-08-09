@@ -5,10 +5,10 @@ import metrics.algorithms.AbstractAlgorithm;
 import metrics.algorithms.Algorithm;
 import metrics.algorithms.FeatureCalculationsAlgorithm;
 import metrics.algorithms.OnlineAutoMinMaxScaler;
+import metrics.algorithms.clustering.BICOClusterer;
 import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
 import metrics.algorithms.clustering.ExternalClusterer;
 import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
-import metrics.algorithms.clustering.MOAStreamClusterer;
 import metrics.algorithms.evaluation.MOAStreamAnomalyDetectionEvaluator;
 import metrics.io.MetricPrinter;
 import metrics.io.fork.TwoWayFork;
@@ -47,7 +47,7 @@ public class Cluster {
 
         AbstractClusterer clusterer = ExternalClusterer.BICO.newInstance();
         Set<String> trainedLabels = new HashSet<>(Arrays.asList(new String[] { "idle", "load" }));
-        MOAStreamClusterer<AbstractClusterer> moaClusterer = new MOAStreamClusterer<>(clusterer, trainedLabels, num_clusters, true);
+        BICOClusterer moaClusterer = new BICOClusterer(trainedLabels, true, num_clusters, null, null);
         ClusterLabelingAlgorithm labeling = new ClusterLabelingAlgorithm(classifiedClusterThreshold, true, false, trainedLabels);
         HostnameTagger hostnameTagger = new HostnameTagger(hostname);
 
