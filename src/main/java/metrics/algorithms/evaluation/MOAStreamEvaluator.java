@@ -25,6 +25,7 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
     private long sampleInterval;
     private long truePostivesSum, falsePositivesSum, falseNegativesSum;
     private Set<String> labels;
+
     /**
      * Maps for tp, fp, fn
      */

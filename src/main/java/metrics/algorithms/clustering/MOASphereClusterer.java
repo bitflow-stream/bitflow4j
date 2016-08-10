@@ -53,7 +53,8 @@ public abstract class MOASphereClusterer<T extends AbstractClusterer & Serializa
 //        } else {
 //            return clusterer.getMicroClusteringResult();
 //        }
-        return clusterer.getMicroClusteringResult();
+//        return clusterer.getMicroClusteringResult();
+        return clusterer.getClusteringResult();
     }
 
     @Override
