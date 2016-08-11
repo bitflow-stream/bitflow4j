@@ -6,7 +6,10 @@ import moa.clusterers.clustree.ClusTree;
 
 import java.util.Map;
 import java.util.Set;
-
+/**
+ * @author mbyfield
+ * Implementation of the Clustree clustering algorithm.
+ */
 public class ClusTreeClusterer extends MOASphereClusterer<ClusTree> {
 
     private final Integer horizon;

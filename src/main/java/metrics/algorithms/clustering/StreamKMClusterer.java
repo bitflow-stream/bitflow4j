@@ -7,7 +7,10 @@ import moa.clusterers.streamkm.StreamKM;
 
 import java.util.Map;
 import java.util.Set;
-
+/**
+ * @author mbyfield
+ * Implementation of the StreamKM clustering algorithm.
+ */
 public class StreamKMClusterer extends MOASphereClusterer<StreamKM> {
     private final Integer sizeCoreset;
     private final Integer numberOfClusters;

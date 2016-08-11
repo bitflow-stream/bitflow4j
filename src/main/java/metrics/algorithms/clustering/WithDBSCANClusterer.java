@@ -8,7 +8,10 @@ import moa.clusterers.denstream.WithDBSCAN;
 
 import java.util.Map;
 import java.util.Set;
-
+/**
+  * @author mbyfield
+ * Implementation of the Denstream clustering algorithm.
+  */
 public class WithDBSCANClusterer extends MOASphereClusterer<WithDBSCAN> {
 //    TODO: add parameters for options
 

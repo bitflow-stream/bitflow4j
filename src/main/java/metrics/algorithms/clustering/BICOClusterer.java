@@ -5,7 +5,10 @@ import metrics.Sample;
 import moa.clusterers.kmeanspm.BICO;
 
 import java.util.Set;
-
+/**
+ * @author mbyfield
+ * Implementation of the BICO clustering algorithm.
+ */
 public class BICOClusterer extends MOASphereClusterer<BICO> {
 
 

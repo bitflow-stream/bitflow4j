@@ -91,7 +91,10 @@ import java.util.Set;
     }
 
 }*/
-
+/**
+ * @author mbyfield
+ * Implementation of the Clustream clustering algorithm.
+ */
 public class CluStreamClusterer extends MOASphereClusterer<Clustream> {
 
     public CluStreamClusterer(boolean alwaysTrain, boolean calculateDistance) {

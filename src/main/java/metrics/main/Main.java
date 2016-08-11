@@ -109,8 +109,8 @@ public class Main {
                     p
                             .step(new FeatureStandardizer())
                             .step(new SourceLabellingAlgorithm())
-                            .step(new BICOClusterer(false, true, null, null, null))
-                            .step(new DistancePrinter())
+                            .step(new BICOClusterer(true, true, 1000, 200, null))
+//                            .step(new DistancePrinter())
                             .step(new ClusterLabelingAlgorithm(0.0, false, false))
                             .step(new LabelAggregatorAlgorithm(10))
                             .step(new MOAStreamEvaluator(1000, true, false));
@@ -178,7 +178,7 @@ public class Main {
                     .step(new FeatureStandardizer())
                     .fork(new OpenStackSampleSplitter().fillInfo(),
                             (name, p) -> {
-                                p.step(new BICOClusterer(true, true, null, null, null));
+                                p.step(new BICOClusterer(false, true, null, null, null));
                     })
                     .runAndWait();
         }

@@ -13,17 +13,41 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.DoubleStream;
-
+/**
+ * @author mbyfield
+ * This abstract class can be extended by all MOA clustering algorithms, that use sphere clusters.
+ * This class implements the calculation of the distance between samples and the nearest cluster.
+ *
+ */
 public abstract class MOASphereClusterer<T extends AbstractClusterer & Serializable> extends MOAStreamClusterer<T> {
 
+    /**
+     * This constructor is used to train on all labels or the default label set.
+     * @param clusterer The clusterer, must extend @link moa.clusterers.AbstractClusterer.
+     * @param alwaysTrain If true, all samples will be used to train the model, if false, only the default configuration is loaded (see {@link MOAStreamClusterer}).
+     * @param calculateDistance If true, the distance to the nearest cluster will be calculated and appended to the sample metrics using the distance prefix @link {@link ClusterConstants#DISTANCE_PREFIX}
+     */
     public MOASphereClusterer(T clusterer, boolean alwaysTrain, boolean calculateDistance) {
         super(clusterer, alwaysTrain, calculateDistance);
     }
 
-    public MOASphereClusterer(T clusterer, Set<String> trainedLabels, boolean calculateDistance) throws IllegalArgumentException {
+    /**
+     * This constructor is used to train on a given set of labels.
+     * @param clusterer The clusterer, must extend @link moa.clusterers.AbstractClusterer.
+     * @param trainedLabels A Set of trained labels. Only samples with a label inside this set will be used to train.
+     * @param calculateDistance If true, the distance to the nearest cluster will be calculated and appended to the sample metrics using the distance prefix @link {@link ClusterConstants#DISTANCE_PREFIX}
+     */
+    public MOASphereClusterer(T clusterer, Set<String> trainedLabels, boolean calculateDistance) {
         super(clusterer, trainedLabels, calculateDistance);
     }
 
+    /**
+     *
+     * @param instance
+     * @param clustering
+     * @return
+     * @throws IOException
+     */
     @Override
     protected Map.Entry<Double, double[]> getDistance(Instance instance, Clustering clustering) throws IOException {
         Map.Entry<Double, double[]> distance = null;
@@ -46,53 +70,32 @@ public abstract class MOASphereClusterer<T extends AbstractClusterer & Serializa
         return distance;
     }
 
+    /**
+     *
+     * @return
+     */
     @Override
     protected Clustering getClusteringResult() {
-//        if (clusterer instanceof WithDBSCAN || clusterer instanceof StreamKM) {
-//            return clusterer.getClusteringResult();
-//        } else {
-//            return clusterer.getMicroClusteringResult();
-//        }
-//        return clusterer.getMicroClusteringResult();
         return clusterer.getClusteringResult();
     }
 
+    /**
+     *
+
     @Override
     protected void printClustererParameters() {
-        com.github.javacliparser.Option[] options = this.clusterer.getOptions().getOptionArray();
-        for (com.github.javacliparser.Option o : options) {
-//            System.out.println(o.getPurpose() + " Type: " + o. + " Value: ");
-            System.out.println(o.getDefaultCLIString());
-        }
-        //        if (this.clusterer instanceof WithDBSCAN) {
-//            System.out.println("horizonOption: " + ((WithDBSCAN) this.clusterer).horizonOption.getValue());
-//            System.out.println("initPointsOption: " + ((WithDBSCAN) this.clusterer).initPointsOption.getValue());
-//            System.out.println("speedOption: " + ((WithDBSCAN) this.clusterer).speedOption.getValue());
-//            System.out.println("betaOption: " + ((WithDBSCAN) this.clusterer).betaOption.getValue());
-//            System.out.println("lambdaOption: " + ((WithDBSCAN) this.clusterer).lambdaOption.getValue());
-//            System.out.println("epsilonOption: " + ((WithDBSCAN) this.clusterer).epsilonOption.getValue());
-//            System.out.println("muOption: " + ((WithDBSCAN) this.clusterer).muOption.getValue());
-//            System.out.println("offlineOption: " + ((WithDBSCAN) this.clusterer).offlineOption.getValue());
-//        } else if (this.clusterer instanceof Clustream) {
-//            System.out.println("timeWindowOption: " + ((Clustream) this.clusterer).timeWindowOption.getValue());
-//            System.out.println("maxNumKernelsOption: " + ((Clustream) this.clusterer).maxNumKernelsOption.getValue());
-//            System.out.println("kernelRadiFactorOption: " + ((Clustream) this.clusterer).kernelRadiFactorOption.getValue());
-//        } else if (this.clusterer instanceof ClusTree) {
-//            System.out.println("horizonOption: " + ((ClusTree) this.clusterer).horizonOption.getValue());
-//            System.out.println("maxHeightOption: " + ((ClusTree) this.clusterer).maxHeightOption.getValue());
-//        } else if (this.clusterer instanceof BICO) {
-//            System.out.println("numClustersOption: " + ((BICO) this.clusterer).numClustersOption.getValue());
-//            System.out.println("maxNumClusterFeaturesOption: " + ((BICO) this.clusterer).maxNumClusterFeaturesOption.getValue());
-//            System.out.println("numDimensionsOption: " + ((BICO) this.clusterer).numDimensionsOption.getValue());
-//            System.out.println("numProjectionsOption: " + ((BICO) this.clusterer).numProjectionsOption.getValue());
-//        } else if (this.clusterer instanceof StreamKM) {
-//            System.out.println("sizeCoresetOption: " + ((StreamKM) this.clusterer).sizeCoresetOption.getValue());
-//            System.out.println("numClustersOption: " + ((StreamKM) this.clusterer).numClustersOption.getValue());
-//            System.out.println("widthOption: " + ((StreamKM) this.clusterer).widthOption.getValue());
-//            System.out.println("randomSeedOption: " + ((StreamKM) this.clusterer).randomSeedOption.getValue());
-//        }
-    }
 
+    }
+*/
+    /**
+     * This method calculates the distance between a given sample and the center of the nearest cluster.
+     * It can only be used for moa clustering algorithms that use sphere clusters internally.
+     * @param center The center of the cluster.
+     * @param doubles The metrics of the {@link Instance}.
+     * @param radius The radius of the sphere cluster
+     * @return The result is a Map.Entry<Double, double[]>.
+     * The key is the overall distance and the double array contains the distances in each dimension.
+     */
     protected Map.Entry<Double, double[]> distance(double[] center, double[] doubles, double radius) {
         if (center.length != doubles.length || center.length == 0) {
             throw new IllegalStateException("THIS SHOULD NOT HAPPEN: " + center.length + " vs " + doubles.length);
@@ -102,7 +105,6 @@ public abstract class MOASphereClusterer<T extends AbstractClusterer & Serializa
         double[] distances = new double[center.length - 1];
         for (int i = 0; i < distances.length; i++) {
             distances[i] = Math.abs(center[i] - doubles[i]);
-//            distances[i] = center[i] - doubles[i];
         }
         distanceCenter = Math.sqrt(DoubleStream.of(distances).map(dist -> dist * dist).sum());
         distance = distanceCenter - radius;
