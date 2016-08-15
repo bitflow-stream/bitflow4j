@@ -86,6 +86,8 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
             if (checkRecalculationRequirement()) {
                 recalculate();
             }
+        }else{
+            System.out.println("WARNING: sample without prediction");
         }
 
         if (extendSample) {

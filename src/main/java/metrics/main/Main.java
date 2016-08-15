@@ -111,9 +111,9 @@ public class Main {
                             .step(new SourceLabellingAlgorithm())
                             .step(new BICOClusterer(true, true, 1000, 200, null))
 //                            .step(new DistancePrinter())
-                            .step(new ClusterLabelingAlgorithm(0.0, false, false))
+                            .step(new ClusterLabelingAlgorithm(0.0, true, false))
                             .step(new LabelAggregatorAlgorithm(10))
-                            .step(new MOAStreamEvaluator(1000, true, false));
+                            .step(new MOAStreamEvaluator(500, true, false));
 
                 })
                 .runAndWait();

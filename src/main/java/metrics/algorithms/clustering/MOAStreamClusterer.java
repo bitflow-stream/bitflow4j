@@ -78,13 +78,13 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
     }
 
     /**
-     * This method initialized the clusterer
-     * @param firstSample
+     * This method initialized the moa-clusterer. This method is used to set certain parameters, that depend on the samples (e.g.
+     * @param firstSample The first sample
      */
     protected void initalizeClusterer(Sample firstSample) {
         this.setupClustererParameter(firstSample);
         this.clusterer.resetLearning();
-        this.printClustererParameters();
+//        this.printClustererParameters();
         this.clusteringResult = null;
     }
 
@@ -111,16 +111,17 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
             count ++;
             matchingClusterFound = true;
         } else if(clusteringResult != null){
-            matchingClusterFound = clusteringResult.getMaxInclusionProbability(instance) != 0;
+//            matchingClusterFound = clusteringResult.getMaxInclusionProbability(instance) != 0;
         }
 
         Map.Entry<Double, double[]> distance = null;
         double inclusionProbability = 0.0;
-        int bestFitCluster = -1;
-        int clusterNum = 0;
+        Integer bestFitCluster = -1;
+        Integer clusterNum = 0;
+//        if (clusteringResult != null) {
         if (clusteringResult != null) {
             AutoExpandVector<Cluster> clustering = clusteringResult.getClustering();
-            if (matchingClusterFound) {
+//            if (matchingClusterFound) {
                 for (Cluster c : clustering) {
                     double clusterInclusionProbability = c.getInclusionProbability(instance);
                     if (inclusionProbability < clusterInclusionProbability) {
@@ -129,7 +130,8 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
                     }
                     clusterNum++;
                 }
-            } else if (calculateDistance) {
+//            } else
+        if (calculateDistance && bestFitCluster == -1) {
                 distance = getDistance(instance, clusteringResult);
             }
         }
@@ -147,12 +149,13 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
             }
 //        System.out.println(bestFitCluster);
 //        System.out.println((bestFitCluster == -1 && label.equals("idle")) || (bestFitCluster != -1 && label.equals("idle")));
-        if ((bestFitCluster == -1 && label.equals("idle")) || (bestFitCluster != -1 && label.equals("idle"))){
-            correct++;
-        }else{
-            wrong++;
-        }
-        if((wrong + correct) % 100 == 0) System.out.println("wrong: " + wrong + " ; correct: " + correct);
+//        if ((bestFitCluster == -1 && label.equals("idle")) || (bestFitCluster != -1 && label.equals("idle"))){
+//            correct++;
+//        }else{
+//            wrong++;
+//        }
+
+//        if((wrong + correct) % 100 == 0) System.out.println("wrong: " + wrong + " ; correct: " + correct);
         return sample;
     }
 
