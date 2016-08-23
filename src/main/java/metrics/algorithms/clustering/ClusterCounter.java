@@ -30,7 +30,7 @@ public class ClusterCounter {
     public String calculateLabel(int id){
         ClusterCounters counters = clusterIdToCounters.get(id);
         if (counters == null) {
-            return ClusterConstants.UNKNOWN_LABEL;
+            return ClusterConstants.UNCLASSIFIED_CLUSTER;
         } else {
             return counters.calculateLabel();
         }

@@ -66,11 +66,13 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
 
         if (predictedLabel != null && originalLabel != null) {
             // Cannot evaluate sample without both predicted and original label.
+            //TODO: decide wether sampleCount should be incremented for non evaluated samples (affects overall precision an recall)
             sampleCount++;
-            labels.add(predictedLabel);
-            labels.add(originalLabel);
-            if (!originalLabel.equals(ClusterConstants.UNKNOWN_LABEL) && !predictedLabel.equals(ClusterConstants.NOISE_CLUSTER)
-                    && !predictedLabel.equals(ClusterConstants.UNCLASSIFIED_CLUSTER)) {
+            if (!originalLabel.equals(ClusterConstants.UNKNOWN_LABEL) && sample.getTag(ClusterConstants.BUFFERED_SAMPLE_TAG) == null
+//                    && !predictedLabel.equals(ClusterConstants.UNCLASSIFIED_CLUSTER)
+                    ) {
+                labels.add(predictedLabel);
+                labels.add(originalLabel);
                 if (predictedLabel.equals(originalLabel)) {
                     //if labels match, increment counter by 1 for labelToTP
                     correctPredictions++;
@@ -98,34 +100,37 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
     }
 
     private void recalculate() {
-        truePostivesSum = labelToTP.values().stream().mapToInt(i -> i.intValue()).sum();
-        falsePositivesSum = labelToFP.values().stream().mapToInt(i -> i.intValue()).sum();
-        falseNegativesSum = labelToFN.values().stream().mapToInt(i -> i.intValue()).sum();
-        overallRecall = (double) truePostivesSum / (double) (truePostivesSum + falsePositivesSum);
-        overallPrecision = (double) truePostivesSum / (double) (truePostivesSum + falseNegativesSum);
-        labels.forEach(label -> {
-            labelToTP.putIfAbsent(label, 0L);
-            labelToFP.putIfAbsent(label, 0L);
-            labelToFN.putIfAbsent(label, 0L);
-            labelToPrecision.put(label, (double) labelToTP.get(label) / (double) (labelToTP.get(label) + labelToFP.get(label)));
-            labelToRecall.put(label, (double) labelToTP.get(label) / (double) (labelToTP.get(label) + labelToFN.get(label)));
-        });
-        averagePrecision = labelToPrecision.values().stream().mapToDouble(d -> d.doubleValue()).average().getAsDouble();
-        weightedAveragePrecision = labelToPrecision.entrySet().stream().mapToDouble(d -> d.getValue().doubleValue() * (labelToTP.get(d
-                .getKey()) + labelToFP.get(d.getKey()))).average().getAsDouble() * labels.size() / sampleCount;
-        averageRecall = labelToRecall.values().stream().mapToDouble(d -> d.doubleValue()).average().getAsDouble();
-        weightedAverageRecall = labelToRecall.entrySet().stream().mapToDouble(d -> d.getValue().doubleValue() * (labelToTP.get(d.getKey())
-                + labelToFP.get(d.getKey()))).average().getAsDouble() * labels.size() / (double) sampleCount;
-        double[] temp = labelToPrecision.values().stream().mapToDouble(d -> d.doubleValue()).sorted().toArray();
-        medianPrecision = temp[temp.length / 2];
-        temp = labelToRecall.values().stream().mapToDouble(d -> d.doubleValue()).sorted().toArray();
-        medianRecall = temp[temp.length / 2];
-        maxPrecision = labelToPrecision.values().stream().mapToDouble(d -> d.doubleValue()).max().getAsDouble();
-        maxRecall = labelToRecall.values().stream().mapToDouble(d -> d.doubleValue()).max().getAsDouble();
-        minPrecision = labelToPrecision.values().stream().mapToDouble(d -> d.doubleValue()).min().getAsDouble();
-        minRecall = labelToRecall.values().stream().mapToDouble(d -> d.doubleValue()).min().getAsDouble();
-        if (printOnRecalculation) {
-            printEvaluation();
+        if (labels != null && !labels.isEmpty()) {
+            truePostivesSum = labelToTP.values().stream().mapToInt(i -> i.intValue()).sum();
+            falsePositivesSum = labelToFP.values().stream().mapToInt(i -> i.intValue()).sum();
+            falseNegativesSum = labelToFN.values().stream().mapToInt(i -> i.intValue()).sum();
+            overallRecall = (double) truePostivesSum / (double) (truePostivesSum + falsePositivesSum);
+            overallPrecision = (double) truePostivesSum / (double) (truePostivesSum + falseNegativesSum);
+            labels.forEach(label -> {
+                labelToTP.putIfAbsent(label, 0L);
+                labelToFP.putIfAbsent(label, 0L);
+                labelToFN.putIfAbsent(label, 0L);
+                labelToPrecision.put(label, (double) labelToTP.get(label) / (double) (labelToTP.get(label) + labelToFP.get(label)));
+                labelToRecall.put(label, (double) labelToTP.get(label) / (double) (labelToTP.get(label) + labelToFN.get(label)));
+            });
+            averagePrecision = labelToPrecision.values().stream().mapToDouble(d -> d.doubleValue()).average().getAsDouble();
+            weightedAveragePrecision = labelToPrecision.entrySet().stream().mapToDouble(d -> d.getValue().doubleValue() * (labelToTP.get(d
+                    .getKey()) + labelToFP.get(d.getKey()))).average().getAsDouble() * labels.size() / sampleCount;
+            averageRecall = labelToRecall.values().stream().mapToDouble(d -> d.doubleValue()).average().getAsDouble();
+            weightedAverageRecall = labelToRecall.entrySet().stream().mapToDouble(d -> d.getValue().doubleValue() * (labelToTP.get(d.getKey())
+                    + labelToFP.get(d.getKey()))).average().getAsDouble() * labels.size() / (double) sampleCount;
+            double[] temp = labelToPrecision.values().stream().mapToDouble(d -> d.doubleValue()).sorted().toArray();
+            medianPrecision = temp[temp.length / 2];
+            temp = labelToRecall.values().stream().mapToDouble(d -> d.doubleValue()).sorted().toArray();
+            medianRecall = temp[temp.length / 2];
+            maxPrecision = labelToPrecision.values().stream().mapToDouble(d -> d.doubleValue()).max().getAsDouble();
+            maxRecall = labelToRecall.values().stream().mapToDouble(d -> d.doubleValue()).max().getAsDouble();
+            minPrecision = labelToPrecision.values().stream().mapToDouble(d -> d.doubleValue()).min().getAsDouble();
+            minRecall = labelToRecall.values().stream().mapToDouble(d -> d.doubleValue()).min().getAsDouble();
+            if (printOnRecalculation) {
+                printEvaluation();
+            }
+        } else {
         }
     }
 

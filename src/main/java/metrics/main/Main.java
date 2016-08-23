@@ -109,7 +109,7 @@ public class Main {
                     p
                             .step(new FeatureStandardizer())
                             .step(new SourceLabellingAlgorithm())
-                            .step(new BICOClusterer(true, true, 1000, 200, null))
+                            .step(new BICOClusterer(true, true, 2000, 200, null))
 //                            .step(new DistancePrinter())
                             .step(new ClusterLabelingAlgorithm(0.0, true, false))
                             .step(new LabelAggregatorAlgorithm(10))

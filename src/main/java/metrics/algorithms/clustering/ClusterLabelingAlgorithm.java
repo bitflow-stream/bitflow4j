@@ -36,12 +36,12 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
     protected synchronized Sample executeSample(Sample sample) throws IOException {
         int labelClusterId = sample.getClusterId();
         String originalLabel = sample.getLabel();
-        if (originalLabel != null && labelClusterId >= 0 && (trainedLabels == null || trainedLabels.contains(originalLabel)))
+        if (originalLabel != null && labelClusterId >= 0 && (trainedLabels == null || trainedLabels.contains(originalLabel)) && sample.getTag(ClusterConstants.BUFFERED_SAMPLE_TAG) == null)
             clusterCounter.increment(labelClusterId, originalLabel);
-        String newLabel = clusterCounter.calculateLabel(labelClusterId);
+        String newLabel = sample.getTag(ClusterConstants.BUFFERED_SAMPLE_TAG) == null? clusterCounter.calculateLabel(labelClusterId) : ClusterConstants.BUFFERED_LABEL;
 
         Sample sampleToReturn;
-        if (includeProbabilities) {
+        if (includeProbabilities && sample.getTag(ClusterConstants.BUFFERED_SAMPLE_TAG) == null) {
             // New header
             String allAnomalies[] = clusterCounter.getAllLabels().toArray(new String[0]);
 

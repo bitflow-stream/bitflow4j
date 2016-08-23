@@ -19,7 +19,7 @@ import java.io.Serializable;
 import java.util.*;
 
 /**
- *
+ *  This abstract class can be extended to transform clusterers from the MOA framework to algorithms.
  * @author fschmidt, mbyfield
  */
 public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializable> extends AbstractAlgorithm {
@@ -32,6 +32,9 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
     //train on all labels
     protected final boolean alwaysTrain;
 
+    //indicates wether the buffering phase is finished and correct results can be fetched
+//    protected boolean buffering;
+
     //set of trained labels
     protected final Set<String> trainedLabels;
 
@@ -40,13 +43,6 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
 
     //The clustering result, recalculated after each sample
     protected volatile Clustering clusteringResult;
-
-    //number of trained samples
-    private int count;
-    //number of correct predictions
-    private int correct;
-    //number of wrong predictions
-    private int wrong;
 
     /**
      * This constructor can be used to train on all labels or on the default label ("idle").
@@ -59,9 +55,8 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
         this.alwaysTrain = alwaysTrain;
         this.trainedLabels = alwaysTrain ? null : new HashSet<>(Arrays.asList(new String[]{"idle"}));
         this.calculateDistance = calculateDistance;
+//        this.buffering = true;
     }
-
-    // Train cluster only for certain labels (or give null-set to train on all VALID labels)
 
     /**
      * This constructor can be used to train on a given set of labels.
@@ -82,87 +77,104 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
      * @param firstSample The first sample
      */
     protected void initalizeClusterer(Sample firstSample) {
+        //
         this.setupClustererParameter(firstSample);
         this.clusterer.resetLearning();
-//        this.printClustererParameters();
+        //this.printClustererParameters();
         this.clusteringResult = null;
     }
 
+    /**
+     * Executes the sample. This algorithm will train an underlying clusterer with the provided samples.
+     * Depending on the settings, the algorith will train all samples or all samples that have a given label.
+     * The assigned ClusterId will be available from the {@link ClusterConstants#CLUSTER_TAG}.
+     * A cluster id of -1 indicates noice. If distances are calculated, they will be appended to the metrics.
+     * In the header, these fields will be named like the original field with the prefix: {@link ClusterConstants#DISTANCE_PREFIX}.
+     * @param sample the executed sample
+     * @return the sample with additional tags and metrics
+     * @throws IOException if an error occurs
+     */
     @Override
     protected synchronized Sample executeSample(Sample sample) throws IOException {
+        int bestFitCluster;
+        Map.Entry<Double, double[]> distance;
+        // make sure all samples have a label
+        String label = getLabel(sample);
+        //initialize clusterer with a header an dimensions
         if (converger.getExpectedHeader() == null) {
             initalizeClusterer(sample);
         }
-        String label = getLabel(sample);
+        // handle changing headers
         double values[] = converger.getValues(sample);
-
         Header expectedHeader = converger.getExpectedHeader();
+        //transform sample to moa instance
         Instances instances = createInstances(expectedHeader, label);
         com.yahoo.labs.samoa.instances.Instance instance = makeInstance(values, label, instances);
 
-        boolean trained = false;
-        boolean matchingClusterFound = false;
+        //check if sample should be trained
         if (alwaysTrain || (label != null && !label.isEmpty() && (trainedLabels == null || trainedLabels.contains(label)))) {
-            clusterer.trainOnInstance(instance);
-            trained = true;
-            if (count > 205)
-            this.clusteringResult = this.getClusteringResult();
-
-            count ++;
-            matchingClusterFound = true;
-        } else if(clusteringResult != null){
-//            matchingClusterFound = clusteringResult.getMaxInclusionProbability(instance) != 0;
+            trainSample(sample, instance);
         }
-
-        Map.Entry<Double, double[]> distance = null;
-        double inclusionProbability = 0.0;
-        Integer bestFitCluster = -1;
-        Integer clusterNum = 0;
-//        if (clusteringResult != null) {
-        if (clusteringResult != null) {
-            AutoExpandVector<Cluster> clustering = clusteringResult.getClustering();
-//            if (matchingClusterFound) {
-                for (Cluster c : clustering) {
-                    double clusterInclusionProbability = c.getInclusionProbability(instance);
-                    if (inclusionProbability < clusterInclusionProbability) {
-                        inclusionProbability = clusterInclusionProbability;
-                        bestFitCluster = clusterNum;
-                    }
-                    clusterNum++;
-                }
-//            } else
-        if (calculateDistance && bestFitCluster == -1) {
-                distance = getDistance(instance, clusteringResult);
-            }
-        }
-            sample.setTag(ClusterConstants.CLUSTER_TAG, Integer.toString(bestFitCluster));
-            if (distance != null) {
-                String newHeader[] = new String[distance.getValue().length + 1];
-                double newValues[] = new double[newHeader.length];
-                for (int i = 0; i < newHeader.length - 1; i++) {
-                    newHeader[i] = ClusterConstants.DISTANCE_PREFIX + sample.getHeader().header[i];
-                    newValues[i] = distance.getValue()[i];
-                }
-                newHeader[newHeader.length - 1] = ClusterConstants.DISTANCE_PREFIX + "overall";
-                newValues[newValues.length - 1] = distance.getKey();
-                sample = sample.extend(newHeader, newValues);
-            }
-//        System.out.println(bestFitCluster);
-//        System.out.println((bestFitCluster == -1 && label.equals("idle")) || (bestFitCluster != -1 && label.equals("idle")));
-//        if ((bestFitCluster == -1 && label.equals("idle")) || (bestFitCluster != -1 && label.equals("idle"))){
-//            correct++;
-//        }else{
-//            wrong++;
-//        }
-
-//        if((wrong + correct) % 100 == 0) System.out.println("wrong: " + wrong + " ; correct: " + correct);
+//        ClusteringResult clusteringResultObject = new ClusteringResult(instance).invoke();
+//        int bestFitCluster = clusteringResultObject.getBestFitCluster();
+//        distance = clusteringResultObject.getDistances();
+        //TODO: we need a valid mechanism to identify the end of the bufferphase
+        bestFitCluster = calculateCluster(instance);
+        distance = calculateDistances(instance, bestFitCluster);
+        //mark samples if they executed during buffering phase (no result vailable)
+        setBufferingStatus(sample);
+        sample.setTag(ClusterConstants.CLUSTER_TAG, Integer.toString(bestFitCluster));
+        sample = appendDistance(sample, distance);
         return sample;
     }
 
+    private Sample appendDistance(Sample sample, Map.Entry<Double, double[]> distance) {
+        if (distance != null) {
+            String newHeader[] = new String[distance.getValue().length + 1];
+            double newValues[] = new double[newHeader.length];
+            for (int i = 0; i < newHeader.length - 1; i++) {
+                newHeader[i] = ClusterConstants.DISTANCE_PREFIX + sample.getHeader().header[i];
+                newValues[i] = distance.getValue()[i];
+            }
+            newHeader[newHeader.length - 1] = ClusterConstants.DISTANCE_PREFIX + "overall";
+            newValues[newValues.length - 1] = distance.getKey();
+            sample = sample.extend(newHeader, newValues);
+        }
+        return sample;
+    }
+
+    /**
+     * Trains a the clusterer with the current sample
+     * @param sample The current sample
+     * @param instance the matching instance for the sample
+     */
+    private void trainSample(Sample sample, com.yahoo.labs.samoa.instances.Instance instance) {
+        clusterer.trainOnInstance(instance);
+        //check if clusterer finished buffering
+        try{
+            this.clusteringResult = this.getClusteringResult();
+        }catch (ArrayIndexOutOfBoundsException e){
+            //mark sample as buffered (will have -1 cluster although used for learning)
+            //TODO: find a way to mark later?
+//            sample.setTag(ClusterConstants.BUFFERED_SAMPLE_TAG, "1");
+//            System.out.println("WARNING: Sample was trained, but no clustering result is available (this may happen during the bufferphase)");
+        }
+        //mark sample as trained sample
+        sample.setTag(ClusterConstants.TRAINING_TAG, "1");
+    }
+
+    /**
+     * resets the learning
+     */
     public synchronized void resetClusters() {
         clusterer.resetLearning();
     }
 
+    /**
+     * Get a label for the current sample.
+     * @param sample the current sample
+     * @return the samples current label or {@link ClusterConstants#UNKNOWN_LABEL} if no label was set.
+     */
     protected String getLabel(Sample sample) {
         String label = sample.getLabel();
         if (label == null || label.isEmpty()) {
@@ -176,6 +188,13 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
         return "moa clusterer";
     }
 
+    /**
+     * Uses a previously created {@link Instances} object and the current value array to create an {com.yahoo.labs.samoa.instances.Instance} that can be used by the moa clusterer.
+     * @param values the values of the current sample.
+     * @param label the label of the current sample
+     * @param instances an {@link Instances} object. Can be obtained using the {@link MOAStreamClusterer#createInstances(Header, String)} method.
+     * @return
+     */
     protected com.yahoo.labs.samoa.instances.Instance makeInstance(double values[], String label, Instances instances) {
         values = Arrays.copyOf(values, values.length + 1);
         Instance instance = new DenseInstance(1.0, values);
@@ -185,6 +204,12 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
         return converter.samoaInstance(instance);
     }
 
+    /**
+     * Creates an {@link Instances} object that can be used for the {@link MOAStreamClusterer#makeInstance(double[], String, Instances)} method.
+     * @param header The header of the sample
+     * @param label The label of the sample
+     * @return An {@link Instances} object
+     */
     protected Instances createInstances(Header header, String label) {
         Instances instances = new Instances(toString() + " data", new ArrayList<>(), 0);
         for (String field : header.header) {
@@ -196,6 +221,11 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
         return instances;
     }
 
+    /**
+     * Adds the current label to the sorted set of all labels
+     * @param label the current label
+     * @return An @link{java.util.ArrayList} containing all labels
+     */
     protected ArrayList<String> allClasses(String label) {
         // TODO is this necessary?
         Set<String> allLabels = new TreeSet<>(); // Classes must be in deterministic order
@@ -224,17 +254,105 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
     /**
      * This method is called during the evaluation process for each executed sample.
      * Subclasses must provide the implementation and return a {@link Clustering}.
-     * @return
+     * @return an instance of @link{moa.cluster.Clustering}
      */
     protected abstract Clustering getClusteringResult();
 
     /**
      *
-     * @param instance
-     * @param clustering
-     * @return
-     * @throws IOException
+     * @param instance the evaluated instance.
+     * @param clustering The clustering used for evaluation
+     * @return a @link{java.util.Map.Entry} with the overall distance as the key and the distances per dimension inside the array.
+     * @throws IOException when an error occurs TODO: add custome exception
      */
     protected abstract Map.Entry<Double, double[]> getDistance(com.yahoo.labs.samoa.instances.Instance instance, Clustering clustering) throws IOException;
 
+    /**
+     * Calculates the best matching cluster for the current sample
+     * @param instance the instance for the current sample
+     * @return the id of the best matching cluster or -1 for noise
+     */
+    private int calculateCluster(com.yahoo.labs.samoa.instances.Instance instance){
+        if (clusteringResult == null) return -1;
+        AutoExpandVector<Cluster> clustering = clusteringResult.getClustering();
+        double inclusionProbability = 0.0;
+        int bestFitCluster = -1;
+        int clusterNum = 0;
+        for (Cluster c : clustering) {
+            double clusterInclusionProbability = c.getInclusionProbability(instance);
+            if (inclusionProbability < clusterInclusionProbability) {
+                inclusionProbability = clusterInclusionProbability;
+                bestFitCluster = clusterNum;
+            }
+            clusterNum++;
+        }
+        return bestFitCluster;
+    }
+
+    /**
+     * Calculate the distance to the nearest real cluster for samples in the noise cluster
+     * @param instance the instance in the cluster
+     * @param bestFitCluster the id of the best fit cluster
+     * @return  A {@link java.util.Map.Entry} containing the overall distance to the closest cluster and the an array holding the distances for each dimension.
+     */
+    private Map.Entry<Double, double[]> calculateDistances(com.yahoo.labs.samoa.instances.Instance instance, int bestFitCluster){
+        if (clusteringResult != null && calculateDistance && bestFitCluster == -1) {
+            try {
+                return getDistance(instance, clusteringResult);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }return null;
+    }
+
+    /**
+     * If no clustering result is available, a {@link ClusterConstants#BUFFERED_SAMPLE_TAG} tag will be added.
+     * @param sample the sample
+     */
+    private void setBufferingStatus(Sample sample) {
+        if(clusteringResult == null) sample.setTag(ClusterConstants.BUFFERED_SAMPLE_TAG, "1");
+    }
+//    /**
+//     * extracted holder for the calculation of the matching cluster
+//     */
+//    private class ClusteringResult {
+//        private com.yahoo.labs.samoa.instances.Instance instance;
+//        private Map.Entry<Double, double[]> distance;
+//        private double inclusionProbability;
+//        private Integer bestFitCluster;
+//        private Integer clusterNum;
+//
+//        public ClusteringResult(com.yahoo.labs.samoa.instances.Instance instance) {
+//            this.instance = instance;
+//            this.inclusionProbability = 0.0;
+//            this.bestFitCluster = -1;
+//            this.clusterNum = 0;
+//        }
+//
+//        public Map.Entry<Double, double[]> getDistances() {
+//            return distance;
+//        }
+//
+//        public Integer getBestFitCluster() {
+//            return bestFitCluster;
+//        }
+//
+//        public ClusteringResult invoke() throws IOException {
+//           if (clusteringResult != null) {
+//                AutoExpandVector<Cluster> clustering = clusteringResult.getClustering();
+//                for (Cluster c : clustering) {
+//                    double clusterInclusionProbability = c.getInclusionProbability(instance);
+//                    if (inclusionProbability < clusterInclusionProbability) {
+//                        inclusionProbability = clusterInclusionProbability;
+//                        bestFitCluster = clusterNum;
+//                    }
+//                    clusterNum++;
+//                }
+//                if (calculateDistance && bestFitCluster == -1) {
+//                    distance = getDistance(instance, clusteringResult);
+//                }
+//            }
+//            return this;
+//        }
+//    }
 }

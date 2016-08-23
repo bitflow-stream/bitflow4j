@@ -45,7 +45,7 @@ public class BICOClusterer extends MOASphereClusterer<BICO> {
         IntOption numProjectionsOption = new IntOption("Projections", 'p',
                 "Number of random projections used for the nearest neighbour search.",
                 numberOfProjections == null ? 1 : numberOfProjections, 1, Integer.MAX_VALUE);
-
+//        this.bufferPhase = numberOfCenters+30;
         this.clusterer.numClustersOption = numClustersOption;
         this.clusterer.maxNumClusterFeaturesOption = maxNumClusterFeaturesOption;
         this.clusterer.numDimensionsOption = numDimensionsOption;

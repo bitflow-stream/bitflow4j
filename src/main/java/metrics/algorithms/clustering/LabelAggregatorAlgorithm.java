@@ -31,34 +31,38 @@ public class LabelAggregatorAlgorithm extends AbstractAlgorithm {
 
     @Override
     protected Sample executeSample(Sample sample) throws IOException {
-        window.add(sample);
+        if (sample.getTag(ClusterConstants.BUFFERED_SAMPLE_TAG) == null) {
+            window.add(sample);
 
-        Map<String, Double> labelInclusionAvgProbabilities = new HashMap<>();
-        for (String metricName : window.allMetricNames()) {
-            if (metricName.startsWith(INC_PROB_PREFIX)) {
-                String anomalyName = metricName.replace(INC_PROB_PREFIX, "");
+            Map<String, Double> labelInclusionAvgProbabilities = new HashMap<>();
+            for (String metricName : window.allMetricNames()) {
+                if (metricName.startsWith(INC_PROB_PREFIX)) {
+                    String anomalyName = metricName.replace(INC_PROB_PREFIX, "");
 
-                LabelInclusionProbabilityPredictionWindow stat = window.getWindow(metricName);
-                labelInclusionAvgProbabilities.put(anomalyName, stat.labelInclusionProbabilityAverage());
+                    LabelInclusionProbabilityPredictionWindow stat = window.getWindow(metricName);
+                    labelInclusionAvgProbabilities.put(anomalyName, stat.labelInclusionProbabilityAverage());
+                }
             }
-        }
-        // Sort Map by value and recommend best value (except of unknown)
-        List<Map.Entry<String, Double>> sortedLabelInclusionAvgProbabilities = labelInclusionAvgProbabilities.entrySet().stream()
-                .sorted(Collections.reverseOrder(Map.Entry.comparingByValue())).collect(Collectors.toList());
-        String recommendedLabel = ClusterConstants.NOISE_CLUSTER;//UNKNOWN_LABEL;
-        for (Map.Entry<String, Double> labelInclusionAvgProbability : sortedLabelInclusionAvgProbabilities) {
-            if (!labelInclusionAvgProbability.getKey().equals(ClusterConstants.UNKNOWN_LABEL)) {
-                recommendedLabel = labelInclusionAvgProbability.getKey();
-                break;
-            }else {
-                System.out.println("ERROR: UNKNOWNLABEL IN LABEL AGGREGATOR ALGORITHM");
+            // Sort Map by value and recommend best value (except of unknown)
+            List<Map.Entry<String, Double>> sortedLabelInclusionAvgProbabilities = labelInclusionAvgProbabilities.entrySet().stream()
+                    .sorted(Collections.reverseOrder(Map.Entry.comparingByValue())).collect(Collectors.toList());
+            String recommendedLabel = ClusterConstants.UNKNOWN_LABEL;
+            for (Map.Entry<String, Double> labelInclusionAvgProbability : sortedLabelInclusionAvgProbabilities) {
+                if (!labelInclusionAvgProbability.getKey().equals(ClusterConstants.UNKNOWN_LABEL)) {
+                    recommendedLabel = labelInclusionAvgProbability.getKey();
+                    break;
+                }else {
+                    System.out.println("ERROR: UNKNOWN LABEL IN LABEL AGGREGATOR ALGORITHM");
+                }
             }
-        }
 
-        Sample sampleToReturn = new Sample(sample);
-        // Possibly overwrites the label previously predicted by ClusterLabelingAlgorithm
-        sampleToReturn.setLabel(recommendedLabel);
-        return sampleToReturn;
+            Sample sampleToReturn = new Sample(sample);
+            // Possibly overwrites the label previously predicted by ClusterLabelingAlgorithm
+            sampleToReturn.setLabel(recommendedLabel);
+            return sampleToReturn;
+        } else {
+            return sample;
+        }
     }
 
     @Override
