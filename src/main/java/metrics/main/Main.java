@@ -8,6 +8,7 @@ import metrics.algorithms.clustering.BICOClusterer;
 import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
 import metrics.algorithms.clustering.ExternalClusterer;
 import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
+import metrics.algorithms.clustering.outliers.AnyOutOutlierDetector;
 import metrics.algorithms.evaluation.DistancePrinter;
 import metrics.algorithms.evaluation.MOAStreamEvaluator;
 import metrics.io.file.FileGroup;
@@ -109,8 +110,9 @@ public class Main {
                     p
                             .step(new FeatureStandardizer())
                             .step(new SourceLabellingAlgorithm())
-                            .step(new BICOClusterer(true, true, 2000, 200, null))
+//                            .step(new BICOClusterer(true, true, 2000, 200, null))
 //                            .step(new DistancePrinter())
+                            .step(new AnyOutOutlierDetector(true, null, null, null, null, null, null))
                             .step(new ClusterLabelingAlgorithm(0.0, true, false))
                             .step(new LabelAggregatorAlgorithm(10))
                             .step(new MOAStreamEvaluator(500, true, false));

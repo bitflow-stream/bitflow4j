@@ -26,6 +26,7 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
 
     //The moa clusterer
     protected final T clusterer;
+    protected long sampleCount;
 
     protected final SampleConverger converger = new SampleConverger(); // No predefined expected header
 
@@ -55,7 +56,6 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
         this.alwaysTrain = alwaysTrain;
         this.trainedLabels = alwaysTrain ? null : new HashSet<>(Arrays.asList(new String[]{"idle"}));
         this.calculateDistance = calculateDistance;
-//        this.buffering = true;
     }
 
     /**
@@ -69,7 +69,6 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
         this.alwaysTrain = false;
         this.trainedLabels = trainedLabels;
         this.calculateDistance = calculateDistance;
-//        clusteringResult = null;
     }
 
     /**
@@ -96,6 +95,7 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
      */
     @Override
     protected synchronized Sample executeSample(Sample sample) throws IOException {
+        sampleCount++;
         int bestFitCluster;
         Map.Entry<Double, double[]> distance;
         // make sure all samples have a label
@@ -149,6 +149,7 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
      * @param instance the matching instance for the sample
      */
     private void trainSample(Sample sample, com.yahoo.labs.samoa.instances.Instance instance) {
+        //TODO: we use trainOnInstanceImpl() for both outlier detection algorithms and clustering algorithms. This is consistent with the current implementation of the outlier detection algorithms, but the interface moa.clusterers.outliers.MyBaseOutlierDetector suggests using processNewInstanceImpl
         clusterer.trainOnInstance(instance);
         //check if clusterer finished buffering
         try{
