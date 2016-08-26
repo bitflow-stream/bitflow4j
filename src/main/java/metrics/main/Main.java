@@ -4,6 +4,8 @@ import metrics.algorithms.FeatureStandardizer;
 import metrics.algorithms.MetricFilterAlgorithm;
 import metrics.algorithms.TimestampSort;
 import metrics.algorithms.classification.ExternalClassifier;
+import metrics.algorithms.classification.SourceTrainingLabelingAlgorithm;
+import metrics.algorithms.classification.WekaEvaluationWrapper;
 import metrics.algorithms.clustering.BICOClusterer;
 import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
 import metrics.algorithms.clustering.ExternalClusterer;
@@ -110,11 +112,13 @@ public class Main {
                     p
                             .step(new FeatureStandardizer())
                             .step(new SourceLabellingAlgorithm())
+                            .step(new SourceTrainingLabelingAlgorithm())
 //                            .step(new BICOClusterer(true, true, 2000, 200, null))
 //                            .step(new DistancePrinter())
                             .step(new AnyOutOutlierDetector(true, null, null, null, null, null, null))
                             .step(new ClusterLabelingAlgorithm(0.0, true, false))
                             .step(new LabelAggregatorAlgorithm(10))
+                            .step(new WekaEvaluationWrapper())
                             .step(new MOAStreamEvaluator(500, true, false));
 
                 })

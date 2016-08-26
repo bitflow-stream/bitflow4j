@@ -3,8 +3,10 @@ package metrics.algorithms.clustering.outliers;
 import com.yahoo.labs.samoa.instances.Instance;
 import metrics.Sample;
 import metrics.algorithms.clustering.MOAStreamClusterer;
+import moa.cluster.Cluster;
 import moa.cluster.Clustering;
 import moa.clusterers.outliers.MyBaseOutlierDetector;
+import moa.core.AutoExpandVector;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -144,4 +146,30 @@ public abstract class MOAStreamOutlierDetection<T extends MyBaseOutlierDetector 
         }
     }
 
+    /**
+     * Returns the clusterId for the provided instance. For outlier detection, there are only 2 possible id's. -1 indicates an outlier, while other points will have Integer.MAX_VALUE as cluster id.
+     * @param instance the instance for the current sample
+     * @return -1 for outlier, Integer.MAX_VALUE else.
+     */
+    @Override
+    protected int calculateCluster(Instance instance) {
+        //if instance is not found, we return Integer.MAX_VALUE, to indicate this is not an outlier
+        if (clusteringResult == null) return Integer.MAX_VALUE;
+        AutoExpandVector<Cluster> clustering = clusteringResult.getClustering();
+        double inclusionProbability = 0.0;
+        //if instance is not found, we return Integer.MAX_VALUE, to indicate this is not an outlier
+        int bestFitCluster = Integer.MAX_VALUE;
+        int clusterNum = 0;
+        // for outlier detection, if an instance is contained in the clustering, it is an outlier
+        if(clustering.contains(instance)) bestFitCluster = -1;
+//        for (Cluster c : clustering) {
+//            double clusterInclusionProbability = c.getInclusionProbability(instance);
+//            if (inclusionProbability < clusterInclusionProbability) {
+//                inclusionProbability = clusterInclusionProbability;
+//                bestFitCluster = clusterNum;
+//            }
+//            clusterNum++;
+//        }
+        return bestFitCluster;
+    }
 }

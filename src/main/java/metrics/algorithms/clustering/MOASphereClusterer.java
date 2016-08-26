@@ -2,8 +2,9 @@ package metrics.algorithms.clustering;
 
 
 import com.yahoo.labs.samoa.instances.Instance;
-import moa.cluster.Clustering;
+import moa.cluster.*;
 import moa.clusterers.AbstractClusterer;
+import moa.core.AutoExpandVector;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -115,4 +116,26 @@ public abstract class MOASphereClusterer<T extends AbstractClusterer & Serializa
         return new TreeMap.SimpleEntry<>(distance, distances);
     }
 
+    /**
+     * Returns the clusterId for the provided instance. For sphere clusterers the cluster id with the highest inclusion probability is returned or -1 for noise.
+     * @param instance the instance for the current sample
+     * @return the cluster id with the highest inclusion probability, or -1 for noise.
+     */
+    @Override
+    protected int calculateCluster(Instance instance) {
+        if (clusteringResult == null) return -1;
+        AutoExpandVector<moa.cluster.Cluster> clustering = clusteringResult.getClustering();
+        double inclusionProbability = 0.0;
+        int bestFitCluster = -1;
+        int clusterNum = 0;
+        for (moa.cluster.Cluster c : clustering) {
+            double clusterInclusionProbability = c.getInclusionProbability(instance);
+            if (inclusionProbability < clusterInclusionProbability) {
+                inclusionProbability = clusterInclusionProbability;
+                bestFitCluster = clusterNum;
+            }
+            clusterNum++;
+        }
+        return bestFitCluster;
+    }
 }

@@ -95,6 +95,8 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
      */
     @Override
     protected synchronized Sample executeSample(Sample sample) throws IOException {
+        //TODO: added support for outlier detection requires refactoring and partial split in SphereClusterer and OutlierDetector (use subclass hook)
+
         sampleCount++;
         int bestFitCluster;
         Map.Entry<Double, double[]> distance;
@@ -197,6 +199,7 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
      * @return
      */
     protected com.yahoo.labs.samoa.instances.Instance makeInstance(double values[], String label, Instances instances) {
+        //TODO: refactor all of this stuff to a saperate class
         values = Arrays.copyOf(values, values.length + 1);
         Instance instance = new DenseInstance(1.0, values);
         instance.setDataset(instances);
@@ -229,6 +232,7 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
      */
     protected ArrayList<String> allClasses(String label) {
         // TODO is this necessary?
+        //TODO: looks strange, Set is never saved, why copy it and why create a single valued set, might be a bug or obsolete artifact
         Set<String> allLabels = new TreeSet<>(); // Classes must be in deterministic order
         allLabels.add(label);
         return new ArrayList<>(allLabels);
@@ -273,22 +277,7 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
      * @param instance the instance for the current sample
      * @return the id of the best matching cluster or -1 for noise
      */
-    private int calculateCluster(com.yahoo.labs.samoa.instances.Instance instance){
-        if (clusteringResult == null) return -1;
-        AutoExpandVector<Cluster> clustering = clusteringResult.getClustering();
-        double inclusionProbability = 0.0;
-        int bestFitCluster = -1;
-        int clusterNum = 0;
-        for (Cluster c : clustering) {
-            double clusterInclusionProbability = c.getInclusionProbability(instance);
-            if (inclusionProbability < clusterInclusionProbability) {
-                inclusionProbability = clusterInclusionProbability;
-                bestFitCluster = clusterNum;
-            }
-            clusterNum++;
-        }
-        return bestFitCluster;
-    }
+    protected abstract int calculateCluster(com.yahoo.labs.samoa.instances.Instance instance);
 
     /**
      * Calculate the distance to the nearest real cluster for samples in the noise cluster
@@ -313,47 +302,4 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
     private void setBufferingStatus(Sample sample) {
         if(clusteringResult == null) sample.setTag(ClusterConstants.BUFFERED_SAMPLE_TAG, "1");
     }
-//    /**
-//     * extracted holder for the calculation of the matching cluster
-//     */
-//    private class ClusteringResult {
-//        private com.yahoo.labs.samoa.instances.Instance instance;
-//        private Map.Entry<Double, double[]> distance;
-//        private double inclusionProbability;
-//        private Integer bestFitCluster;
-//        private Integer clusterNum;
-//
-//        public ClusteringResult(com.yahoo.labs.samoa.instances.Instance instance) {
-//            this.instance = instance;
-//            this.inclusionProbability = 0.0;
-//            this.bestFitCluster = -1;
-//            this.clusterNum = 0;
-//        }
-//
-//        public Map.Entry<Double, double[]> getDistances() {
-//            return distance;
-//        }
-//
-//        public Integer getBestFitCluster() {
-//            return bestFitCluster;
-//        }
-//
-//        public ClusteringResult invoke() throws IOException {
-//           if (clusteringResult != null) {
-//                AutoExpandVector<Cluster> clustering = clusteringResult.getClustering();
-//                for (Cluster c : clustering) {
-//                    double clusterInclusionProbability = c.getInclusionProbability(instance);
-//                    if (inclusionProbability < clusterInclusionProbability) {
-//                        inclusionProbability = clusterInclusionProbability;
-//                        bestFitCluster = clusterNum;
-//                    }
-//                    clusterNum++;
-//                }
-//                if (calculateDistance && bestFitCluster == -1) {
-//                    distance = getDistance(instance, clusteringResult);
-//                }
-//            }
-//            return this;
-//        }
-//    }
 }
