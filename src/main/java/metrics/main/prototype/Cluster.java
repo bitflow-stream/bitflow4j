@@ -47,7 +47,7 @@ public class Cluster {
 
         AbstractClusterer clusterer = ExternalClusterer.BICO.newInstance();
         Set<String> trainedLabels = new HashSet<>(Arrays.asList(new String[] { "idle", "load" }));
-        BICOClusterer moaClusterer = new BICOClusterer(trainedLabels, true, num_clusters, null, null);
+        BICOClusterer moaClusterer = new BICOClusterer(trainedLabels, true, num_clusters, null, null).alwaysAddDistanceMetrics();
         ClusterLabelingAlgorithm labeling = new ClusterLabelingAlgorithm(classifiedClusterThreshold, true, false, trainedLabels);
         HostnameTagger hostnameTagger = new HostnameTagger(hostname);
 

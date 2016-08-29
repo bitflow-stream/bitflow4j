@@ -5,10 +5,8 @@ import metrics.Header;
 import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
 import metrics.algorithms.SampleConverger;
-import moa.cluster.Cluster;
 import moa.cluster.Clustering;
 import moa.clusterers.AbstractClusterer;
-import moa.core.AutoExpandVector;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
@@ -42,6 +40,8 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
     protected boolean calculateDistance;
 //    protected Clustering clusteringResult;
 
+    private boolean alwaysAddDistanceMetrics = false;
+
     //The clustering result, recalculated after each sample
     protected volatile Clustering clusteringResult;
 
@@ -69,6 +69,15 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
         this.alwaysTrain = false;
         this.trainedLabels = trainedLabels;
         this.calculateDistance = calculateDistance;
+    }
+
+    /**
+     * If calculateDistance is true then set distance-metrics to -1.0 when
+     * the sample is inside a known cluster (no real distance can be calculated).
+     */
+    public MOAStreamClusterer alwaysAddDistanceMetrics() {
+        alwaysAddDistanceMetrics = true;
+        return this;
     }
 
     /**
@@ -131,6 +140,16 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
     }
 
     private Sample appendDistance(Sample sample, Map.Entry<Double, double[]> distance) {
+        if (distance == null && alwaysAddDistanceMetrics) {
+            // Output only -1 values for all distances.
+            Map<Double, double[]> distanceMap = new HashMap<>();
+            double mockDistances[] = new double[sample.getMetrics().length];
+            Arrays.fill(mockDistances, -1.0);
+            distanceMap.put(-1.0, mockDistances);
+            distance = distanceMap.entrySet().<Map.Entry<Double, double[]>>toArray(new Map.Entry[1])[0];
+        }
+
+        // distance can be changed in the block above
         if (distance != null) {
             String newHeader[] = new String[distance.getValue().length + 1];
             double newValues[] = new double[newHeader.length];

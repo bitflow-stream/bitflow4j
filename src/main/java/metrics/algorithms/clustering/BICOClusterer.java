@@ -30,6 +30,11 @@ public class BICOClusterer extends MOASphereClusterer<BICO> {
         this.numberOfProjections = numberOfProjections;
     }
 
+    public BICOClusterer alwaysAddDistanceMetrics() {
+        super.alwaysAddDistanceMetrics();
+        return this;
+    }
+
     @Override
     protected void setupClustererParameter(Sample firstSample) {
         int numMetrics = firstSample.getHeader().header.length;
