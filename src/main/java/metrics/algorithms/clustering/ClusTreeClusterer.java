@@ -12,8 +12,12 @@ import java.util.Set;
  */
 public class ClusTreeClusterer extends MOASphereClusterer<ClusTree> {
 
-    private final Integer horizon;
-    private final Integer height;
+    private Integer horizon = null;
+    private Integer height = null;
+
+    public ClusTreeClusterer(){
+        super((ClusTree) ExternalClusterer.CLUSTREE.newInstance());
+    }
 
     public ClusTreeClusterer(boolean alwaysTrain, boolean calculateDistance, Integer horizon, Integer height) {
         super((ClusTree) ExternalClusterer.CLUSTREE.newInstance(), alwaysTrain, calculateDistance);
@@ -40,5 +44,15 @@ public class ClusTreeClusterer extends MOASphereClusterer<ClusTree> {
 
         this.clusterer.horizonOption = horizonOption;
         this.clusterer.maxHeightOption = maxHeightOption;
+    }
+
+    public ClusTreeClusterer setHorizon(Integer horizon) {
+        this.horizon = horizon;
+        return this;
+    }
+
+    public ClusTreeClusterer setHeight(Integer height) {
+        this.height = height;
+        return this;
     }
 }

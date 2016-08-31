@@ -3,6 +3,7 @@ package metrics.algorithms.evaluation;
 import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
 import metrics.algorithms.clustering.ClusterConstants;
+import metrics.io.MetricOutputStream;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -62,27 +63,53 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
     @Override
     protected Sample executeSample(Sample sample) throws IOException {
         String predictedLabel = sample.getLabel();
-        String originalLabel = sample.getTag(ClusterConstants.ORIGINAL_LABEL_TAG);
-
-        if (predictedLabel != null && originalLabel != null) {
+//        String originalLabel = sample.getTag(ClusterConstants.ORIGINAL_LABEL_TAG);
+        String expectedLabel = sample.getTag(ClusterConstants.EXPECTED_PREDICTION_TAG);
+        if(expectedLabel == null) {
+            //TODO add handling of unlabled data
+            throw new IOException("no expected label found, data not prepared for evaluation (use SourceTrainingLabelingAlgorithm)");
+        }
+        if (predictedLabel != null && expectedLabel != null) {
+//        if (predictedLabel != null && originalLabel != null) {
             // Cannot evaluate sample without both predicted and original label.
             //TODO: decide wether sampleCount should be incremented for non evaluated samples (affects overall precision an recall)
-            sampleCount++;
-            if (!originalLabel.equals(ClusterConstants.UNKNOWN_LABEL) && sample.getTag(ClusterConstants.BUFFERED_SAMPLE_TAG) == null
+//            if (!originalLabel.equals(ClusterConstants.UNKNOWN_LABEL) && sample.getTag(ClusterConstants.BUFFERED_SAMPLE_TAG) == null
+            if (sample.getTag(ClusterConstants.BUFFERED_SAMPLE_TAG) == null
+                //                    && !predictedLabel.equals(ClusterConstants.UNCLASSIFIED_CLUSTER)
+                    ) {
+                sampleCount++;
+                if (!predictedLabel.equals(ClusterConstants.UNKNOWN_LABEL)
 //                    && !predictedLabel.equals(ClusterConstants.UNCLASSIFIED_CLUSTER)
                     ) {
-                labels.add(predictedLabel);
-                labels.add(originalLabel);
-                if (predictedLabel.equals(originalLabel)) {
-                    //if labels match, increment counter by 1 for labelToTP
-                    correctPredictions++;
-                    labelToTP.put(originalLabel, labelToTP.containsKey(originalLabel) ? labelToTP.get(originalLabel) + 1 : 1);
 
-                } else {
-                    wrongPredictions++;
-                    //if labels dont match, increment counter by 1 for labelToFP(predictedLabe) and labelTOFN(originalLabel)
-                    labelToFP.put(predictedLabel, labelToFP.containsKey(predictedLabel) ? labelToFP.get(predictedLabel) + 1 : 1);
-                    labelToFN.put(originalLabel, labelToFN.containsKey(originalLabel) ? labelToFN.get(originalLabel) + 1 : 1);
+                    labels.add(predictedLabel);
+                    labels.add(expectedLabel);
+//                    if(predictedLabel == null){
+//                        System.out.println("null predicted");
+//                    }
+//                    if(expectedLabel == null){
+//                        System.out.println("null expected");
+//                    }
+//                    if(expectedLabel.equals("null")){
+//                        System.out.println("null String");
+//                    }
+//                    if(predictedLabel.equals("null")){
+//                        System.out.println("null String");
+//                    }
+//                    if(expectedLabel.isEmpty() || predictedLabel.isEmpty()){
+//                        System.out.println("String empty");
+//                    }TODO remove
+                    if (predictedLabel.equals(expectedLabel)) {
+                        //if labels match, increment counter by 1 for labelToTP
+                        correctPredictions++;
+                        labelToTP.put(expectedLabel, labelToTP.containsKey(expectedLabel) ? labelToTP.get(expectedLabel) + 1 : 1);
+
+                    } else {
+                        wrongPredictions++;
+                        //if labels dont match, increment counter by 1 for labelToFP(predictedLabe) and labelTOFN(originalLabel)
+                        labelToFP.put(predictedLabel, labelToFP.containsKey(predictedLabel) ? labelToFP.get(predictedLabel) + 1 : 1);
+                        labelToFN.put(expectedLabel, labelToFN.containsKey(expectedLabel) ? labelToFN.get(expectedLabel) + 1 : 1);
+                    }
                 }
             }
             if (checkRecalculationRequirement()) {
@@ -255,4 +282,10 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
 //        String[]
 //        originalLabel =
 //    }
+
+    @Override
+    protected void inputClosed(MetricOutputStream output) throws IOException {
+        recalculate();
+        super.inputClosed(output);
+    }
 }

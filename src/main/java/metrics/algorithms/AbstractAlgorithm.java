@@ -94,6 +94,11 @@ public abstract class AbstractAlgorithm implements Algorithm {
         return this;
     }
 
+    public AbstractAlgorithm reset(){
+        this.startedStacktrace = null;
+        return this;
+    }
+
     private class Runner extends Thread {
 
         private final MetricInputStream input;

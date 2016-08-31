@@ -19,6 +19,8 @@ public class ClusterConstants {
     public static final String BUFFERED_SAMPLE_TAG = "buffered";
     public static final String TRAINING_TAG = "trained";
     public static final String EXPECTED_PREDICTION_TAG = "expected-cls";
+    public static final String ANOMALY_CLUSTER = "anomaly";
+    public static final String NO_LABEL_FOR_WINDOW = "window-failed";
     // TODO move prefix
     public static String DISTANCE_PREFIX = "_distance_";
     public static String BUFFERED_LABEL = "buffered";

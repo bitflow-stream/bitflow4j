@@ -2,17 +2,15 @@ package metrics.algorithms.clustering;
 
 
 import com.yahoo.labs.samoa.instances.Instance;
-import moa.cluster.*;
+import metrics.Sample;
+import moa.cluster.Clustering;
 import moa.clusterers.AbstractClusterer;
 import moa.core.AutoExpandVector;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.DoubleStream;
 /**
  * @author mbyfield
@@ -22,6 +20,14 @@ import java.util.stream.DoubleStream;
  */
 public abstract class MOASphereClusterer<T extends AbstractClusterer & Serializable> extends MOAStreamClusterer<T> {
 
+    protected boolean calculateDistance;
+    private boolean alwaysAddDistanceMetrics;
+
+    public MOASphereClusterer(T clusterer){
+        super(clusterer);
+        alwaysAddDistanceMetrics = false;
+    }
+
     /**
      * This constructor is used to train on all labels or the default label set.
      * @param clusterer The clusterer, must extend @link moa.clusterers.AbstractClusterer.
@@ -29,7 +35,9 @@ public abstract class MOASphereClusterer<T extends AbstractClusterer & Serializa
      * @param calculateDistance If true, the distance to the nearest cluster will be calculated and appended to the sample metrics using the distance prefix @link {@link ClusterConstants#DISTANCE_PREFIX}
      */
     public MOASphereClusterer(T clusterer, boolean alwaysTrain, boolean calculateDistance) {
-        super(clusterer, alwaysTrain, calculateDistance);
+        super(clusterer, alwaysTrain);
+        this.calculateDistance = calculateDistance;
+        alwaysAddDistanceMetrics = false;
     }
 
     /**
@@ -39,7 +47,9 @@ public abstract class MOASphereClusterer<T extends AbstractClusterer & Serializa
      * @param calculateDistance If true, the distance to the nearest cluster will be calculated and appended to the sample metrics using the distance prefix @link {@link ClusterConstants#DISTANCE_PREFIX}
      */
     public MOASphereClusterer(T clusterer, Set<String> trainedLabels, boolean calculateDistance) {
-        super(clusterer, trainedLabels, calculateDistance);
+        super(clusterer, trainedLabels);
+        this.calculateDistance = calculateDistance;
+        alwaysAddDistanceMetrics = false;
     }
 
     /**
@@ -49,7 +59,6 @@ public abstract class MOASphereClusterer<T extends AbstractClusterer & Serializa
      * @return
      * @throws IOException
      */
-    @Override
     protected Map.Entry<Double, double[]> getDistance(Instance instance, Clustering clustering) throws IOException {
         Map.Entry<Double, double[]> distance = null;
         Optional<Map.Entry<Double, double[]>> distanceT;
@@ -137,5 +146,72 @@ public abstract class MOASphereClusterer<T extends AbstractClusterer & Serializa
             clusterNum++;
         }
         return bestFitCluster;
+    }
+
+    public MOAStreamClusterer calculateDistance(){
+        this.calculateDistance = true;
+        return this;
+    }
+
+
+    /**
+     * Calculate the distance to the nearest real cluster for samples in the noise cluster
+     * @param instance the instance in the cluster
+     * @param bestFitCluster the id of the best fit cluster
+     * @return  A {@link Map.Entry} containing the overall distance to the closest cluster and the an array holding the distances for each dimension.
+     */
+    protected Map.Entry<Double, double[]> calculateDistances(Instance instance, int bestFitCluster){
+        if (clusteringResult != null && calculateDistance && bestFitCluster == -1) {
+            try {
+                return getDistance(instance, clusteringResult);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }return null;
+    }
+
+    /**
+     * Clusterers that calculate a distance for outliers can override this method and extend the sample with the culculated distance
+     * @param sample The current sample
+     * @param distance The overall distance and an array for the distances in each dimension
+     * @return the extended sample
+     */
+    protected Sample appendDistance(Sample sample, Map.Entry<Double, double[]> distance) {
+        if (distance == null && alwaysAddDistanceMetrics) {
+            // Output only -1 values for all distances.
+            Map<Double, double[]> distanceMap = new HashMap<>();
+            double mockDistances[] = new double[sample.getMetrics().length];
+            Arrays.fill(mockDistances, -1.0);
+            distanceMap.put(-1.0, mockDistances);
+            distance = distanceMap.entrySet().<Map.Entry<Double, double[]>>toArray(new Map.Entry[1])[0];
+        }
+        // distance can be changed in the block above
+        if (distance != null) {
+            String newHeader[] = new String[distance.getValue().length + 1];
+            double newValues[] = new double[newHeader.length];
+            for (int i = 0; i < newHeader.length - 1; i++) {
+                newHeader[i] = ClusterConstants.DISTANCE_PREFIX + sample.getHeader().header[i];
+                newValues[i] = distance.getValue()[i];
+            }
+            newHeader[newHeader.length - 1] = ClusterConstants.DISTANCE_PREFIX + "overall";
+            newValues[newValues.length - 1] = distance.getKey();
+            sample = sample.extend(newHeader, newValues);
+        }
+        return sample;
+    }
+
+
+    /**
+     * If calculateDistance is true then set distance-metrics to -1.0 when
+     * the sample is inside a known cluster (no real distance can be calculated).
+     */
+    public MOAStreamClusterer alwaysAddDistanceMetrics() {
+        alwaysAddDistanceMetrics = true;
+        return this;
+    }
+
+    @Override
+    protected void onClusterCalculation(Sample sample, Instance instance, int bestFitCluster) {
+        this.appendDistance(sample,this.calculateDistances(instance, bestFitCluster));
     }
 }

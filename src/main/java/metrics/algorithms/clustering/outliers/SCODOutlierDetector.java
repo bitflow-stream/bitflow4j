@@ -12,8 +12,12 @@ import java.util.Set;
  */
 public class SCODOutlierDetector extends MOAStreamOutlierDetection<SimpleCOD> {
 
-    private final Float radiusParameter;
-    private final Integer kParameter;
+    private volatile Float radiusParameter;
+    private volatile Integer kParameter;
+
+    public SCODOutlierDetector(){
+        super((SimpleCOD) ExternalClusterer.SCOD.newInstance());
+    }
 
     public SCODOutlierDetector(boolean alwaysTrain, Float radius, Integer kParameter) {
         super((SimpleCOD) ExternalClusterer.SCOD.newInstance(), alwaysTrain);
@@ -25,6 +29,22 @@ public class SCODOutlierDetector extends MOAStreamOutlierDetection<SimpleCOD> {
         super((SimpleCOD) ExternalClusterer.SCOD.newInstance(),trainedLabels);
         this.radiusParameter = radius;
         this.kParameter = kParameter;
+    }
+
+    public SCODOutlierDetector setRadius(Float radiusParameter) {
+        if(radiusParameter!= null) throw new IllegalStateException("Final option cannot be set twice.");
+        else{
+            this.radiusParameter = radiusParameter;
+            return this;
+        }
+    }
+
+    public SCODOutlierDetector setK(Integer kParameter) {
+        if(kParameter != null) throw new IllegalStateException("Final option cannot be set twice.");
+        else{
+            this.kParameter = kParameter;
+            return this;
+        }
     }
 
     @Override

@@ -50,6 +50,12 @@ public class WekaEvaluationWrapper extends AbstractWekaAlgorithm {
         Instances testInstances = this.createTestDataset();
         this.fillDataset(predictedInstances);
         this.fillTestDataset(testInstances);
+        //why do we need to build this classifier ?
+        try {
+            classifier.buildClassifier(predictedInstances);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         try {
             this.eval = new Evaluation(predictedInstances);
         } catch (Exception e) {
@@ -77,13 +83,16 @@ public class WekaEvaluationWrapper extends AbstractWekaAlgorithm {
     }
 
     private void fillTestDataset(Instances testInstances) throws IOException {
+        CITInstance.resetCounter();
         for (Sample sample : window.samples) {
             double[] values = sample.getMetrics();
             values = Arrays.copyOf(values, values.length + 1);
-            Instance instance = new DenseInstance(1.0, values);
+            Instance instance = new CITInstance(1.0, values);
             instance.setDataset(testInstances);
             String expectedPrediction = sample.getTag(ClusterConstants.EXPECTED_PREDICTION_TAG);
             if(expectedPrediction == null) throw new IOException("Sample not prepared for evaluation (no expected pridiction tag present)");
+            System.out.println("predicted label to set: " + expectedPrediction);
+            System.out.println("orig label: " + sample.getLabel());
             instance.setClassValue(expectedPrediction);
             testInstances.add(instance);
         }
@@ -104,13 +113,13 @@ public class WekaEvaluationWrapper extends AbstractWekaAlgorithm {
 
     @Override
     public String toString() {
-        return "weka evaluation wrapper";
+        return "weka-evaluation-wrapper";
     }
     //TODO: all the error handling etc
     public ArrayList<String> allTestClasses() {
         Set<String> allLabels = new TreeSet<>(); // Classes must be in deterministic order
         for (Sample sample : window.samples) {
-            allLabels.add(sample.getTag(ClusterConstants.ORIGINAL_LABEL_TAG));
+            allLabels.add(sample.getTag(ClusterConstants.EXPECTED_PREDICTION_TAG));
         }
         return new ArrayList<>(allLabels);
     }

@@ -48,10 +48,11 @@ public abstract class AbstractWekaAlgorithm extends WindowBatchAlgorithm {
     }
 
     synchronized void fillDataset(Instances instances) {
+        CITInstance.resetCounter();
         for (Sample sample : window.samples) {
             double[] values = sample.getMetrics();
             values = Arrays.copyOf(values, values.length + 1);
-            Instance instance = new DenseInstance(1.0, values);
+            Instance instance = new CITInstance(1.0, values);
             instance.setDataset(instances);
             instance.setClassValue(sample.getLabel());
             instances.add(instance);

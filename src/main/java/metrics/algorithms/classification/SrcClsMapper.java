@@ -15,12 +15,17 @@ public class SrcClsMapper {
     private static Object synchronizationLock = new Object();
     private static ReadWriteLock lock = new ReentrantReadWriteLock();
     private static Map<String, String> srcClsMapping = null;
+    private static volatile boolean original = false;
 
     static {
         //initialize with default values
         srcClsMapping = new HashMap<>();
         srcClsMapping.put("idle", "idle");
 //        srcClsMapping.put(ClusterConstants.UNKNOWN_LABEL, ClusterConstants.UNKNOWN_LABEL);
+    }
+
+    public static void useOriginal(boolean useOriginal){
+        original = useOriginal;
     }
 
     /**
@@ -31,7 +36,11 @@ public class SrcClsMapper {
     public static String getCorrectPrediction(String srcLabel) throws IllegalArgumentException{
 //        if (srcLabel == null) throw new IllegalArgumentException("label must not be null");
 //        @throws @link{IllegalArgumentException} if null label is provided
-        if (srcLabel == null) return ClusterConstants.UNKNOWN_LABEL;
+        if(original) return srcLabel;
+        if (srcLabel == null) {
+            System.out.println("###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\n###########################################\nvv");
+            return ClusterConstants.UNKNOWN_LABEL;
+        }
         lock.readLock().lock();
         String correctLabel;
         try{

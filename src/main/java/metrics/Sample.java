@@ -1,12 +1,10 @@
 package metrics;
 
 import metrics.algorithms.clustering.ClusterConstants;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by mwall on 30.03.16.
@@ -16,6 +14,8 @@ import java.util.Map;
  * {@link Header#HEADER_TIME}, although these fields are also transported over the network.
  */
 public class Sample {
+    //TODO add some synchronization?
+
 
     public static final String TAG_SOURCE = "src";
     public static final String TAG_LABEL = "cls";
@@ -86,6 +86,18 @@ public class Sample {
     }
 
     public String getTag(String name) {
+//TODO remove
+//        if(name == null || tags == null || tags.isEmpty() || tags.get(name) == null || tags.get(name).equalsIgnoreCase("null")){
+//            System.out.println("break");
+//        }
+//        String s = tags.get(name);
+//        if(s == null){
+//            System.out.println("b");
+//        }else if(s.isEmpty()){
+//            System.out.println("b");
+//        }else if(s.equalsIgnoreCase("null")){
+//            System.out.println("b");
+//        }
         return tags.get(name);
     }
 
@@ -94,7 +106,15 @@ public class Sample {
     }
 
     public void setTag(String name, String value) {
-        tags.put(name, value);
+//        if(value == null || value.isEmpty() || value.equalsIgnoreCase("null"))
+//        if(name == null || tags == null){
+//            System.out.println("break");
+//        }TODO remove
+//        String result =
+                tags.put(name, value);
+//        if (result != null){
+//            System.out.println("break");
+//        }
     }
 
     public String getSource() {
@@ -122,6 +142,9 @@ public class Sample {
     }
 
     public void setLabel(String label) {
+//        if(label == null || label.isEmpty() || label.equalsIgnoreCase("null")){
+//            System.out.println("b");
+//        }TODO remove
         setTag(TAG_LABEL, label);
     }
 
@@ -210,6 +233,57 @@ public class Sample {
         System.arraycopy(newValues, 0, outMetrics, incomingFields, newValues.length);
 
         return new Sample(outHeader, outMetrics, this);
+    }
+
+    //TODO comment and maybe add return type
+    public void removeMetrics(String ... metricNames){
+        //TODO it will me more officient to have reimplement this (will save multiple loops over the full metrics array
+//        for (String s : metricNames) removeMetric(s);
+        //cannot call because sample is returned instead of changed
+        throw new UnsupportedOperationException("not yet implemented");
+    }
+
+    public Sample removeMetric(String metricName){
+        //cannot call because sample is returned instead of changed
+        throw new UnsupportedOperationException("not yet implemented");
+//        removeMetricsWithPrefix(metricName);
+    }
+
+    public Sample removeMetricsWithPrefix(String prefix){
+        //TODO do we need to take care of duplicate metrics?
+        ArrayList<String> resultHeader = new ArrayList<String>();
+        ArrayList<Double> resultMetrics = new ArrayList<>();
+//        int count = 0;
+        for (int i = 0; i < header.header.length ; i++){
+            if(!header.header[i].startsWith(prefix)){
+                resultHeader.add(header.header[i]);
+                resultMetrics.add(metrics[i]);
+//                resultMetricsIndexes.add(i);
+//                count++;
+            }
+        }
+        //TODO double check by anton wether this is valid usage of header field
+
+        String[] headers = new String[resultHeader.size()];
+        headers = resultHeader.toArray(headers);
+        Header newHeader = new Header(headers);
+        double[] newMetrics = new double[headers.length];
+        Double[] boxHolder = new Double[newMetrics.length];
+        newMetrics = ArrayUtils.toPrimitive(resultMetrics.toArray(boxHolder));
+        //new double[count];
+
+//        this is all dirty hacking...
+//        for(int i = 0; i < this.metrics.length - count; i++){
+//            newMetrics[i]
+//        }
+        Sample sampleToReturn = new Sample(newHeader, newMetrics, this);
+        return sampleToReturn;
+    }
+
+    public void removeMetricsWithPrefix(String ... prefix){
+        //cannot call because sample is returned instead of changed
+        throw new UnsupportedOperationException("not yet implemented");
+//        for (String s : prefix) removeMetricsWithPrefix(s);
     }
 
 }

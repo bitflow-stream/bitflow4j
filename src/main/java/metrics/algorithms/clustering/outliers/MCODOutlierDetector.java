@@ -12,8 +12,16 @@ import java.util.Set;
  */
 public class MCODOutlierDetector extends MOAStreamOutlierDetection<MCOD> {
 
-    private final Float radiusParameter;
-    private final Integer kParameter;
+
+
+    private volatile Float radiusParameter;
+    private volatile Integer kParameter;
+
+    public MCODOutlierDetector(){
+        super((MCOD) ExternalClusterer.MCOD.newInstance());
+        this.radiusParameter = null;
+        this.kParameter = null;
+    }
 
     public MCODOutlierDetector(boolean alwaysTrain, Float radius, Integer kParameter) {
         super((MCOD) ExternalClusterer.MCOD.newInstance(), alwaysTrain);
@@ -26,6 +34,22 @@ public class MCODOutlierDetector extends MOAStreamOutlierDetection<MCOD> {
         super((MCOD) ExternalClusterer.MCOD.newInstance(), trainedLabels);
         this.kParameter = kParameter;
         this.radiusParameter = radius;
+    }
+
+    public MCODOutlierDetector setRadius(Float radiusParameter) {
+        if(radiusParameter!= null) throw new IllegalStateException("Final option cannot be set twice.");
+        else{
+            this.radiusParameter = radiusParameter;
+            return this;
+        }
+    }
+
+    public MCODOutlierDetector setK(Integer kParameter) {
+        if(kParameter != null) throw new IllegalStateException("Final option cannot be set twice.");
+        else{
+            this.kParameter = kParameter;
+            return this;
+        }
     }
 
     @Override

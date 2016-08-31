@@ -11,10 +11,14 @@ import java.util.Set;
  * Created by malcolmx on 23.08.16.
  */
 public class StormApproxOutlierDetector extends MOAStreamOutlierDetection<ApproxSTORM> {
-    private final Float radiusParameter;
-    private final Integer kParameter;
-    private final Integer queryFrequency;
-    private final Float pParameter;
+    private volatile Float radiusParameter;
+    private volatile Integer kParameter;
+    private volatile Integer queryFrequency;
+    private volatile Float pParameter;
+
+    public StormApproxOutlierDetector(){
+        super((ApproxSTORM) ExternalClusterer.STORM_APPROX.newInstance());
+    }
 
     public StormApproxOutlierDetector(boolean alwaysTrain, Float radiusParameter, Integer kParameter, Integer queryFrequency, Float pParameter) {
         super((ApproxSTORM) ExternalClusterer.STORM_APPROX.newInstance(), alwaysTrain);
@@ -40,6 +44,38 @@ public class StormApproxOutlierDetector extends MOAStreamOutlierDetection<Approx
     @Override
     protected void onInlier(MyBaseOutlierDetector.Outlier outlier) {
 
+    }
+
+    public StormApproxOutlierDetector setP(Float pParameter) {
+        if(pParameter!= null) throw new IllegalStateException("Final option cannot be set twice.");
+        else{
+            this.pParameter = pParameter;
+            return this;
+        }
+    }
+
+    public StormApproxOutlierDetector setQueryFrequency(Integer queryFrequency) {
+        if(queryFrequency!= null) throw new IllegalStateException("Final option cannot be set twice.");
+        else{
+            this.queryFrequency = queryFrequency;
+            return this;
+        }
+    }
+
+    public StormApproxOutlierDetector setRadius(Float radiusParameter) {
+        if(radiusParameter!= null) throw new IllegalStateException("Final option cannot be set twice.");
+        else{
+            this.radiusParameter = radiusParameter;
+            return this;
+        }
+    }
+
+    public StormApproxOutlierDetector setK(Integer kParameter) {
+        if(kParameter != null) throw new IllegalStateException("Final option cannot be set twice.");
+        else{
+            this.kParameter = kParameter;
+            return this;
+        }
     }
 
     @Override

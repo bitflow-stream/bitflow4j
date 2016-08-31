@@ -13,36 +13,92 @@ import java.util.Set;
  * Implementation of the Denstream clustering algorithm.
   */
 public class WithDBSCANClusterer extends MOASphereClusterer<WithDBSCAN> {
-//    TODO: add parameters for options
-
-    public WithDBSCANClusterer(boolean alwaysTrain, boolean calculateDistance) {
-        super((WithDBSCAN) ExternalClusterer.DENSTREAM.newInstance(), alwaysTrain, calculateDistance);
+    //TODO sanetize setter and null check
+    public WithDBSCANClusterer setHorizon(Integer horizon) {
+        this.horizon = horizon;
+        return this;
     }
 
-    public WithDBSCANClusterer(Set<String> trainedLabels, Map<String, Object> parameters, boolean calculateDistance) throws IllegalArgumentException {
+    public WithDBSCANClusterer setNumberOfInitPoints(Integer numberOfInitPoints) {
+        this.numberOfInitPoints = numberOfInitPoints;
+        return this;
+    }
+
+    public WithDBSCANClusterer setProcessingSpeed(Integer processingSpeed) {
+        this.processingSpeed = processingSpeed;
+        return this;
+    }
+
+    public WithDBSCANClusterer setEpsilonParameter(Double epsilonParameter) {
+        this.epsilonParameter = epsilonParameter;
+        return this;
+    }
+
+    public WithDBSCANClusterer setMuParameter(Double muParameter) {
+        this.muParameter = muParameter;
+        return this;
+    }
+
+    public WithDBSCANClusterer setOfflineMultiplier(Double offlineMultiplier) {
+        this.offlineMultiplier = offlineMultiplier;
+        return this;
+    }
+
+    private Integer horizon = null;
+    private Integer numberOfInitPoints =null;
+    private Integer processingSpeed =null;
+    private Double epsilonParameter =null;
+    private Double muParameter =null;
+
+
+
+    private Double offlineMultiplier;
+    //    TODO: for all clusterers, sanetize input for options
+
+    public WithDBSCANClusterer(){
+        super((WithDBSCAN) ExternalClusterer.DENSTREAM.newInstance());
+    }
+
+    public WithDBSCANClusterer(boolean alwaysTrain, boolean calculateDistance, Integer horizon, Integer numberOfInitPoints, Integer processingSpeed, Double epsilonParameter, Double muParameter, Double offlineMultiplier) {
+        super((WithDBSCAN) ExternalClusterer.DENSTREAM.newInstance(), alwaysTrain, calculateDistance);
+        this.horizon = horizon;
+        this.numberOfInitPoints = numberOfInitPoints;
+        this.processingSpeed = processingSpeed;
+        this.epsilonParameter = epsilonParameter;
+        this.muParameter = muParameter;
+        this.offlineMultiplier = offlineMultiplier;
+    }
+
+    public WithDBSCANClusterer(Set<String> trainedLabels, Map<String, Object> parameters, boolean calculateDistance, Integer horizon, Integer numberOfInitPoints, Integer processingSpeed, Double epsilonParameter, Double muParameter, Double offlineMultiplier) throws IllegalArgumentException {
         super((WithDBSCAN) ExternalClusterer.DENSTREAM.newInstance(), trainedLabels, calculateDistance);
+        this.horizon = horizon;
+        this.numberOfInitPoints = numberOfInitPoints;
+        this.processingSpeed = processingSpeed;
+        this.epsilonParameter = epsilonParameter;
+        this.muParameter = muParameter;
+        this.offlineMultiplier = offlineMultiplier;
     }
 
     @Override
     protected void setupClustererParameter(Sample firstSample) {
         int numMetrics = firstSample.getHeader().header.length;
         numMetrics++; // The class/label attribute is added
-        IntOption horizonOption = new IntOption("horizon", 'h',
-                "Range of the window.", 1000);
+        IntOption horizonOption =  new IntOption("horizon", 'h',
+                "Range of the window.", horizon == null ? 1000 : horizon);
         IntOption initPointsOption = new IntOption("initPoints", 'i',
-                "Number of points to use for initialization.", 1000);
+                "Number of points to use for initialization.", numberOfInitPoints == null ? 1000 : numberOfInitPoints);
         IntOption speedOption = new IntOption("processingSpeed", 's',
-                "Number of incoming points per time unit.", 100, 1, 1000);
+                "Number of incoming points per time unit.", processingSpeed == null ? 100 : processingSpeed, 1, 1000);
         FloatOption betaOption = new FloatOption("beta", 'b', "", 0.2, 0,
                 1);
         FloatOption epsilonOption = new FloatOption("epsilon", 'e',
-                "Defines the epsilon neighbourhood", 0.15, 0, 1);
+                "Defines the epsilon neighbourhood", epsilonParameter == null ? 15 : epsilonParameter, 0, 1);
         FloatOption lambdaOption = new FloatOption("lambda", 'l', "",
                 0.25, 0, 1);
-        FloatOption muOption = new FloatOption("mu", 'm', "", 1, 0,
+        FloatOption muOption = new FloatOption("mu", 'm', "", muParameter == null ? 1 : muParameter, 0,
                 Double.MAX_VALUE);
-        FloatOption offlineOption = new FloatOption("offline", 'o',
-                "offline multiplier for epsilion.", 2, 2, 20);
+        FloatOption offlineOption =   new FloatOption("offline", 'o',
+                "offline multiplier for epsilion.", offlineMultiplier == null ? 2 : offlineMultiplier, 2, 20);
         this.clusterer.horizonOption = horizonOption;
         this.clusterer.initPointsOption = initPointsOption;
         this.clusterer.speedOption = speedOption;
@@ -52,6 +108,8 @@ public class WithDBSCANClusterer extends MOASphereClusterer<WithDBSCAN> {
         this.clusterer.muOption = muOption;
         this.clusterer.offlineOption = offlineOption;
     }
+
+
 
     @Override
     protected Clustering getClusteringResult() {

@@ -12,10 +12,35 @@ import java.util.Set;
  * Implementation of the StreamKM clustering algorithm.
  */
 public class StreamKMClusterer extends MOASphereClusterer<StreamKM> {
-    private final Integer sizeCoreset;
-    private final Integer numberOfClusters;
-    private final Integer width;
-    private final Integer randomSeed;
+    private Integer sizeCoreset = null;
+    private Integer numberOfClusters = null;
+    private Integer width = null;
+    private Integer randomSeed = null;
+
+    //TODO sanetize parameters
+    public StreamKMClusterer setSizeCoreset(Integer sizeCoreset) {
+        this.sizeCoreset = sizeCoreset;
+        return this;
+    }
+
+    public StreamKMClusterer setNumberOfClusters(Integer numberOfClusters) {
+        this.numberOfClusters = numberOfClusters;
+        return this;
+    }
+
+    public StreamKMClusterer setWidth(Integer width) {
+        this.width = width;
+        return this;
+    }
+
+    public StreamKMClusterer setRandomSeed(Integer randomSeed) {
+        this.randomSeed = randomSeed;
+        return this;
+    }
+
+    public StreamKMClusterer() {
+        super((StreamKM) ExternalClusterer.STREAM_KMEANS.newInstance());
+    }
 
     public StreamKMClusterer(boolean alwaysTrain, boolean calculateDistance, Integer sizeCoreset, Integer numberOfClusters, Integer width, Integer randomSeed) {
         super((StreamKM) ExternalClusterer.STREAM_KMEANS.newInstance(), alwaysTrain, calculateDistance);

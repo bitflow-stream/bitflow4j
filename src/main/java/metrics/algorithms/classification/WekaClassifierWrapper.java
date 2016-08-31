@@ -26,9 +26,29 @@ public class WekaClassifierWrapper extends AbstractClassifier {
 
     @Override
     public double classifyInstance(Instance instance) throws Exception {
-        int index = instances.indexOf(instance);
-        if(index > 0) return instances.get(index).classValue();
-        else throw new Exception("cannot classify an instance, that was not trained (this class is for evaluation only)");
+//        if(instance == null) System.out.println("WTF null instance passed to evaluator....");
+//        int index = instances.indexOf(instance);
+//        if(index > 0) return instances.get(index).classValue();
+//        else throw new Exception("cannot classify an instance, that was not trained (this class is for evaluation only)");
+        return this.getClassForInstance(instance);
+    }
+
+//    @Override
+    private double getClassForInstance(Instance instance) throws IllegalArgumentException {
+        CITInstance citInstance = null;
+        try {
+            citInstance = (CITInstance) instance;
+        }catch (ClassCastException e){
+            throw new IllegalArgumentException("Instance must be subclass of CITInstance");
+        }
+        //TODO typecheck later
+        for (Instance inst : this.instances){
+            int index = ((CITInstance)inst).getIndex();
+            if(index == citInstance.getIndex()){
+                return inst.classValue();
+            }
+        }
+        throw new IllegalArgumentException("Unknown instance, cannot classify");
     }
 
     @Override

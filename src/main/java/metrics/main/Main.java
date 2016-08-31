@@ -1,8 +1,7 @@
 package metrics.main;
 
-import metrics.algorithms.FeatureStandardizer;
-import metrics.algorithms.MetricFilterAlgorithm;
-import metrics.algorithms.TimestampSort;
+import metrics.Sample;
+import metrics.algorithms.*;
 import metrics.algorithms.classification.ExternalClassifier;
 import metrics.algorithms.classification.SourceTrainingLabelingAlgorithm;
 import metrics.algorithms.classification.WekaEvaluationWrapper;
@@ -22,6 +21,7 @@ import metrics.main.analysis.SourceLabellingAlgorithm;
 import metrics.main.data.*;
 import moa.clusterers.AbstractClusterer;
 import weka.classifiers.AbstractClassifier;
+import metrics.algorithms.clustering.MOAStreamClusterer;
 
 import java.io.File;
 import java.io.IOException;
@@ -103,6 +103,30 @@ public class Main {
 //                                    .consoleOutput();
 //                        })
 //                .runAndWait();
+        BICOClusterer bico = new BICOClusterer(false, false, 2000, 1000, null);
+        ClusterLabelingAlgorithm clusterLabelingAlgorithm = new ClusterLabelingAlgorithm(0.0, true, false);
+        new AlgorithmPipeline(new File(preparedDataFile(source)), FileMetricReader.FILE_NAME)
+                .step(new MetricFilterAlgorithm("disk-usage///free", "disk-usage///used"))
+                .fork(new OpenStackSampleSplitter(),
+                        (name, p) -> {
+                    String file = outputs.getFile(name.isEmpty() ? "default" : name);
+
+                    p
+                            .step(new SourceLabellingAlgorithm())
+                            .step(new BatchSampleFilterAlgorithm(null, false))
+                            .step(new FeatureStandardizer())
+                            .step(new SourceTrainingLabelingAlgorithm())
+                            .step(bico.reset())
+//                            .step(new DistancePrinter())
+//                            .step(new AnyOutOutlierDetector(true, null, null, null, null, null, null))
+                            .step(clusterLabelingAlgorithm)
+//                            .step(new LabelAggregatorAlgorithm(10))//.stripData())
+//                            .step(new WekaEvaluationWrapper())
+//                            .step(new MOAStreamEvaluator(500, true, false))
+
+                ;})
+                .runAndWait();
+        System.out.println("now it should be finished");
         new AlgorithmPipeline(new File(preparedDataFile(source)), FileMetricReader.FILE_NAME)
                 .step(new MetricFilterAlgorithm("disk-usage///free", "disk-usage///used"))
                 .fork(new OpenStackSampleSplitter(),
@@ -112,17 +136,20 @@ public class Main {
                     p
                             .step(new FeatureStandardizer())
                             .step(new SourceLabellingAlgorithm())
+                            .step(new BatchSampleFilterAlgorithm(null, true))
                             .step(new SourceTrainingLabelingAlgorithm())
 //                            .step(new BICOClusterer(true, true, 2000, 200, null))
 //                            .step(new DistancePrinter())
-                            .step(new AnyOutOutlierDetector(true, null, null, null, null, null, null))
-                            .step(new ClusterLabelingAlgorithm(0.0, true, false))
-                            .step(new LabelAggregatorAlgorithm(10))
-                            .step(new WekaEvaluationWrapper())
-                            .step(new MOAStreamEvaluator(500, true, false));
+                            .step(bico.reset())
+//                            .step(new AnyOutOutlierDetector(true, null, null, null, null, null, null))
+                            .step(clusterLabelingAlgorithm.reset())
+                            .step(new LabelAggregatorAlgorithm(10).stripData())
+//                            .step(new WekaEvaluationWrapper())
+                            .step(new MOAStreamEvaluator(100, true, false));
 
                 })
                 .runAndWait();
+
     }
 
     private static String preparedDataFile(Host source) throws IOException {

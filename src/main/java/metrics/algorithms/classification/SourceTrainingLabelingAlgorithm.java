@@ -21,7 +21,11 @@ public class SourceTrainingLabelingAlgorithm extends AbstractAlgorithm {
     @Override
     protected Sample executeSample(Sample sample) throws IOException {
         //TODO: maybe replace with src ?
-        sample.setTag(ClusterConstants.EXPECTED_PREDICTION_TAG, SrcClsMapper.getCorrectPrediction(sample.getLabel()));
+        String s = SrcClsMapper.getCorrectPrediction(sample.getLabel());
+//        if(s == null || s.isEmpty() || s.equals("null")){
+//            System.out.println("break");
+//        } TODO remove
+        sample.setTag(ClusterConstants.EXPECTED_PREDICTION_TAG, s);
         return sample;
     }
 

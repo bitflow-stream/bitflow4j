@@ -12,9 +12,28 @@ import java.util.Set;
 public class BICOClusterer extends MOASphereClusterer<BICO> {
 
 
-    private final Integer numberOfProjections;
-    private final Integer numberOfClusters;
-    private final Integer numberOfCenters;
+    private volatile Integer numberOfProjections;
+    private volatile Integer numberOfClusters;
+    private volatile Integer numberOfCenters;
+
+    public BICOClusterer setNumberOfProjections(Integer numberOfProjections) {
+        this.numberOfProjections = numberOfProjections;
+        return this;
+    }
+
+    public BICOClusterer setNumberOfClusters(Integer numberOfClusters) {
+        this.numberOfClusters = numberOfClusters;
+        return this;
+    }
+
+    public BICOClusterer setNumberOfCenters(Integer numberOfCenters) {
+        this.numberOfCenters = numberOfCenters;
+        return this;
+    }
+
+    public BICOClusterer(){
+        super((BICO)ExternalClusterer.BICO.newInstance());
+    }
 
     public BICOClusterer(boolean alwaysTrain, boolean calculateDistance, Integer numberOfClusters, Integer numberOfCenters, Integer numberOfProjections) {
         super((BICO) ExternalClusterer.BICO.newInstance(), alwaysTrain, calculateDistance);

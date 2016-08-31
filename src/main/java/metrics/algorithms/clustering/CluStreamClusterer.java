@@ -97,12 +97,26 @@ import java.util.Set;
  */
 public class CluStreamClusterer extends MOASphereClusterer<Clustream> {
 
-    public CluStreamClusterer(boolean alwaysTrain, boolean calculateDistance) {
-        super((Clustream) ExternalClusterer.CLUSTREAM.newInstance(), alwaysTrain, calculateDistance);
+    private Integer kernelRadiusMultiplier = null;
+    private Integer numberOfKernels = null;
+    private Integer horizon = null;
+
+    public CluStreamClusterer(){
+        super((Clustream) ExternalClusterer.CLUSTREAM.newInstance());
     }
 
-    public CluStreamClusterer(Set<String> trainedLabels, Map<String, Object> parameters, boolean calculateDistance) throws IllegalArgumentException {
+    public CluStreamClusterer(boolean alwaysTrain, boolean calculateDistance, Integer kernelRadiusMultiplier, Integer numberOfKernels, Integer horizon) {
+        super((Clustream) ExternalClusterer.CLUSTREAM.newInstance(), alwaysTrain, calculateDistance);
+        this.kernelRadiusMultiplier = kernelRadiusMultiplier;
+        this.numberOfKernels = numberOfKernels;
+        this.horizon = horizon;
+    }
+
+    public CluStreamClusterer(Set<String> trainedLabels, Map<String, Object> parameters, boolean calculateDistance, Integer kernelRadiusMultiplier, Integer numberOfKernels, Integer horizon) throws IllegalArgumentException {
         super((Clustream) ExternalClusterer.CLUSTREAM.newInstance(), trainedLabels, calculateDistance);
+        this.kernelRadiusMultiplier = kernelRadiusMultiplier;
+        this.numberOfKernels = numberOfKernels;
+        this.horizon = horizon;
     }
 
     @Override
@@ -110,13 +124,13 @@ public class CluStreamClusterer extends MOASphereClusterer<Clustream> {
         int numMetrics = firstSample.getHeader().header.length;
         numMetrics++; // The class/label attribute is added
         IntOption timeWindowOption = new IntOption("horizon",
-                'h', "Rang of the window.", 1000);
+                'h', "Rang of the window.", horizon == null ? 1000 : horizon);
         IntOption maxNumKernelsOption = new IntOption(
                 "maxNumKernels", 'k',
-                "Maximum number of micro kernels to use.", 100);
+                "Maximum number of micro kernels to use.", numberOfKernels == null ? 100 : numberOfKernels);
         IntOption kernelRadiFactorOption = new IntOption(
                 "kernelRadiFactor", 't',
-                "Multiplier for the kernel radius", 2);
+                "Multiplier for the kernel radius", kernelRadiusMultiplier == null ? 2 : kernelRadiusMultiplier);
         this.clusterer.timeWindowOption = timeWindowOption;
         this.clusterer.maxNumKernelsOption = maxNumKernelsOption;
         this.clusterer.kernelRadiFactorOption = kernelRadiFactorOption;

@@ -10,9 +10,7 @@ import moa.core.AutoExpandVector;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  *
@@ -24,15 +22,19 @@ public abstract class MOAStreamOutlierDetection<T extends MyBaseOutlierDetector 
     private final MOAOutlierNotifier outlierNotifier;
     private final HashSet<Long> outlierIds, inlierIds;
     protected volatile Sample currentSample;
+    protected boolean calculateDistance;
+    private boolean alwaysAddDistanceMetrics = false;
 
-    public void recursiion(int n){
-        n--;
-        if(n == 0) return;
-        else recursiion(n); System.out.println("Hello");
+    public MOAStreamOutlierDetection(T clusterer){
+        super(clusterer);
+        this.outlierIds = new HashSet<>();
+        this.inlierIds = new HashSet<>();
+        this.outlierNotifier = new MOAOutlierNotifier();
+        this.currentSample = null;
     }
 
     public MOAStreamOutlierDetection(T clusterer, boolean alwaysTrain) {
-        super(clusterer, alwaysTrain, false);
+        super(clusterer, alwaysTrain);
         this.outlierIds = new HashSet<>();
         this.outlierNotifier = new MOAOutlierNotifier();
         inlierIds = new HashSet<Long>();
@@ -44,7 +46,7 @@ public abstract class MOAStreamOutlierDetection<T extends MyBaseOutlierDetector 
     }
 
     public MOAStreamOutlierDetection(T clusterer, Set<String> trainedLabels) {
-        super(clusterer, trainedLabels, false);
+        super(clusterer, trainedLabels);
         outlierIds = new HashSet<>();
         inlierIds = new HashSet<Long>();
         this.outlierNotifier = new MOAOutlierNotifier();
@@ -53,6 +55,11 @@ public abstract class MOAStreamOutlierDetection<T extends MyBaseOutlierDetector 
         }catch(ClassCastException e){
             throw new IllegalArgumentException("Clusterer must be a subclass of moa.clusterers.outliers.MyBaseOutlierDetector");
         }
+    }
+
+    public MOAStreamOutlierDetection addOutlierNotifier(MyBaseOutlierDetector.OutlierNotifier notifier){
+        this.outlierNotifier.addOutlierNotifier(notifier);
+        return this;
     }
 
 //    @Override
@@ -65,7 +72,7 @@ public abstract class MOAStreamOutlierDetection<T extends MyBaseOutlierDetector 
     protected synchronized Sample executeSample(Sample sample) throws IOException {
         this.currentSample = sample;
         Sample sampleToReturn = super.executeSample(sample);
-        System.out.println("clusterId =" + sample.getClusterId());
+//        System.out.println("clusterId =" + sample.getClusterId());
         return sampleToReturn;
     }
 
@@ -74,7 +81,6 @@ public abstract class MOAStreamOutlierDetection<T extends MyBaseOutlierDetector 
         return clusterer.getClusteringResult();
     }
     //TODO: distance calculation should only be done for normal sphere clusterers (or can we calc distance for outliers?)
-    @Override
     protected Map.Entry<Double, double[]> getDistance(Instance instance, Clustering clustering) throws IOException {
         return null;
     }
@@ -129,20 +135,29 @@ public abstract class MOAStreamOutlierDetection<T extends MyBaseOutlierDetector 
         onOutlier(outlier);
     }
 
-
     class MOAOutlierNotifier extends MyBaseOutlierDetector.OutlierNotifier {
-        public MOAOutlierNotifier(){}
+        private List<MyBaseOutlierDetector.OutlierNotifier> outlierNotifierList;
+        //TODO sync this ? maybe not necessary
+        public MOAOutlierNotifier(){
+            this.outlierNotifierList = new ArrayList<>();
+        }
 
         @Override
         public void OnOutlier(MyBaseOutlierDetector.Outlier outlier) {
             System.out.println("im here first time!!!");
+            this.outlierNotifierList.forEach( notifier -> notifier.OnOutlier(outlier));
             processOutlier(outlier);
         }
 
         @Override
         public void OnInlier(MyBaseOutlierDetector.Outlier outlier) {
             System.out.println("im here first time!!!");
+            this.outlierNotifierList.forEach( notifier -> notifier.OnInlier(outlier));
             processInlier(outlier);
+        }
+
+        void addOutlierNotifier(MyBaseOutlierDetector.OutlierNotifier outlierNotifier){
+            this.outlierNotifierList.add(outlierNotifier);
         }
     }
 
@@ -171,5 +186,10 @@ public abstract class MOAStreamOutlierDetection<T extends MyBaseOutlierDetector 
 //            clusterNum++;
 //        }
         return bestFitCluster;
+    }
+
+    @Override
+    protected void onClusterCalculation(Sample sample, Instance instance, int bestFitCluster) {
+        //NOTHING TO DO, implementing to prevent compiler error in sub-classes
     }
 }
