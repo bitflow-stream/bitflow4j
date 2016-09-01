@@ -47,58 +47,44 @@ public class LabelAggregatorAlgorithm extends AbstractAlgorithm {
 
     @Override
     protected Sample executeSample(Sample sample) throws IOException {
-        Sample sampleToReturn;
         if (sample.getTag(ClusterConstants.BUFFERED_SAMPLE_TAG) == null) {
             window.add(sample);
+
+            // TODO this relies on the includeProbabilities flag of ClusterLabelingAlgorithm
+            // There should be a check that this flag is enabled and ClusterLabelingAlgorithm is part of the pipeline...
 
             Map<String, Double> labelInclusionAvgProbabilities = new HashMap<>();
             for (String metricName : window.allMetricNames()) {
                 if (metricName.startsWith(INC_PROB_PREFIX)) {
                     String anomalyName = metricName.replace(INC_PROB_PREFIX, "");
-                    //TODO clarify what happens here
                     LabelInclusionProbabilityPredictionWindow stat = window.getWindow(metricName);
                     labelInclusionAvgProbabilities.put(anomalyName, stat.labelInclusionProbabilityAverage());
                 }
             }
-            if(labelInclusionAvgProbabilities.isEmpty()) System.out.println("AÖLKHFHBFRABFSIPASDHGKJSDHVNLJCXNISBHCAHSDBGAJKLHDAKSJDB");
-//            for (String temp : labelInclusionAvgProbabilities.keySet()){
-//                if(temp == null || temp.isEmpty() || temp.equalsIgnoreCase("null")){
-//                    System.out.println("b");
-//                };
-//            }
+
             // Sort Map by value and recommend best value (except of unknown)
-            List<Map.Entry<String, Double>> sortedLabelInclusionAvgProbabilities = labelInclusionAvgProbabilities.entrySet().stream()
-                    .sorted(Collections.reverseOrder(Map.Entry.comparingByValue())).collect(Collectors.toList());
-//            for (Map.Entry<String, Double> temp : sortedLabelInclusionAvgProbabilities){
-//                if(temp.getKey() == null || temp.getKey().isEmpty() || temp.getKey().equalsIgnoreCase("null")){
-//                    System.out.println("b");
-//                };
-//            }
+            List<Map.Entry<String, Double>> sortedLabelInclusionAvgProbabilities =
+                    labelInclusionAvgProbabilities.entrySet().stream()
+                            .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
+                            .collect(Collectors.toList());
             String recommendedLabel = ClusterConstants.UNKNOWN_LABEL;
 
             for (Map.Entry<String, Double> labelInclusionAvgProbability : sortedLabelInclusionAvgProbabilities) {
                 if (!labelInclusionAvgProbability.getKey().equals(ClusterConstants.UNKNOWN_LABEL)) {
                     recommendedLabel = labelInclusionAvgProbability.getKey();
-//                    if(recommendedLabel == null || recommendedLabel.isEmpty() || recommendedLabel.equalsIgnoreCase("null")){
-//                        System.out.println("b");
-//                        recommendedLabel = ClusterConstants.NO_LABEL_FOR_WINDOW;
-//                    }TODO remove
                     break;
                 } else {
                     System.out.println("ERROR: UNKNOWN LABEL IN LABEL AGGREGATOR ALGORITHM");
                 }
             }
-            if (recommendedLabel.equals(ClusterConstants.UNKNOWN_LABEL)) System.out.println("ERRRROR");
-            sampleToReturn = new Sample(sample);
             // Possibly overwrites the label previously predicted by ClusterLabelingAlgorithm
-            sampleToReturn.setLabel(recommendedLabel);
-//            return sampleToReturn;
+            sample = new Sample(sample);
+            sample.setLabel(recommendedLabel);
         } else {
             bufferedSamples++;
-            sampleToReturn = sample;
         }
-        if(stripData) sampleToReturn = sampleToReturn.removeMetricsWithPrefix(INC_PROB_PREFIX);
-        return sampleToReturn;
+        if (stripData) sample = sample.removeMetricsWithPrefix(INC_PROB_PREFIX);
+        return sample;
     }
 
     @Override

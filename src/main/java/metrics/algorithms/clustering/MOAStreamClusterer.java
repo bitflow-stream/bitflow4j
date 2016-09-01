@@ -31,14 +31,9 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
     //train on all labels
     protected volatile boolean alwaysTrain;
 
-    //indicates wether the buffering phase is finished and correct results can be fetched
-//    protected boolean buffering;
-
     //set of trained labels
     //TODO this variable was final and should be double checked
     protected volatile Set<String> trainedLabels;
-
-    //    protected Clustering clusteringResult;
 
     //The clustering result, recalculated after each sample
     protected volatile Clustering clusteringResult;
@@ -111,34 +106,27 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
         //TODO: added support for outlier detection requires refactoring and partial split in SphereClusterer and OutlierDetector (use subclass hook)
 
         sampleCount++;
-        int bestFitCluster;
-        Map.Entry<Double, double[]> distance;
-        // make sure all samples have a label
-        String label = getLabel(sample);
-        //initialize clusterer with a header an dimensions
         if (converger.getExpectedHeader() == null) {
             initalizeClusterer(sample);
         }
-        // handle changing headers
+
+        // Handle changing headers
         double values[] = converger.getValues(sample);
         Header expectedHeader = converger.getExpectedHeader();
-        //transform sample to moa instance
+
+        // Transform sample to moa instance
+        String label = getLabel(sample);
         Instances instances = createInstances(expectedHeader, label);
         com.yahoo.labs.samoa.instances.Instance instance = makeInstance(values, label, instances);
 
-        //check if sample should be trained
-        if (alwaysTrain || (label != null && !label.isEmpty() && (trainedLabels == null || trainedLabels.contains(label)))) {
+        // Check if sample should be trained
+        if (alwaysTrain ||(label != null && !label.isEmpty() &&
+                            (trainedLabels == null || trainedLabels.contains(label)))) {
             trainSample(sample, instance);
         }
-//        ClusteringResult clusteringResultObject = new ClusteringResult(instance).invoke();
-//        int bestFitCluster = clusteringResultObject.getBestFitCluster();
-//        distance = clusteringResultObject.getDistances();
         //TODO: we need a valid mechanism to identify the end of the bufferphase
-        bestFitCluster = calculateCluster(instance);
-        this.onClusterCalculation(sample, instance, bestFitCluster);
-//        distance = calculateDistances(instance, bestFitCluster);
-        //mark samples if they executed during buffering phase (no result vailable)
-//        sample = appendDistance(sample, distance);
+        int bestFitCluster = calculateCluster(instance);
+        sample = sampleClustered(sample, instance, bestFitCluster);
         setBufferingStatus(sample);
         sample.setTag(ClusterConstants.CLUSTER_TAG, Integer.toString(bestFitCluster));
         return sample;
@@ -150,9 +138,10 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
      * @param instance The matching {@link com.yahoo.labs.samoa.instances.Instance} for the sample
      * @param bestFitCluster The id of the best fitting cluster
      */
-    protected abstract void onClusterCalculation(Sample sample, com.yahoo.labs.samoa.instances.Instance instance, int bestFitCluster);
-
-
+    protected Sample sampleClustered(Sample sample, com.yahoo.labs.samoa.instances.Instance instance, int bestFitCluster) {
+        // No changes to the sample by default.
+        return sample;
+    }
 
     /**
      * Trains a the clusterer with the current sample
@@ -162,14 +151,16 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
     private void trainSample(Sample sample, com.yahoo.labs.samoa.instances.Instance instance) {
         //TODO: we use trainOnInstanceImpl() for both outlier detection algorithms and clustering algorithms. This is consistent with the current implementation of the outlier detection algorithms, but the interface moa.clusterers.outliers.MyBaseOutlierDetector suggests using processNewInstanceImpl
         clusterer.trainOnInstance(instance);
+
         //check if clusterer finished buffering
+        this.clusteringResult = null;
         try{
             this.clusteringResult = this.getClusteringResult();
-        }catch (ArrayIndexOutOfBoundsException e){
+        } catch (ArrayIndexOutOfBoundsException e){
             //mark sample as buffered (will have -1 cluster although used for learning)
             //TODO: find a way to mark later?
 //            sample.setTag(ClusterConstants.BUFFERED_SAMPLE_TAG, "1");
-//            System.out.println("WARNING: Sample was trained, but no clustering result is available (this may happen during the bufferphase)");
+            System.out.println("WARNING: Sample was trained, but no clustering result is available: " + e);
         }
         //mark sample as trained sample
         sample.setTag(ClusterConstants.TRAINING_TAG, "1");
@@ -284,6 +275,6 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
      * @param sample the sample
      */
     private void setBufferingStatus(Sample sample) {
-        if(clusteringResult == null) sample.setTag(ClusterConstants.BUFFERED_SAMPLE_TAG, "1");
+        if (clusteringResult == null) sample.setTag(ClusterConstants.BUFFERED_SAMPLE_TAG, "1");
     }
 }

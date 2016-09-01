@@ -6,11 +6,7 @@ import metrics.algorithms.AbstractAlgorithm;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
-
-import static metrics.algorithms.clustering.ClusterConstants.INC_PROB_PREFIX;
-import static org.apache.commons.lang3.ArrayUtils.toArray;
 
 /**
  * This labeling algorithm exchanges the current label of each sample with the best label as calculated by the last clustering algorithm.
@@ -112,6 +108,7 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
                 }
             } else if (stripData) {
                 sampleToReturn = new Sample(Header.EMPTY_HEADER, new double[0], sample);
+
             } else {
                 sampleToReturn = new Sample(sample);
             }

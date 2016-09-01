@@ -7,7 +7,6 @@ import metrics.algorithms.FeatureCalculationsAlgorithm;
 import metrics.algorithms.OnlineAutoMinMaxScaler;
 import metrics.algorithms.clustering.BICOClusterer;
 import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
-import metrics.algorithms.clustering.ExternalClusterer;
 import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
 import metrics.algorithms.evaluation.MOAStreamAnomalyDetectionEvaluator;
 import metrics.io.MetricPrinter;
@@ -15,7 +14,6 @@ import metrics.io.fork.TwoWayFork;
 import metrics.io.net.TcpMetricsOutput;
 import metrics.main.AlgorithmPipeline;
 import metrics.main.analysis.OpenStackSampleSplitter;
-import moa.clusterers.AbstractClusterer;
 
 import java.io.IOException;
 import java.util.*;
@@ -26,8 +24,7 @@ import java.util.*;
 public class Cluster {
 
     private static final double classifiedClusterThreshold = 0.1;
-    private static final long labelAggregationWindow = 4000; // Milliseconds
-    private static final int labelAggregationWindow_number = 20;
+    private static final long labelAggregationWindow = 4000; // Milliseconds, must be declared as long
 
     public static void main(String[] args) throws IOException {
         if (args.length != 8) {
@@ -45,7 +42,6 @@ public class Cluster {
         boolean conceptChangeEnabled = Boolean.valueOf(args[7]);
         Algorithm filterAlgo = Train.getFilter(filter);
 
-        AbstractClusterer clusterer = ExternalClusterer.BICO.newInstance();
         Set<String> trainedLabels = new HashSet<>(Arrays.asList(new String[] { "idle", "load" }));
         BICOClusterer moaClusterer = new BICOClusterer(trainedLabels, true, num_clusters, null, null).alwaysAddDistanceMetrics();
         ClusterLabelingAlgorithm labeling = new ClusterLabelingAlgorithm(classifiedClusterThreshold, true, false, trainedLabels);
@@ -60,9 +56,6 @@ public class Cluster {
             FeatureStatistics.Feature statsFt = stats.getFeature(feature);
             statsFt.min = ft.reportedMin;
             statsFt.max = ft.reportedMax;
-            // for (FeatureStatistics.Feature f : stats.allFeatures()) {
-            //     if (f.scalingMin < 0) f.scalingMin = 0;
-            // }
 
             try {
                 stats.writeFile(statsFile);
@@ -90,15 +83,11 @@ public class Cluster {
                             }
                             p
                                     .step(filterAlgo)
-                                    // .step(new OnlineFeatureStandardizer(model.averages, model.stddevs))
-                                    // .step(new OnlineAutoFeatureStandardizer())
                                     .step(new OnlineAutoMinMaxScaler(0.5, conceptChangeHandler, stats))
                                     .step(extraFeatures)
                                     .step(moaClusterer)
                                     .step(labeling)
                                     .step(new LabelAggregatorAlgorithm(labelAggregationWindow))
-                                    // .step(new LabelAggregatorAlgorithm(labelAggregationWindow_number))
-                                    // .step(new MOAStreamEvaluator(1, false, true))
                                     .step(new MOAStreamAnomalyDetectionEvaluator(1, false, true, trainedLabels, "normal", "anomaly"))
                                     .step(hostnameTagger)
                                     .fork(new TwoWayFork(),
