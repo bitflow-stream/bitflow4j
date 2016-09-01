@@ -80,7 +80,8 @@ public abstract class MOASphereClusterer<T extends AbstractClusterer & Serializa
     @Override
     protected Clustering getClusteringResult() {
         // TODO this used to be getMicroClusteringResult()
-        return clusterer.getClusteringResult();
+        // return clusterer.getClusteringResult();
+        return clusterer.getMicroClusteringResult();
     }
 
     /**
