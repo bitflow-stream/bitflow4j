@@ -11,6 +11,12 @@ public class ClusterCounter {
     private final Map<Integer, ClusterCounters> clusterIdToCounters;
     private final double thresholdToClassifyCluster;
 
+    private static final Map<String, Double> empty_map = new HashMap<>();
+
+    static {
+        empty_map.put(ClusterConstants.NOISE_CLUSTER, 1.0);
+    }
+
     public ClusterCounter(double thresholdToClassifyCluster) {
         this.thresholdToClassifyCluster = thresholdToClassifyCluster;
         clusterIdToCounters = new HashMap<>();
@@ -28,8 +34,10 @@ public class ClusterCounter {
     }
     
     public String calculateLabel(int id){
+        if(id == -1) return ClusterConstants.NOISE_CLUSTER;
         ClusterCounters counters = clusterIdToCounters.get(id);
         if (counters == null) {
+            System.out.println("returning unclassified in ClusterCounter");
             return ClusterConstants.UNCLASSIFIED_CLUSTER;
         } else {
             return counters.calculateLabel();
@@ -40,7 +48,7 @@ public class ClusterCounter {
         clusterIdToCounters.clear();
     }
 
-    private static final Map<String, Double> empty_map = new HashMap<>();
+
 
     public Map<String, Double> getLabelInclusionProbability(int id) {
         ClusterCounters counters = clusterIdToCounters.get(id);

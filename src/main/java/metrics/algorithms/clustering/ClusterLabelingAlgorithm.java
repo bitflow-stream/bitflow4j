@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
 
+import static metrics.algorithms.clustering.ClusterConstants.INC_PROB_PREFIX;
+
 /**
  * This labeling algorithm exchanges the current label of each sample with the best label as calculated by the last clustering algorithm.
  * Requires the {@link ClusterConstants#CLUSTER_TAG} to be set correctly. It extends the metrics with the inclusion probability to given
@@ -95,12 +97,9 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
                     }
                 }
 
-//            for (int i = 0; i < allAnomalies.length; i++) {
-//                if(allAnomalies[i] == null || allAnomalies[i].equalsIgnoreCase("null")){
-//                    System.out.println("b");
-//                }
-//                allAnomalies[i] = INC_PROB_PREFIX + allAnomalies[i];
-//            }TODO remove
+                for (int i = 0; i < allAnomalies.length; i++) {
+                    allAnomalies[i] = INC_PROB_PREFIX + allAnomalies[i];
+                }
                 if (stripData) {
                     sampleToReturn = new Sample(new Header(allAnomalies, sample.getHeader()), anomalyProbs, sample);
                 } else {
@@ -118,6 +117,7 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
                 sampleToReturn.setTag(ClusterConstants.ORIGINAL_LABEL_TAG, originalLabel);
             }
         } else {
+
             //Noise, due to labelClusterId == -1
             String newLabel = sample.getTag(ClusterConstants.BUFFERED_SAMPLE_TAG) == null ? clusterCounter.calculateLabel(labelClusterId)
                     : ClusterConstants.BUFFERED_LABEL;
@@ -139,12 +139,9 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
                     }
                 }
 
-//            for (int i = 0; i < allAnomalies.length; i++) {
-//                if(allAnomalies[i] == null || allAnomalies[i].equalsIgnoreCase("null")){
-//                    System.out.println("b");
-//                }
-//                allAnomalies[i] = INC_PROB_PREFIX + allAnomalies[i];
-//            }TODO remove
+            for (int i = 0; i < allAnomalies.length; i++) {
+                allAnomalies[i] = INC_PROB_PREFIX + allAnomalies[i];
+            }
                 if (stripData) {
                     sampleToReturn = new Sample(new Header(allAnomalies, sample.getHeader()), anomalyProbs, sample);
                 } else {
@@ -161,7 +158,6 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
                 sampleToReturn.setTag(ClusterConstants.ORIGINAL_LABEL_TAG, originalLabel);
             }
         }
-
         return sampleToReturn;
     }
 

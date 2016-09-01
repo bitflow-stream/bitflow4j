@@ -90,7 +90,6 @@ public class LabelAggregatorAlgorithm extends AbstractAlgorithm {
     @Override
     protected void inputClosed(MetricOutputStream output) throws IOException {
         super.inputClosed(output);
-        System.out.println("number of buffered samples: " + bufferedSamples);
     }
 
     @Override

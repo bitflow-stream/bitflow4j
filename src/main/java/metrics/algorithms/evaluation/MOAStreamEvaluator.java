@@ -110,6 +110,8 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
                         labelToFP.put(predictedLabel, labelToFP.containsKey(predictedLabel) ? labelToFP.get(predictedLabel) + 1 : 1);
                         labelToFN.put(expectedLabel, labelToFN.containsKey(expectedLabel) ? labelToFN.get(expectedLabel) + 1 : 1);
                     }
+                }else {
+                    System.out.println("unknown label");
                 }
             }
             if (checkRecalculationRequirement()) {
@@ -158,6 +160,8 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
                 printEvaluation();
             }
         } else {
+            if(labels == null) System.out.println("labels null");
+            else if(labels.isEmpty()) System.out.println("labels empty");
         }
     }
 

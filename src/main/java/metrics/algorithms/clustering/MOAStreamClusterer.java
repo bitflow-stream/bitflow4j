@@ -5,7 +5,7 @@ import metrics.Header;
 import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
 import metrics.algorithms.SampleConverger;
-import moa.cluster.Clustering;
+import moa.cluster.*;
 import moa.clusterers.AbstractClusterer;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
@@ -151,7 +151,6 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
     private void trainSample(Sample sample, com.yahoo.labs.samoa.instances.Instance instance) {
         //TODO: we use trainOnInstanceImpl() for both outlier detection algorithms and clustering algorithms. This is consistent with the current implementation of the outlier detection algorithms, but the interface moa.clusterers.outliers.MyBaseOutlierDetector suggests using processNewInstanceImpl
         clusterer.trainOnInstance(instance);
-
         //check if clusterer finished buffering
         this.clusteringResult = null;
         try{
@@ -275,6 +274,8 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
      * @param sample the sample
      */
     private void setBufferingStatus(Sample sample) {
-        if (clusteringResult == null) sample.setTag(ClusterConstants.BUFFERED_SAMPLE_TAG, "1");
+        if (clusteringResult == null|| clusteringResult.size() == 0) {
+            sample.setTag(ClusterConstants.BUFFERED_SAMPLE_TAG, "1");
+        }
     }
 }

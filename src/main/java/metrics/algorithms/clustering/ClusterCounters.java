@@ -57,6 +57,7 @@ public class ClusterCounters {
             if (bestChance >= thresholdToClassifyCluster) {
                 return bestLabel;
             } else {
+                System.out.println("returning unclassified in ClusterCounter");
                 return ClusterConstants.UNCLASSIFIED_CLUSTER;
             }
         } else {

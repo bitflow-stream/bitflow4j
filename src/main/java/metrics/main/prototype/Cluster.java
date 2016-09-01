@@ -5,10 +5,13 @@ import metrics.algorithms.AbstractAlgorithm;
 import metrics.algorithms.Algorithm;
 import metrics.algorithms.FeatureCalculationsAlgorithm;
 import metrics.algorithms.OnlineAutoMinMaxScaler;
+import metrics.algorithms.classification.SourceTrainingLabelingAlgorithm;
+import metrics.algorithms.classification.SrcClsMapper;
 import metrics.algorithms.clustering.BICOClusterer;
 import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
 import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
 import metrics.algorithms.evaluation.MOAStreamAnomalyDetectionEvaluator;
+import metrics.algorithms.evaluation.MOAStreamEvaluator;
 import metrics.io.MetricPrinter;
 import metrics.io.fork.TwoWayFork;
 import metrics.io.net.TcpMetricsOutput;
@@ -28,7 +31,7 @@ public class Cluster {
 
     public static void main(String[] args) throws IOException {
         if (args.length != 8) {
-            System.err.println("Parameters: <receive-port> <feature ini file> <target-host> <target-port> <local hostname> <filter> <num_clusters> <concept-change-enabled>");
+            System.err.println("Parameters: <receive-port> <feature ini file> <target-host> <target-port> <local hostname> <filter> <num_clusters> <num_cluster_features> <concept-change-enabled>");
             return;
         }
         int receivePort = Integer.parseInt(args[0]);
@@ -39,12 +42,18 @@ public class Cluster {
         String hostname = args[4];
         String filter = args[5];
         int num_clusters = Integer.valueOf(args[6]);
-        boolean conceptChangeEnabled = Boolean.valueOf(args[7]);
+        int num_cluster_feature = Integer.valueOf(args[7]);
+        boolean conceptChangeEnabled = Boolean.valueOf(args[8]);
         Algorithm filterAlgo = Train.getFilter(filter);
 
+        //configure expected labels
+        SrcClsMapper.useOriginal(true);
         Set<String> trainedLabels = new HashSet<>(Arrays.asList(new String[] { "idle", "load" }));
-        BICOClusterer moaClusterer = new BICOClusterer(trainedLabels, true, num_clusters, null, null).alwaysAddDistanceMetrics();
+        BICOClusterer moaClusterer = new BICOClusterer(trainedLabels, true, num_cluster_feature , num_clusters, null).alwaysAddDistanceMetrics();
         ClusterLabelingAlgorithm labeling = new ClusterLabelingAlgorithm(classifiedClusterThreshold, true, false, trainedLabels);
+        LabelAggregatorAlgorithm labelAggregatorAlgorithm = new LabelAggregatorAlgorithm(labelAggregationWindow);
+        SourceTrainingLabelingAlgorithm sourceTrainingLabelingAlgorithm = new SourceTrainingLabelingAlgorithm();
+        MOAStreamEvaluator evaluator = new MOAStreamEvaluator(1, false, true);
         HostnameTagger hostnameTagger = new HostnameTagger(hostname);
 
         OnlineAutoMinMaxScaler.ConceptChangeHandler conceptChangeHandler = (handler, feature) -> {
@@ -85,10 +94,11 @@ public class Cluster {
                                     .step(filterAlgo)
                                     .step(new OnlineAutoMinMaxScaler(0.5, conceptChangeHandler, stats))
                                     .step(extraFeatures)
+                                    .step(sourceTrainingLabelingAlgorithm)
                                     .step(moaClusterer)
                                     .step(labeling)
-                                    .step(new LabelAggregatorAlgorithm(labelAggregationWindow))
-                                    .step(new MOAStreamAnomalyDetectionEvaluator(1, false, true, trainedLabels, "normal", "anomaly"))
+                                    .step(labelAggregatorAlgorithm)
+                                    .step(evaluator)
                                     .step(hostnameTagger)
                                     .fork(new TwoWayFork(),
                                             (type, out) -> out.output(

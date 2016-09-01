@@ -1,7 +1,7 @@
 package metrics.algorithms.clustering;
 
 /**
- * Created by Malcolm-X on 27.06.2016.
+ * This class holds all constants used for clustering (e.g. tags for cluster id, and labels).
  */
 public class ClusterConstants {
 
