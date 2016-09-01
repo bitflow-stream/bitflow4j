@@ -4,24 +4,59 @@ package metrics.algorithms.clustering;
  * Created by Malcolm-X on 27.06.2016.
  */
 public class ClusterConstants {
-    public static final String UNCLASSIFIED_CLUSTER = "unclassified";
-    public static final String UNKNOWN_LABEL = "unknown";
-    public static final String ORIGINAL_LABEL_TAG = "cls-input";
-    public static final String CLUSTER_TAG = "cluster";
+
+    // ======================
+    // ==== Metric names ====
+    // ======================
 
     // Prefix for meta metric names
     public static final String INC_PROB_PREFIX = "_prob_";
 
-    /**
-     * label for a noise cluster
-     */
-    public final static String NOISE_CLUSTER = "noise";
-    public static final String BUFFERED_SAMPLE_TAG = "buffered";
-    public static final String TRAINING_TAG = "trained";
-    public static final String EXPECTED_PREDICTION_TAG = "expected-cls";
-    public static final String ANOMALY_CLUSTER = "anomaly";
-    public static final String NO_LABEL_FOR_WINDOW = "window-failed";
-    // TODO move prefix
     public static String DISTANCE_PREFIX = "_distance_";
+
+    // ===================
+    // ==== Tag names ====
+    // ===================
+
+    // If an incoming Sample has a cls tag set, and the cls tag is overwritten, the original
+    // label will be stored with this tag.
+    public static final String ORIGINAL_LABEL_TAG = "cls-input";
+
+    // Tag name containing the cluster id of an outgoing sample.
+    public static final String CLUSTER_TAG = "cluster";
+
+    // TODO comment
+    public static final String EXPECTED_PREDICTION_TAG = "expected-cls";
+
+    // ====================
+    // ==== Tag values ====
+    // ====================
+
+    // Label for clusters that don't have enough information or where the distribution of incoming
+    // labels is too even to pick a clear dominating label.
+    public static final String UNCLASSIFIED_CLUSTER = "unclassified";
+
+    // Indicates that a Sample did not have a cls/src tag set.
+    // Use of this seems to indicate corrupted data or a bug
+    // TODO this should be eliminated and exceptions thrown instead at the correct places
+    public static final String UNKNOWN_LABEL = "unknown";
+
+    // label for a noise cluster
+    public final static String NOISE_CLUSTER = "noise";
+
+    // TODO comment
+    public static final String BUFFERED_SAMPLE_TAG = "buffered";
+
+    // TODO comment
+    public static final String TRAINING_TAG = "trained";
+
+    // TODO comment or delete
+    public static final String ANOMALY_CLUSTER = "anomaly";
+
+    // TODO comment or delete
+    public static final String NO_LABEL_FOR_WINDOW = "window-failed";
+
+    // TODO comment
     public static String BUFFERED_LABEL = "buffered";
+
 }

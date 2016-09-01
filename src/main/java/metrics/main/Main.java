@@ -1,16 +1,14 @@
 package metrics.main;
 
-import metrics.Sample;
-import metrics.algorithms.*;
+import metrics.algorithms.FeatureStandardizer;
+import metrics.algorithms.MetricFilterAlgorithm;
+import metrics.algorithms.TimestampSort;
 import metrics.algorithms.classification.ExternalClassifier;
 import metrics.algorithms.classification.SourceTrainingLabelingAlgorithm;
-import metrics.algorithms.classification.WekaEvaluationWrapper;
 import metrics.algorithms.clustering.BICOClusterer;
 import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
 import metrics.algorithms.clustering.ExternalClusterer;
 import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
-import metrics.algorithms.clustering.outliers.AnyOutOutlierDetector;
-import metrics.algorithms.evaluation.DistancePrinter;
 import metrics.algorithms.evaluation.MOAStreamEvaluator;
 import metrics.io.file.FileGroup;
 import metrics.io.file.FileMetricReader;
@@ -21,7 +19,6 @@ import metrics.main.analysis.SourceLabellingAlgorithm;
 import metrics.main.data.*;
 import moa.clusterers.AbstractClusterer;
 import weka.classifiers.AbstractClassifier;
-import metrics.algorithms.clustering.MOAStreamClusterer;
 
 import java.io.File;
 import java.io.IOException;
@@ -113,7 +110,7 @@ public class Main {
 
                     p
                             .step(new SourceLabellingAlgorithm())
-                            .step(new BatchSampleFilterAlgorithm(null, false))
+                            // .step(new BatchSampleFilterAlgorithm(null, false))
                             .step(new FeatureStandardizer())
                             .step(new SourceTrainingLabelingAlgorithm())
                             .step(bico.reset())
@@ -136,7 +133,7 @@ public class Main {
                     p
                             .step(new FeatureStandardizer())
                             .step(new SourceLabellingAlgorithm())
-                            .step(new BatchSampleFilterAlgorithm(null, true))
+                            // .step(new BatchSampleFilterAlgorithm(null, true))
                             .step(new SourceTrainingLabelingAlgorithm())
 //                            .step(new BICOClusterer(true, true, 2000, 200, null))
 //                            .step(new DistancePrinter())
