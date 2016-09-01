@@ -5,6 +5,7 @@ import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
 
@@ -79,6 +80,8 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
             Collection<String> ls = clusterCounter.getAllLabels();
             String allAnomalies[] = ls.toArray(new String[ls.size()]);
 
+            System.err.println("STRIP DATA: " + stripData + ", ALL ANOMALIES: " + Arrays.toString(allAnomalies));
+
             // New metrics
             double[] anomalyProbs = new double[allAnomalies.length];
             for (int i = 0; i < allAnomalies.length; i++) {
@@ -96,6 +99,9 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
                 sampleToReturn = sample.extend(allAnomalies, anomalyProbs);
             }
         } else {
+
+            System.err.println("WARNING --- not including _prob_ metrics in ClusterLabelingAlgorithm: " + includeProbabilities + ", " + isBuffered);
+
             if (stripData)
                 sampleToReturn = new Sample(Header.EMPTY_HEADER, new double[0], sample);
             else
