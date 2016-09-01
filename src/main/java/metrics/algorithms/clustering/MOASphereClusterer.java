@@ -77,23 +77,12 @@ public abstract class MOASphereClusterer<T extends AbstractClusterer & Serializa
         return distance;
     }
 
-    /**
-     *
-     * @return
-     */
     @Override
     protected Clustering getClusteringResult() {
+        // TODO this used to be getMicroClusteringResult()
         return clusterer.getClusteringResult();
     }
 
-    /**
-     *
-
-    @Override
-    protected void printClustererParameters() {
-
-    }
-*/
     /**
      * This method calculates the distance between a given sample and the center of the nearest cluster.
      * It can only be used for moa clustering algorithms that use sphere clusters internally.
