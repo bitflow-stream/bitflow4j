@@ -62,6 +62,13 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
 
     @Override
     protected Sample executeSample(Sample sample) throws IOException {
+        if (sample.getTag(ClusterConstants.IGNORE_SAMPLE) != null) {
+            if (extendSample) {
+                return sample.extend(new String[] { PRECISION_METRIC }, new double[] { overallPrecision });
+            } else {
+                return sample;
+            }
+        }
         String predictedLabel = sample.getLabel();
 //        String originalLabel = sample.getTag(ClusterConstants.ORIGINAL_LABEL_TAG);
         String expectedLabel = sample.getTag(ClusterConstants.EXPECTED_PREDICTION_TAG);
@@ -172,6 +179,8 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
     private boolean checkRecalculationRequirement() {
         return (sampleCount % sampleInterval) == 0;
     }
+
+
 
     public String getReadableEvaluation() {
         StringBuilder builder = new StringBuilder();

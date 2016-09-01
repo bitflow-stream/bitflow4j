@@ -71,6 +71,7 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
 
     @Override
     protected synchronized Sample executeSample(Sample sample) throws IOException {
+        if (sample.getTag(ClusterConstants.IGNORE_SAMPLE) != null) return sample;
         int labelClusterId = sample.getClusterId();
         String originalLabel = sample.getLabel();
         Sample sampleToReturn;

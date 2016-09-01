@@ -104,7 +104,7 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
     @Override
     protected synchronized Sample executeSample(Sample sample) throws IOException {
         //TODO: added support for outlier detection requires refactoring and partial split in SphereClusterer and OutlierDetector (use subclass hook)
-
+        if (sample.getTag(ClusterConstants.IGNORE_SAMPLE) != null) return sample;
         sampleCount++;
         if (converger.getExpectedHeader() == null) {
             initalizeClusterer(sample);

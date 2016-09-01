@@ -26,6 +26,12 @@ public class SourceTrainingLabelingAlgorithm extends AbstractAlgorithm {
 //            System.out.println("break");
 //        } TODO remove
         sample.setTag(ClusterConstants.EXPECTED_PREDICTION_TAG, s);
+        if (sample.getLabel() == null || sample.getLabel().isEmpty()) {
+            sample.setTag(ClusterConstants.IGNORE_SAMPLE, String.valueOf(1));
+        }
+        if(sample.getLabel().equals("load")){
+            sample.setLabel("idle");
+        }
         return sample;
     }
 

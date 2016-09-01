@@ -47,6 +47,7 @@ public class LabelAggregatorAlgorithm extends AbstractAlgorithm {
 
     @Override
     protected Sample executeSample(Sample sample) throws IOException {
+        if (sample.getTag(ClusterConstants.IGNORE_SAMPLE) != null) return sample;
         if (sample.getTag(ClusterConstants.BUFFERED_SAMPLE_TAG) == null) {
             window.add(sample);
 

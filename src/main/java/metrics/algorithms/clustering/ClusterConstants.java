@@ -11,6 +11,7 @@ public class ClusterConstants {
 
     // Prefix for meta metric names
     public static final String INC_PROB_PREFIX = "_prob_";
+    public static final String IGNORE_SAMPLE = "ignore-sample";
 
     public static String DISTANCE_PREFIX = "_distance_";
 
