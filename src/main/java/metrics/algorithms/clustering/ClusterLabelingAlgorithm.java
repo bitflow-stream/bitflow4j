@@ -5,7 +5,6 @@ import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
 
@@ -79,14 +78,15 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
             // New header
             Collection<String> ls = clusterCounter.getAllLabels();
             String allAnomalies[] = ls.toArray(new String[ls.size()]);
-
-            System.err.println("STRIP DATA: " + stripData + ", ALL ANOMALIES: " + Arrays.toString(allAnomalies));
+            String anomalyProbMetrics[] = new String[allAnomalies.length];
 
             // New metrics
             double[] anomalyProbs = new double[allAnomalies.length];
             for (int i = 0; i < allAnomalies.length; i++) {
                 String anomaly = allAnomalies[i];
+                anomalyProbMetrics[i] = ClusterConstants.INC_PROB_PREFIX + anomaly;
                 Double inclusionProbability = clusterCounter.getLabelInclusionProbability(labelClusterId).get(anomaly);
+
                 if (inclusionProbability == null)
                     anomalyProbs[i] = 0;
                 else
@@ -94,14 +94,11 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
             }
 
             if (stripData) {
-                sampleToReturn = new Sample(new Header(allAnomalies, sample.getHeader()), anomalyProbs, sample);
+                sampleToReturn = new Sample(new Header(anomalyProbMetrics, sample.getHeader()), anomalyProbs, sample);
             } else {
-                sampleToReturn = sample.extend(allAnomalies, anomalyProbs);
+                sampleToReturn = sample.extend(anomalyProbMetrics, anomalyProbs);
             }
         } else {
-
-            System.err.println("WARNING --- not including _prob_ metrics in ClusterLabelingAlgorithm: " + includeProbabilities + ", " + isBuffered);
-
             if (stripData)
                 sampleToReturn = new Sample(Header.EMPTY_HEADER, new double[0], sample);
             else
