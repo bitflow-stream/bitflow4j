@@ -21,11 +21,10 @@ import java.util.stream.DoubleStream;
 public abstract class MOASphereClusterer<T extends AbstractClusterer & Serializable> extends MOAStreamClusterer<T> {
 
     protected boolean calculateDistance;
-    private boolean alwaysAddDistanceMetrics;
+    private boolean alwaysAddDistanceMetrics = false;
 
     public MOASphereClusterer(T clusterer){
         super(clusterer);
-        alwaysAddDistanceMetrics = false;
     }
 
     /**
@@ -37,7 +36,6 @@ public abstract class MOASphereClusterer<T extends AbstractClusterer & Serializa
     public MOASphereClusterer(T clusterer, boolean alwaysTrain, boolean calculateDistance) {
         super(clusterer, alwaysTrain);
         this.calculateDistance = calculateDistance;
-        alwaysAddDistanceMetrics = false;
     }
 
     /**
@@ -49,7 +47,6 @@ public abstract class MOASphereClusterer<T extends AbstractClusterer & Serializa
     public MOASphereClusterer(T clusterer, Set<String> trainedLabels, boolean calculateDistance) {
         super(clusterer, trainedLabels);
         this.calculateDistance = calculateDistance;
-        alwaysAddDistanceMetrics = false;
     }
 
     /**
@@ -171,7 +168,7 @@ public abstract class MOASphereClusterer<T extends AbstractClusterer & Serializa
     }
 
     /**
-     * Clusterers that calculate a distance for outliers can override this method and extend the sample with the culculated distance
+     * Append distance metrics to the sample, giving the distance to the closest cluster.
      * @param sample The current sample
      * @param distance The overall distance and an array for the distances in each dimension
      * @return the extended sample
@@ -211,7 +208,7 @@ public abstract class MOASphereClusterer<T extends AbstractClusterer & Serializa
     }
 
     @Override
-    protected void onClusterCalculation(Sample sample, Instance instance, int bestFitCluster) {
-        this.appendDistance(sample,this.calculateDistances(instance, bestFitCluster));
+    protected Sample sampleClustered(Sample sample, Instance instance, int bestFitCluster) {
+        return appendDistance(sample, calculateDistances(instance, bestFitCluster));
     }
 }

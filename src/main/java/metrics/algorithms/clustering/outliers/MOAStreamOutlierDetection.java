@@ -188,8 +188,4 @@ public abstract class MOAStreamOutlierDetection<T extends MyBaseOutlierDetector 
         return bestFitCluster;
     }
 
-    @Override
-    protected void onClusterCalculation(Sample sample, Instance instance, int bestFitCluster) {
-        //NOTHING TO DO, implementing to prevent compiler error in sub-classes
-    }
 }

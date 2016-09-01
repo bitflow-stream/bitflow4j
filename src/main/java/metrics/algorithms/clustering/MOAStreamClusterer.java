@@ -111,34 +111,27 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
         //TODO: added support for outlier detection requires refactoring and partial split in SphereClusterer and OutlierDetector (use subclass hook)
 
         sampleCount++;
-        int bestFitCluster;
-        Map.Entry<Double, double[]> distance;
-        // make sure all samples have a label
-        String label = getLabel(sample);
-        //initialize clusterer with a header an dimensions
         if (converger.getExpectedHeader() == null) {
             initalizeClusterer(sample);
         }
-        // handle changing headers
+
+        // Handle changing headers
         double values[] = converger.getValues(sample);
         Header expectedHeader = converger.getExpectedHeader();
-        //transform sample to moa instance
+
+        // Transform sample to moa instance
+        String label = getLabel(sample);
         Instances instances = createInstances(expectedHeader, label);
         com.yahoo.labs.samoa.instances.Instance instance = makeInstance(values, label, instances);
 
-        //check if sample should be trained
-        if (alwaysTrain || (label != null && !label.isEmpty() && (trainedLabels == null || trainedLabels.contains(label)))) {
+        // Check if sample should be trained
+        if (alwaysTrain ||(label != null && !label.isEmpty() &&
+                            (trainedLabels == null || trainedLabels.contains(label)))) {
             trainSample(sample, instance);
         }
-//        ClusteringResult clusteringResultObject = new ClusteringResult(instance).invoke();
-//        int bestFitCluster = clusteringResultObject.getBestFitCluster();
-//        distance = clusteringResultObject.getDistances();
         //TODO: we need a valid mechanism to identify the end of the bufferphase
-        bestFitCluster = calculateCluster(instance);
-        this.onClusterCalculation(sample, instance, bestFitCluster);
-//        distance = calculateDistances(instance, bestFitCluster);
-        //mark samples if they executed during buffering phase (no result vailable)
-//        sample = appendDistance(sample, distance);
+        int bestFitCluster = calculateCluster(instance);
+        sample = sampleClustered(sample, instance, bestFitCluster);
         setBufferingStatus(sample);
         sample.setTag(ClusterConstants.CLUSTER_TAG, Integer.toString(bestFitCluster));
         return sample;
@@ -150,9 +143,10 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
      * @param instance The matching {@link com.yahoo.labs.samoa.instances.Instance} for the sample
      * @param bestFitCluster The id of the best fitting cluster
      */
-    protected abstract void onClusterCalculation(Sample sample, com.yahoo.labs.samoa.instances.Instance instance, int bestFitCluster);
-
-
+    protected Sample sampleClustered(Sample sample, com.yahoo.labs.samoa.instances.Instance instance, int bestFitCluster) {
+        // No changes to the sample by default.
+        return sample;
+    }
 
     /**
      * Trains a the clusterer with the current sample
@@ -284,6 +278,6 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
      * @param sample the sample
      */
     private void setBufferingStatus(Sample sample) {
-        if(clusteringResult == null) sample.setTag(ClusterConstants.BUFFERED_SAMPLE_TAG, "1");
+        if (clusteringResult == null) sample.setTag(ClusterConstants.BUFFERED_SAMPLE_TAG, "1");
     }
 }
