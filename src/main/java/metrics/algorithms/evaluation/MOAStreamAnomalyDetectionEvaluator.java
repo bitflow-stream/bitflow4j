@@ -39,10 +39,11 @@ public class MOAStreamAnomalyDetectionEvaluator extends AbstractAlgorithm {
 
     private final Set<String> trainedLabels;
     private final String normalState;
+    private final String abnormalState;
 
     // If extendSample is true, the overall precision will be added to outgoing samples
     public MOAStreamAnomalyDetectionEvaluator(long sampleInterval, boolean printOnRecalculation, boolean extendSample,
-            Set<String> trainedLabels, String normalState) {
+            Set<String> trainedLabels, String normalState, String abnormalState) {
         this.extendSample = extendSample;
         this.sampleInterval = sampleInterval;
         this.printOnRecalculation = printOnRecalculation;
@@ -55,6 +56,7 @@ public class MOAStreamAnomalyDetectionEvaluator extends AbstractAlgorithm {
         labels = new HashSet<>();
         this.trainedLabels = trainedLabels;
         this.normalState = normalState;
+        this.abnormalState = abnormalState;
     }
 
     @Override
@@ -67,23 +69,21 @@ public class MOAStreamAnomalyDetectionEvaluator extends AbstractAlgorithm {
         String predictedLabel = sample.getLabel();
         String originalLabel = sample.getTag(ClusterConstants.ORIGINAL_LABEL_TAG);
 
-        if (predictedLabel != null && originalLabel != null) {
-            // Cannot evaluate sample without both predicted and original label.
+        if (predictedLabel != null && (normalState.equals(originalLabel) || abnormalState.equals(originalLabel))) {
+            // Only evaluate if a prediction exists and the incoming sample
+            // was labelled with one of the two special cases (normal/abnormal)
             sampleCount++;
             labels.add(predictedLabel);
             labels.add(originalLabel);
 
-            boolean originalTrained = trainedLabels.contains(originalLabel);
-            boolean predictedTrained = trainedLabels.contains(predictedLabel);
+            boolean shouldBeNormal = normalState.equals(originalLabel);
+            boolean predictedNormal = trainedLabels.contains(predictedLabel);
 
-            if (originalTrained == predictedTrained ||
-                    (normalState.equals(originalLabel) && predictedTrained)) {
+            if (shouldBeNormal == predictedNormal) {
                 correctPredictions++;
                 truePositives.put(originalLabel, truePositives.containsKey(originalLabel) ? truePositives.get(originalLabel) + 1 : 1);
-
             } else {
                 wrongPredictions++;
-                //if labels dont match, increment counter by 1 for falsePositives(predictedLabe) and labelTOFN(originalLabel)
                 falsePositives.put(predictedLabel, falsePositives.containsKey(predictedLabel) ? falsePositives.get(predictedLabel) + 1 : 1);
                 falseNegatives.put(originalLabel, falseNegatives.containsKey(originalLabel) ? falseNegatives.get(originalLabel) + 1 : 1);
             }
