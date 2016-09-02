@@ -8,7 +8,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Map incoming values to a spcified header. If values are missing, fill them up with defaults.
+ * Map incoming values to a specified header.
+ * Metrics not existing in the desired header are stripped, missing values are filled up with defaults.
+ * If an instance is initialized without a given header, then the header of the FIRST incoming Sample
+ * is stored and all subsequent Samples are changed to fit into it.
+ * Use with care: this algorithm hides changes in headers and can cause data corruption to go unnoticed.
+ * The purpose of this is to avoid errors at any cost, if the system should keep running even when changing
+ * headers are expected.
  *
  * Created by anton on 6/21/16.
  */

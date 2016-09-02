@@ -10,6 +10,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
+ * Instead of immediately handling every Sample, fill up a batch of samples and then handle all
+ * of them at once, possibly outputting a different number of resulting Samples.
+ *
  * Created by anton on 5/8/16.
  */
 public abstract class BatchAlgorithm extends AbstractAlgorithm {

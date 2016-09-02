@@ -6,6 +6,9 @@ import metrics.main.misc.ParameterHash;
 import java.io.IOException;
 
 /**
+ * Randomly vary all metrics of all samples coming through this algorithm.
+ * The change happens within a certain percentage interval based on the incoming metrics value.
+ *
  * Created by anton on 5/2/16.
  */
 public class RandomVariance extends AbstractAlgorithm {

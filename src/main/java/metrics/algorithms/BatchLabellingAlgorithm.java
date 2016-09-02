@@ -9,6 +9,8 @@ import metrics.io.window.SampleWindow;
 import java.io.IOException;
 
 /**
+ * Collect Samples in a batch, then assign new labels to them.
+ *
  * Created by anton on 5/7/16.
  */
 public abstract class BatchLabellingAlgorithm extends WindowBatchAlgorithm {
