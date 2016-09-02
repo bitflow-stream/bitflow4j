@@ -1,14 +1,18 @@
-package metrics.algorithms.normalization;
+package metrics.algorithms;
 
 import metrics.Header;
 import metrics.Sample;
-import metrics.algorithms.AbstractAlgorithm;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * Abstract algorithm designed to extend incoming Samples by "artificial" features.
+ * Every artificial feature is represented by an implementation of FeatureCalculation.
+ * Artificial features can be based on values of existing features, which are
+ * accessed through an instance of FeatureAccess.
+ *
  * Created by anton on 7/26/16.
  */
 public class FeatureCalculationsAlgorithm extends AbstractAlgorithm {

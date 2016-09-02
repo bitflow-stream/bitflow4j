@@ -3,7 +3,7 @@ package metrics.main.prototype;
 import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
 import metrics.algorithms.Algorithm;
-import metrics.algorithms.normalization.FeatureCalculationsAlgorithm;
+import metrics.algorithms.FeatureCalculationsAlgorithm;
 import metrics.algorithms.normalization.OnlineAutoMinMaxScaler;
 import metrics.algorithms.classification.SourceTrainingLabelingAlgorithm;
 import metrics.algorithms.classification.SrcClsMapper;
