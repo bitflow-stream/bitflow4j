@@ -8,8 +8,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
 
-import static metrics.algorithms.clustering.ClusterConstants.INC_PROB_PREFIX;
-
 /**
  * This labeling algorithm exchanges the current label of each sample with the best label as calculated by the last clustering algorithm.
  * Requires the {@link ClusterConstants#CLUSTER_TAG} to be set correctly. It extends the metrics with the inclusion probability to given
@@ -74,92 +72,42 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
         if (sample.getTag(ClusterConstants.IGNORE_SAMPLE) != null) return sample;
         int labelClusterId = sample.getClusterId();
         String originalLabel = sample.getLabel();
-        Sample sampleToReturn;
-        if (originalLabel != null && labelClusterId >= 0) { //&& (trainedLabels == null || trainedLabels.contains(originalLabel)) && sample.getTag(ClusterConstants.BUFFERED_SAMPLE_TAG) == null)
+        if (originalLabel != null && labelClusterId >= 0) {
             clusterCounter.increment(labelClusterId, originalLabel);
+        }
 
-            String newLabel = sample.getTag(ClusterConstants.BUFFERED_SAMPLE_TAG) == null ? clusterCounter.calculateLabel(labelClusterId)
-                    : ClusterConstants.BUFFERED_LABEL;
+        boolean isBuffered = sample.getTag(ClusterConstants.BUFFERED_SAMPLE_TAG) != null;
+        String newLabel = isBuffered ? ClusterConstants.BUFFERED_LABEL : clusterCounter.calculateLabel(labelClusterId);
 
-            if (includeProbabilities && sample.getTag(ClusterConstants.BUFFERED_SAMPLE_TAG) == null) {
-                // New header
-                Collection<String> ls = clusterCounter.getAllLabels();
-                String allAnomalies[] = ls.toArray(new String[ls.size()]);
+        if (includeProbabilities && !isBuffered) {
+            // New header
+            Collection<String> ls = clusterCounter.getAllLabels();
+            String allAnomalies[] = ls.toArray(new String[ls.size()]);
+            String anomalyProbMetrics[] = new String[allAnomalies.length];
 
-                // New metrics
-                double[] anomalyProbs = new double[allAnomalies.length];
-                for (int i = 0; i < allAnomalies.length; i++) {
-                    String anomaly = allAnomalies[i];
-                    Double inclusionProbability = clusterCounter.getLabelInclusionProbability(labelClusterId).get(anomaly);
-                    if (inclusionProbability == null) {
-                        anomalyProbs[i] = 0;
-                    } else {
-                        anomalyProbs[i] = inclusionProbability;
-                    }
-                }
-
-                for (int i = 0; i < allAnomalies.length; i++) {
-                    allAnomalies[i] = INC_PROB_PREFIX + allAnomalies[i];
-                }
-                if (stripData) {
-                    sampleToReturn = new Sample(new Header(allAnomalies, sample.getHeader()), anomalyProbs, sample);
-                } else {
-                    sampleToReturn = sample.extend(allAnomalies, anomalyProbs);
-                }
-            } else if (stripData) {
-                sampleToReturn = new Sample(Header.EMPTY_HEADER, new double[0], sample);
-
-            } else {
-                sampleToReturn = new Sample(sample);
-            }
-
-            sampleToReturn.setLabel(newLabel);
-            if (originalLabel != null) {
-                sampleToReturn.setTag(ClusterConstants.ORIGINAL_LABEL_TAG, originalLabel);
-            }
-        } else {
-
-            //Noise, due to labelClusterId == -1
-            String newLabel = sample.getTag(ClusterConstants.BUFFERED_SAMPLE_TAG) == null ? clusterCounter.calculateLabel(labelClusterId)
-                    : ClusterConstants.BUFFERED_LABEL;
-
-            if (includeProbabilities && sample.getTag(ClusterConstants.BUFFERED_SAMPLE_TAG) == null) {
-                // New header
-                Collection<String> ls = clusterCounter.getAllLabels();
-                String allAnomalies[] = ls.toArray(new String[ls.size()]);
-
-                // New metrics
-                double[] anomalyProbs = new double[allAnomalies.length];
-                for (int i = 0; i < allAnomalies.length; i++) {
-                    String anomaly = allAnomalies[i];
-                    Double inclusionProbability = clusterCounter.getLabelInclusionProbability(labelClusterId).get(anomaly);
-                    if(labelClusterId==-1 && anomaly.equals(ClusterConstants.NOISE_CLUSTER)){
-                        anomalyProbs[i] = 1;
-                    }else {
-                        anomalyProbs[i] = 0;
-                    }
-                }
-
+            // New metrics
+            double[] anomalyProbs = new double[allAnomalies.length];
             for (int i = 0; i < allAnomalies.length; i++) {
-                allAnomalies[i] = INC_PROB_PREFIX + allAnomalies[i];
-            }
-                if (stripData) {
-                    sampleToReturn = new Sample(new Header(allAnomalies, sample.getHeader()), anomalyProbs, sample);
-                } else {
-                    sampleToReturn = sample.extend(allAnomalies, anomalyProbs);
-                }
-            } else if (stripData) {
-                sampleToReturn = new Sample(Header.EMPTY_HEADER, new double[0], sample);
-            } else {
-                sampleToReturn = new Sample(sample);
+                String anomaly = allAnomalies[i];
+                anomalyProbMetrics[i] = ClusterConstants.INC_PROB_PREFIX + anomaly;
+                Double inclusionProbability = clusterCounter.getLabelInclusionProbability(labelClusterId).get(anomaly);
+
+                if (inclusionProbability == null)
+                    anomalyProbs[i] = 0;
+                else
+                    anomalyProbs[i] = inclusionProbability;
             }
 
-            sampleToReturn.setLabel(newLabel);
-            if (originalLabel != null) {
-                sampleToReturn.setTag(ClusterConstants.ORIGINAL_LABEL_TAG, originalLabel);
+            if (stripData) {
+                sample = new Sample(new Header(anomalyProbMetrics, sample.getHeader()), anomalyProbs, sample);
+            } else {
+                sample = sample.extend(anomalyProbMetrics, anomalyProbs);
             }
         }
-        return sampleToReturn;
+        sample.setLabel(newLabel);
+        if (originalLabel != null)
+            sample.setTag(ClusterConstants.ORIGINAL_LABEL_TAG, originalLabel);
+        return sample;
     }
 
     public synchronized void resetCounters() {

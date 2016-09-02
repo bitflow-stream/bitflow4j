@@ -142,9 +142,6 @@ public class Sample {
     }
 
     public void setLabel(String label) {
-//        if(label == null || label.isEmpty() || label.equalsIgnoreCase("null")){
-//            System.out.println("b");
-//        }TODO remove
         setTag(TAG_LABEL, label);
     }
 
