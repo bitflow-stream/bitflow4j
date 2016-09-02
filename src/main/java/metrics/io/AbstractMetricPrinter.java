@@ -8,6 +8,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 /**
+ * Implements MetricOutputStream using an instance Marshaller to marshall Sample instances
+ * into a byte-oriented OutputStream like a file or network connection.
+ *
  * Created by anton on 4/6/16.
  */
 public abstract class AbstractMetricPrinter extends AbstractOutputStream {

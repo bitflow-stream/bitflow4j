@@ -6,6 +6,9 @@ import metrics.Sample;
 import java.util.LinkedList;
 
 /**
+ * A window of samples that simply inserts/outputs the Samples as they come in, without
+ * modifying the Samples or order of the Samples.
+ *
  * Created by anton on 5/6/16.
  */
 public class SampleWindow extends AbstractSampleWindow {

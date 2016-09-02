@@ -9,6 +9,10 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 /**
+ * Multiple MetricInputStreams are read in sequential order, always waiting for the
+ * current input stream to finish. Only useful for input streams that are known
+ * to finish in finite time, like reading from a file.
+ *
  * Created by anton on 4/11/16.
  */
 public class SequentialAggregator extends MetricInputAggregator {

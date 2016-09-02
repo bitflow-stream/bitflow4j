@@ -41,7 +41,7 @@ public class MetricPipe extends AbstractOutputStream implements MetricInputStrea
                 }
                 return result;
             } catch (InterruptedException exc) {
-                continue;
+                // ignore
             }
         }
     }
@@ -55,7 +55,7 @@ public class MetricPipe extends AbstractOutputStream implements MetricInputStrea
                 values.put(data);
                 return;
             } catch (InterruptedException exc) {
-                continue;
+                // ignore
             }
         }
     }

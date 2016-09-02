@@ -3,6 +3,8 @@ package metrics.io.window;
 import gnu.trove.list.linked.TDoubleLinkedList;
 
 /**
+ * Implements a FIFO queue for a single metric, i.e. a queue of double values.
+ *
  * Created by anton on 4/21/16.
  */
 public class MetricWindow {

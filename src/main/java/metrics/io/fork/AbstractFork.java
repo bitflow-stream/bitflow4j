@@ -55,8 +55,7 @@ public abstract class AbstractFork<T> extends AbstractOutputStream {
     @Override
     public void waitUntilClosed() {
         super.waitUntilClosed();
-        for (MetricOutputStream output : outputSet)
-            output.waitUntilClosed();
+        outputSet.forEach(MetricOutputStream::waitUntilClosed);
     }
 
     public synchronized void setOutputFactory(OutputStreamFactory<T> factory) {

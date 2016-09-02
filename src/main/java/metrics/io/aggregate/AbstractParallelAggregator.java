@@ -11,8 +11,8 @@ import java.util.TreeMap;
 /**
  * Created by anton on 4/6/16.
  * <p>
- * Inputs are read independently from readSample(), overwriting intermediate data if readSample() is not called
- * frequently enough.
+ * Inputs are read in parallel, independently from readSample(),
+ * overwriting intermediate data if readSample() is not called frequently enough.
  * readSample() will only block until the data changes in any way:
  * an input stream delivers data, a new input stream is added, or an input stream is closed.
  */
@@ -92,12 +92,13 @@ public abstract class AbstractParallelAggregator extends MetricInputAggregator {
             this.setDaemon(false);
         }
 
+        @SuppressWarnings("StatementWithEmptyBody")
         public void run() {
             if (!inputStarting(this))
                 throw new IllegalStateException("Input with name " + name + " already exists");
             Throwable exception = null;
             try {
-                while (pollSample()) ;
+                while (pollSample()) ; // Only ends on exception
             } catch (Throwable t) {
                 exception = t;
             } finally {

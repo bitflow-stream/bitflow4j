@@ -13,7 +13,6 @@ import java.util.Set;
  * Created by anton on 4/11/16.
  * <p>
  * This abstract MetricInputStream aggregates multiple other MetricInputStreams into one.
- * Every incoming Sample is
  */
 public abstract class MetricInputAggregator implements MetricInputStream {
 

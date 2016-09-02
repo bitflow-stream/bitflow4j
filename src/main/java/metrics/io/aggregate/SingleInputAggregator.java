@@ -7,6 +7,9 @@ import metrics.io.MetricInputStream;
 import java.io.IOException;
 
 /**
+ * Simple implementation of MetricInputAggregator that wraps a single
+ * MetricInputStream, reading from it directly.
+ *
  * Created by anton on 4/28/16.
  */
 public class SingleInputAggregator extends MetricInputAggregator {

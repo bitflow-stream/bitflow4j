@@ -12,7 +12,6 @@ import java.util.*;
  * The header contains labels for the values. It does not contain special fields like
  * {@link Header#HEADER_TIME}, although these fields are also transported over the network.
  */
-@SuppressWarnings("unused")
 public class Sample {
 
     public static final String TAG_SOURCE = "src";

@@ -12,8 +12,6 @@ public interface InputStreamProducer {
      * aggregator using addInput().
      * Before producing, also call producerStarting(), when no more
      * inputs will be produced, call producerFinished().
-     *
-     * @param aggregator
      */
     void start(MetricInputAggregator aggregator);
 

@@ -3,6 +3,8 @@ package metrics.io;
 import java.io.IOException;
 
 /**
+ * Implements basic functionality for closing the output stream.
+ *
  * Created by anton on 4/14/16.
  */
 public abstract class AbstractOutputStream implements MetricOutputStream {

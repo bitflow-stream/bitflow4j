@@ -5,6 +5,8 @@ import metrics.Sample;
 import java.io.IOException;
 
 /**
+ * Basic interface for writing a stream of Samples.
+ *
  * @author fschmidt
  */
 public interface MetricOutputStream {
