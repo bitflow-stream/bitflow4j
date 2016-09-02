@@ -159,8 +159,6 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
 //            sample.setTag(ClusterConstants.BUFFERED_SAMPLE_TAG, "1");
             System.out.println("WARNING: Sample was trained, but no clustering result is available: " + e);
         }
-        //mark sample as trained sample
-        sample.setTag(ClusterConstants.TRAINING_TAG, "1");
     }
 
     /**

@@ -8,6 +8,7 @@ import metrics.io.MetricOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -18,34 +19,28 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
     public static final String PRECISION_METRIC = "_overall_precision_";
 
     private long sampleInterval;
-    private Set<String> labels;
+    private boolean printOnRecalculation;
+    private final boolean extendSample;
+    private Set<String> labels = new HashSet<>();
 
     /**
      * Maps for tp, fp, fn
      */
-    private HashMap<String, Long> labelToTP, labelToFN, labelToFP;
-    private HashMap<String, Double> labelToPrecision, labelToRecall;
+    private Map<String, Long> labelToTP = new HashMap<>();
+    private Map<String, Long> labelToFN = new HashMap<>();
+    private Map<String, Long> labelToFP = new HashMap<>();
+    private Map<String, Double> labelToPrecision = new HashMap<>();
+    private Map<String, Double> labelToRecall = new HashMap<>();
     private long sampleCount, unclassifiedSamples;
     private double overallPrecision, averagePrecision, averageRecall, overallRecall, weightedAverageRecall, weightedAveragePrecision, minPrecision, minRecall, maxPrecision, maxRecall;
-    private long correctPredictions;
-    private long wrongPredictions;
-    private double medianRecall;
-    private double medianPrecision;
-    private boolean printOnRecalculation;
-    private final boolean extendSample;
+    private long correctPredictions, wrongPredictions;
+    private double medianRecall, medianPrecision;
 
     // If extendSample is true, the overall precision will be added to outgoing samples
     public MOAStreamEvaluator(long sampleInterval, boolean printOnRecalculation, boolean extendSample) {
         this.extendSample = extendSample;
         this.sampleInterval = sampleInterval;
         this.printOnRecalculation = printOnRecalculation;
-        sampleCount = 0;
-        labelToFN = new HashMap<>();
-        labelToFP = new HashMap<>();
-        labelToTP = new HashMap<>();
-        labelToPrecision = new HashMap<>();
-        labelToRecall = new HashMap<>();
-        labels = new HashSet<>();
     }
 
     @Override
@@ -113,10 +108,9 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
         }
 
         if (extendSample) {
-            return sample.extend(new String[] { PRECISION_METRIC }, new double[] { overallPrecision });
-        } else {
-            return sample;
+            sample = sample.extend(new String[] { PRECISION_METRIC }, new double[] { overallPrecision });
         }
+        return sample;
     }
 
     @SuppressWarnings("OptionalGetWithoutIsPresent")

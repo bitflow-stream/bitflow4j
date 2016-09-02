@@ -30,32 +30,27 @@ public class ClusterConstants {
     // Tag name containing the cluster id of an outgoing sample.
     public static final String CLUSTER_TAG = "cluster";
 
-    // TODO comment
+    // TODO comment or eliminate
     public static final String EXPECTED_PREDICTION_TAG = "expected-cls";
 
-    // ====================
-    // ==== Tag values ====
-    // ====================
-
-    // Label for clusters that don't have enough information or where the distribution of incoming
-    // labels is too even to pick a clear dominating label.
-    public static final String UNCLASSIFIED_CLUSTER = "unclassified";
+    // ================
+    // ==== Labels ====
+    // ================
 
     // Indicates that a Sample did not have a cls/src tag set.
     // Use of this seems to indicate corrupted data or a bug
     // TODO this should be eliminated and exceptions thrown instead at the correct places
     public static final String UNKNOWN_LABEL = "unknown";
 
+    // =======================
+    // ==== Cluster names ====
+    // =======================
+
     // label for a noise cluster
     public final static String NOISE_CLUSTER = "noise";
 
-    // TODO comment
-    public static final String TRAINING_TAG = "trained";
-
-    // TODO comment or delete
-    public static final String ANOMALY_CLUSTER = "anomaly";
-
-    // TODO comment or delete
-    public static final String NO_LABEL_FOR_WINDOW = "window-failed";
+    // Label for clusters that don't have enough information or where the distribution of incoming
+    // labels is too even to pick a clear dominating label.
+    public static final String UNCLASSIFIED_CLUSTER = "unclassified";
 
 }
