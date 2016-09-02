@@ -7,7 +7,7 @@ import metrics.algorithms.clustering.BICOClusterer;
 import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
 import metrics.algorithms.clustering.ExternalClusterer;
 import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
-import metrics.algorithms.evaluation.MOAStreamEvaluator;
+import metrics.algorithms.evaluation.ExtendedStreamEvaluator;
 import metrics.algorithms.filter.MetricFilterAlgorithm;
 import metrics.algorithms.normalization.FeatureStandardizer;
 import metrics.io.file.FileGroup;
@@ -119,7 +119,7 @@ public class Main {
                             .step(clusterLabelingAlgorithm)
 //                            .step(new LabelAggregatorAlgorithm(10))//.stripData())
 //                            .step(new WekaEvaluationWrapper())
-//                            .step(new MOAStreamEvaluator(500, true, false))
+//                            .step(new StreamEvaluator(500, true, false))
 
                 ;})
                 .runAndWait();
@@ -142,7 +142,7 @@ public class Main {
                             .step(clusterLabelingAlgorithm.reset())
                             .step(new LabelAggregatorAlgorithm(10).stripData())
 //                            .step(new WekaEvaluationWrapper())
-                            .step(new MOAStreamEvaluator(10, true, false));
+                            .step(new ExtendedStreamEvaluator(10, true, false));
 
                 })
                 .runAndWait();

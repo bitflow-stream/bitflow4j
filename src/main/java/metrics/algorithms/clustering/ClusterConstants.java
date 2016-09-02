@@ -19,6 +19,10 @@ public class ClusterConstants {
     // Values of < 0 mean the Sample is actually inside a cluster.
     public static String DISTANCE_PREFIX = "_distance_";
 
+    // Optionally used by StreamEvaluator algorithm, contains the historical precision of the
+    // clustering/classification algorithm in the pipeline.
+    public static final String OVERALL_PRECISION_METRIC = "_overall_precision_";
+
     // ===================
     // ==== Tag names ====
     // ===================
@@ -30,7 +34,8 @@ public class ClusterConstants {
     // Tag name containing the cluster id of an outgoing sample.
     public static final String CLUSTER_TAG = "cluster";
 
-    // TODO comment or eliminate
+    // Used by ExtendedStreamEvaluator to calculate recall/precision. Contains the label that should be
+    // predicted for the given sample.
     public static final String EXPECTED_PREDICTION_TAG = "expected-cls";
 
     // ================

@@ -94,6 +94,11 @@ public class Sample {
         tags.put(name, value);
     }
 
+    public boolean hasTag(String name) {
+        String tag = getLabel();
+        return tag != null && !tag.isEmpty();
+    }
+
     public String getSource() {
         return getTag(TAG_SOURCE);
     }
@@ -107,8 +112,7 @@ public class Sample {
     }
 
     public boolean hasLabel() {
-        String label = getLabel();
-        return label != null && !label.isEmpty();
+        return hasTag(TAG_LABEL);
     }
 
     public boolean headerChanged(Header oldHeader) {

@@ -4,13 +4,12 @@ import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
 import metrics.algorithms.Algorithm;
 import metrics.algorithms.FeatureCalculationsAlgorithm;
-import metrics.algorithms.normalization.OnlineAutoMinMaxScaler;
-import metrics.algorithms.classification.SourceTrainingLabelingAlgorithm;
-import metrics.algorithms.classification.SrcClsMapper;
 import metrics.algorithms.clustering.BICOClusterer;
 import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
 import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
-import metrics.algorithms.evaluation.MOAStreamEvaluator;
+import metrics.algorithms.evaluation.OnlineOutlierEvaluator;
+import metrics.algorithms.evaluation.StreamEvaluator;
+import metrics.algorithms.normalization.OnlineAutoMinMaxScaler;
 import metrics.io.MetricPrinter;
 import metrics.io.fork.TwoWayFork;
 import metrics.io.net.TcpMetricsOutput;
@@ -45,14 +44,11 @@ public class Cluster {
         boolean conceptChangeEnabled = Boolean.valueOf(args[8]);
         Algorithm filterAlgo = Train.getFilter(filter);
 
-        //configure expected labels
-        SrcClsMapper.useOriginal(true);
         Set<String> trainedLabels = new HashSet<>(Arrays.asList(new String[] { "idle", "load" }));
         BICOClusterer moaClusterer = new BICOClusterer(trainedLabels, true, num_cluster_feature , num_clusters, null).alwaysAddDistanceMetrics();
         ClusterLabelingAlgorithm labeling = new ClusterLabelingAlgorithm(classifiedClusterThreshold, true, false, trainedLabels);
         LabelAggregatorAlgorithm labelAggregatorAlgorithm = new LabelAggregatorAlgorithm(labelAggregationWindow);
-        SourceTrainingLabelingAlgorithm sourceTrainingLabelingAlgorithm = new SourceTrainingLabelingAlgorithm();
-        MOAStreamEvaluator evaluator = new MOAStreamEvaluator(1, false, true);
+        StreamEvaluator evaluator = new OnlineOutlierEvaluator(true, trainedLabels, "normal", "abnormal");
         HostnameTagger hostnameTagger = new HostnameTagger(hostname);
 
         OnlineAutoMinMaxScaler.ConceptChangeHandler conceptChangeHandler = (handler, feature) -> {
@@ -93,7 +89,6 @@ public class Cluster {
                                     .step(filterAlgo)
                                     .step(new OnlineAutoMinMaxScaler(0.5, conceptChangeHandler, stats))
                                     .step(extraFeatures)
-                                    .step(sourceTrainingLabelingAlgorithm)
                                     .step(moaClusterer)
                                     .step(labeling)
                                     .step(labelAggregatorAlgorithm)
