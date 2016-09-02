@@ -1,4 +1,4 @@
-package metrics.algorithms.evaluation;
+package metrics.main;
 
 import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
