@@ -1,8 +1,5 @@
 package metrics.main;
 
-import metrics.algorithms.BatchSampleFilterAlgorithm;
-import metrics.algorithms.normalization.FeatureStandardizer;
-import metrics.algorithms.filter.MetricFilterAlgorithm;
 import metrics.algorithms.TimestampSort;
 import metrics.algorithms.classification.ExternalClassifier;
 import metrics.algorithms.classification.SourceTrainingLabelingAlgorithm;
@@ -11,6 +8,8 @@ import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
 import metrics.algorithms.clustering.ExternalClusterer;
 import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
 import metrics.algorithms.evaluation.MOAStreamEvaluator;
+import metrics.algorithms.filter.MetricFilterAlgorithm;
+import metrics.algorithms.normalization.FeatureStandardizer;
 import metrics.io.file.FileGroup;
 import metrics.io.file.FileMetricReader;
 import metrics.io.fork.TwoWayFork;
@@ -111,7 +110,7 @@ public class Main {
 
                     p
                             .step(new SourceLabellingAlgorithm())
-                             .step(new BatchSampleFilterAlgorithm(null, false))
+                            // .step(new BatchSampleFilterAlgorithm(null, false))
                             .step(new FeatureStandardizer())
                             .step(new SourceTrainingLabelingAlgorithm())
                             .step(bico.reset())
@@ -134,7 +133,7 @@ public class Main {
                     p
                             .step(new FeatureStandardizer())
                             .step(new SourceLabellingAlgorithm())
-                             .step(new BatchSampleFilterAlgorithm(null, true))
+                            // .step(new BatchSampleFilterAlgorithm(null, true))
                             .step(new SourceTrainingLabelingAlgorithm())
 //                            .step(new BICOClusterer(true, true, 2000, 200, null))
 //                            .step(new DistancePrinter())
