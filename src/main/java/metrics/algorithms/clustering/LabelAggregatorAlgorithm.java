@@ -25,7 +25,6 @@ public class LabelAggregatorAlgorithm extends AbstractAlgorithm {
     protected boolean stripData = false;
 
     private final MultiHeaderWindow<LabelInclusionProbabilityPredictionWindow> window;
-    private int bufferedSamples;
 
     public LabelAggregatorAlgorithm(){
         window = new MultiHeaderWindow<LabelInclusionProbabilityPredictionWindow>(DEFAULT_WINDOW_SIZE, LabelInclusionProbabilityPredictionWindow.FACTORY);
@@ -47,43 +46,38 @@ public class LabelAggregatorAlgorithm extends AbstractAlgorithm {
 
     @Override
     protected Sample executeSample(Sample sample) throws IOException {
-        if (sample.getTag(ClusterConstants.IGNORE_SAMPLE) != null) return sample;
-        if (sample.getTag(ClusterConstants.BUFFERED_SAMPLE_TAG) == null) {
-            window.add(sample);
+        window.add(sample);
 
-            // TODO this relies on the includeProbabilities flag of ClusterLabelingAlgorithm
-            // There should be a check that this flag is enabled and ClusterLabelingAlgorithm is part of the pipeline...
+        // TODO this relies on the includeProbabilities flag of ClusterLabelingAlgorithm
+        // There should be a check that this flag is enabled and ClusterLabelingAlgorithm is part of the pipeline...
 
-            Map<String, Double> labelInclusionAvgProbabilities = new HashMap<>();
-            for (String metricName : window.allMetricNames()) {
-                if (metricName.startsWith(INC_PROB_PREFIX)) {
-                    String anomalyName = metricName.replace(INC_PROB_PREFIX, "");
-                    LabelInclusionProbabilityPredictionWindow stat = window.getWindow(metricName);
-                    labelInclusionAvgProbabilities.put(anomalyName, stat.labelInclusionProbabilityAverage());
-                }
+        Map<String, Double> labelInclusionAvgProbabilities = new HashMap<>();
+        for (String metricName : window.allMetricNames()) {
+            if (metricName.startsWith(INC_PROB_PREFIX)) {
+                String anomalyName = metricName.replace(INC_PROB_PREFIX, "");
+                LabelInclusionProbabilityPredictionWindow stat = window.getWindow(metricName);
+                labelInclusionAvgProbabilities.put(anomalyName, stat.labelInclusionProbabilityAverage());
             }
-
-            // Sort Map by value and recommend best value (except of unknown)
-            List<Map.Entry<String, Double>> sortedLabelInclusionAvgProbabilities =
-                    labelInclusionAvgProbabilities.entrySet().stream()
-                            .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-                            .collect(Collectors.toList());
-            String recommendedLabel = ClusterConstants.UNKNOWN_LABEL;
-
-            for (Map.Entry<String, Double> labelInclusionAvgProbability : sortedLabelInclusionAvgProbabilities) {
-                if (!labelInclusionAvgProbability.getKey().equals(ClusterConstants.UNKNOWN_LABEL)) {
-                    recommendedLabel = labelInclusionAvgProbability.getKey();
-                    break;
-                } else {
-                    System.out.println("ERROR: UNKNOWN LABEL IN LABEL AGGREGATOR ALGORITHM");
-                }
-            }
-            // Possibly overwrites the label previously predicted by ClusterLabelingAlgorithm
-            sample = new Sample(sample);
-            sample.setLabel(recommendedLabel);
-        } else {
-            bufferedSamples++;
         }
+
+        // Sort Map by value and recommend best value (except of unknown)
+        List<Map.Entry<String, Double>> sortedLabelInclusionAvgProbabilities =
+                labelInclusionAvgProbabilities.entrySet().stream()
+                        .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
+                        .collect(Collectors.toList());
+        String recommendedLabel = ClusterConstants.UNKNOWN_LABEL;
+
+        for (Map.Entry<String, Double> labelInclusionAvgProbability : sortedLabelInclusionAvgProbabilities) {
+            if (!labelInclusionAvgProbability.getKey().equals(ClusterConstants.UNKNOWN_LABEL)) {
+                recommendedLabel = labelInclusionAvgProbability.getKey();
+                break;
+            } else {
+                System.out.println("ERROR: UNKNOWN LABEL IN LABEL AGGREGATOR ALGORITHM");
+            }
+        }
+        // Possibly overwrites the label previously predicted by ClusterLabelingAlgorithm
+        sample = new Sample(sample);
+        sample.setLabel(recommendedLabel);
         if (stripData) sample = sample.removeMetricsWithPrefix(INC_PROB_PREFIX);
         return sample;
     }

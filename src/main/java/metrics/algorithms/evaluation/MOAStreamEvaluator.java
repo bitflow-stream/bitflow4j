@@ -17,14 +17,7 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
 
     public static final String PRECISION_METRIC = "_overall_precision_";
 
-    private final static String LINE = "----------------------------------------------";
-    private final static String HASH = "##############################################";
-    private final static String NEW_LINE = System.getProperty("line.separator");
-    private static final String INCORRECT_HEADERS = "Incorrect headers found. Try adding a MOAStreamClusterer to the Algorithm pipeline.";
-
-    //    private ExternalClusterer clusterer;
     private long sampleInterval;
-    private long truePostivesSum, falsePositivesSum, falseNegativesSum;
     private Set<String> labels;
 
     /**
@@ -62,50 +55,41 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
 
     @Override
     protected Sample executeSample(Sample sample) throws IOException {
-        if (sample.getTag(ClusterConstants.IGNORE_SAMPLE) != null) {
-            if (extendSample) {
-                return sample.extend(new String[] { PRECISION_METRIC }, new double[] { overallPrecision });
-            } else {
-                return sample;
+        if (sample.hasLabel()) {
+            String predictedLabel = sample.getLabel();
+            //        String originalLabel = sample.getTag(ClusterConstants.ORIGINAL_LABEL_TAG);
+            String expectedLabel = sample.getTag(ClusterConstants.EXPECTED_PREDICTION_TAG);
+            if (expectedLabel == null) {
+                //TODO add handling of unlabled data
+                throw new IOException("no expected label found, data not prepared for evaluation (use SourceTrainingLabelingAlgorithm)");
             }
-        }
-        String predictedLabel = sample.getLabel();
-//        String originalLabel = sample.getTag(ClusterConstants.ORIGINAL_LABEL_TAG);
-        String expectedLabel = sample.getTag(ClusterConstants.EXPECTED_PREDICTION_TAG);
-        if(expectedLabel == null) {
-            //TODO add handling of unlabled data
-            throw new IOException("no expected label found, data not prepared for evaluation (use SourceTrainingLabelingAlgorithm)");
-        }
-        if (predictedLabel != null && expectedLabel != null) {
-//        if (predictedLabel != null && originalLabel != null) {
-            // Cannot evaluate sample without both predicted and original label.
-            //TODO: decide wether sampleCount should be incremented for non evaluated samples (affects overall precision an recall)
-//            if (!originalLabel.equals(ClusterConstants.UNKNOWN_LABEL) && sample.getTag(ClusterConstants.BUFFERED_SAMPLE_TAG) == null
-            if (sample.getTag(ClusterConstants.BUFFERED_SAMPLE_TAG) == null
-                //                    && !predictedLabel.equals(ClusterConstants.UNCLASSIFIED_CLUSTER)
-                    ) {
+            if (predictedLabel != null && expectedLabel != null) {
+                //        if (predictedLabel != null && originalLabel != null) {
+                // Cannot evaluate sample without both predicted and original label.
+                //TODO: decide wether sampleCount should be incremented for non evaluated samples (affects overall precision an recall)
+                //            if (!originalLabel.equals(ClusterConstants.UNKNOWN_LABEL) && sample.getTag(ClusterConstants.BUFFERED_SAMPLE_TAG) == null
                 sampleCount++;
                 if (!predictedLabel.equals(ClusterConstants.UNKNOWN_LABEL)
-//                    && !predictedLabel.equals(ClusterConstants.UNCLASSIFIED_CLUSTER)
-                    ) {
+                    //                    && !predictedLabel.equals(ClusterConstants.UNCLASSIFIED_CLUSTER)
+                        ) {
 
                     labels.add(predictedLabel);
                     labels.add(expectedLabel);
-//                    if(predictedLabel == null){
-//                        System.out.println("null predicted");
-//                    }
-//                    if(expectedLabel == null){
-//                        System.out.println("null expected");
-//                    }
-//                    if(expectedLabel.equals("null")){
-//                        System.out.println("null String");
-//                    }
-//                    if(predictedLabel.equals("null")){
-//                        System.out.println("null String");
-//                    }
-//                    if(expectedLabel.isEmpty() || predictedLabel.isEmpty()){
-//                        System.out.println("String empty");
-//                    }TODO remove
+                    //                    if(predictedLabel == null){
+                    //                        System.err.println("null predicted");
+                    //                    }
+                    //                    if(expectedLabel == null){
+                    //                        System.err.println("null expected");
+                    //                    }
+                    //                    if(expectedLabel.equals("null")){
+                    //                        System.err.println("null String");
+                    //                    }
+                    //                    if(predictedLabel.equals("null")){
+                    //                        System.err.println("null String");
+                    //                    }
+                    //                    if(expectedLabel.isEmpty() || predictedLabel.isEmpty()){
+                    //                        System.err.println("String empty");
+                    //                    }TODO remove
                     if (predictedLabel.equals(expectedLabel)) {
                         //if labels match, increment counter by 1 for labelToTP
                         correctPredictions++;
@@ -117,15 +101,15 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
                         labelToFP.put(predictedLabel, labelToFP.containsKey(predictedLabel) ? labelToFP.get(predictedLabel) + 1 : 1);
                         labelToFN.put(expectedLabel, labelToFN.containsKey(expectedLabel) ? labelToFN.get(expectedLabel) + 1 : 1);
                     }
-                }else {
-                    System.out.println("unknown label");
+                } else {
+                    System.err.println("unknown label");
                 }
+                if (checkRecalculationRequirement()) {
+                    recalculate();
+                }
+            } else {
+                System.err.println("WARNING: sample without prediction");
             }
-            if (checkRecalculationRequirement()) {
-                recalculate();
-            }
-        }else{
-            System.out.println("WARNING: sample without prediction");
         }
 
         if (extendSample) {
@@ -135,11 +119,12 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
         }
     }
 
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
     private void recalculate() {
         if (labels != null && !labels.isEmpty()) {
-            truePostivesSum = labelToTP.values().stream().mapToInt(i -> i.intValue()).sum();
-            falsePositivesSum = labelToFP.values().stream().mapToInt(i -> i.intValue()).sum();
-            falseNegativesSum = labelToFN.values().stream().mapToInt(i -> i.intValue()).sum();
+            long truePostivesSum = labelToTP.values().stream().mapToInt(Long::intValue).sum();
+            long falsePositivesSum = labelToFP.values().stream().mapToInt(Long::intValue).sum();
+            long falseNegativesSum = labelToFN.values().stream().mapToInt(Long::intValue).sum();
             overallRecall = (double) truePostivesSum / (double) (truePostivesSum + falsePositivesSum);
             overallPrecision = (double) truePostivesSum / (double) (truePostivesSum + falseNegativesSum);
             labels.forEach(label -> {
@@ -149,38 +134,40 @@ public class MOAStreamEvaluator extends AbstractAlgorithm {
                 labelToPrecision.put(label, (double) labelToTP.get(label) / (double) (labelToTP.get(label) + labelToFP.get(label)));
                 labelToRecall.put(label, (double) labelToTP.get(label) / (double) (labelToTP.get(label) + labelToFN.get(label)));
             });
-            averagePrecision = labelToPrecision.values().stream().mapToDouble(d -> d.doubleValue()).average().getAsDouble();
-            weightedAveragePrecision = labelToPrecision.entrySet().stream().mapToDouble(d -> d.getValue().doubleValue() * (labelToTP.get(d
+            averagePrecision = labelToPrecision.values().stream().mapToDouble(d -> d).average().getAsDouble();
+            weightedAveragePrecision = labelToPrecision.entrySet().stream().mapToDouble(d -> d.getValue() * (labelToTP.get(d
                     .getKey()) + labelToFP.get(d.getKey()))).average().getAsDouble() * labels.size() / sampleCount;
-            averageRecall = labelToRecall.values().stream().mapToDouble(d -> d.doubleValue()).average().getAsDouble();
-            weightedAverageRecall = labelToRecall.entrySet().stream().mapToDouble(d -> d.getValue().doubleValue() * (labelToTP.get(d.getKey())
+            averageRecall = labelToRecall.values().stream().mapToDouble(d -> d).average().getAsDouble();
+            weightedAverageRecall = labelToRecall.entrySet().stream().mapToDouble(d -> d.getValue() * (labelToTP.get(d.getKey())
                     + labelToFP.get(d.getKey()))).average().getAsDouble() * labels.size() / (double) sampleCount;
-            double[] temp = labelToPrecision.values().stream().mapToDouble(d -> d.doubleValue()).sorted().toArray();
+            double[] temp = labelToPrecision.values().stream().mapToDouble(d -> d).sorted().toArray();
             medianPrecision = temp[temp.length / 2];
-            temp = labelToRecall.values().stream().mapToDouble(d -> d.doubleValue()).sorted().toArray();
+            temp = labelToRecall.values().stream().mapToDouble(d -> d).sorted().toArray();
             medianRecall = temp[temp.length / 2];
-            maxPrecision = labelToPrecision.values().stream().mapToDouble(d -> d.doubleValue()).max().getAsDouble();
-            maxRecall = labelToRecall.values().stream().mapToDouble(d -> d.doubleValue()).max().getAsDouble();
-            minPrecision = labelToPrecision.values().stream().mapToDouble(d -> d.doubleValue()).min().getAsDouble();
-            minRecall = labelToRecall.values().stream().mapToDouble(d -> d.doubleValue()).min().getAsDouble();
+            maxPrecision = labelToPrecision.values().stream().mapToDouble(d -> d).max().getAsDouble();
+            maxRecall = labelToRecall.values().stream().mapToDouble(d -> d).max().getAsDouble();
+            minPrecision = labelToPrecision.values().stream().mapToDouble(d -> d).min().getAsDouble();
+            minRecall = labelToRecall.values().stream().mapToDouble(d -> d).min().getAsDouble();
             if (printOnRecalculation) {
                 printEvaluation();
             }
         } else {
-            if(labels == null) System.out.println("labels null");
-            else if(labels.isEmpty()) System.out.println("labels empty");
+            if(labels == null) System.err.println("labels null");
+            else if(labels.isEmpty()) System.err.println("labels empty");
         }
     }
 
     private void printEvaluation() {
-        System.out.println(getReadableEvaluation());
+        System.err.println(getReadableEvaluation());
     }
 
     private boolean checkRecalculationRequirement() {
         return (sampleCount % sampleInterval) == 0;
     }
 
-
+    private final static String LINE = "----------------------------------------------";
+    private final static String HASH = "##############################################";
+    private final static String NEW_LINE = System.getProperty("line.separator");
 
     public String getReadableEvaluation() {
         StringBuilder builder = new StringBuilder();

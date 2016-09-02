@@ -69,17 +69,15 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
 
     @Override
     protected synchronized Sample executeSample(Sample sample) throws IOException {
-        if (sample.getTag(ClusterConstants.IGNORE_SAMPLE) != null) return sample;
         int labelClusterId = sample.getClusterId();
         String originalLabel = sample.getLabel();
         if (originalLabel != null && labelClusterId >= 0) {
             clusterCounter.increment(labelClusterId, originalLabel);
         }
 
-        boolean isBuffered = sample.getTag(ClusterConstants.BUFFERED_SAMPLE_TAG) != null;
-        String newLabel = isBuffered ? ClusterConstants.BUFFERED_LABEL : clusterCounter.calculateLabel(labelClusterId);
+        String newLabel = clusterCounter.calculateLabel(labelClusterId);
 
-        if (includeProbabilities && !isBuffered) {
+        if (includeProbabilities) {
             // New header
             Collection<String> ls = clusterCounter.getAllLabels();
             String allAnomalies[] = ls.toArray(new String[ls.size()]);

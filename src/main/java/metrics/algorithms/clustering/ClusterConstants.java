@@ -9,10 +9,14 @@ public class ClusterConstants {
     // ==== Metric names ====
     // ======================
 
-    // Prefix for meta metric names
+    // Prefix for metrics containing the probability for the sample to be part of a given label.
+    // E.g. _prob_idle contains a value between 0 and 1, stating how likely the sample is "idle".
     public static final String INC_PROB_PREFIX = "_prob_";
-    public static final String IGNORE_SAMPLE = "ignore-sample";
 
+    // Prefix for metrics giving the distance of the sample to the closest cluster.
+    // E.g. _distance_cpu gives the distance on the "cpu" metric to the closest cluster.
+    // _distance_overall gives the euklidean distance to the closest cluster.
+    // Values of < 0 mean the Sample is actually inside a cluster.
     public static String DISTANCE_PREFIX = "_distance_";
 
     // ===================
@@ -46,9 +50,6 @@ public class ClusterConstants {
     public final static String NOISE_CLUSTER = "noise";
 
     // TODO comment
-    public static final String BUFFERED_SAMPLE_TAG = "buffered";
-
-    // TODO comment
     public static final String TRAINING_TAG = "trained";
 
     // TODO comment or delete
@@ -56,8 +57,5 @@ public class ClusterConstants {
 
     // TODO comment or delete
     public static final String NO_LABEL_FOR_WINDOW = "window-failed";
-
-    // TODO comment
-    public static String BUFFERED_LABEL = "buffered";
 
 }

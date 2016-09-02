@@ -107,7 +107,8 @@ public class Sample {
     }
 
     public boolean hasLabel() {
-        return getLabel() != null;
+        String label = getLabel();
+        return label != null && !label.isEmpty();
     }
 
     public boolean headerChanged(Header oldHeader) {

@@ -5,7 +5,7 @@ import metrics.Header;
 import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
 import metrics.algorithms.SampleConverger;
-import moa.cluster.*;
+import moa.cluster.Clustering;
 import moa.clusterers.AbstractClusterer;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
@@ -104,7 +104,6 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
     @Override
     protected synchronized Sample executeSample(Sample sample) throws IOException {
         //TODO: added support for outlier detection requires refactoring and partial split in SphereClusterer and OutlierDetector (use subclass hook)
-        if (sample.getTag(ClusterConstants.IGNORE_SAMPLE) != null) return sample;
         sampleCount++;
         if (converger.getExpectedHeader() == null) {
             initalizeClusterer(sample);
@@ -127,7 +126,6 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
         //TODO: we need a valid mechanism to identify the end of the bufferphase
         int bestFitCluster = calculateCluster(instance);
         sample = sampleClustered(sample, instance, bestFitCluster);
-        setBufferingStatus(sample);
         sample.setTag(ClusterConstants.CLUSTER_TAG, Integer.toString(bestFitCluster));
         return sample;
     }
@@ -195,7 +193,6 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
      * @param values the values of the current sample.
      * @param label the label of the current sample
      * @param instances an {@link Instances} object. Can be obtained using the {@link MOAStreamClusterer#createInstances(Header, String)} method.
-     * @return
      */
     protected com.yahoo.labs.samoa.instances.Instance makeInstance(double values[], String label, Instances instances) {
         //TODO: refactor all of this stuff to a saperate class
@@ -269,13 +266,4 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
      */
     protected abstract int calculateCluster(com.yahoo.labs.samoa.instances.Instance instance);
 
-    /**
-     * If no clustering result is available, a {@link ClusterConstants#BUFFERED_SAMPLE_TAG} tag will be added.
-     * @param sample the sample
-     */
-    private void setBufferingStatus(Sample sample) {
-        if (clusteringResult == null|| clusteringResult.size() == 0) {
-            sample.setTag(ClusterConstants.BUFFERED_SAMPLE_TAG, "1");
-        }
-    }
 }
