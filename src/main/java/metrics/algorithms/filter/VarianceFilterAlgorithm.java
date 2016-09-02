@@ -14,6 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Filter out metrics with a very low normalized standard deviation.
+ * This only keeps metrics that exceed a minimum inside each given window.
+ *
  * Created by anton on 4/7/16.
  */
 public class VarianceFilterAlgorithm extends WindowBatchAlgorithm {

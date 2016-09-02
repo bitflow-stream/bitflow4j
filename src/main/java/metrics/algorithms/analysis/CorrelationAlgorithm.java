@@ -17,6 +17,8 @@ import java.util.Arrays;
 import java.util.Date;
 
 /**
+ * Compute different types of correlation measures for the features.
+ *
  * Created by anton on 4/11/16.
  */
 public class CorrelationAlgorithm extends WindowBatchAlgorithm {

@@ -12,6 +12,9 @@ import java.io.IOException;
 import java.util.Arrays;
 
 /**
+ * The T-SNE maps a high-dimensional dataset to a lower number of dimensions.
+ * Based on initial experiments this is very slow and PCAAlgorithm can be used instead.
+ *
  * Created by anton on 5/14/16.
  */
 public class TsneAlgorithm extends WindowBatchAlgorithm {

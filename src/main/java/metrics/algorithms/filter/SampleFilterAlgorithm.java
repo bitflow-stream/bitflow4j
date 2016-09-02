@@ -7,6 +7,8 @@ import metrics.main.misc.ParameterHash;
 import java.io.IOException;
 
 /**
+ * Samples can be filtered out based on some user defined rule.
+ *
  * Created by anton on 4/23/16.
  */
 public class SampleFilterAlgorithm extends AbstractAlgorithm {
