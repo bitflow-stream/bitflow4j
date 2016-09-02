@@ -23,8 +23,7 @@ public class BinaryMarshaller extends AbstractMarshaller {
         }
 
         String[] header = headerList.toArray(new String[headerList.size()]);
-        Header h = Header.unmarshallHeader(header);
-        return h;
+        return Header.unmarshallHeader(header);
     }
 
     public Sample unmarshallSample(InputStream input, Header header) throws IOException {

@@ -1,7 +1,6 @@
 package metrics;
 
 import metrics.algorithms.clustering.ClusterConstants;
-import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.IOException;
 import java.util.*;
@@ -13,9 +12,8 @@ import java.util.*;
  * The header contains labels for the values. It does not contain special fields like
  * {@link Header#HEADER_TIME}, although these fields are also transported over the network.
  */
+@SuppressWarnings("unused")
 public class Sample {
-    //TODO add some synchronization?
-
 
     public static final String TAG_SOURCE = "src";
     public static final String TAG_LABEL = "cls";
@@ -86,18 +84,6 @@ public class Sample {
     }
 
     public String getTag(String name) {
-//TODO remove
-//        if(name == null || tags == null || tags.isEmpty() || tags.get(name) == null || tags.get(name).equalsIgnoreCase("null")){
-//            System.out.println("break");
-//        }
-//        String s = tags.get(name);
-//        if(s == null){
-//            System.out.println("b");
-//        }else if(s.isEmpty()){
-//            System.out.println("b");
-//        }else if(s.equalsIgnoreCase("null")){
-//            System.out.println("b");
-//        }
         return tags.get(name);
     }
 
@@ -106,15 +92,7 @@ public class Sample {
     }
 
     public void setTag(String name, String value) {
-//        if(value == null || value.isEmpty() || value.equalsIgnoreCase("null"))
-//        if(name == null || tags == null){
-//            System.out.println("break");
-//        }TODO remove
-//        String result =
-                tags.put(name, value);
-//        if (result != null){
-//            System.out.println("break");
-//        }
+        tags.put(name, value);
     }
 
     public String getSource() {
@@ -152,7 +130,7 @@ public class Sample {
         } catch (NullPointerException | ArrayIndexOutOfBoundsException | NumberFormatException e) {
             throw new IOException(
                     "Sample not prepared for labeling, add a clusterer to the pipeline or fix current clusterer"+
-                            " (failed to extract cluster id from point label or original label not found).");
+                            " (failed to convert tag " + ClusterConstants.CLUSTER_TAG + " to an integer cluster id).");
         }
         return labelClusterId;
     }
@@ -232,55 +210,45 @@ public class Sample {
         return new Sample(outHeader, outMetrics, this);
     }
 
-    //TODO comment and maybe add return type
-    public void removeMetrics(String ... metricNames){
-        //TODO it will me more officient to have reimplement this (will save multiple loops over the full metrics array
-//        for (String s : metricNames) removeMetric(s);
-        //cannot call because sample is returned instead of changed
-        throw new UnsupportedOperationException("not yet implemented");
-    }
-
-    public Sample removeMetric(String metricName){
-        //cannot call because sample is returned instead of changed
-        throw new UnsupportedOperationException("not yet implemented");
-//        removeMetricsWithPrefix(metricName);
-    }
-
-    public Sample removeMetricsWithPrefix(String prefix){
-        //TODO do we need to take care of duplicate metrics?
-        ArrayList<String> resultHeader = new ArrayList<String>();
-        ArrayList<Double> resultMetrics = new ArrayList<>();
-//        int count = 0;
-        for (int i = 0; i < header.header.length ; i++){
-            if(!header.header[i].startsWith(prefix)){
-                resultHeader.add(header.header[i]);
-                resultMetrics.add(metrics[i]);
-//                resultMetricsIndexes.add(i);
-//                count++;
+    /**
+     * Return a copy of the receiver with all given metrics removed.
+     * If the list of metrics would stay the same, the received is returned unchanged.
+     */
+    public Sample removeMetrics(Collection<String> removeMetrics) {
+        String headerFields[] = getHeader().header;
+        double metrics[] = getMetrics();
+        double newMetrics[] = new double[headerFields.length];
+        String newHeaderFields[] = new String[headerFields.length];
+        int j = 0;
+        for (int i = 0; i < headerFields.length; i++) {
+            String headerField = headerFields[i];
+            if (!removeMetrics.contains(headerField)) {
+                newHeaderFields[j] = headerField;
+                newMetrics[j] = metrics[i];
+                j++;
             }
         }
-        //TODO double check by anton wether this is valid usage of header field
-
-        String[] headers = new String[resultHeader.size()];
-        headers = resultHeader.toArray(headers);
-        Header newHeader = new Header(headers);
-        double[] newMetrics = new double[headers.length];
-        Double[] boxHolder = new Double[newMetrics.length];
-        newMetrics = ArrayUtils.toPrimitive(resultMetrics.toArray(boxHolder));
-        //new double[count];
-
-//        this is all dirty hacking...
-//        for(int i = 0; i < this.metrics.length - count; i++){
-//            newMetrics[i]
-//        }
-        Sample sampleToReturn = new Sample(newHeader, newMetrics, this);
-        return sampleToReturn;
+        if (j == metrics.length) {
+            return this;
+        } else {
+            newMetrics = Arrays.copyOf(newMetrics, j);
+            newHeaderFields = Arrays.copyOf(newHeaderFields, j);
+            return new Sample(new Header(newHeaderFields, getHeader()), newMetrics, this);
+        }
     }
 
-    public void removeMetricsWithPrefix(String ... prefix){
-        //cannot call because sample is returned instead of changed
-        throw new UnsupportedOperationException("not yet implemented");
-//        for (String s : prefix) removeMetricsWithPrefix(s);
+    public Sample removeMetrics(String ...metrics) {
+        return removeMetrics(new HashSet<>(Arrays.asList(metrics)));
+    }
+
+    public Sample removeMetricsWithPrefix(String prefix) {
+        Set<String> removeMetrics = new HashSet<>();
+        for (String metric : getHeader().header) {
+            if (metric.startsWith(prefix)) {
+                removeMetrics.add(metric);
+            }
+        }
+        return removeMetrics(removeMetrics);
     }
 
 }
