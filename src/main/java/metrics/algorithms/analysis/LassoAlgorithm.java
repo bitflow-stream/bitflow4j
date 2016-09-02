@@ -1,7 +1,8 @@
-package metrics.algorithms;
+package metrics.algorithms.analysis;
 
-import metrics.algorithms.lasso.LassoFit;
-import metrics.algorithms.lasso.LassoFitGenerator;
+import metrics.algorithms.WindowBatchAlgorithm;
+import metrics.algorithms.analysis.lasso.LassoFit;
+import metrics.algorithms.analysis.lasso.LassoFitGenerator;
 import metrics.io.MetricOutputStream;
 import metrics.io.window.AbstractSampleWindow;
 import metrics.io.window.MetricWindow;

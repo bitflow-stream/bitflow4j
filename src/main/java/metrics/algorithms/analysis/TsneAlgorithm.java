@@ -1,9 +1,10 @@
-package metrics.algorithms;
+package metrics.algorithms.analysis;
 
 import com.jujutsu.tsne.FastTSne;
 import com.jujutsu.tsne.TSne;
 import metrics.Header;
 import metrics.Sample;
+import metrics.algorithms.WindowBatchAlgorithm;
 import metrics.io.MetricOutputStream;
 import metrics.io.window.*;
 

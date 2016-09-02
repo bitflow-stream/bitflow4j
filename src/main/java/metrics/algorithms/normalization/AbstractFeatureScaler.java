@@ -1,7 +1,8 @@
-package metrics.algorithms;
+package metrics.algorithms.normalization;
 
 import metrics.Header;
 import metrics.Sample;
+import metrics.algorithms.TrainableWindowAlgorithm;
 import metrics.io.MetricOutputStream;
 import metrics.io.window.AbstractSampleWindow;
 import metrics.io.window.MetricStatisticsWindow;

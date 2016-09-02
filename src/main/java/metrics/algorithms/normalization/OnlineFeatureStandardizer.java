@@ -1,4 +1,4 @@
-package metrics.algorithms;
+package metrics.algorithms.normalization;
 
 import java.util.Map;
 

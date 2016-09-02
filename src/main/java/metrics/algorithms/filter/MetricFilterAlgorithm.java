@@ -1,7 +1,8 @@
-package metrics.algorithms;
+package metrics.algorithms.filter;
 
 import metrics.Header;
 import metrics.Sample;
+import metrics.algorithms.AbstractAlgorithm;
 import metrics.main.misc.ParameterHash;
 
 import java.io.IOException;

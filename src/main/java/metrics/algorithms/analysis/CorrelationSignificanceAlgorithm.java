@@ -1,7 +1,8 @@
-package metrics.algorithms;
+package metrics.algorithms.analysis;
 
 import metrics.Header;
 import metrics.Sample;
+import metrics.algorithms.BatchAlgorithm;
 import metrics.io.MetricOutputStream;
 import metrics.main.misc.ParameterHash;
 

@@ -1,4 +1,4 @@
-package metrics.algorithms.lasso;
+package metrics.algorithms.analysis.lasso;
 
 import java.text.DecimalFormat;
 import java.util.List;

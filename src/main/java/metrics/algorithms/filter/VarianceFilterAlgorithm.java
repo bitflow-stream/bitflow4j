@@ -1,6 +1,7 @@
-package metrics.algorithms;
+package metrics.algorithms.filter;
 
 import metrics.Header;
+import metrics.algorithms.WindowBatchAlgorithm;
 import metrics.io.MetricOutputStream;
 import metrics.io.window.AbstractSampleWindow;
 import metrics.io.window.MetricStatisticsWindow;

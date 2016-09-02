@@ -1,4 +1,4 @@
-package metrics.algorithms.lasso;
+package metrics.algorithms.analysis.lasso;
 
 /**
  * This implemenation is based on: Friedman, J., Hastie, T. and Tibshirani, R.

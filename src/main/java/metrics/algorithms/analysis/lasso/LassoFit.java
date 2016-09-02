@@ -1,4 +1,4 @@
-package metrics.algorithms.lasso;
+package metrics.algorithms.analysis.lasso;
 
 /**
  * This class is a container for arrays and values that

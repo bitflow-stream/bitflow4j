@@ -1,7 +1,8 @@
-package metrics.algorithms;
+package metrics.algorithms.normalization;
 
 import metrics.Header;
 import metrics.Sample;
+import metrics.algorithms.AbstractAlgorithm;
 import metrics.io.window.MetricStatisticsWindow;
 import metrics.io.window.MultiHeaderWindow;
 import metrics.main.misc.ParameterHash;

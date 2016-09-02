@@ -1,9 +1,9 @@
 package metrics.main.prototype;
 
 import metrics.algorithms.Algorithm;
-import metrics.algorithms.FeatureAggregator;
-import metrics.algorithms.OnlineFeatureMinMaxScaler;
-import metrics.algorithms.OnlineFeatureStandardizer;
+import metrics.algorithms.normalization.FeatureAggregator;
+import metrics.algorithms.normalization.OnlineFeatureMinMaxScaler;
+import metrics.algorithms.normalization.OnlineFeatureStandardizer;
 import metrics.algorithms.classification.Model;
 import metrics.algorithms.classification.WekaOnlineClassifier;
 import metrics.io.MetricPrinter;

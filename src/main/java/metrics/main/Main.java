@@ -1,8 +1,8 @@
 package metrics.main;
 
 import metrics.algorithms.BatchSampleFilterAlgorithm;
-import metrics.algorithms.FeatureStandardizer;
-import metrics.algorithms.MetricFilterAlgorithm;
+import metrics.algorithms.normalization.FeatureStandardizer;
+import metrics.algorithms.filter.MetricFilterAlgorithm;
 import metrics.algorithms.TimestampSort;
 import metrics.algorithms.classification.ExternalClassifier;
 import metrics.algorithms.classification.SourceTrainingLabelingAlgorithm;

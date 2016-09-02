@@ -1,4 +1,4 @@
-package metrics.algorithms;
+package metrics.algorithms.analysis;
 
 import Jama.Matrix;
 import com.mkobos.pca_transform.PCA;
@@ -6,6 +6,7 @@ import gnu.trove.list.TDoubleList;
 import gnu.trove.list.array.TDoubleArrayList;
 import metrics.Header;
 import metrics.Sample;
+import metrics.algorithms.WindowBatchAlgorithm;
 import metrics.io.MetricOutputStream;
 import metrics.io.window.AbstractSampleWindow;
 import metrics.io.window.SampleMetadata;
