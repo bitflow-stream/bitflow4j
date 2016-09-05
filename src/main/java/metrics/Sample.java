@@ -95,7 +95,7 @@ public class Sample {
     }
 
     public boolean hasTag(String name) {
-        String tag = getLabel();
+        String tag = getTag(name);
         return tag != null && !tag.isEmpty();
     }
 

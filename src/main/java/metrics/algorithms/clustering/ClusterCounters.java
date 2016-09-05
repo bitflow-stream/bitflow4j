@@ -47,22 +47,19 @@ public class ClusterCounters {
     }
 
     public String calculateLabel() {
-        if (clusterId != -1) {
-            //TODO: allow multilabel clusters
-            String bestLabel = counters.entrySet().stream().max((entry1, entry2) -> entry1.getValue() > entry2
-                    .getValue() ? 1 : -1).get().getKey();
-            //the chance for the best label
-            double bestChance = (double) counters.get(bestLabel) / (double) total;
-            //check quality requirement and label
-            if (bestChance >= thresholdToClassifyCluster) {
-                return bestLabel;
-            } else {
-                System.out.println("returning unclassified in ClusterCounter");
-                return ClusterConstants.UNCLASSIFIED_CLUSTER;
-            }
+        if (clusterId == -1) return ClusterConstants.NOISE_CLUSTER;
+
+        //TODO: allow multilabel clusters
+        String bestLabel = counters.entrySet().stream().max((entry1, entry2) -> entry1.getValue() > entry2
+                .getValue() ? 1 : -1).get().getKey();
+        //the chance for the best label
+        double bestChance = (double) counters.get(bestLabel) / (double) total;
+        //check quality requirement and label
+        if (bestChance >= thresholdToClassifyCluster) {
+            return bestLabel;
         } else {
-            //if clusterId == -1, its noise
-            return ClusterConstants.NOISE_CLUSTER;
+            System.out.println("returning unclassified in ClusterCounter");
+            return ClusterConstants.UNCLASSIFIED_CLUSTER;
         }
     }
     
@@ -72,7 +69,6 @@ public class ClusterCounters {
                 .forEach((key) -> {
                     inclusionProbability.put(key, (double)counters.get(key)/(double)total);
         });
-//        System.out.println(inclusionProbability);
         return inclusionProbability;
     }
 }

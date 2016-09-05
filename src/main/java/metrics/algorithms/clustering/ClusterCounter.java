@@ -33,11 +33,12 @@ public class ClusterCounter {
         }
     }
     
-    public String calculateLabel(int id){
-        if(id == -1) return ClusterConstants.NOISE_CLUSTER;
+    public String calculateLabel(int id) {
+        if (id == -1) return ClusterConstants.NOISE_CLUSTER;
         ClusterCounters counters = clusterIdToCounters.get(id);
         if (counters == null) {
-            System.out.println("returning unclassified in ClusterCounter");
+            // This should not happen in practice: if the label for a cluster ID is queried, then the cluster
+            // should have already been accessed and a ClusterCounters instance should exist.
             return ClusterConstants.UNCLASSIFIED_CLUSTER;
         } else {
             return counters.calculateLabel();
@@ -47,8 +48,6 @@ public class ClusterCounter {
     public void reset() {
         clusterIdToCounters.clear();
     }
-
-
 
     public Map<String, Double> getLabelInclusionProbability(int id) {
         ClusterCounters counters = clusterIdToCounters.get(id);

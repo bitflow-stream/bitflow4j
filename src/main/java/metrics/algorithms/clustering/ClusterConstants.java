@@ -47,15 +47,11 @@ public class ClusterConstants {
     // TODO this should be eliminated and exceptions thrown instead at the correct places
     public static final String UNKNOWN_LABEL = "unknown";
 
-    // =======================
-    // ==== Cluster names ====
-    // =======================
-
-    // label for a noise cluster
+    // Label for samples that are clustered as noise
     public final static String NOISE_CLUSTER = "noise";
 
-    // Label for clusters that don't have enough information or where the distribution of incoming
-    // labels is too even to pick a clear dominating label.
+    // Label for samples in clusters that don't have enough information or where the distribution of incoming
+    // labels is too even to pick a clear dominating label
     public static final String UNCLASSIFIED_CLUSTER = "unclassified";
 
 }
