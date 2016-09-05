@@ -1,11 +1,9 @@
 package metrics.algorithms.clustering.outliers;
 
 import metrics.Sample;
-import metrics.algorithms.clustering.ExternalClusterer;
+import metrics.algorithms.clustering.ClusteringAlgorithm;
 import moa.clusterers.outliers.Angiulli.ExactSTORM;
 import moa.clusterers.outliers.MyBaseOutlierDetector;
-
-import java.util.Set;
 
 /**
  * Created by malcolmx on 23.08.16.
@@ -15,22 +13,8 @@ public class StormExactOutlierDetector extends MOAStreamOutlierDetection<ExactST
     private volatile Integer kParameter;
     private volatile Integer queryFrequency;
 
-    public StormExactOutlierDetector(){
-        super((ExactSTORM)ExternalClusterer.STORM_EXACT.newInstance());
-        this.radiusParameter = null;
-        this.kParameter = null;
-        this.queryFrequency = null;
-    }
-
-    public StormExactOutlierDetector(boolean alwaysTrain, Float radiusParameter, Integer kParameter, Integer queryFrequency) {
-        super((ExactSTORM) ExternalClusterer.STORM_EXACT.newInstance(), alwaysTrain);
-        this.radiusParameter = radiusParameter;
-        this.kParameter = kParameter;
-        this.queryFrequency = queryFrequency;
-    }
-
-    public StormExactOutlierDetector(Set trainedLabels, Float radiusParameter, Integer kParameter, Integer queryFrequency) {
-        super((ExactSTORM) ExternalClusterer.STORM_EXACT.newInstance(), trainedLabels);
+    public StormExactOutlierDetector(Float radiusParameter, Integer kParameter, Integer queryFrequency) {
+        super((ExactSTORM) ClusteringAlgorithm.STORM_EXACT.newInstance());
         this.radiusParameter = radiusParameter;
         this.kParameter = kParameter;
         this.queryFrequency = queryFrequency;

@@ -20,7 +20,7 @@ import java.util.TreeSet;
  * This class can be used to evaluate any classification algorithm stack.
  * In order to use this evaluator, the samples must be tagged with the correct predictions
  * (e.g. by using the {@link SourceTrainingLabelingAlgorithm}.
- * This is a batch algorithm and not suited for online streaming (can be added by allowing
+ * This is a obsolete algorithm and not suited for online streaming (can be added by allowing
  * variable window size in {@link AbstractWekaAlgorithm}
  */
 public class WekaEvaluationWrapper extends AbstractWekaAlgorithm {

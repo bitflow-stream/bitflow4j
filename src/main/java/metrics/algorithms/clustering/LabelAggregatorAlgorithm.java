@@ -19,17 +19,8 @@ import static metrics.algorithms.clustering.ClusterConstants.INC_PROB_PREFIX;
  */
 public class LabelAggregatorAlgorithm extends AbstractAlgorithm {
 
-    // TODO allow multiple window sizes
-    public static final int DEFAULT_WINDOW_SIZE = 10;
-//    public static final long DEFAULT_WINDOW_TIMESPAN = 1000;
     protected boolean stripData = false;
-
     private final MultiHeaderWindow<LabelInclusionProbabilityPredictionWindow> window;
-
-    public LabelAggregatorAlgorithm(){
-        window = new MultiHeaderWindow<LabelInclusionProbabilityPredictionWindow>(DEFAULT_WINDOW_SIZE, LabelInclusionProbabilityPredictionWindow.FACTORY);
-    }
-
 
     public LabelAggregatorAlgorithm(int windowSize) {
         window = new MultiHeaderWindow<>(windowSize, LabelInclusionProbabilityPredictionWindow.FACTORY);

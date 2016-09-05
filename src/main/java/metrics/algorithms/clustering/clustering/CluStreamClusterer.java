@@ -1,11 +1,9 @@
-package metrics.algorithms.clustering;
+package metrics.algorithms.clustering.clustering;
 
 import com.github.javacliparser.IntOption;
 import metrics.Sample;
+import metrics.algorithms.clustering.ClusteringAlgorithm;
 import moa.clusterers.clustream.Clustream;
-
-import java.util.Map;
-import java.util.Set;
 
 /**
  *
@@ -102,18 +100,11 @@ public class CluStreamClusterer extends MOASphereClusterer<Clustream> {
     private Integer horizon = null;
 
     public CluStreamClusterer(){
-        super((Clustream) ExternalClusterer.CLUSTREAM.newInstance());
+        super((Clustream) ClusteringAlgorithm.CLUSTREAM.newInstance());
     }
 
-    public CluStreamClusterer(boolean alwaysTrain, boolean calculateDistance, Integer kernelRadiusMultiplier, Integer numberOfKernels, Integer horizon) {
-        super((Clustream) ExternalClusterer.CLUSTREAM.newInstance(), alwaysTrain, calculateDistance);
-        this.kernelRadiusMultiplier = kernelRadiusMultiplier;
-        this.numberOfKernels = numberOfKernels;
-        this.horizon = horizon;
-    }
-
-    public CluStreamClusterer(Set<String> trainedLabels, Map<String, Object> parameters, boolean calculateDistance, Integer kernelRadiusMultiplier, Integer numberOfKernels, Integer horizon) throws IllegalArgumentException {
-        super((Clustream) ExternalClusterer.CLUSTREAM.newInstance(), trainedLabels, calculateDistance);
+    public CluStreamClusterer(boolean calculateDistance, Integer kernelRadiusMultiplier, Integer numberOfKernels, Integer horizon) {
+        super((Clustream) ClusteringAlgorithm.CLUSTREAM.newInstance(), calculateDistance);
         this.kernelRadiusMultiplier = kernelRadiusMultiplier;
         this.numberOfKernels = numberOfKernels;
         this.horizon = horizon;

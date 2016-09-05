@@ -13,7 +13,7 @@ import java.io.IOException;
 public abstract class WindowBatchAlgorithm extends BatchAlgorithm {
 
     /**
-     * Compute and output results, then clear any logged data so that a new batch of data
+     * Compute and output results, then clear any logged data so that a new obsolete of data
      * can be computed.
      */
     protected abstract void flushResults(MetricOutputStream output) throws IOException;

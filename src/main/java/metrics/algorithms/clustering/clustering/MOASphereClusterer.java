@@ -1,8 +1,10 @@
-package metrics.algorithms.clustering;
+package metrics.algorithms.clustering.clustering;
 
 
 import com.yahoo.labs.samoa.instances.Instance;
 import metrics.Sample;
+import metrics.algorithms.clustering.ClusterConstants;
+import metrics.algorithms.clustering.MOAStreamClusterer;
 import moa.cluster.Clustering;
 import moa.clusterers.AbstractClusterer;
 import moa.core.AutoExpandVector;
@@ -30,32 +32,15 @@ public abstract class MOASphereClusterer<T extends AbstractClusterer & Serializa
     /**
      * This constructor is used to train on all labels or the default label set.
      * @param clusterer The clusterer, must extend @link moa.clusterers.AbstractClusterer.
-     * @param alwaysTrain If true, all samples will be used to train the model, if false, only the default configuration is loaded (see {@link MOAStreamClusterer}).
-     * @param calculateDistance If true, the distance to the nearest cluster will be calculated and appended to the sample metrics using the distance prefix @link {@link ClusterConstants#DISTANCE_PREFIX}
+     * @param calculateDistance If true, the distance to the nearest cluster will be calculated
+     *                          and appended to the sample metrics using the distance prefix
+     *                          {@link ClusterConstants#DISTANCE_PREFIX}
      */
-    public MOASphereClusterer(T clusterer, boolean alwaysTrain, boolean calculateDistance) {
-        super(clusterer, alwaysTrain);
+    public MOASphereClusterer(T clusterer, boolean calculateDistance) {
+        super(clusterer);
         this.calculateDistance = calculateDistance;
     }
 
-    /**
-     * This constructor is used to train on a given set of labels.
-     * @param clusterer The clusterer, must extend @link moa.clusterers.AbstractClusterer.
-     * @param trainedLabels A Set of trained labels. Only samples with a label inside this set will be used to train.
-     * @param calculateDistance If true, the distance to the nearest cluster will be calculated and appended to the sample metrics using the distance prefix @link {@link ClusterConstants#DISTANCE_PREFIX}
-     */
-    public MOASphereClusterer(T clusterer, Set<String> trainedLabels, boolean calculateDistance) {
-        super(clusterer, trainedLabels);
-        this.calculateDistance = calculateDistance;
-    }
-
-    /**
-     *
-     * @param instance
-     * @param clustering
-     * @return
-     * @throws IOException
-     */
     protected Map.Entry<Double, double[]> getDistance(Instance instance, Clustering clustering) throws IOException {
         Map.Entry<Double, double[]> distance = null;
         Optional<Map.Entry<Double, double[]>> distanceT;
@@ -135,7 +120,7 @@ public abstract class MOASphereClusterer<T extends AbstractClusterer & Serializa
         return bestFitCluster;
     }
 
-    public MOAStreamClusterer calculateDistance(){
+    public MOAStreamClusterer<T> calculateDistance(){
         this.calculateDistance = true;
         return this;
     }

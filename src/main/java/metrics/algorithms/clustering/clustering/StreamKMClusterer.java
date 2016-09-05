@@ -1,12 +1,10 @@
-package metrics.algorithms.clustering;
+package metrics.algorithms.clustering.clustering;
 
 import com.github.javacliparser.IntOption;
 import metrics.Sample;
+import metrics.algorithms.clustering.ClusteringAlgorithm;
 import moa.cluster.Clustering;
 import moa.clusterers.streamkm.StreamKM;
-
-import java.util.Map;
-import java.util.Set;
 /**
  * @author mbyfield
  * Implementation of the StreamKM clustering algorithm.
@@ -39,19 +37,11 @@ public class StreamKMClusterer extends MOASphereClusterer<StreamKM> {
     }
 
     public StreamKMClusterer() {
-        super((StreamKM) ExternalClusterer.STREAM_KMEANS.newInstance());
+        super((StreamKM) ClusteringAlgorithm.STREAM_KMEANS.newInstance());
     }
 
-    public StreamKMClusterer(boolean alwaysTrain, boolean calculateDistance, Integer sizeCoreset, Integer numberOfClusters, Integer width, Integer randomSeed) {
-        super((StreamKM) ExternalClusterer.STREAM_KMEANS.newInstance(), alwaysTrain, calculateDistance);
-        this.sizeCoreset = sizeCoreset;
-        this.numberOfClusters = numberOfClusters;
-        this.width = width;
-        this.randomSeed = randomSeed;
-    }
-
-    public StreamKMClusterer(Set<String> trainedLabels, Map<String, Object> parameters, boolean calculateDistance, Integer sizeCoreset, Integer numberOfClusters, Integer width, Integer randomSeed) throws IllegalArgumentException {
-        super((StreamKM) ExternalClusterer.STREAM_KMEANS.newInstance(), trainedLabels, calculateDistance);
+    public StreamKMClusterer(boolean calculateDistance, Integer sizeCoreset, Integer numberOfClusters, Integer width, Integer randomSeed) {
+        super((StreamKM) ClusteringAlgorithm.STREAM_KMEANS.newInstance(), calculateDistance);
         this.sizeCoreset = sizeCoreset;
         this.numberOfClusters = numberOfClusters;
         this.width = width;
@@ -65,8 +55,6 @@ public class StreamKMClusterer extends MOASphereClusterer<StreamKM> {
 
     @Override
     protected void setupClustererParameter(Sample firstSample) {
-        int numMetrics = firstSample.getHeader().header.length;
-        numMetrics++; // The class/label attribute is added
         IntOption sizeCoresetOption = new IntOption("sizeCoreset",
                 's', "Size of the coreset.", sizeCoreset == null ? 1000 : sizeCoreset);
         IntOption numClustersOption = new IntOption(

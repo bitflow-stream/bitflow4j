@@ -1,11 +1,9 @@
 package metrics.algorithms.clustering.outliers;
 
 import metrics.Sample;
-import metrics.algorithms.clustering.ExternalClusterer;
+import metrics.algorithms.clustering.ClusteringAlgorithm;
 import moa.clusterers.outliers.Angiulli.ApproxSTORM;
 import moa.clusterers.outliers.MyBaseOutlierDetector;
-
-import java.util.Set;
 
 /**
  * Created by malcolmx on 23.08.16.
@@ -17,19 +15,11 @@ public class StormApproxOutlierDetector extends MOAStreamOutlierDetection<Approx
     private volatile Float pParameter;
 
     public StormApproxOutlierDetector(){
-        super((ApproxSTORM) ExternalClusterer.STORM_APPROX.newInstance());
+        super((ApproxSTORM) ClusteringAlgorithm.STORM_APPROX.newInstance());
     }
 
-    public StormApproxOutlierDetector(boolean alwaysTrain, Float radiusParameter, Integer kParameter, Integer queryFrequency, Float pParameter) {
-        super((ApproxSTORM) ExternalClusterer.STORM_APPROX.newInstance(), alwaysTrain);
-        this.radiusParameter = radiusParameter;
-        this.kParameter = kParameter;
-        this.queryFrequency = queryFrequency;
-        this.pParameter = pParameter;
-    }
-
-    public StormApproxOutlierDetector(Set<String> trainedLabels, Float radiusParameter, Integer kParameter, Integer queryFrequency, Float pParameter) {
-        super((ApproxSTORM) ExternalClusterer.STORM_APPROX.newInstance(), trainedLabels);
+    public StormApproxOutlierDetector(Float radiusParameter, Integer kParameter, Integer queryFrequency, Float pParameter) {
+        super((ApproxSTORM) ClusteringAlgorithm.STORM_APPROX.newInstance());
         this.radiusParameter = radiusParameter;
         this.kParameter = kParameter;
         this.queryFrequency = queryFrequency;

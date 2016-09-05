@@ -1,4 +1,4 @@
-package metrics.algorithms.clustering;
+package metrics.algorithms.clustering.obsolete;
 
 import metrics.Sample;
 import metrics.algorithms.WindowBatchAlgorithm;

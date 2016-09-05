@@ -10,7 +10,10 @@ import moa.core.AutoExpandVector;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -20,53 +23,22 @@ public abstract class MOAStreamOutlierDetection<T extends MyBaseOutlierDetector 
 
 
     private final MOAOutlierNotifier outlierNotifier;
-    private final HashSet<Long> outlierIds, inlierIds;
-    protected volatile Sample currentSample;
+    private final HashSet<Long> outlierIds = new HashSet<>();
+    private final HashSet<Long> inlierIds = new HashSet<>();
+    protected Sample currentSample = null;
     protected boolean calculateDistance;
     private boolean alwaysAddDistanceMetrics = false;
 
     public MOAStreamOutlierDetection(T clusterer){
         super(clusterer);
-        this.outlierIds = new HashSet<>();
-        this.inlierIds = new HashSet<>();
         this.outlierNotifier = new MOAOutlierNotifier();
-        this.currentSample = null;
+        clusterer.outlierNotifier = this.outlierNotifier;
     }
 
-    public MOAStreamOutlierDetection(T clusterer, boolean alwaysTrain) {
-        super(clusterer, alwaysTrain);
-        this.outlierIds = new HashSet<>();
-        this.outlierNotifier = new MOAOutlierNotifier();
-        inlierIds = new HashSet<Long>();
-        try{
-            ((MyBaseOutlierDetector)clusterer).outlierNotifier = this.outlierNotifier;
-        }catch(ClassCastException e){
-            throw new IllegalArgumentException("Clusterer must be a subclass of moa.clusterers.outliers.MyBaseOutlierDetector");
-        }
-    }
-
-    public MOAStreamOutlierDetection(T clusterer, Set<String> trainedLabels) {
-        super(clusterer, trainedLabels);
-        outlierIds = new HashSet<>();
-        inlierIds = new HashSet<Long>();
-        this.outlierNotifier = new MOAOutlierNotifier();
-        try{
-            ((MyBaseOutlierDetector)clusterer).outlierNotifier = this.outlierNotifier;
-        }catch(ClassCastException e){
-            throw new IllegalArgumentException("Clusterer must be a subclass of moa.clusterers.outliers.MyBaseOutlierDetector");
-        }
-    }
-
-    public MOAStreamOutlierDetection addOutlierNotifier(MyBaseOutlierDetector.OutlierNotifier notifier){
+    public MOAStreamOutlierDetection notify(MyBaseOutlierDetector.OutlierNotifier notifier){
         this.outlierNotifier.addOutlierNotifier(notifier);
         return this;
     }
-
-//    @Override
-//    protected void setupClustererParameter(Sample firstSample) {
-//
-//    }
-
 
     @Override
     protected synchronized Sample executeSample(Sample sample) throws IOException {

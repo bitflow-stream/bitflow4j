@@ -1,11 +1,9 @@
 package metrics.algorithms.clustering.outliers;
 
 import metrics.Sample;
-import metrics.algorithms.clustering.ExternalClusterer;
+import metrics.algorithms.clustering.ClusteringAlgorithm;
 import moa.clusterers.outliers.MyBaseOutlierDetector;
 import moa.clusterers.outliers.SimpleCOD.SimpleCOD;
-
-import java.util.Set;
 
 /**
  * Created by malcolmx on 23.08.16.
@@ -15,18 +13,8 @@ public class SCODOutlierDetector extends MOAStreamOutlierDetection<SimpleCOD> {
     private volatile Float radiusParameter;
     private volatile Integer kParameter;
 
-    public SCODOutlierDetector(){
-        super((SimpleCOD) ExternalClusterer.SCOD.newInstance());
-    }
-
-    public SCODOutlierDetector(boolean alwaysTrain, Float radius, Integer kParameter) {
-        super((SimpleCOD) ExternalClusterer.SCOD.newInstance(), alwaysTrain);
-        this.radiusParameter = radius;
-        this.kParameter = kParameter;
-    }
-
-    public SCODOutlierDetector(Set<String> trainedLabels, Float radius, Integer kParameter) {
-        super((SimpleCOD) ExternalClusterer.SCOD.newInstance(),trainedLabels);
+    public SCODOutlierDetector(Float radius, Integer kParameter) {
+        super((SimpleCOD) ClusteringAlgorithm.SCOD.newInstance());
         this.radiusParameter = radius;
         this.kParameter = kParameter;
     }

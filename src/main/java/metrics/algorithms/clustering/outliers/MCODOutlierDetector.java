@@ -1,39 +1,22 @@
 package metrics.algorithms.clustering.outliers;
 
 import metrics.Sample;
-import metrics.algorithms.clustering.ExternalClusterer;
+import metrics.algorithms.clustering.ClusteringAlgorithm;
 import moa.clusterers.outliers.MCOD.MCOD;
 import moa.clusterers.outliers.MyBaseOutlierDetector;
-
-import java.util.Set;
 
 /**
  * Created by malcolmx on 23.08.16.
  */
 public class MCODOutlierDetector extends MOAStreamOutlierDetection<MCOD> {
 
-
-
     private volatile Float radiusParameter;
     private volatile Integer kParameter;
 
-    public MCODOutlierDetector(){
-        super((MCOD) ExternalClusterer.MCOD.newInstance());
-        this.radiusParameter = null;
-        this.kParameter = null;
-    }
-
-    public MCODOutlierDetector(boolean alwaysTrain, Float radius, Integer kParameter) {
-        super((MCOD) ExternalClusterer.MCOD.newInstance(), alwaysTrain);
+    public MCODOutlierDetector(Float radius, Integer kParameter) {
+        super((MCOD) ClusteringAlgorithm.MCOD.newInstance());
         this.radiusParameter = radius;
         this.kParameter = kParameter;
-    }
-
-
-    public MCODOutlierDetector(Set<String> trainedLabels, Float radius, Integer kParameter) {
-        super((MCOD) ExternalClusterer.MCOD.newInstance(), trainedLabels);
-        this.kParameter = kParameter;
-        this.radiusParameter = radius;
     }
 
     public MCODOutlierDetector setRadius(Float radiusParameter) {

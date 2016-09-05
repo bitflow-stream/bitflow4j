@@ -4,9 +4,9 @@ import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
 import metrics.algorithms.Algorithm;
 import metrics.algorithms.FeatureCalculationsAlgorithm;
-import metrics.algorithms.clustering.BICOClusterer;
 import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
 import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
+import metrics.algorithms.clustering.clustering.BICOClusterer;
 import metrics.algorithms.evaluation.OnlineOutlierEvaluator;
 import metrics.algorithms.evaluation.StreamEvaluator;
 import metrics.algorithms.normalization.OnlineAutoMinMaxScaler;
@@ -45,8 +45,8 @@ public class Cluster {
         Algorithm filterAlgo = Train.getFilter(filter);
 
         Set<String> trainedLabels = new HashSet<>(Arrays.asList(new String[] { "idle", "load" }));
-        BICOClusterer moaClusterer = new BICOClusterer(trainedLabels, true, num_cluster_feature , num_clusters, null).alwaysAddDistanceMetrics();
-        ClusterLabelingAlgorithm labeling = new ClusterLabelingAlgorithm(classifiedClusterThreshold, true, false, trainedLabels);
+        BICOClusterer moaClusterer = new BICOClusterer(true, num_cluster_feature , num_clusters, null).trainedLabels(trainedLabels).alwaysAddDistanceMetrics();
+        ClusterLabelingAlgorithm labeling = new ClusterLabelingAlgorithm(classifiedClusterThreshold, true);
         LabelAggregatorAlgorithm labelAggregatorAlgorithm = new LabelAggregatorAlgorithm(labelAggregationWindow);
         StreamEvaluator evaluator = new OnlineOutlierEvaluator(true, trainedLabels, "normal", "abnormal");
         HostnameTagger hostnameTagger = new HostnameTagger(hostname);

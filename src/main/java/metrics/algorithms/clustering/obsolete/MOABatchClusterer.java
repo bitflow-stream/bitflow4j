@@ -1,4 +1,4 @@
-package metrics.algorithms.clustering;
+package metrics.algorithms.clustering.obsolete;
 
 import com.yahoo.labs.samoa.instances.WekaToSamoaInstanceConverter;
 import metrics.algorithms.classification.Model;
@@ -15,21 +15,24 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
  * @author fschmidt
  */
-// TODO is this class obsolete?
-public class MOAClusterer<T extends AbstractClusterer & Serializable> extends AbstractMOAClusterer {
+public class MOABatchClusterer<T extends AbstractClusterer & Serializable> extends AbstractMOAClusterer {
 
     private final Model<T> model;
     private final T clusterer;
+    private final Map<Integer, Map<String, Integer>> clusterLabelMaps;
 
-    public MOAClusterer(Model<T> model, T clusterer) {
+    public MOABatchClusterer(Model<T> model, T clusterer) {
         this.model = model;
         this.clusterer = clusterer;
         this.clusterer.resetLearning();
+        this.clusterLabelMaps = new HashMap<>();
     }
 
     @Override
@@ -44,12 +47,47 @@ public class MOAClusterer<T extends AbstractClusterer & Serializable> extends Ab
         try {
             for (Instance inst : instances) {
                 com.yahoo.labs.samoa.instances.Instance instance = makeInstance(inst);
+
                 clusterer.trainOnInstance(instance);
                 AutoExpandVector<moa.cluster.Cluster> clustering = clusterer.getMicroClusteringResult().getClustering();
                 System.out.println("########################");
-                for(moa.cluster.Cluster cluster : clustering){
-                    System.out.println("ID: "+cluster.getInfo() + " , " + Arrays.toString(cluster.getCenter()));
+//                for (moa.cluster.Cluster cluster : clustering) {
+//                    System.out.println("ID: " + cluster.getInfo() + " , " + Arrays.toString(cluster.getCenter()));
+//                }
+                //prints all micro-clusters
+                double inclusionProbability = 0.0;
+                int bestFitCluster = -1;
+                int clusterNum = 0;
+                for (moa.cluster.Cluster c : clusterer.getMicroClusteringResult().getClustering()) {
+//                    System.out.println(clusterNum + ": ");
+//                    for (double p : c.getCenter()) {
+//                        System.out.print(p + " ");
+//                    }
+//                    System.out.println(" " + clusterer.getMicroClusteringResult().dimension());
+//                    System.out.println("Inclusion Probability: " + c.getInclusionProbability(instance));
+                    double clusterInclusionProbability = c.getInclusionProbability(instance);
+                    if(inclusionProbability <clusterInclusionProbability){
+                        inclusionProbability = clusterInclusionProbability;
+                        bestFitCluster = clusterNum;
+                    }
+                    clusterNum++;
                 }
+
+//                //Evaluate Clusters
+//                if (clusterLabelMaps.containsKey(bestFitCluster)) {
+//                    Map<String, Integer> labelCountMap = clusterLabelMaps.get(bestFitCluster);
+//                    if (labelCountMap.containsKey(sample.getLabel())) {
+//                        labelCountMap.put(sample.getLabel(), labelCountMap.get(sample.getLabel()) + 1);
+//                    } else {
+//                        labelCountMap.put(sample.getLabel(), 1);
+//                    }
+//                } else {
+//                    Map<String, Integer> labelCountMap = new HashMap<>();
+//                    labelCountMap.put(sample.getLabel(), 1);
+//                    clusterLabelMaps.put(bestFitCluster, labelCountMap);
+//                }
+//                //Print Evaluation
+
             }
         } catch (Exception e) {
             IOException io = new IOException(toString() + ": Learning failed", e);

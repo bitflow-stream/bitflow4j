@@ -8,7 +8,6 @@ import moa.clusterers.outliers.AbstractC.AbstractC;
 import moa.clusterers.outliers.Angiulli.ApproxSTORM;
 import moa.clusterers.outliers.Angiulli.ExactSTORM;
 import moa.clusterers.outliers.AnyOut.AnyOut;
-import moa.clusterers.outliers.MCOD.MCOD;
 import moa.clusterers.outliers.SimpleCOD.SimpleCOD;
 import moa.clusterers.streamkm.StreamKM;
 
@@ -16,7 +15,8 @@ import moa.clusterers.streamkm.StreamKM;
  *
  * @author fschmidt
  */
-public enum ExternalClusterer {
+public enum ClusteringAlgorithm {
+
     CLUSTREAM(Clustream::new),
     CLUSTREE(ClusTree::new),
     DENSTREAM(WithDBSCAN::new),
@@ -29,11 +29,9 @@ public enum ExternalClusterer {
     MCOD(moa.clusterers.outliers.MCOD.MCOD::new),
     SCOD(SimpleCOD::new);
 
-
-
     private final ClustererFactory clusterer;
 
-    ExternalClusterer(ClustererFactory clusterer) {
+    ClusteringAlgorithm(ClustererFactory clusterer) {
         this.clusterer = clusterer;
     }
 

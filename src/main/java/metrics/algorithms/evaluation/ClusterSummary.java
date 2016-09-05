@@ -1,4 +1,4 @@
-package metrics.algorithms.clustering;
+package metrics.algorithms.evaluation;
 
 import metrics.Header;
 import metrics.Sample;
@@ -11,6 +11,9 @@ import java.util.Date;
 import java.util.TreeMap;
 
 /**
+ * Count how many samples are put in what cluster (based on the label) and output a
+ * simple statistic about the results in the outgoing samples.
+ *
  * Created by anton on 5/14/16.
  */
 public class ClusterSummary extends AbstractAlgorithm {

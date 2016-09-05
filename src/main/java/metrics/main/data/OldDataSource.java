@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 /**
  * Created by anton on 4/14/16.
  * <p>
- * This represents the experiment folder structure of the first batch of experiment results (experiments-old/)
+ * This represents the experiment folder structure of the first obsolete of experiment results (experiments-old/)
  */
 public class OldDataSource extends DataSource<Host> {
 

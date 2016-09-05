@@ -3,10 +3,10 @@ package metrics.main;
 import metrics.algorithms.TimestampSort;
 import metrics.algorithms.classification.ExternalClassifier;
 import metrics.algorithms.classification.SourceTrainingLabelingAlgorithm;
-import metrics.algorithms.clustering.BICOClusterer;
 import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
-import metrics.algorithms.clustering.ExternalClusterer;
+import metrics.algorithms.clustering.ClusteringAlgorithm;
 import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
+import metrics.algorithms.clustering.clustering.BICOClusterer;
 import metrics.algorithms.evaluation.ExtendedStreamEvaluator;
 import metrics.algorithms.filter.MetricFilterAlgorithm;
 import metrics.algorithms.normalization.FeatureStandardizer;
@@ -100,8 +100,8 @@ public class Main {
 //                                    .consoleOutput();
 //                        })
 //                .runAndWait();
-        BICOClusterer bico = new BICOClusterer(false, false, 2000, 1000, null);
-        ClusterLabelingAlgorithm clusterLabelingAlgorithm = new ClusterLabelingAlgorithm(0.0, true, false);
+        BICOClusterer bico = new BICOClusterer(false, 2000, 1000, null);
+        ClusterLabelingAlgorithm clusterLabelingAlgorithm = new ClusterLabelingAlgorithm(0.0, true);
         new AlgorithmPipeline(new File(preparedDataFile(source)), FileMetricReader.FILE_NAME)
                 .step(new MetricFilterAlgorithm("disk-usage///free", "disk-usage///used"))
                 .fork(new OpenStackSampleSplitter(),
@@ -197,7 +197,7 @@ public class Main {
         Host source = bono;
         FileGroup outputs = new FileGroup(new File(newData.makeOutputDir(source), "analysis"));
 
-        for (ExternalClusterer clustererEnum : ExternalClusterer.values()) {
+        for (ClusteringAlgorithm clustererEnum : ClusteringAlgorithm.values()) {
             AbstractClusterer clusterer = clustererEnum.newInstance();
 
             new AlgorithmPipeline(newData, source)
@@ -207,9 +207,7 @@ public class Main {
                     .step(new SourceLabellingAlgorithm())
                     .step(new FeatureStandardizer())
                     .fork(new OpenStackSampleSplitter().fillInfo(),
-                            (name, p) -> {
-                                p.step(new BICOClusterer(false, true, null, null, null));
-                    })
+                            (name, p) -> p.step(new BICOClusterer(true, null, null, null)))
                     .runAndWait();
         }
         System.exit(0);

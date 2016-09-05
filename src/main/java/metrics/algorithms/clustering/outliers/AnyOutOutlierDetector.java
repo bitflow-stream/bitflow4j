@@ -5,16 +5,15 @@ import com.github.javacliparser.FloatOption;
 import com.github.javacliparser.IntOption;
 import com.github.javacliparser.Options;
 import metrics.Sample;
-import metrics.algorithms.clustering.ExternalClusterer;
+import metrics.algorithms.clustering.ClusteringAlgorithm;
 import moa.clusterers.outliers.AnyOut.AnyOut;
 import moa.clusterers.outliers.MyBaseOutlierDetector;
-
-import java.util.Set;
 
 /**
  * Created by malcolmx on 23.08.16.
  */
 public class AnyOutOutlierDetector extends MOAStreamOutlierDetection<AnyOut> {
+
     private volatile Integer trainingSetSize = null;
     private volatile Integer oScoreAggregationSize = null;
     private volatile Boolean useMeanScore = null;
@@ -22,15 +21,8 @@ public class AnyOutOutlierDetector extends MOAStreamOutlierDetection<AnyOut> {
     private volatile Integer confidence = null;
     private volatile Float threshold = null;
 
-    public void setConfidenceAggregationSize(Integer confidenceAggregationSize) {
-        this.confidenceAggregationSize = confidenceAggregationSize;
-    }
-
-    public void setConfidence(Integer confidence) {
-        this.confidence = confidence;
-    }
-    public AnyOutOutlierDetector(boolean alwaysTrain, Integer trainingSetSize, Integer OScoreAggregationSize, Integer confidenceAggregationSize, Integer confidence, Boolean useMeanScore, Float threshold) {
-        super((AnyOut) ExternalClusterer.ANY_OUT.newInstance(), alwaysTrain);
+    public AnyOutOutlierDetector(Integer trainingSetSize, Integer OScoreAggregationSize, Integer confidenceAggregationSize, Integer confidence, Boolean useMeanScore, Float threshold) {
+        super((AnyOut) ClusteringAlgorithm.ANY_OUT.newInstance());
         this.trainingSetSize = trainingSetSize;
         this.oScoreAggregationSize = OScoreAggregationSize;
         this.confidenceAggregationSize = confidenceAggregationSize;
@@ -39,8 +31,12 @@ public class AnyOutOutlierDetector extends MOAStreamOutlierDetection<AnyOut> {
         this.threshold = threshold;
     }
 
-    public AnyOutOutlierDetector() {
-        super((AnyOut) ExternalClusterer.ANY_OUT.newInstance());
+    public void setConfidenceAggregationSize(Integer confidenceAggregationSize) {
+        this.confidenceAggregationSize = confidenceAggregationSize;
+    }
+
+    public void setConfidence(Integer confidence) {
+        this.confidence = confidence;
     }
 
     public AnyOutOutlierDetector setTrainingSetSize(Integer trainingSetSize) throws IllegalStateException{
@@ -72,18 +68,6 @@ public class AnyOutOutlierDetector extends MOAStreamOutlierDetection<AnyOut> {
             throw new IllegalStateException("Final option cannot be set twice");
         }
     }
-
-    public AnyOutOutlierDetector(Set<String> trainedLabels, Integer trainingSetSize, Integer OScoreAggregationSize, Integer confidenceAggregationSize, Integer confidence, Boolean useMeanScore, Float threshold) {
-        super((AnyOut) ExternalClusterer.ANY_OUT.newInstance(), trainedLabels);
-        this.trainingSetSize = trainingSetSize;
-        oScoreAggregationSize = OScoreAggregationSize;
-        this.confidenceAggregationSize = confidenceAggregationSize;
-        this.confidence = confidence;
-        this.useMeanScore = useMeanScore;
-        this.threshold = threshold;
-    }
-
-
 
     @Override
     protected void onOutlier(MyBaseOutlierDetector.Outlier outlier) {

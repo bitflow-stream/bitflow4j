@@ -10,7 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Instead of immediately handling every Sample, fill up a batch of samples and then handle all
+ * Instead of immediately handling every Sample, fill up a obsolete of samples and then handle all
  * of them at once, possibly outputting a different number of resulting Samples.
  *
  * Created by anton on 5/8/16.
@@ -22,8 +22,8 @@ public abstract class BatchAlgorithm extends AbstractAlgorithm {
     public String currentSource = null;
 
     /**
-     * Compute and output results, then clear any logged data so that a new batch of data
-     * can be computed. Clear any intermediate data so that a new batch can be started.
+     * Compute and output results, then clear any logged data so that a new obsolete of data
+     * can be computed. Clear any intermediate data so that a new obsolete can be started.
      */
     protected abstract void flushAndClearResults(MetricOutputStream output) throws IOException;
 

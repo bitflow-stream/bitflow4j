@@ -1,8 +1,9 @@
-package metrics.algorithms.clustering;
+package metrics.algorithms.clustering.obsolete;
 
 import metrics.Header;
 import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
+import metrics.algorithms.clustering.ClusterConstants;
 import weka.clusterers.OPTICS;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
