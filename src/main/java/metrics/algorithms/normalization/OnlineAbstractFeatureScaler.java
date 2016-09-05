@@ -12,7 +12,7 @@ import java.util.Set;
  */
 public abstract class OnlineAbstractFeatureScaler extends AbstractAlgorithm {
 
-    private Set<String> warnedMetrics = new HashSet<String>();
+    private Set<String> warnedMetrics = new HashSet<>();
 
     @Override
     protected Sample executeSample(Sample sample) throws IOException {

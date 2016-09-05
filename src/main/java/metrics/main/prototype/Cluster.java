@@ -29,7 +29,7 @@ public class Cluster {
 
     public static void main(String[] args) throws IOException {
         if (args.length != 8) {
-            System.err.println("Parameters: <receive-port> <feature ini file> <target-host> <target-port> <local hostname> <filter> <num_clusters> <num_cluster_features> <concept-change-enabled>");
+            System.err.println("Parameters: <receive-port> <feature ini file> <target-host> <target-port> <local hostname> <filter> <num_clusters> <concept-change-enabled>");
             return;
         }
         int receivePort = Integer.parseInt(args[0]);
@@ -40,12 +40,12 @@ public class Cluster {
         String hostname = args[4];
         String filter = args[5];
         int num_clusters = Integer.valueOf(args[6]);
-        int num_cluster_feature = Integer.valueOf(args[7]);
-        boolean conceptChangeEnabled = Boolean.valueOf(args[8]);
+        int num_cluster_features = 15;
+        boolean conceptChangeEnabled = Boolean.valueOf(args[7]);
         Algorithm filterAlgo = Train.getFilter(filter);
 
         Set<String> trainedLabels = new HashSet<>(Arrays.asList(new String[] { "idle", "load" }));
-        BICOClusterer moaClusterer = new BICOClusterer(true, num_cluster_feature , num_clusters, null).trainedLabels(trainedLabels).alwaysAddDistanceMetrics();
+        BICOClusterer moaClusterer = new BICOClusterer(true, num_clusters, num_cluster_features, null).trainedLabels(trainedLabels).alwaysAddDistanceMetrics();
         ClusterLabelingAlgorithm labeling = new ClusterLabelingAlgorithm(classifiedClusterThreshold, true).trainedLabels(trainedLabels);
         LabelAggregatorAlgorithm labelAggregatorAlgorithm = new LabelAggregatorAlgorithm(labelAggregationWindow);
         StreamEvaluator evaluator = new OnlineOutlierEvaluator(true, trainedLabels, "normal", "abnormal");
