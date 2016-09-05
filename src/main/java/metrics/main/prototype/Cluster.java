@@ -46,7 +46,7 @@ public class Cluster {
 
         Set<String> trainedLabels = new HashSet<>(Arrays.asList(new String[] { "idle", "load" }));
         BICOClusterer moaClusterer = new BICOClusterer(true, num_cluster_feature , num_clusters, null).trainedLabels(trainedLabels).alwaysAddDistanceMetrics();
-        ClusterLabelingAlgorithm labeling = new ClusterLabelingAlgorithm(classifiedClusterThreshold, true);
+        ClusterLabelingAlgorithm labeling = new ClusterLabelingAlgorithm(classifiedClusterThreshold, true).trainedLabels(trainedLabels);
         LabelAggregatorAlgorithm labelAggregatorAlgorithm = new LabelAggregatorAlgorithm(labelAggregationWindow);
         StreamEvaluator evaluator = new OnlineOutlierEvaluator(true, trainedLabels, "normal", "abnormal");
         HostnameTagger hostnameTagger = new HostnameTagger(hostname);

@@ -5,6 +5,7 @@ import metrics.algorithms.AbstractAlgorithm;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * This labeling algorithm exchanges the current label of each sample with the best label as calculated by the last
@@ -25,6 +26,12 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
      */
     protected boolean includeProbabilities = false;
 
+    /**
+     * If not null, only change the cluster maps for labels that are inside this set.
+     * Samples with other labels are ignored.
+     */
+    protected Set<String> trainedLabels = null;
+
     public ClusterLabelingAlgorithm(double thresholdToClassify, boolean includeProbabilities) {
         this.clusterCounter = new ClusterCounter(thresholdToClassify);
         this.includeProbabilities = includeProbabilities;
@@ -35,11 +42,16 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
         return this;
     }
 
+    public ClusterLabelingAlgorithm trainedLabels(Set<String> trainedLabels) {
+        this.trainedLabels = trainedLabels;
+        return this;
+    }
+
     @Override
     protected synchronized Sample executeSample(Sample sample) throws IOException {
         int clusterId = sample.getClusterId();
         String originalLabel = sample.getLabel();
-        if (originalLabel != null && clusterId >= 0) {
+        if (sample.hasLabel() && clusterId >= 0 && (trainedLabels == null || trainedLabels.contains(originalLabel))) {
             clusterCounter.increment(clusterId, originalLabel);
         }
         String newLabel = clusterCounter.calculateLabel(clusterId);
