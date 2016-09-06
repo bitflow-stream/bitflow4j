@@ -1,5 +1,6 @@
 package metrics.main;
 
+import metrics.algorithms.filter.BatchSampleFilterAlgorithm;
 import metrics.algorithms.TimestampSort;
 import metrics.algorithms.classification.ExternalClassifier;
 import metrics.algorithms.classification.SourceTrainingLabelingAlgorithm;
@@ -110,7 +111,7 @@ public class Main {
 
                     p
                             .step(new SourceLabellingAlgorithm())
-                            // .step(new BatchSampleFilterAlgorithm(null, false))
+                             .step(new BatchSampleFilterAlgorithm(null, false))
                             .step(new FeatureStandardizer())
                             .step(new SourceTrainingLabelingAlgorithm())
                             .step(bico.reset())
@@ -119,7 +120,7 @@ public class Main {
                             .step(clusterLabelingAlgorithm)
 //                            .step(new LabelAggregatorAlgorithm(10))//.stripData())
 //                            .step(new WekaEvaluationWrapper())
-//                            .step(new StreamEvaluator(500, true, false))
+//                            .step(new MOAStreamEvaluator(500, true, false))
 
                 ;})
                 .runAndWait();
@@ -133,7 +134,7 @@ public class Main {
                     p
                             .step(new FeatureStandardizer())
                             .step(new SourceLabellingAlgorithm())
-                            // .step(new BatchSampleFilterAlgorithm(null, true))
+                             .step(new BatchSampleFilterAlgorithm(null, true))
                             .step(new SourceTrainingLabelingAlgorithm())
 //                            .step(new BICOClusterer(true, true, 2000, 200, null))
 //                            .step(new DistancePrinter())
