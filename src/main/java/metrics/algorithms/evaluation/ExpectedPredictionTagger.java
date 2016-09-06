@@ -55,7 +55,7 @@ public class ExpectedPredictionTagger extends AbstractAlgorithm {
 
     @Override
     public String toString() {
-        return "source training labeling algorithm";
+        return "expected prediction tagger";
     }
 
 }

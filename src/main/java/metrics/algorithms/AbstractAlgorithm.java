@@ -30,7 +30,9 @@ public abstract class AbstractAlgorithm implements Algorithm {
     private Exception startedStacktrace = null;
     private boolean started = false;
 
-    public abstract String toString();
+    public String toString() {
+        return getClass().getName();
+    }
 
     public synchronized final void start(MetricInputStream input, MetricOutputStream output) {
         if (startedStacktrace != null) {

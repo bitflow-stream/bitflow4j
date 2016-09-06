@@ -70,7 +70,7 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
         //TODO: added support for outlier detection requires refactoring and partial split in SphereClusterer and OutlierDetector (use subclass hook)
         sampleCount++;
         if (converger.getExpectedHeader() == null) {
-            initalizeClusterer(sample);
+            initializeClusterer(sample);
         }
 
         // Handle changing headers
@@ -100,7 +100,7 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
      * that depend on the samples.
      * @param firstSample The first sample
      */
-    protected void initalizeClusterer(Sample firstSample) {
+    protected void initializeClusterer(Sample firstSample) {
         this.setupClustererParameter(firstSample);
         this.clusterer.resetLearning();
         // this.printClustererParameters();

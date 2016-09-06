@@ -157,7 +157,7 @@ public class Main {
                             .step(new FeatureStandardizer())
                             .step(labelling.reset())
                             .step(new BatchSampleFilterAlgorithm(null, true))
-                            .step(tagger)
+                            .step(tagger.reset())
 //                            .step(new BICOClusterer(true, true, 2000, 200, null))
 //                            .step(new DistancePrinter())
                             .step(bico.reset())

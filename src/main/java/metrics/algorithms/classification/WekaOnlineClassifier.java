@@ -65,9 +65,4 @@ public class WekaOnlineClassifier<T extends Classifier & Serializable> extends A
         }
     }
 
-    @Override
-    public String toString() {
-        return "weka online classifier";
-    }
-
 }

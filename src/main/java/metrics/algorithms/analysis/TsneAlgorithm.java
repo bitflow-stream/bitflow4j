@@ -96,9 +96,4 @@ public class TsneAlgorithm extends WindowBatchAlgorithm {
         return window;
     }
 
-    @Override
-    public String toString() {
-        return "t-sne";
-    }
-
 }
