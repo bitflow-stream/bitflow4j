@@ -1,7 +1,7 @@
 package metrics.main;
 
 import metrics.Sample;
-import metrics.algorithms.Algorithm;
+import metrics.algorithms.AbstractAlgorithm;
 import metrics.algorithms.LabellingAlgorithm;
 import metrics.algorithms.TimestampSort;
 import metrics.algorithms.classification.ExternalClassifier;
@@ -113,7 +113,7 @@ public class Main {
         tagger.defaultLabel = ClusterConstants.NOISE_CLUSTER;
         tagger.addMapping(normalLabel, normalLabel);
 
-        Algorithm labelling = new LabellingAlgorithm() {
+        AbstractAlgorithm labelling = new LabellingAlgorithm() {
             @Override
             protected String newLabel(Sample sample) {
                 String label = sample.getSource();
@@ -155,7 +155,7 @@ public class Main {
 
                     p
                             .step(new FeatureStandardizer())
-                            .step(labelling)
+                            .step(labelling.reset())
                             .step(new BatchSampleFilterAlgorithm(null, true))
                             .step(tagger)
 //                            .step(new BICOClusterer(true, true, 2000, 200, null))

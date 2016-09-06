@@ -1,6 +1,5 @@
 package metrics.algorithms.clustering;
 
-import com.yahoo.labs.samoa.instances.WekaToSamoaInstanceConverter;
 import metrics.Header;
 import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
@@ -154,7 +153,7 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
         Instance instance = new DenseInstance(1.0, values);
         instance.setDataset(instances);
         WekaToSamoaInstanceConverter converter = new WekaToSamoaInstanceConverter();
-        return converter.samoaInstance(instance);
+        return converter.samoaInstance(instance, false);
     }
 
     /**
