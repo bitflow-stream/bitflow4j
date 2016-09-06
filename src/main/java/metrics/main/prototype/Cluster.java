@@ -149,10 +149,6 @@ public class Cluster {
             return output;
         }
 
-        @Override
-        public String toString() {
-            return "hostname tagger";
-        }
     }
 
 }

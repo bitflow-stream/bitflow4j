@@ -21,6 +21,9 @@ public class MetricPipe extends AbstractOutputStream implements MetricInputStrea
     // This is used to wake up the reading Thread when closing the pipe
     private final Sample closedMarker = Sample.newEmptySample();
 
+    // Is set to true when closedMarker
+    private boolean closedMarkerWasRead = false;
+
     public MetricPipe() {
         values = new LinkedBlockingQueue<>();
     }
@@ -37,6 +40,10 @@ public class MetricPipe extends AbstractOutputStream implements MetricInputStrea
                 }
                 Sample result = values.take();
                 if (result == closedMarker) {
+                    synchronized (this) {
+                        closedMarkerWasRead = true;
+                        notifyAll();
+                    }
                     throw new InputStreamClosedException();
                 }
                 return result;
@@ -64,6 +71,17 @@ public class MetricPipe extends AbstractOutputStream implements MetricInputStrea
         if (closed) return;
         writeSample(closedMarker);
         super.close();
+    }
+
+    @Override
+    public synchronized void waitUntilClosed() {
+        while (!(closedMarkerWasRead && closed)) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                // ignore
+            }
+        }
     }
 
 }

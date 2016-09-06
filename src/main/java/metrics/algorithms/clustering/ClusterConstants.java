@@ -42,11 +42,6 @@ public class ClusterConstants {
     // ==== Labels ====
     // ================
 
-    // Indicates that a Sample did not have a cls/src tag set.
-    // Use of this seems to indicate corrupted data or a bug
-    // TODO this should be eliminated and exceptions thrown instead at the correct places
-    public static final String UNKNOWN_LABEL = "unknown";
-
     // Label for samples that are clustered as noise
     public final static String NOISE_CLUSTER = "noise";
 

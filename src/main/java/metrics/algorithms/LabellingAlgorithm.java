@@ -23,9 +23,4 @@ public abstract class LabellingAlgorithm extends AbstractAlgorithm {
 
     protected abstract String newLabel(Sample sample);
 
-    @Override
-    public String toString() {
-        return "labelling algorithm";
-    }
-
 }

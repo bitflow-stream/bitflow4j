@@ -32,14 +32,14 @@ public class SrcClsMapper {
     /**
      * This method returns the correct expected predition for the given src-label
      * @param srcLabel the original source label of the sample
-     * @return the correct label, {@link ClusterConstants#NOISE_CLUSTER} if no mapping is present or {@link ClusterConstants#UNKNOWN_LABEL} if null is provided
      */
     public static String getCorrectPrediction(String srcLabel) throws IllegalArgumentException{
 //        if (srcLabel == null) throw new IllegalArgumentException("label must not be null");
 //        @throws @link{IllegalArgumentException} if null label is provided
         if(original) return srcLabel;
         if (srcLabel == null) {
-            return ClusterConstants.UNKNOWN_LABEL;
+            // return ClusterConstants.UNKNOWN_LABEL;
+            return "unknown";
         }
         lock.readLock().lock();
         String correctLabel;

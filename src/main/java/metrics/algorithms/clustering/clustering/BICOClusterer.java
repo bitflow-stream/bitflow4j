@@ -39,6 +39,13 @@ public class BICOClusterer extends MOASphereClusterer<BICO> {
         this.numberOfProjections = numberOfProjections;
     }
 
+    public void copyClusterer(BICOClusterer source) {
+        this.clusterer = source.clusterer;
+        this.numberOfClusters = source.numberOfClusters;
+        this.numberOfMicroclusters = source.numberOfMicroclusters;
+        this.numberOfProjections = source.numberOfProjections;
+    }
+
     public BICOClusterer alwaysAddDistanceMetrics() {
         super.alwaysAddDistanceMetrics();
         return this;

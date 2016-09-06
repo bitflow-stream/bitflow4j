@@ -37,9 +37,4 @@ public abstract class BatchLabellingAlgorithm extends WindowBatchAlgorithm {
 
     protected abstract String newLabel(Sample sample);
 
-    @Override
-    public String toString() {
-        return "obsolete labelling algorithm";
-    }
-
 }

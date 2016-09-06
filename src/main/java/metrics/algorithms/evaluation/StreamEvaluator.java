@@ -66,7 +66,7 @@ public abstract class StreamEvaluator extends AbstractAlgorithm {
     // Return null, if the sample is incomplete, an evaluation is not possible or should be avoided.
     protected abstract Boolean isCorrectPrediction(Sample sample);
 
-    private void recalculate() {
+    protected void recalculate() {
         overallPrecision = (double) correctPredictions / (double) (correctPredictions + wrongPredictions);
     }
 

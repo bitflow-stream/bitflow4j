@@ -12,11 +12,6 @@ import java.io.IOException;
 public class DistancePrinter extends AbstractAlgorithm {
 
     @Override
-    public String toString() {
-        return "distance printer";
-    }
-
-    @Override
     protected Sample executeSample(Sample sample) throws IOException {
         sample.getTags().entrySet().forEach(entry -> {
             if (entry.getKey().startsWith(ClusterConstants.DISTANCE_PREFIX)) {

@@ -1,18 +1,17 @@
 package metrics.main;
 
 import metrics.Sample;
-import metrics.algorithms.AbstractAlgorithm;
-import metrics.algorithms.LabellingAlgorithm;
-import metrics.algorithms.TimestampSort;
+import metrics.algorithms.*;
 import metrics.algorithms.classification.ExternalClassifier;
+import metrics.algorithms.classification.Model;
 import metrics.algorithms.clustering.ClusterConstants;
+import metrics.algorithms.clustering.ClusterCounter;
 import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
 import metrics.algorithms.clustering.ClusteringAlgorithm;
-import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
 import metrics.algorithms.clustering.clustering.BICOClusterer;
+import metrics.algorithms.evaluation.CrossValidationFork;
 import metrics.algorithms.evaluation.ExpectedPredictionTagger;
 import metrics.algorithms.evaluation.ExtendedStreamEvaluator;
-import metrics.algorithms.filter.BatchSampleFilterAlgorithm;
 import metrics.algorithms.filter.MetricFilterAlgorithm;
 import metrics.algorithms.normalization.FeatureStandardizer;
 import metrics.io.file.FileGroup;
@@ -23,6 +22,7 @@ import metrics.main.analysis.OpenStackSampleSplitter;
 import metrics.main.analysis.SourceLabellingAlgorithm;
 import metrics.main.data.*;
 import moa.clusterers.AbstractClusterer;
+import moa.clusterers.Clusterer;
 import weka.classifiers.AbstractClassifier;
 
 import java.io.File;
@@ -43,77 +43,24 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 //        allClassifiers();
-
 //        allClusterers();
 //        prepareData(bono);
+
         Host source = bono;
         FileGroup outputs = new FileGroup(new File(newData.makeOutputDir(source), "analysis"));
-//
-//        /*
-//        new AlgorithmPipeline(new File(outputs.getFile("tsne") + ".csv"), FileMetricReader.FILE_NAME)
-//                .step(new FeatureStandardizer())
-//                .output(new OutputMetricPlotter<>(new JMathPlotter(), 0, 1))
-//                .runAndWait();
-//        System.exit(0);
-//        */
-//
-//        // new AlgorithmPipeline(newData, source)
-//        new AlgorithmPipeline(new File(preparedDataFile(source)), FileMetricReader.FILE_NAME)
-////                    .cache(new File(outputs.getFile("cache")))
-//                .step(new MetricFilterAlgorithm("disk-usage///free", "disk-usage///used"))
-////                .step(new SampleFilterAlgorithm((sample) -> sample.getTimestamp().after(new Date(2016 - 1900, 4, 1))))
-////                .step(new SourceLabellingAlgorithm())
-//                .fork(new OpenStackSampleSplitter().fillInfo(),
-//                        (name, p) -> {
-//                            String file = outputs.getFile(name.isEmpty() ? "default" : name);
-////                            p.consoleOutput("CSV");
-////                            p.csvOutput(file + ".csv");
-////                            p.cache(new File(outputs.getFile("cache")));
-//
-////                            p
-////                                    .step(new PCAAlgorithm(0.99))
-////                                    .output(new OutputMetricPlotter<>(new ScatterPlotter(), file, 0, 1));
-//
-////                            p.step(new FeatureAggregator(10000L).addAvg().addSlope());
-////                            p.csvOutput(file + "-agg.csv");
-////                            p.fork(
-////                                    new TwoWayFork(0.8f),
-////                                    new TimeBasedTwoWayFork(0.3f),
-////                                    new SortedTimeBasedFork(0.3f, new Date(2016 - 1900, 4, 10, 9, 8, 40)),
-////                                    new ClassifierFork<>(new J48(), file + ".png"));
-//
-//                            p
-//                                    .step(new PCAAlgorithm(0.99))
-//                                    .output(new OutputMetricPlotter<>(new ScatterPlotter(), file, 0, 1));
 
-//                            p.step(new FeatureAggregator(10000L).addAvg().addSlope());
-//                            p.csvOutput(file + "-agg.csv");
-//                            p.fork(
-//                                    new TwoWayFork(0.8f),
-//                                    new TimeBasedTwoWayFork(0.3f),
-//                                    new SortedTimeBasedFork(0.3f, new Date(2016 - 1900, 4, 10, 9, 8, 40)),
-//                                    new ClassifierFork<>(new J48(), file + ".png"));
-//                            p
-//                                    .step(new FeatureStandardizer())
-//                                    .step(new CobwebClusterer(0.7, false, 0, null))
-//                                    .step(new PCAAlgorithm(0.99))
-//                                    .output(new OutputMetricPlotter<>(new JMathPlotter(), 0, 1));
-//                                    .step(new ClusterSummary(false, true))
-//                                    .consoleOutput("TXT");
-//                            p
-//                                    .step(new TsneAlgorithm(5.0, 50, 2, false))
-//                                    .csvOutput(outputs.getFile("tsne") + ".csv");
-//                                    .consoleOutput();
-//                        })
-//                .runAndWait();
         final String normalLabel = "normal";
+        Model<Clusterer> bicoModel = new Model<>();
+        Model<ClusterCounter> labelingModel = new Model<>();
         BICOClusterer bico = new BICOClusterer(false, 500, 50, null).trainedLabels(Collections.singleton(normalLabel));
-        ClusterLabelingAlgorithm clusterLabelingAlgorithm = new ClusterLabelingAlgorithm(0.0, true);
+        BICOClusterer evalBico = new BICOClusterer(false, 500, 50, null).trainedLabels(Collections.singleton(normalLabel));
+        ClusterLabelingAlgorithm clusterLabeler = new ClusterLabelingAlgorithm(0.0, true);
+        ClusterLabelingAlgorithm evalClusterLabeler = new ClusterLabelingAlgorithm(0.0, true);
         ExpectedPredictionTagger tagger = new ExpectedPredictionTagger();
         tagger.defaultLabel = ClusterConstants.NOISE_CLUSTER;
         tagger.addMapping(normalLabel, normalLabel);
 
-        AbstractAlgorithm labelling = new LabellingAlgorithm() {
+        AbstractAlgorithm initialLabeller = new LabellingAlgorithm() {
             @Override
             protected String newLabel(Sample sample) {
                 String label = sample.getSource();
@@ -125,51 +72,37 @@ public class Main {
             }
         };
 
-        new AlgorithmPipeline(new File(preparedDataFile(source)), FileMetricReader.FILE_NAME)
+        // preparedDataFile(source)
+        new AlgorithmPipeline(new File("/home/anton/Data/analysis/experiments-new-2/virtual_host_bono.ims/sorted.csv"), FileMetricReader.FILE_NAME)
                 .step(new MetricFilterAlgorithm("disk-usage///free", "disk-usage///used"))
                 .fork(new OpenStackSampleSplitter(),
                         (name, p) -> {
                     String file = outputs.getFile(name.isEmpty() ? "default" : name);
-
                     p
-                            .step(new SourceLabellingAlgorithm())
-                            .step(new BatchSampleFilterAlgorithm(null, false))
-                            .step(new FeatureStandardizer())
+                            .step(initialLabeller)
                             .step(tagger)
-                            .step(bico.reset())
-//                            .step(new DistancePrinter())
-//                            .step(new AnyOutOutlierDetector(true, null, null, null, null, null, null))
-                            .step(clusterLabelingAlgorithm)
-//                            .step(new LabelAggregatorAlgorithm(10))//.stripData())
-//                            .step(new WekaEvaluationWrapper())
-//                            .step(new MOAStreamEvaluator(500, true, false))
-
-                ;})
-                .runAndWait();
-        System.out.println("now it should be finished");
-        new AlgorithmPipeline(new File(preparedDataFile(source)), FileMetricReader.FILE_NAME)
-                .step(new MetricFilterAlgorithm("disk-usage///free", "disk-usage///used"))
-                .fork(new OpenStackSampleSplitter(),
-                        (name, p) -> {
-                    String file = outputs.getFile(name.isEmpty() ? "default" : name);
-
-                    p
                             .step(new FeatureStandardizer())
-                            .step(labelling.reset())
-                            .step(new BatchSampleFilterAlgorithm(null, true))
-                            .step(tagger.reset())
-//                            .step(new BICOClusterer(true, true, 2000, 200, null))
-//                            .step(new DistancePrinter())
-                            .step(bico.reset())
-//                            .step(new AnyOutOutlierDetector(true, null, null, null, null, null, null))
-                            .step(clusterLabelingAlgorithm.reset())
-                            .step(new LabelAggregatorAlgorithm(10).stripData())
-//                            .step(new WekaEvaluationWrapper())
-                            .step(new ExtendedStreamEvaluator(10, true, false));
-
+                            .fork(
+                                    new CrossValidationFork(Collections.singleton("normal"), 0.8d),
+                                    (key, pipeline) -> {
+                                        pipeline.emptyOutput();
+                                        switch (key) {
+                                            case Primary:
+                                                pipeline
+                                                        .step(new AlgorithmModelProvider<>(bico, bicoModel))
+                                                        .step(new AlgorithmModelProvider<>(clusterLabeler, labelingModel));
+                                                break;
+                                            case Secondary:
+                                                pipeline
+                                                        .step(new AlgorithmModelReceiver<>(evalBico, bicoModel))
+                                                        .step(new AlgorithmModelReceiver<>(evalClusterLabeler, labelingModel))
+//                                                        .step(new LabelAggregatorAlgorithm(10).stripData())
+                                                        .step(new ExtendedStreamEvaluator(false));
+                                                break;
+                                        }
+                                    });
                 })
                 .runAndWait();
-
     }
 
     private static String preparedDataFile(Host source) throws IOException {
@@ -208,7 +141,6 @@ public class Main {
 
                         p.fork(
                                 new TwoWayFork(0.8f),
-                                //                                new TimeBasedTwoWayFork(0.45f),
                                 new ClassifierFork<>(classifier, file + ".png"));
                     })
                     .runAndWait();

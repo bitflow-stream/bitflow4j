@@ -37,9 +37,4 @@ public class SampleFilterAlgorithm extends AbstractAlgorithm {
         hash.writeClassName(filter);
     }
 
-    @Override
-    public String toString() {
-        return "sample filter";
-    }
-
 }

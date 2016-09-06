@@ -23,7 +23,7 @@ import java.util.Set;
  */
 public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializable> extends AbstractAlgorithm {
 
-    protected final T clusterer;
+    protected T clusterer;
     protected long sampleCount;
 
     protected final SampleConverger converger = new SampleConverger(); // No predefined expected header
@@ -126,8 +126,13 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
     private void trainSample(Sample sample, com.yahoo.labs.samoa.instances.Instance instance) {
         //TODO: we use trainOnInstanceImpl() for both outlier detection algorithms and clustering algorithms. This is consistent with the current implementation of the outlier detection algorithms, but the interface moa.clusterers.outliers.MyBaseOutlierDetector suggests using processNewInstanceImpl
         clusterer.trainOnInstance(instance);
-        //check if clusterer finished buffering
-        clusteringResult = getClusteringResult();
+        try {
+            clusteringResult = getClusteringResult();
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // This exception occurs in BICO.getClusteringResult() and possibly other implementations of that method,
+            // when not enough samples have been trained to provide a correct clustering.
+            // Ignore the exception, clusteringResult is not available in that case.
+        }
     }
 
     /**
@@ -135,11 +140,6 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
      */
     public synchronized void resetClusters() {
         clusterer.resetLearning();
-    }
-
-    @Override
-    public String toString() {
-        return "moa clusterer";
     }
 
     /**
@@ -201,4 +201,14 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
      */
     protected abstract int calculateCluster(com.yahoo.labs.samoa.instances.Instance instance);
 
+    @Override
+    public Object getModel() {
+        return clusterer;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void setModel(Object model) {
+        clusterer = (T) model;
+    }
 }

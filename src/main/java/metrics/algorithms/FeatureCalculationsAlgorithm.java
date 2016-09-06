@@ -81,9 +81,4 @@ public class FeatureCalculationsAlgorithm extends AbstractAlgorithm {
 
     }
 
-    @Override
-    public String toString() {
-        return "Feature Calculations Algorithm";
-    }
-
 }

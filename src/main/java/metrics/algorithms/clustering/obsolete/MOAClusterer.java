@@ -33,11 +33,6 @@ public class MOAClusterer<T extends AbstractClusterer & Serializable> extends Ab
     }
 
     @Override
-    public String toString() {
-        return "MOA clusterer";
-    }
-
-    @Override
     protected void flushResults(MetricOutputStream output) throws IOException {
         Instances instances = createDataset();
         fillDataset(instances);

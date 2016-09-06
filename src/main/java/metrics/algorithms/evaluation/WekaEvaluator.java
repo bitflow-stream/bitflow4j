@@ -58,9 +58,4 @@ public class WekaEvaluator<T extends Classifier & Serializable> extends Abstract
         System.out.println(resultsString());
     }
 
-    @Override
-    public String toString() {
-        return "weka evaluator";
-    }
-
 }

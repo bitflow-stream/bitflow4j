@@ -30,11 +30,17 @@ public abstract class AbstractAlgorithm implements Algorithm {
     private Exception startedStacktrace = null;
     private boolean started = false;
 
+    private synchronized static int nextInstanceNumber() {
+        return algorithmInstanceCounter++;
+    }
+    private static int algorithmInstanceCounter = 0;
+    private final int algorithmInstanceNumber = nextInstanceNumber();
+
     public String toString() {
-        return getClass().getName();
+        return getClass().getSimpleName() + " (Instance " + algorithmInstanceNumber + ")";
     }
 
-    public synchronized final void start(MetricInputStream input, MetricOutputStream output) {
+    public synchronized void start(MetricInputStream input, MetricOutputStream output) {
         if (startedStacktrace != null) {
             throw new IllegalStateException("Algorithm was already started: " + toString(), startedStacktrace);
         }
@@ -131,6 +137,14 @@ public abstract class AbstractAlgorithm implements Algorithm {
             }
         }
 
+    }
+
+    public Object getModel() {
+        throw new UnsupportedOperationException("Not implemented for this class");
+    }
+
+    public void setModel(Object model) {
+        throw new UnsupportedOperationException("Not implemented for this class");
     }
 
 }

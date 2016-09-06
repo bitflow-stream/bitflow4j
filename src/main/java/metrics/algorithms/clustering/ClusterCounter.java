@@ -1,11 +1,12 @@
 package metrics.algorithms.clustering;
 
+import java.io.Serializable;
 import java.util.*;
 
 /**
  * Created by Malcolm-X on 27.06.2016.
  */
-public class ClusterCounter {
+public class ClusterCounter implements Serializable {
 
     private final Set<String> allLabels = new TreeSet<>();
     private final Map<Integer, ClusterCounters> clusterIdToCounters;

@@ -8,11 +8,6 @@ import metrics.io.window.MetricStatisticsWindow;
 public class FeatureMinMaxScaler extends AbstractFeatureScaler {
 
     @Override
-    public String toString() {
-        return "min-max scaling";
-    }
-
-    @Override
     protected MetricScaler createScaler(MetricStatisticsWindow stats) {
         return new MetricMinMaxScaler(stats);
     }

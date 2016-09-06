@@ -26,9 +26,4 @@ public class OnlineFeatureStandardizer extends OnlineAbstractFeatureScaler {
         return (val - average) / stdDeviation;
     }
 
-    @Override
-    public String toString() {
-        return "online feature standardizer";
-    }
-
 }

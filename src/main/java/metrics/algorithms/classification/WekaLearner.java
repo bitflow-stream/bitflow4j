@@ -32,11 +32,6 @@ public class WekaLearner<T extends Classifier & Serializable> extends AbstractWe
     }
 
     @Override
-    public String toString() {
-        return "weka learner";
-    }
-
-    @Override
     protected void flushResults(MetricOutputStream output) throws IOException {
         allFlushedClasses = allClasses();
         flushedHeader = window.getHeader();

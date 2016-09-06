@@ -31,11 +31,6 @@ public class VarianceFilterAlgorithm extends WindowBatchAlgorithm {
     }
 
     @Override
-    public String toString() {
-        return "stdDeviation-filter [" + minNormalizedDeviation + "]";
-    }
-
-    @Override
     public void hashParameters(ParameterHash hash) {
         super.hashParameters(hash);
         hash.writeDouble(minNormalizedDeviation);

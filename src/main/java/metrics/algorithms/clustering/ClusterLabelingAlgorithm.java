@@ -92,7 +92,13 @@ public class ClusterLabelingAlgorithm extends AbstractAlgorithm {
     }
 
     @Override
-    public String toString() {
-        return "cluster labeling algorithm";
+    public void setModel(Object model) {
+        clusterCounter = (ClusterCounter) model;
     }
+
+    @Override
+    public Object getModel() {
+        return clusterCounter;
+    }
+
 }

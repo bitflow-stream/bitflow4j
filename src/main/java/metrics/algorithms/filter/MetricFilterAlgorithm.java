@@ -69,11 +69,6 @@ public class MetricFilterAlgorithm extends AbstractAlgorithm {
 
     }
 
-    @Override
-    public String toString() {
-        return "metric filter";
-    }
-
     protected Sample executeSample(Sample sample) throws IOException {
         sample.checkConsistency();
         if (sample.headerChanged(lastHeader))

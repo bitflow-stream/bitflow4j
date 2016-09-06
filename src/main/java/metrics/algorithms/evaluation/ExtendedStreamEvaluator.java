@@ -2,7 +2,9 @@ package metrics.algorithms.evaluation;
 
 import metrics.Sample;
 import metrics.algorithms.clustering.ClusterConstants;
+import metrics.io.MetricOutputStream;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -12,9 +14,6 @@ import java.util.Set;
  * Created by Malcolm-X on 27.06.2016.
  */
 public class ExtendedStreamEvaluator extends StreamEvaluator {
-
-    private long sampleInterval;
-    private boolean printOnRecalculation;
 
     private Set<String> labels = new HashSet<>();
     private Map<String, Long> truePositives = new HashMap<>();
@@ -26,10 +25,8 @@ public class ExtendedStreamEvaluator extends StreamEvaluator {
     private double averagePrecision, averageRecall, overallRecall, weightedAverageRecall, weightedAveragePrecision, minPrecision, minRecall, maxPrecision, maxRecall;
     private double medianRecall, medianPrecision;
 
-    public ExtendedStreamEvaluator(long sampleInterval, boolean printOnRecalculation, boolean extendSample) {
+    public ExtendedStreamEvaluator(boolean extendSample) {
         super(extendSample);
-        this.sampleInterval = sampleInterval;
-        this.printOnRecalculation = printOnRecalculation;
     }
 
     protected void correctSample(Sample sample) {
@@ -50,9 +47,10 @@ public class ExtendedStreamEvaluator extends StreamEvaluator {
     protected Boolean isCorrectPrediction(Sample sample) {
         // TODO: decide wether sampleCount should be incremented for non evaluated samples
         // (affects overall precision an recall)
-
-        if (!sample.hasLabel() || !sample.hasTag(ClusterConstants.EXPECTED_PREDICTION_TAG))
+        if (!sample.hasLabel() || !sample.hasTag(ClusterConstants.EXPECTED_PREDICTION_TAG)) {
             return null;
+        }
+
         String predictedLabel = sample.getLabel();
         String expectedLabel = sample.getTag(ClusterConstants.EXPECTED_PREDICTION_TAG);
         sampleCount++;
@@ -62,7 +60,8 @@ public class ExtendedStreamEvaluator extends StreamEvaluator {
     }
 
     @SuppressWarnings("OptionalGetWithoutIsPresent")
-    private void recalculate() {
+    @Override
+    protected void recalculate() {
         if (labels != null && !labels.isEmpty()) {
             long truePostivesSum = truePositives.values().stream().mapToInt(Long::intValue).sum();
             long falsePositivesSum = falsePositives.values().stream().mapToInt(Long::intValue).sum();
@@ -90,9 +89,6 @@ public class ExtendedStreamEvaluator extends StreamEvaluator {
             maxRecall = labelToRecall.values().stream().mapToDouble(d -> d).max().getAsDouble();
             minPrecision = labelToPrecision.values().stream().mapToDouble(d -> d).min().getAsDouble();
             minRecall = labelToRecall.values().stream().mapToDouble(d -> d).min().getAsDouble();
-            if (printOnRecalculation) {
-                printEvaluation();
-            }
         } else {
             if(labels == null) System.err.println("labels null");
             else if(labels.isEmpty()) System.err.println("labels empty");
@@ -100,11 +96,19 @@ public class ExtendedStreamEvaluator extends StreamEvaluator {
     }
 
     private void printEvaluation() {
-        System.err.println(getReadableEvaluation());
+        System.out.println(getReadableEvaluation());
+    }
+
+    @Override
+    protected void inputClosed(MetricOutputStream output) throws IOException {
+        recalculate();
+        printEvaluation();
+        super.inputClosed(output);
     }
 
     protected boolean shouldRecalculate() {
-        return (sampleCount % sampleInterval) == 0;
+        // Only recalculate when finished collecting data (in inputClosed())
+        return false;
     }
 
     private final static String LINE = "----------------------------------------------";

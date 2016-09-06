@@ -2,7 +2,6 @@ package metrics.algorithms.clustering;
 
 import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
-import metrics.io.MetricOutputStream;
 import metrics.io.window.MetricStatisticsWindow;
 import metrics.io.window.MultiHeaderWindow;
 
@@ -63,11 +62,6 @@ public class LabelAggregatorAlgorithm extends AbstractAlgorithm {
         // Possibly overwrites the label previously predicted by ClusterLabelingAlgorithm
         sample.setLabel(recommendedLabel);
         return sample;
-    }
-
-    @Override
-    protected void inputClosed(MetricOutputStream output) throws IOException {
-        super.inputClosed(output);
     }
 
     @Override

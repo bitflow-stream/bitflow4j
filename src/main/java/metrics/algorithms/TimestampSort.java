@@ -34,9 +34,4 @@ public class TimestampSort extends WindowBatchAlgorithm {
         return window;
     }
 
-    @Override
-    public String toString() {
-        return "timestamp sort";
-    }
-
 }

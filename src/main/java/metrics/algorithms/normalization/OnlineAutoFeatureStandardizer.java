@@ -30,9 +30,4 @@ public class OnlineAutoFeatureStandardizer extends OnlineAbstractFeatureScaler {
         return (val - average) / stdDeviation;
     }
 
-    @Override
-    public String toString() {
-        return "auto online feature standardizer";
-    }
-
 }

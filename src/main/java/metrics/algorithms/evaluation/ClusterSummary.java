@@ -108,11 +108,6 @@ public class ClusterSummary extends AbstractAlgorithm {
     }
 
     @Override
-    public String toString() {
-        return "cluster summary";
-    }
-
-    @Override
     public void hashParameters(ParameterHash hash) {
         super.hashParameters(hash);
         hash.writeBoolean(printDetails);

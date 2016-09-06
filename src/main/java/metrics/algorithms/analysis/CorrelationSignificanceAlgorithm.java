@@ -72,11 +72,6 @@ public class CorrelationSignificanceAlgorithm extends BatchAlgorithm {
     }
 
     @Override
-    public String toString() {
-        return "correlation post-analysis [" + minCorrelationSignificance + "]";
-    }
-
-    @Override
     public void hashParameters(ParameterHash hash) {
         super.hashParameters(hash);
         hash.writeDouble(minCorrelationSignificance);

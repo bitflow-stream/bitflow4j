@@ -27,11 +27,6 @@ public class LassoAlgorithm extends WindowBatchAlgorithm {
     }
 
     @Override
-    public String toString() {
-        return "lasso [" + maxAllowedFeatures + "]";
-    }
-
-    @Override
     protected AbstractSampleWindow getWindow() {
         return window;
     }
