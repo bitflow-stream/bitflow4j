@@ -12,6 +12,7 @@ import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
 import metrics.algorithms.clustering.clustering.BICOClusterer;
 import metrics.algorithms.evaluation.ExpectedPredictionTagger;
 import metrics.algorithms.evaluation.ExtendedStreamEvaluator;
+import metrics.algorithms.filter.BatchSampleFilterAlgorithm;
 import metrics.algorithms.filter.MetricFilterAlgorithm;
 import metrics.algorithms.normalization.FeatureStandardizer;
 import metrics.io.file.FileGroup;
@@ -131,8 +132,8 @@ public class Main {
                     String file = outputs.getFile(name.isEmpty() ? "default" : name);
 
                     p
-                            .step(labelling)
-                            // .step(new BatchSampleFilterAlgorithm(null, false))
+                            .step(new SourceLabellingAlgorithm())
+                            .step(new BatchSampleFilterAlgorithm(null, false))
                             .step(new FeatureStandardizer())
                             .step(tagger)
                             .step(bico.reset())
@@ -141,7 +142,7 @@ public class Main {
                             .step(clusterLabelingAlgorithm)
 //                            .step(new LabelAggregatorAlgorithm(10))//.stripData())
 //                            .step(new WekaEvaluationWrapper())
-//                            .step(new StreamEvaluator(500, true, false))
+//                            .step(new MOAStreamEvaluator(500, true, false))
 
                 ;})
                 .runAndWait();
@@ -155,7 +156,7 @@ public class Main {
                     p
                             .step(new FeatureStandardizer())
                             .step(labelling)
-                            // .step(new BatchSampleFilterAlgorithm(null, true))
+                            .step(new BatchSampleFilterAlgorithm(null, true))
                             .step(tagger)
 //                            .step(new BICOClusterer(true, true, 2000, 200, null))
 //                            .step(new DistancePrinter())
