@@ -1,12 +1,16 @@
 package metrics.main;
 
+import metrics.Sample;
+import metrics.algorithms.Algorithm;
+import metrics.algorithms.LabellingAlgorithm;
 import metrics.algorithms.TimestampSort;
 import metrics.algorithms.classification.ExternalClassifier;
-import metrics.algorithms.classification.SourceTrainingLabelingAlgorithm;
+import metrics.algorithms.clustering.ClusterConstants;
 import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
 import metrics.algorithms.clustering.ClusteringAlgorithm;
 import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
 import metrics.algorithms.clustering.clustering.BICOClusterer;
+import metrics.algorithms.evaluation.ExpectedPredictionTagger;
 import metrics.algorithms.evaluation.ExtendedStreamEvaluator;
 import metrics.algorithms.filter.MetricFilterAlgorithm;
 import metrics.algorithms.normalization.FeatureStandardizer;
@@ -22,6 +26,7 @@ import weka.classifiers.AbstractClassifier;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 
 @SuppressWarnings("unused")
 public class Main {
@@ -100,8 +105,25 @@ public class Main {
 //                                    .consoleOutput();
 //                        })
 //                .runAndWait();
-        BICOClusterer bico = new BICOClusterer(false, 2000, 1000, null);
+        final String normalLabel = "normal";
+        BICOClusterer bico = new BICOClusterer(false, 500, 50, null).trainedLabels(Collections.singleton(normalLabel));
         ClusterLabelingAlgorithm clusterLabelingAlgorithm = new ClusterLabelingAlgorithm(0.0, true);
+        ExpectedPredictionTagger tagger = new ExpectedPredictionTagger();
+        tagger.defaultLabel = ClusterConstants.NOISE_CLUSTER;
+        tagger.addMapping(normalLabel, normalLabel);
+
+        Algorithm labelling = new LabellingAlgorithm() {
+            @Override
+            protected String newLabel(Sample sample) {
+                String label = sample.getSource();
+                if (sample.hasLabel()) {
+                    if (label.equals("idle") || label.equals("load") || label.equals("overload"))
+                        return normalLabel;
+                }
+                return label;
+            }
+        };
+
         new AlgorithmPipeline(new File(preparedDataFile(source)), FileMetricReader.FILE_NAME)
                 .step(new MetricFilterAlgorithm("disk-usage///free", "disk-usage///used"))
                 .fork(new OpenStackSampleSplitter(),
@@ -109,10 +131,10 @@ public class Main {
                     String file = outputs.getFile(name.isEmpty() ? "default" : name);
 
                     p
-                            .step(new SourceLabellingAlgorithm())
+                            .step(labelling)
                             // .step(new BatchSampleFilterAlgorithm(null, false))
                             .step(new FeatureStandardizer())
-                            .step(new SourceTrainingLabelingAlgorithm())
+                            .step(tagger)
                             .step(bico.reset())
 //                            .step(new DistancePrinter())
 //                            .step(new AnyOutOutlierDetector(true, null, null, null, null, null, null))
@@ -132,9 +154,9 @@ public class Main {
 
                     p
                             .step(new FeatureStandardizer())
-                            .step(new SourceLabellingAlgorithm())
+                            .step(labelling)
                             // .step(new BatchSampleFilterAlgorithm(null, true))
-                            .step(new SourceTrainingLabelingAlgorithm())
+                            .step(tagger)
 //                            .step(new BICOClusterer(true, true, 2000, 200, null))
 //                            .step(new DistancePrinter())
                             .step(bico.reset())

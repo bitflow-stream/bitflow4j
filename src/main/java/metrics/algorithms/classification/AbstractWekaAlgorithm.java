@@ -2,10 +2,10 @@ package metrics.algorithms.classification;
 
 import metrics.Sample;
 import metrics.algorithms.WindowBatchAlgorithm;
+import metrics.algorithms.evaluation.CITInstance;
 import metrics.io.window.AbstractSampleWindow;
 import metrics.io.window.SampleWindow;
 import weka.core.Attribute;
-import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
 
@@ -19,14 +19,14 @@ import java.util.TreeSet;
  */
 public abstract class AbstractWekaAlgorithm extends WindowBatchAlgorithm {
 
-    final SampleWindow window = new SampleWindow();
+    public final SampleWindow window = new SampleWindow();
 
     @Override
     protected AbstractSampleWindow getWindow() {
         return window;
     }
 
-    Instances createDataset() {
+    public Instances createDataset() {
         if (window.numSamples() < 1)
             throw new IllegalStateException("Cannot create empty dataset");
         Instances instances = new Instances(toString() + " data", new ArrayList<>(), window.numSamples());
@@ -47,7 +47,7 @@ public abstract class AbstractWekaAlgorithm extends WindowBatchAlgorithm {
         return new ArrayList<>(allLabels);
     }
 
-    synchronized void fillDataset(Instances instances) {
+    public synchronized void fillDataset(Instances instances) {
         CITInstance.resetCounter();
         for (Sample sample : window.samples) {
             double[] values = sample.getMetrics();

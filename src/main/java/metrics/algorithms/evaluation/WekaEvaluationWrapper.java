@@ -1,12 +1,13 @@
-package metrics.algorithms.classification;
+package metrics.algorithms.evaluation;
 
 import metrics.Sample;
+import metrics.algorithms.classification.AbstractWekaAlgorithm;
+import metrics.algorithms.classification.Model;
 import metrics.algorithms.clustering.ClusterConstants;
 import metrics.io.MetricOutputStream;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.core.Attribute;
-import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
 
@@ -19,7 +20,7 @@ import java.util.TreeSet;
 /**
  * This class can be used to evaluate any classification algorithm stack.
  * In order to use this evaluator, the samples must be tagged with the correct predictions
- * (e.g. by using the {@link SourceTrainingLabelingAlgorithm}.
+ * (e.g. by using the {@link ExpectedPredictionTagger}.
  * This is a obsolete algorithm and not suited for online streaming (can be added by allowing
  * variable window size in {@link AbstractWekaAlgorithm}
  */

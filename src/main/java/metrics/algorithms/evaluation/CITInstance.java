@@ -1,4 +1,4 @@
-package metrics.algorithms.classification;
+package metrics.algorithms.evaluation;
 
 import weka.core.DenseInstance;
 import weka.core.Instance;

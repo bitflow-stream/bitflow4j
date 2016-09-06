@@ -54,9 +54,6 @@ public class ExtendedStreamEvaluator extends StreamEvaluator {
         if (!sample.hasLabel() || !sample.hasTag(ClusterConstants.EXPECTED_PREDICTION_TAG))
             return null;
         String predictedLabel = sample.getLabel();
-        if (predictedLabel.equals(ClusterConstants.UNKNOWN_LABEL))
-            return null;
-
         String expectedLabel = sample.getTag(ClusterConstants.EXPECTED_PREDICTION_TAG);
         sampleCount++;
         labels.add(predictedLabel);

@@ -2,7 +2,6 @@ package metrics.algorithms;
 
 import metrics.Header;
 import metrics.Sample;
-import metrics.algorithms.classification.OnlineNormalEstimator;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -14,11 +14,16 @@ import java.util.Set;
 public class BICOClusterer extends MOASphereClusterer<BICO> {
 
     private volatile Integer numberOfProjections;
+    private volatile Integer numberOfMicroclusters;
     private volatile Integer numberOfClusters;
-    private volatile Integer numberOfCenters;
 
     public BICOClusterer setNumberOfProjections(Integer numberOfProjections) {
         this.numberOfProjections = numberOfProjections;
+        return this;
+    }
+
+    public BICOClusterer setNumberOfMicroclusters(Integer numberOfMicroclusters) {
+        this.numberOfMicroclusters = numberOfMicroclusters;
         return this;
     }
 
@@ -27,15 +32,10 @@ public class BICOClusterer extends MOASphereClusterer<BICO> {
         return this;
     }
 
-    public BICOClusterer setNumberOfCenters(Integer numberOfCenters) {
-        this.numberOfCenters = numberOfCenters;
-        return this;
-    }
-
-    public BICOClusterer(boolean calculateDistance, Integer numberOfClusters, Integer numberOfCenters, Integer numberOfProjections) {
+    public BICOClusterer(boolean calculateDistance, Integer numberOfMicroclusters, Integer numberOfClusters, Integer numberOfProjections) {
         super((BICO) ClusteringAlgorithm.BICO.newInstance(), calculateDistance);
+        this.numberOfMicroclusters = numberOfMicroclusters;
         this.numberOfClusters = numberOfClusters;
-        this.numberOfCenters = numberOfCenters;
         this.numberOfProjections = numberOfProjections;
     }
 
@@ -54,12 +54,12 @@ public class BICOClusterer extends MOASphereClusterer<BICO> {
         int numMetrics = firstSample.getHeader().header.length;
         numMetrics++; // The class/label attribute is added
         IntOption numClustersOption = new IntOption("Cluster", 'k',
-                "Number of desired centers.", numberOfCenters == null ? 15 : numberOfCenters, 1, Integer.MAX_VALUE);
+                "Number of desired centers.", numberOfClusters == null ? 15 : numberOfClusters, 1, Integer.MAX_VALUE);
         IntOption numDimensionsOption = new IntOption("Dimensions", 'd',
                 "Number of the dimensions of the input points.", numMetrics, 1,
                 Integer.MAX_VALUE);
         IntOption maxNumClusterFeaturesOption = new IntOption(
-                "MaxClusterFeatures", 'n', "Maximum size of the coreset.", numberOfClusters == null ? 500 : numberOfClusters, 1,
+                "MaxClusterFeatures", 'n', "Maximum size of the coreset.", numberOfMicroclusters == null ? 500 : numberOfMicroclusters, 1,
                 Integer.MAX_VALUE);
         IntOption numProjectionsOption = new IntOption("Projections", 'p',
                 "Number of random projections used for the nearest neighbour search.",

@@ -1,6 +1,6 @@
 package metrics.algorithms.normalization;
 
-import metrics.algorithms.classification.OnlineNormalEstimator;
+import metrics.algorithms.OnlineNormalEstimator;
 
 import java.util.HashMap;
 import java.util.Map;

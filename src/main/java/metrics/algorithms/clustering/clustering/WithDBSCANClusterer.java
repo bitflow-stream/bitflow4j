@@ -4,7 +4,6 @@ import com.github.javacliparser.FloatOption;
 import com.github.javacliparser.IntOption;
 import metrics.Sample;
 import metrics.algorithms.clustering.ClusteringAlgorithm;
-import moa.cluster.Clustering;
 import moa.clusterers.denstream.WithDBSCAN;
 /**
   * @author mbyfield
@@ -93,8 +92,4 @@ public class WithDBSCANClusterer extends MOASphereClusterer<WithDBSCAN> {
         this.clusterer.offlineOption = offlineOption;
     }
 
-    @Override
-    protected Clustering getClusteringResult() {
-        return clusterer.getClusteringResult();
-    }
 }

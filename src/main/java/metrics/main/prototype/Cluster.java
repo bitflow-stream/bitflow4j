@@ -40,12 +40,16 @@ public class Cluster {
         String hostname = args[4];
         String filter = args[5];
         int num_clusters = Integer.valueOf(args[6]);
-        int num_cluster_features = 15;
+        int num_micro_clusters = 500;
         boolean conceptChangeEnabled = Boolean.valueOf(args[7]);
         Algorithm filterAlgo = Train.getFilter(filter);
 
-        Set<String> trainedLabels = new HashSet<>(Arrays.asList(new String[] { "idle", "load" }));
-        BICOClusterer moaClusterer = new BICOClusterer(true, num_clusters, num_cluster_features, null).trainedLabels(trainedLabels).alwaysAddDistanceMetrics();
+        Set<String> trainedLabels = new HashSet<>(Arrays.asList(new String[] { "idle", "load", "overload" }));
+        BICOClusterer moaClusterer = new BICOClusterer(true, num_micro_clusters, num_clusters, null).trainedLabels(trainedLabels).alwaysAddDistanceMetrics();
+
+        // TODO switch to regular clusters
+        moaClusterer.useMicroclusters();
+
         ClusterLabelingAlgorithm labeling = new ClusterLabelingAlgorithm(classifiedClusterThreshold, true).trainedLabels(trainedLabels);
         LabelAggregatorAlgorithm labelAggregatorAlgorithm = new LabelAggregatorAlgorithm(labelAggregationWindow);
         StreamEvaluator evaluator = new OnlineOutlierEvaluator(true, trainedLabels, "normal", "abnormal");

@@ -1,5 +1,7 @@
-package metrics.algorithms.classification;
+package metrics.algorithms.evaluation;
 
+import metrics.algorithms.classification.AbstractWekaAlgorithm;
+import metrics.algorithms.classification.Model;
 import metrics.io.MetricOutputStream;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;

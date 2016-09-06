@@ -3,7 +3,6 @@ package metrics.algorithms.clustering.clustering;
 import com.github.javacliparser.IntOption;
 import metrics.Sample;
 import metrics.algorithms.clustering.ClusteringAlgorithm;
-import moa.cluster.Clustering;
 import moa.clusterers.streamkm.StreamKM;
 /**
  * @author mbyfield
@@ -46,11 +45,6 @@ public class StreamKMClusterer extends MOASphereClusterer<StreamKM> {
         this.numberOfClusters = numberOfClusters;
         this.width = width;
         this.randomSeed = randomSeed;
-    }
-
-    @Override
-    protected Clustering getClusteringResult() {
-        return clusterer.getClusteringResult();
     }
 
     @Override

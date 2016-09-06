@@ -24,6 +24,7 @@ public abstract class MOASphereClusterer<T extends AbstractClusterer & Serializa
 
     protected boolean calculateDistance;
     private boolean alwaysAddDistanceMetrics = false;
+    protected boolean useMicroclusteringResult = false;
 
     public MOASphereClusterer(T clusterer){
         super(clusterer);
@@ -39,6 +40,11 @@ public abstract class MOASphereClusterer<T extends AbstractClusterer & Serializa
     public MOASphereClusterer(T clusterer, boolean calculateDistance) {
         super(clusterer);
         this.calculateDistance = calculateDistance;
+    }
+
+    public MOASphereClusterer useMicroclusters() {
+        useMicroclusteringResult = true;
+        return this;
     }
 
     protected Map.Entry<Double, double[]> getDistance(Instance instance, Clustering clustering) throws IOException {
@@ -64,9 +70,11 @@ public abstract class MOASphereClusterer<T extends AbstractClusterer & Serializa
 
     @Override
     protected Clustering getClusteringResult() {
-        // TODO this used to be getMicroClusteringResult()
-        // return clusterer.getClusteringResult();
-        return clusterer.getMicroClusteringResult();
+        if (useMicroclusteringResult) {
+             return clusterer.getMicroClusteringResult();
+        } else {
+            return clusterer.getClusteringResult();
+        }
     }
 
     /**

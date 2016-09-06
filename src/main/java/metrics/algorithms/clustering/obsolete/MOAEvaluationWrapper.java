@@ -1,4 +1,4 @@
-package metrics.algorithms.classification;
+package metrics.algorithms.clustering.obsolete;
 
 import com.yahoo.labs.samoa.instances.Instance;
 import com.yahoo.labs.samoa.instances.WekaToSamoaInstanceConverter;

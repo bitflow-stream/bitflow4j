@@ -1,4 +1,4 @@
-package metrics.algorithms.classification;
+package metrics.algorithms.clustering.obsolete;
 
 import metrics.algorithms.clustering.ClusterConstants;
 

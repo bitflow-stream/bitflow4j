@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -81,16 +80,13 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
         Header expectedHeader = converger.getExpectedHeader();
 
         // Transform sample to moa instance
-        boolean hasLabel = sample.hasLabel();
-        String label = sample.getLabel();
-        String moaLabel = hasLabel ? label : ClusterConstants.UNKNOWN_LABEL;
         // TODO a new Instances object is created for every sample. Is this correct?
-        // TODO do we even need the label here, since we are only clustering, not classifying?
-        Instances instances = createInstances(expectedHeader, moaLabel);
-        com.yahoo.labs.samoa.instances.Instance instance = makeInstance(values, moaLabel, instances);
+        Instances instances = createInstances(expectedHeader);
+        com.yahoo.labs.samoa.instances.Instance instance = makeInstance(values, instances);
 
         // Check if sample should be used for training
-        if ((trainedLabels != null && hasLabel && trainedLabels.contains(label)) ||
+        boolean hasLabel = sample.hasLabel();
+        if ((trainedLabels != null && hasLabel && trainedLabels.contains(sample.getLabel())) ||
             (trainedLabels == null && (hasLabel || trainUnknownLabels))) {
             trainSample(sample, instance);
         }
@@ -132,13 +128,7 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
         //TODO: we use trainOnInstanceImpl() for both outlier detection algorithms and clustering algorithms. This is consistent with the current implementation of the outlier detection algorithms, but the interface moa.clusterers.outliers.MyBaseOutlierDetector suggests using processNewInstanceImpl
         clusterer.trainOnInstance(instance);
         //check if clusterer finished buffering
-        this.clusteringResult = null;
-        try {
-            this.clusteringResult = this.getClusteringResult();
-        } catch (ArrayIndexOutOfBoundsException e){
-            //mark sample as buffered (will have -1 cluster although used for learning)
-            System.err.println("WARNING: Sample was trained, but no clustering result is available: " + e);
-        }
+        clusteringResult = getClusteringResult();
     }
 
     /**
@@ -156,33 +146,27 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
     /**
      * Uses a previously created {@link Instances} object and the current value array to create an {com.yahoo.labs.samoa.instances.Instance} that can be used by the moa clusterer.
      * @param values the values of the current sample.
-     * @param label the label of the current sample
-     * @param instances an {@link Instances} object. Can be obtained using the {@link MOAStreamClusterer#createInstances(Header, String)} method.
+     * @param instances an {@link Instances} object. Can be obtained using the {@link MOAStreamClusterer#createInstances(Header)} method.
      */
-    protected com.yahoo.labs.samoa.instances.Instance makeInstance(double values[], String label, Instances instances) {
-        //TODO: refactor all of this stuff to a saperate class
+    protected com.yahoo.labs.samoa.instances.Instance makeInstance(double values[], Instances instances) {
+        // TODO: refactor all of this stuff to a saperate class
         values = Arrays.copyOf(values, values.length + 1);
         Instance instance = new DenseInstance(1.0, values);
         instance.setDataset(instances);
-        instance.setClassValue(label);
         WekaToSamoaInstanceConverter converter = new WekaToSamoaInstanceConverter();
         return converter.samoaInstance(instance);
     }
 
     /**
-     * Creates an {@link Instances} object that can be used for the {@link MOAStreamClusterer#makeInstance(double[], String, Instances)} method.
+     * Creates an {@link Instances} object that can be used for the {@link MOAStreamClusterer#makeInstance(double[], Instances)} method.
      * @param header The header of the sample
-     * @param label The label of the sample
      * @return An {@link Instances} object
      */
-    protected Instances createInstances(Header header, String label) {
+    protected Instances createInstances(Header header) {
         Instances instances = new Instances(toString() + " data", new ArrayList<>(), 0);
         for (String field : header.header) {
             instances.insertAttributeAt(new Attribute(field), instances.numAttributes());
         }
-        Attribute attr = new Attribute("class", new ArrayList<>(Collections.singletonList(label)));
-        instances.insertAttributeAt(attr, instances.numAttributes());
-        instances.setClass(instances.attribute(instances.numAttributes() - 1));
         return instances;
     }
 

@@ -14,7 +14,7 @@
  * +1 (718) 290-9170.
  */
 
-package metrics.algorithms.classification;
+package metrics.algorithms;
 
 
 
