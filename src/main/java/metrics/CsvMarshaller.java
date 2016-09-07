@@ -17,9 +17,9 @@ public class CsvMarshaller extends AbstractMarshaller {
     private static final String separator = ",";
     private static final byte[] separatorBytes = separator.getBytes();
 
-    private static final String dateFormat = "yyyy-MM-dd HH:mm:ss.SSS";
-    private static final int dateLength = dateFormat.length();
-    private static final SimpleDateFormat date_formatter = new SimpleDateFormat(dateFormat);
+    public static final String dateFormat = "yyyy-MM-dd HH:mm:ss.SSS";
+    public static final int dateLength = dateFormat.length();
+    public static final SimpleDateFormat date_formatter = new SimpleDateFormat(dateFormat);
 
     public Header unmarshallHeader(InputStream input) throws IOException {
         String[] fields = readLine(input).split(separator);

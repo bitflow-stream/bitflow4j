@@ -1,5 +1,6 @@
 package metrics.algorithms.evaluation;
 
+import metrics.CsvMarshaller;
 import metrics.Sample;
 import metrics.algorithms.clustering.ClusterConstants;
 
@@ -24,6 +25,7 @@ public class OnlineOutlierEvaluator extends StreamEvaluator {
     private String incorrectnessLogfile = null;
     private String hostname = null;
     private Date incorrectStarted = null;
+    private boolean incorrectShouldBeNormal;
 
     public OnlineOutlierEvaluator(boolean extendSample, Collection<String> normalLabels,
                                   String expectNormalLabel, String expectAbnormalLabel) {
@@ -45,12 +47,11 @@ public class OnlineOutlierEvaluator extends StreamEvaluator {
 
     @Override
     protected Boolean isCorrectPrediction(Sample sample) {
-        if (!sample.hasTag(ClusterConstants.ORIGINAL_LABEL_TAG)) return null;
-        String originalLabel = sample.getTag(ClusterConstants.ORIGINAL_LABEL_TAG);
-        boolean shouldBeNormal = originalLabel.equals(expectNormalLabel);
-        boolean shouldBeAbnormal = originalLabel.equals(expectAbnormalLabel);
-        if (!shouldBeNormal && !shouldBeAbnormal) return null;
-        if (!sample.hasLabel()) return null;
+        Boolean shouldBeNormal = shouldBeNormal(sample);
+        if (shouldBeNormal == null) {
+            logPrediction(true, false); // In case an incorrect prediction was going on.
+            return null;
+        }
 
         boolean isNormal = normalLabels.contains(sample.getLabel());
         boolean correct = shouldBeNormal == isNormal;
@@ -58,17 +59,28 @@ public class OnlineOutlierEvaluator extends StreamEvaluator {
         return correct;
     }
 
+    private Boolean shouldBeNormal(Sample sample) {
+        if (!sample.hasTag(ClusterConstants.ORIGINAL_LABEL_TAG)) return null;
+        String originalLabel = sample.getTag(ClusterConstants.ORIGINAL_LABEL_TAG);
+        boolean shouldBeNormal = originalLabel.equals(expectNormalLabel);
+        boolean shouldBeAbnormal = originalLabel.equals(expectAbnormalLabel);
+        if (!shouldBeNormal && !shouldBeAbnormal) return null;
+        if (!sample.hasLabel()) return null;
+        return shouldBeNormal;
+    }
+
     private void logPrediction(boolean isCorrect, boolean shouldBeNormal) {
         if (isCorrect && incorrectStarted != null) {
             // Period with incorrect predictions has stopped, output a log line
-            long duration = new Date().getTime() - incorrectStarted.getTime();
-            System.err.println("Incorrect prediction interval ended: Duration " + duration + ", should have been normal: " + shouldBeNormal);
+            Date now = new Date();
+            long duration = now.getTime() - incorrectStarted.getTime();
+            System.err.println("Incorrect prediction interval ended: Duration " + duration + ", should have been normal: " + incorrectShouldBeNormal);
             incorrectStarted = null;
             if (incorrectnessLogfile != null) {
                 try {
-                    FileOutputStream out = new FileOutputStream(incorrectnessLogfile);
+                    FileOutputStream out = new FileOutputStream(incorrectnessLogfile, true);
                     StringBuffer buf = new StringBuffer();
-                    writeLogMessage(buf, shouldBeNormal, duration);
+                    writeLogMessage(buf, incorrectShouldBeNormal, duration, now);
                     out.write(buf.toString().getBytes());
                     out.flush();
                     out.close();
@@ -80,11 +92,14 @@ public class OnlineOutlierEvaluator extends StreamEvaluator {
         } else if (!isCorrect && incorrectStarted == null) {
             // Starting period with incorrect predictions
             incorrectStarted = new Date();
-            System.err.println("Incorrect prediction interval starting, should have been normal: " + shouldBeNormal);
+            incorrectShouldBeNormal = shouldBeNormal;
+            System.err.println("Incorrect prediction interval starting, should have been normal: " + incorrectShouldBeNormal);
         }
     }
 
-    private void writeLogMessage(StringBuffer buf, boolean shouldBeNormal, long duration) {
+    private void writeLogMessage(StringBuffer buf, boolean shouldBeNormal, long duration, Date timestamp) {
+        String dateStr = CsvMarshaller.date_formatter.format(timestamp);
+        buf.append(dateStr).append(",");
         buf.append(hostname).append(",");
         buf.append(shouldBeNormal).append(",");
         buf.append(duration).append("\n");
