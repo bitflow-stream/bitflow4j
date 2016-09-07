@@ -8,7 +8,6 @@ import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
 import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
 import metrics.algorithms.clustering.clustering.BICOClusterer;
 import metrics.algorithms.evaluation.OnlineOutlierEvaluator;
-import metrics.algorithms.evaluation.StreamEvaluator;
 import metrics.algorithms.normalization.OnlineAutoMinMaxScaler;
 import metrics.io.MetricPrinter;
 import metrics.io.fork.TwoWayFork;
@@ -29,7 +28,7 @@ public class Cluster {
 
     public static void main(String[] args) throws IOException {
         if (args.length != 8) {
-            System.err.println("Parameters: <receive-port> <feature ini file> <target-host> <target-port> <local hostname> <filter> <num_clusters> <concept-change-enabled>");
+            System.err.println("Parameters: <receive-port> <feature ini file> <target-host> <target-port> <local hostname> <filter> <num_clusters> <concept-change-enabled> <incorrect-predictions-log>");
             return;
         }
         int receivePort = Integer.parseInt(args[0]);
@@ -42,6 +41,7 @@ public class Cluster {
         int num_clusters = Integer.valueOf(args[6]);
         int num_micro_clusters = 500;
         boolean conceptChangeEnabled = Boolean.valueOf(args[7]);
+        String incorrectPredictionsLog = args[8];
         Algorithm filterAlgo = Train.getFilter(filter);
 
         Set<String> trainedLabels = new HashSet<>(Arrays.asList(new String[] { "idle", "load", "overload" }));
@@ -52,7 +52,8 @@ public class Cluster {
 
         ClusterLabelingAlgorithm labeling = new ClusterLabelingAlgorithm(classifiedClusterThreshold, true).trainedLabels(trainedLabels);
         LabelAggregatorAlgorithm labelAggregatorAlgorithm = new LabelAggregatorAlgorithm(labelAggregationWindow);
-        StreamEvaluator evaluator = new OnlineOutlierEvaluator(true, trainedLabels, "normal", "abnormal");
+        OnlineOutlierEvaluator evaluator = new OnlineOutlierEvaluator(true, trainedLabels, "normal", "abnormal");
+        evaluator.logIncorrectPredictions(incorrectPredictionsLog, hostname);
         HostnameTagger hostnameTagger = new HostnameTagger(hostname);
 
         OnlineAutoMinMaxScaler.ConceptChangeHandler conceptChangeHandler = (handler, feature) -> {
