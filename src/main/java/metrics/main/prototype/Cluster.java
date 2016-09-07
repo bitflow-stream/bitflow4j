@@ -27,7 +27,7 @@ public class Cluster {
     private static final long labelAggregationWindow = 4000; // Milliseconds, must be declared as long
 
     public static void main(String[] args) throws IOException {
-        if (args.length != 8) {
+        if (args.length != 9) {
             System.err.println("Parameters: <receive-port> <feature ini file> <target-host> <target-port> <local hostname> <filter> <num_clusters> <concept-change-enabled> <incorrect-predictions-log>");
             return;
         }
