@@ -54,4 +54,13 @@ public class AlgorithmModelReceiver<T extends Serializable> implements Algorithm
         return "Model-Receiver for " + wrapped.toString();
     }
 
+    @Override
+    public Object getModel() {
+        throw new UnsupportedOperationException("not implemented yet");
+    }
+
+    @Override
+    public void setModel(Object model) {
+        throw new UnsupportedOperationException("not implemented yet");
+    }
 }

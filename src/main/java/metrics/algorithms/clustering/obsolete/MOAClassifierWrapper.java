@@ -1,6 +1,6 @@
 package metrics.algorithms.clustering.obsolete;
 
-import com.yahoo.labs.samoa.instances.*;
+import com.yahoo.labs.samoa.instances.WekaToSamoaInstanceConverter;
 import metrics.Header;
 import metrics.Sample;
 import metrics.algorithms.Algorithm;
@@ -12,10 +12,6 @@ import metrics.io.MetricOutputStream;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.bayes.net.ParentSet;
 import weka.core.*;
-import weka.core.Attribute;
-import weka.core.DenseInstance;
-import weka.core.Instance;
-import weka.core.Instances;
 import weka.filters.Filter;
 import weka.filters.supervised.attribute.Discretize;
 import weka.filters.unsupervised.attribute.ReplaceMissingValues;
@@ -28,20 +24,24 @@ import java.util.*;
  */
 public class MOAClassifierWrapper extends AbstractClassifier  implements Algorithm {
 
+    public Instances m_Instances;
+    //BEGIN: copy from abstract algorithm
+    public boolean catchExceptions = false;
     protected Map<String, List<Instances>> classifiedSamplesBatch;
     protected ParentSet[] m_ParentSets;
 //    public Estimator[][] m_Distributions;
     protected Discretize m_DiscretizeFilter = null;
-    int m_nNonDiscreteAttribute = -1;
     protected ReplaceMissingValues m_MissingValuesFilter = null;
     protected int m_NumClasses;
-    public Instances m_Instances;
-    private int m_NumInstances;
+    int m_nNonDiscreteAttribute = -1;
 //    ADNode m_ADTree;
 //    protected BIFReader m_otherBayesNet = null;
 //    boolean m_bUseADTree = false;
 //    SearchAlgorithm m_SearchAlgorithm = new K2();
 //    BayesNetEstimator m_BayesNetEstimator = new SimpleEstimator();
+private int m_NumInstances;
+    private Exception startedStacktrace = null;
+    private boolean started = false;
 
     @Override
     public Capabilities getCapabilities() {
@@ -94,25 +94,24 @@ public class MOAClassifierWrapper extends AbstractClassifier  implements Algorit
 
         this.m_ParentSets = new ParentSet[this.m_Instances.numAttributes()];
 
-        for(iAttribute = 0; iAttribute < this.m_Instances.numAttributes(); ++iAttribute) {
+        for (iAttribute = 0; iAttribute < this.m_Instances.numAttributes(); ++iAttribute) {
             this.m_ParentSets[iAttribute] = new ParentSet(this.m_Instances.numAttributes());
         }
 
     }
 
-
     protected Instances normalizeDataSet(Instances instances) throws Exception {
         this.m_nNonDiscreteAttribute = -1;
         Enumeration enu = instances.enumerateAttributes();
 
-        while(enu.hasMoreElements()) {
-            Attribute attribute = (Attribute)enu.nextElement();
-            if(attribute.type() != 1) {
+        while (enu.hasMoreElements()) {
+            Attribute attribute = (Attribute) enu.nextElement();
+            if (attribute.type() != 1) {
                 this.m_nNonDiscreteAttribute = attribute.index();
             }
         }
 
-        if(this.m_nNonDiscreteAttribute > -1 && instances.attribute(this.m_nNonDiscreteAttribute).type() != 1) {
+        if (this.m_nNonDiscreteAttribute > -1 && instances.attribute(this.m_nNonDiscreteAttribute).type() != 1) {
             this.m_DiscretizeFilter = new Discretize();
             this.m_DiscretizeFilter.setInputFormat(instances);
             instances = Filter.useFilter(instances, this.m_DiscretizeFilter);
@@ -129,11 +128,6 @@ public class MOAClassifierWrapper extends AbstractClassifier  implements Algorit
         return "Weka Classifier Wrapper";
     }
 
-    //BEGIN: copy from abstract algorithm
-    public boolean catchExceptions = false;
-    private Exception startedStacktrace = null;
-    private boolean started = false;
-
     public synchronized final void start(MetricInputStream input, MetricOutputStream output) {
         if (startedStacktrace != null) {
             throw new IllegalStateException("Algorithm was already started: " + toString(), startedStacktrace);
@@ -143,6 +137,16 @@ public class MOAClassifierWrapper extends AbstractClassifier  implements Algorit
         thread.setDaemon(false);
         thread.setName("Algorithm Thread '" + toString() + "'");
         thread.start();
+    }
+
+    @Override
+    public Object getModel() {
+        throw new UnsupportedOperationException("not implemented yet");
+    }
+
+    @Override
+    public void setModel(Object model) {
+        throw new UnsupportedOperationException("not implemented yet");
     }
 
     @SuppressWarnings("InfiniteLoopStatement")

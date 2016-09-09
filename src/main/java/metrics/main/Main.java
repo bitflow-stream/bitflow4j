@@ -14,6 +14,7 @@ import metrics.algorithms.evaluation.ExpectedPredictionTagger;
 import metrics.algorithms.evaluation.ExtendedStreamEvaluator;
 import metrics.algorithms.filter.MetricFilterAlgorithm;
 import metrics.algorithms.normalization.FeatureStandardizer;
+import metrics.algorithms.rest.RestServer;
 import metrics.io.file.FileGroup;
 import metrics.io.file.FileMetricReader;
 import metrics.io.fork.TwoWayFork;
@@ -45,6 +46,7 @@ public class Main {
 //        allClassifiers();
 //        allClusterers();
 //        prepareData(bono);
+        RestServer server = new RestServer(9000);
 
         Host source = bono;
         FileGroup outputs = new FileGroup(new File(newData.makeOutputDir(source), "analysis"));
@@ -71,9 +73,13 @@ public class Main {
                 return label;
             }
         };
-
+        server.addAlgorithm(bico);
+        server.addAlgorithm(clusterLabeler);
+        server.addAlgorithm(evalClusterLabeler);
+        server.addAlgorithm(evalBico);
+        server.start();
         // preparedDataFile(source)
-        new AlgorithmPipeline(new File("/home/anton/Data/analysis/experiments-new-2/virtual_host_bono.ims/sorted.csv"), FileMetricReader.FILE_NAME)
+        new AlgorithmPipeline(new File(preparedDataFile(source)), FileMetricReader.FILE_NAME)
                 .step(new MetricFilterAlgorithm("disk-usage///free", "disk-usage///used"))
                 .fork(new OpenStackSampleSplitter(),
                         (name, p) -> {
@@ -103,6 +109,7 @@ public class Main {
                                     });
                 })
                 .runAndWait();
+        Thread.sleep(100000000000L);
     }
 
     private static String preparedDataFile(Host source) throws IOException {
