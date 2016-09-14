@@ -26,9 +26,20 @@ import java.io.IOException;
  */
 public abstract class AbstractAlgorithm implements Algorithm {
 
+    private static int ID_COUNTER;
+
+    /**
+     * Get the next unused free id.
+     * @return the next unused id.
+     */
+    public synchronized static int getNextId(){
+        return ID_COUNTER++;
+    }
+
     public boolean catchExceptions = false;
     private Exception startedStacktrace = null;
     private boolean started = false;
+    protected int id = getNextId();
 
     private synchronized static int nextInstanceNumber() {
         return algorithmInstanceCounter++;
@@ -139,12 +150,24 @@ public abstract class AbstractAlgorithm implements Algorithm {
 
     }
 
+    @Override
     public Object getModel() {
         throw new UnsupportedOperationException("Not implemented for this class");
     }
 
+    @Override
     public void setModel(Object model) {
         throw new UnsupportedOperationException("Not implemented for this class");
     }
 
+    @Deprecated
+    public int getId() {
+        return this.id;
+    }
+
+    @Override
+    @Deprecated
+    public boolean equals(Object o){
+        return o instanceof AbstractAlgorithm ? ((AbstractAlgorithm) o).getId() == this.getId() : o instanceof Integer ? this.getId() == ((Integer)o).intValue() : false;
+    }
 }

@@ -1,13 +1,11 @@
 package metrics.main;
 
+import metrics.CsvMarshaller;
 import metrics.Sample;
 import metrics.algorithms.*;
 import metrics.algorithms.classification.ExternalClassifier;
 import metrics.algorithms.classification.Model;
-import metrics.algorithms.clustering.ClusterConstants;
-import metrics.algorithms.clustering.ClusterCounter;
-import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
-import metrics.algorithms.clustering.ClusteringAlgorithm;
+import metrics.algorithms.clustering.*;
 import metrics.algorithms.clustering.clustering.BICOClusterer;
 import metrics.algorithms.evaluation.CrossValidationFork;
 import metrics.algorithms.evaluation.ExpectedPredictionTagger;
@@ -15,6 +13,7 @@ import metrics.algorithms.evaluation.ExtendedStreamEvaluator;
 import metrics.algorithms.filter.MetricFilterAlgorithm;
 import metrics.algorithms.normalization.FeatureStandardizer;
 import metrics.algorithms.rest.RestServer;
+import metrics.io.MetricPrinter;
 import metrics.io.file.FileGroup;
 import metrics.io.file.FileMetricReader;
 import metrics.io.fork.TwoWayFork;
@@ -26,9 +25,11 @@ import moa.clusterers.AbstractClusterer;
 import moa.clusterers.Clusterer;
 import weka.classifiers.AbstractClassifier;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Scanner;
 
 @SuppressWarnings("unused")
 public class Main {
@@ -46,6 +47,26 @@ public class Main {
 //        allClassifiers();
 //        allClusterers();
 //        prepareData(bono);
+//        bicoCVSplitPipeline();
+        printModelPipeline();
+    }
+
+    private static void printModelPipeline() throws IOException {
+        Host source = bono;
+        String jsonFile = "/home/malcolmx/Desktop/first_bico.json"; // change to point to correct file
+        String outputFile = "/home/malcolmx/Desktop/out.csv"; //change to point correct file
+//        String jsonString = new Scanner(jsonFile).useDelimiter("\\Z").next();
+        String jsonString = new String(Files.readAllBytes(Paths.get(jsonFile)));
+        AbstractClusterer deserializedClusterer = MOAUtil.getClustererFromJSONString(jsonString);
+        ClusterReader clusterReader = new ClusterReader(deserializedClusterer);
+        CsvMarshaller marshaller = new CsvMarshaller();
+        MetricPrinter printer = new MetricPrinter(outputFile, marshaller);
+        AlgorithmPipeline pipeline = new AlgorithmPipeline(new File(preparedDataFile(source)), FileMetricReader.FILE_NAME);
+        //TODO plot output
+        pipeline.step(clusterReader).csvOutput(outputFile);
+    }
+
+    private static void bicoCVSplitPipeline() throws IOException, InterruptedException {
         RestServer server = new RestServer(9000);
 
         Host source = bono;
@@ -73,10 +94,10 @@ public class Main {
                 return label;
             }
         };
-        server.addAlgorithm(bico);
-        server.addAlgorithm(clusterLabeler);
-        server.addAlgorithm(evalClusterLabeler);
-        server.addAlgorithm(evalBico);
+        server.addAlgorithm(bico, "first_bico");
+        server.addAlgorithm(clusterLabeler, "first_cluster_labeler");
+        server.addAlgorithm(evalClusterLabeler, "eval_cluster_labeler");
+        server.addAlgorithm(evalBico, "eval_bico");
         server.start();
         // preparedDataFile(source)
         new AlgorithmPipeline(new File(preparedDataFile(source)), FileMetricReader.FILE_NAME)
