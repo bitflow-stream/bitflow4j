@@ -1,21 +1,15 @@
 package metrics.algorithms.clustering;
 
-import metrics.Header;
+import com.yahoo.labs.samoa.instances.*;
 import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
 import metrics.algorithms.SampleConverger;
 import moa.cluster.Clustering;
 import moa.clusterers.AbstractClusterer;
-import weka.core.Attribute;
-import weka.core.DenseInstance;
-import weka.core.Instance;
-import weka.core.Instances;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Set;
+import java.util.*;
 
 /**
  *  This abstract class can be extended to transform clusterers from the MOA framework to algorithms.
@@ -76,12 +70,7 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
         // Handle changing headers
         // TODO: get rid of the converger, or make optional.
         double values[] = converger.getValues(sample);
-        Header expectedHeader = converger.getExpectedHeader();
-
-        // Transform sample to moa instance
-        // TODO a new Instances object is created for every sample. Is this correct?
-        Instances instances = createInstances(expectedHeader);
-        com.yahoo.labs.samoa.instances.Instance instance = makeInstance(values, instances);
+        Instance instance = makeInstance(values, clusterer.getModelContext());
 
         // Check if sample should be used for training
         boolean hasLabel = sample.hasLabel();
@@ -102,18 +91,43 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
      */
     protected void initializeClusterer(Sample firstSample) {
         this.setupClustererParameter(firstSample);
-        this.clusterer.resetLearning();
+
+        List<Attribute> attributes = new ArrayList<>();
+        for (String name : firstSample.getHeader().header) {
+            attributes.add(new Attribute(name));
+        }
+        Attribute classAttr = new Attribute("class", new ArrayList<>(Collections.singletonList("")));
+        attributes.add(classAttr);
+
+        Instances instances = new Instances(toString() + " data", attributes, 0);
+        InstancesHeader header = new InstancesHeader(instances);
+        header.setClassIndex(attributes.size() - 1);
+        clusterer.setModelContext(header);
+        clusterer.resetLearning();
+        clusteringResult = null;
         // this.printClustererParameters();
-        this.clusteringResult = null;
+    }
+
+    /**
+     * Uses a previously created {@link Instances} object and the current value array to create an {Instance} that can be used by the moa clusterer.
+     * @param values the values of the current sample.
+     * @param instances an {@link Instances} object. Can be obtained from clusterer.getModelContext().
+     */
+    protected Instance makeInstance(double values[], Instances instances) {
+        values = Arrays.copyOf(values, values.length + 1);
+        InstanceImpl instance = new InstanceImpl(1, values);
+        instance.setDataset(instances);
+        instance.setClassValue(0.0); // TODO how does this double map to the actual String array created in initializeClusterer
+        return instance;
     }
 
     /**
      * This method can be used by implementing classes to do some additional processing after the best cluster has been calculated (e.g. calculate and append distance).
      * @param sample The current sample
-     * @param instance The matching {@link com.yahoo.labs.samoa.instances.Instance} for the sample
+     * @param instance The matching {@link Instance} for the sample
      * @param bestFitCluster The id of the best fitting cluster
      */
-    protected Sample sampleClustered(Sample sample, com.yahoo.labs.samoa.instances.Instance instance, int bestFitCluster) {
+    protected Sample sampleClustered(Sample sample, Instance instance, int bestFitCluster) {
         // No changes to the sample by default.
         return sample;
     }
@@ -123,7 +137,7 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
      * @param sample The current sample
      * @param instance the matching instance for the sample
      */
-    private void trainSample(Sample sample, com.yahoo.labs.samoa.instances.Instance instance) {
+    private void trainSample(Sample sample, Instance instance) {
         //TODO: we use trainOnInstanceImpl() for both outlier detection algorithms and clustering algorithms. This is consistent with the current implementation of the outlier detection algorithms, but the interface moa.clusterers.outliers.MyBaseOutlierDetector suggests using processNewInstanceImpl
         clusterer.trainOnInstance(instance);
         try {
@@ -140,33 +154,6 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
      */
     public synchronized void resetClusters() {
         clusterer.resetLearning();
-    }
-
-    /**
-     * Uses a previously created {@link Instances} object and the current value array to create an {com.yahoo.labs.samoa.instances.Instance} that can be used by the moa clusterer.
-     * @param values the values of the current sample.
-     * @param instances an {@link Instances} object. Can be obtained using the {@link MOAStreamClusterer#createInstances(Header)} method.
-     */
-    protected com.yahoo.labs.samoa.instances.Instance makeInstance(double values[], Instances instances) {
-        // TODO: refactor all of this stuff to a saperate class
-        values = Arrays.copyOf(values, values.length + 1);
-        Instance instance = new DenseInstance(1.0, values);
-        instance.setDataset(instances);
-        WekaToSamoaInstanceConverter converter = new WekaToSamoaInstanceConverter();
-        return converter.samoaInstance(instance, false);
-    }
-
-    /**
-     * Creates an {@link Instances} object that can be used for the {@link MOAStreamClusterer#makeInstance(double[], Instances)} method.
-     * @param header The header of the sample
-     * @return An {@link Instances} object
-     */
-    protected Instances createInstances(Header header) {
-        Instances instances = new Instances(toString() + " data", new ArrayList<>(), 0);
-        for (String field : header.header) {
-            instances.insertAttributeAt(new Attribute(field), instances.numAttributes());
-        }
-        return instances;
     }
 
     /**
@@ -199,7 +186,7 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
      * @param instance the instance for the current sample
      * @return the id of the best matching cluster or -1 for noise
      */
-    protected abstract int calculateCluster(com.yahoo.labs.samoa.instances.Instance instance);
+    protected abstract int calculateCluster(Instance instance);
 
     @Override
     public Object getModel() {

@@ -10,8 +10,6 @@ import metrics.algorithms.clustering.clustering.BICOClusterer;
 import metrics.algorithms.evaluation.OnlineOutlierEvaluator;
 import metrics.algorithms.normalization.OnlineAutoMinMaxScaler;
 import metrics.algorithms.rest.RestServer;
-import metrics.io.MetricPrinter;
-import metrics.io.fork.TwoWayFork;
 import metrics.io.net.TcpMetricsOutput;
 import metrics.main.AlgorithmPipeline;
 import metrics.main.analysis.OpenStackSampleSplitter;
@@ -107,11 +105,14 @@ public class Cluster {
                                     .step(labelAggregatorAlgorithm)
                                     .step(evaluator)
                                     .step(hostnameTagger)
+                                    .output(new TcpMetricsOutput(AlgorithmPipeline.getMarshaller(Analyse.TCP_OUTPUT_FORMAT), targetHost, targetPort));
+                            /*
                                     .fork(new TwoWayFork(),
                                             (type, out) -> out.output(
                                                     type == TwoWayFork.ForkType.Primary ?
                                                             new MetricPrinter(AlgorithmPipeline.getMarshaller(Analyse.CONSOLE_OUTPUT)) :
                                                             new TcpMetricsOutput(AlgorithmPipeline.getMarshaller(Analyse.TCP_OUTPUT_FORMAT), targetHost, targetPort)));
+                            */
                         })
                 .runAndWait();
     }
