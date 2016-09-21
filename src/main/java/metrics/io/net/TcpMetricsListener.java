@@ -22,7 +22,7 @@ public class TcpMetricsListener implements InputStreamProducer {
     private MetricInputAggregator aggregator;
 
     public TcpMetricsListener(int port, Marshaller marshaller) throws IOException {
-        this(port, marshaller, -1);
+        this(port, marshaller, 1);
     }
 
     public TcpMetricsListener(int port, Marshaller marshaller, int numConnections) throws IOException {

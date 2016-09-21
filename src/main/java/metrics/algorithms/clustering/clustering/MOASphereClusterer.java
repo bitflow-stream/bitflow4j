@@ -121,7 +121,13 @@ public abstract class MOASphereClusterer<T extends AbstractClusterer & Serializa
             double clusterInclusionProbability = c.getInclusionProbability(instance);
             if (inclusionProbability < clusterInclusionProbability) {
                 inclusionProbability = clusterInclusionProbability;
-                bestFitCluster = clusterNum;
+                // bestFitCluster = clusterNum;
+
+                // TODO improve this
+                bestFitCluster = (int) c.getId();
+                if (c.getId() - (double) bestFitCluster > 0.001) {
+                    throw new IllegalStateException("Cluster ID is not an int: " + c.getId());
+                }
             }
             clusterNum++;
         }

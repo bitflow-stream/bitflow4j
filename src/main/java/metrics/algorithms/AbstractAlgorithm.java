@@ -51,7 +51,7 @@ public abstract class AbstractAlgorithm implements Algorithm {
         return getClass().getSimpleName() + " (Instance " + algorithmInstanceNumber + ")";
     }
 
-    public synchronized void start(MetricInputStream input, MetricOutputStream output) {
+    public synchronized void start(MetricInputStream input, MetricOutputStream output) throws IOException {
         if (startedStacktrace != null) {
             throw new IllegalStateException("Algorithm was already started: " + toString(), startedStacktrace);
         }
@@ -68,11 +68,7 @@ public abstract class AbstractAlgorithm implements Algorithm {
             try {
                 executeStep(input, output);
             } catch (InputStreamClosedException exc) {
-                try {
-                    inputClosed(output);
-                } catch (IOException ioExc) {
-                    throw new InputStreamClosedException(ioExc);
-                }
+                inputClosed(output);
                 throw exc;
             } catch (IOException exc) {
                 if (catchExceptions) {
