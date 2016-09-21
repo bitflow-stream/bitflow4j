@@ -76,7 +76,7 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
         boolean hasLabel = sample.hasLabel();
         if ((trainedLabels != null && hasLabel && trainedLabels.contains(sample.getLabel())) ||
             (trainedLabels == null && (hasLabel || trainUnknownLabels))) {
-            trainSample(sample, instance);
+            trainInstance(instance);
         }
         int bestFitCluster = calculateCluster(instance);
         sample = sampleClustered(sample, instance, bestFitCluster);
@@ -134,10 +134,9 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
 
     /**
      * Trains a the clusterer with the current sample
-     * @param sample The current sample
      * @param instance the matching instance for the sample
      */
-    private void trainSample(Sample sample, Instance instance) {
+    private void trainInstance(Instance instance) {
         //TODO: we use trainOnInstanceImpl() for both outlier detection algorithms and clustering algorithms. This is consistent with the current implementation of the outlier detection algorithms, but the interface moa.clusterers.outliers.MyBaseOutlierDetector suggests using processNewInstanceImpl
         clusterer.trainOnInstance(instance);
         try {
