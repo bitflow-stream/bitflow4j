@@ -9,8 +9,7 @@ import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
 import metrics.algorithms.clustering.clustering.BICOClusterer;
 import metrics.algorithms.evaluation.OnlineOutlierEvaluator;
 import metrics.algorithms.normalization.OnlineAutoMinMaxScaler;
-import metrics.io.MetricPrinter;
-import metrics.io.fork.TwoWayFork;
+import metrics.algorithms.rest.RestServer;
 import metrics.io.net.TcpMetricsOutput;
 import metrics.main.AlgorithmPipeline;
 import metrics.main.analysis.OpenStackSampleSplitter;
@@ -43,6 +42,9 @@ public class Cluster {
         boolean conceptChangeEnabled = Boolean.valueOf(args[7]);
         String incorrectPredictionsLog = args[8];
         Algorithm filterAlgo = Train.getFilter(filter);
+        int restPort = 9000;
+
+        RestServer restServer = new RestServer(restPort);
 
         Set<String> trainedLabels = new HashSet<>(Arrays.asList(new String[] { "idle", "load", "overload" }));
         BICOClusterer moaClusterer = new BICOClusterer(true, num_micro_clusters, num_clusters, null).trainedLabels(trainedLabels).alwaysAddDistanceMetrics();
@@ -83,6 +85,10 @@ public class Cluster {
 
         FeatureCalculationsAlgorithm extraFeatures = getExtraFeatures();
 
+        restServer.addAlgorithm(moaClusterer);
+        restServer.addAlgorithm(labeling);
+        restServer.start();
+
         new AlgorithmPipeline(receivePort, Analyse.TCP_FORMAT)
                 .fork(new OpenStackSampleSplitter(),
                         (name, p) -> {
@@ -99,11 +105,14 @@ public class Cluster {
                                     .step(labelAggregatorAlgorithm)
                                     .step(evaluator)
                                     .step(hostnameTagger)
+                                    .output(new TcpMetricsOutput(AlgorithmPipeline.getMarshaller(Analyse.TCP_OUTPUT_FORMAT), targetHost, targetPort));
+                            /*
                                     .fork(new TwoWayFork(),
                                             (type, out) -> out.output(
                                                     type == TwoWayFork.ForkType.Primary ?
                                                             new MetricPrinter(AlgorithmPipeline.getMarshaller(Analyse.CONSOLE_OUTPUT)) :
                                                             new TcpMetricsOutput(AlgorithmPipeline.getMarshaller(Analyse.TCP_OUTPUT_FORMAT), targetHost, targetPort)));
+                            */
                         })
                 .runAndWait();
     }

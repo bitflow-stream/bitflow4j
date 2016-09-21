@@ -75,13 +75,6 @@ import moa.clusterers.clustream.Clustream;
 //        }
 //        return new ArrayList<>(allLabels);
 //    }
-    private com.yahoo.labs.samoa.instances.Instance makeInstance(Sample sample) {
-        Instance instance = new DenseInstance(1.0, sample.getMetrics());
-        instance.setDataset(instances);
-        WekaToSamoaInstanceConverter converter = new WekaToSamoaInstanceConverter();
-        com.yahoo.labs.samoa.instances.Instance samoaInstance = converter.samoaInstance(instance);
-        return samoaInstance;
-    }
 
     @Override
     public String toString() {
