@@ -25,12 +25,8 @@ public class ClusterReader extends AbstractAlgorithm{
     private String[] headerStrings;
     private boolean addRadius = false;
 
-    public interface ClustererAccessor {
-        AbstractClusterer getClusterer();
-    }
-
     public ClusterReader(ClustererAccessor accessor) {
-        if(accessor == null){
+        if (accessor == null) {
             throw new IllegalArgumentException("Empty or null clustering not allowed.");
         }
         this.accessor = accessor;
@@ -58,6 +54,8 @@ public class ClusterReader extends AbstractAlgorithm{
             throw new IllegalStateException("underlying clusterer returned null on call to " + (useMicroClusters ? "getMicroClusteringResult()" : "getClusteringResult()" ));
         }
         catch (Exception e){
+            throw new IllegalStateException("underlying clusterer returned null on call to " + (useMicroClusters ? "getMicroClusteringResult()" : "getClusteringResult()"), e);
+        } catch (Exception e) {
             throw new IllegalStateException("underlying cluster threw exception on call to " + (useMicroClusters ? "getMicroClusteringResult()" : "getClusteringResult()" ), e);
         }
     }
@@ -75,6 +73,9 @@ public class ClusterReader extends AbstractAlgorithm{
     private List<Sample> getSamplesFromClustering(Clustering clustering) throws IllegalArgumentException{
         setHeaderArray();
         List<Sample> result = new ArrayList<>();
+        if (clustering.size() == 0) {
+            throw new IllegalArgumentException("empty clustering");
+        }
         for(Cluster cluster : clustering.getClustering()){
 //            result.addAll(getSamplesFromCluster(cluster));
             result.add(getSampleFromCluster(cluster));
@@ -121,13 +122,8 @@ public class ClusterReader extends AbstractAlgorithm{
         return result;
     }
 
-
-    //TODO obsolete if we change the plotter
-//    private Collection<? extends Sample> getSamplesFromCluster(Cluster cluster) {
-//        List<Sample> result = new ArrayList<Sample>();
-//
-//        return result;
-//    }
-
+    public interface ClustererAccessor {
+        AbstractClusterer getClusterer();
+    }
 
 }

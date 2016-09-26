@@ -7,11 +7,13 @@ import metrics.algorithms.classification.ExternalClassifier;
 import metrics.algorithms.classification.Model;
 import metrics.algorithms.clustering.*;
 import metrics.algorithms.clustering.clustering.BICOClusterer;
+import metrics.algorithms.clustering.obsolete.SimplePrinter;
 import metrics.algorithms.evaluation.CrossValidationFork;
 import metrics.algorithms.evaluation.ExpectedPredictionTagger;
 import metrics.algorithms.evaluation.ExtendedStreamEvaluator;
 import metrics.algorithms.filter.MetricFilterAlgorithm;
 import metrics.algorithms.normalization.FeatureStandardizer;
+import metrics.algorithms.rest.ExtendedRestServer;
 import metrics.algorithms.rest.RestServer;
 import metrics.io.MetricPrinter;
 import metrics.io.file.FileGroup;
@@ -25,11 +27,11 @@ import moa.clusterers.AbstractClusterer;
 import moa.clusterers.Clusterer;
 import weka.classifiers.AbstractClassifier;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.Scanner;
 
 @SuppressWarnings("unused")
 public class Main {
@@ -44,30 +46,68 @@ public class Main {
     private static final DataSource<Integer> tcpData = new TcpDataSource(9999, "BIN", 1);
 
     public static void main(String[] args) throws Exception {
+        String jsonFile = "/home/malcolmx/Desktop/first_bico.json"; // change to point to correct file
+        String outputFile = "/home/malcolmx/Desktop/out.csv"; //change to point correct file
+        String inputFile = preparedDataFile(bono); // change to oint to correct file
 //        allClassifiers();
 //        allClusterers();
 //        prepareData(bono);
-//        bicoCVSplitPipeline();
-        printModelPipeline();
+//        bicoCVSplitPipeline(null);
+//        printModelPipeline(jsonFile, outputFile, null).runAndWait();
+        testClusterReader(inputFile).runAndWait();
+
+
+        Thread.sleep(1000000000L); //remove for normal close
     }
 
-    private static void printModelPipeline() throws IOException {
+    private static AlgorithmPipeline testClusterReader(String inputFile) throws Exception {
+        final String normalLabel = "normal";
+        BICOClusterer bico = new BICOClusterer(false, 500, 50, null).trainedLabels(Collections.singleton(normalLabel));
+        ClusterLabelingAlgorithm clusterLabeler = new ClusterLabelingAlgorithm(0.0, true);
+        ExpectedPredictionTagger tagger = new ExpectedPredictionTagger();
+        tagger.defaultLabel = ClusterConstants.NOISE_CLUSTER;
+        tagger.addMapping(normalLabel, normalLabel);
+        bico.alwaysTrain();
+        AlgorithmPipeline pipeline = new AlgorithmPipeline(new File(inputFile), FileMetricReader.FILE_NAME);
+        RestServer server = new ExtendedRestServer(9000);
+        server.addAlgorithm(bico, "first_bico");
+        server.start();
+        pipeline.step(new MetricFilterAlgorithm("disk-usage///free", "disk-usage///used"))
+                .step(new SourceLabellingAlgorithm())
+//                .step(new FeatureStandardizer())
+                .step(tagger)
+                .step(bico)
+                .step(clusterLabeler)
+                .runAndWait();
+        return pipeline;
+    }
+
+    public static AlgorithmPipeline printModelPipeline(String jsonFile, String outputFile, ClusterReader cr) throws IOException {
         Host source = bono;
-        String jsonFile = "/home/malcolmx/Desktop/first_bico.json"; // change to point to correct file
-        String outputFile = "/home/malcolmx/Desktop/out.csv"; //change to point correct file
+        //String jsonFile = "/home/malcolmx/Desktop/first_bico.json"; // change to point to correct file
+        //String outputFile = "/home/malcolmx/Desktop/out.csv"; //change to point correct file
 //        String jsonString = new Scanner(jsonFile).useDelimiter("\\Z").next();
-        String jsonString = new String(Files.readAllBytes(Paths.get(jsonFile)));
-        AbstractClusterer deserializedClusterer = MOAUtil.getClustererFromJSONString(jsonString);
-        ClusterReader clusterReader = new ClusterReader(deserializedClusterer);
+        if (jsonFile != null && cr == null) {
+
+            String jsonString = new String(Files.readAllBytes(Paths.get(jsonFile)));
+            AbstractClusterer deserializedClusterer = MOAUtil.getClustererFromJSONString(jsonString);
+            cr = new ClusterReader(deserializedClusterer);
+        }
         CsvMarshaller marshaller = new CsvMarshaller();
         MetricPrinter printer = new MetricPrinter(outputFile, marshaller);
         AlgorithmPipeline pipeline = new AlgorithmPipeline(new File(preparedDataFile(source)), FileMetricReader.FILE_NAME);
+
         //TODO plot output
-        pipeline.step(clusterReader).csvOutput(outputFile);
+        cr.useMicroClusters();
+        pipeline.step(cr);//.csvOutput(outputFile);
+        pipeline.step(new SimplePrinter());
+        return pipeline;
     }
 
-    private static void bicoCVSplitPipeline() throws IOException, InterruptedException {
-        RestServer server = new RestServer(9000);
+    private static void bicoCVSplitPipeline(RestServer server) throws IOException, InterruptedException {
+        if (server == null) {
+            server = new RestServer(9000);
+        }
 
         Host source = bono;
         FileGroup outputs = new FileGroup(new File(newData.makeOutputDir(source), "analysis"));
@@ -130,7 +170,6 @@ public class Main {
                                     });
                 })
                 .runAndWait();
-        Thread.sleep(100000000000L);
     }
 
     private static String preparedDataFile(Host source) throws IOException {
