@@ -6,9 +6,7 @@ import fi.iki.elonen.NanoHTTPD;
 import metrics.algorithms.Algorithm;
 import moa.clusterers.kmeanspm.BICO;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,6 +20,8 @@ public class RestServer extends NanoHTTPD {
     private static final String MIME_TEXT_HTML = "text/html";
     private static final String MIME_TEXT_PLAIN = "text/plain";
     private static final String MIME_APPLICATION_JSON = "application/json";
+    private static final String MIME_CSS = "text/css";
+    private static final String MIME_JS = "application/javascript";
     private final Map<String, Algorithm> algorithms = new ConcurrentHashMap<>();
     Gson gson = new Gson();
 
@@ -81,6 +81,22 @@ public class RestServer extends NanoHTTPD {
         return newFixedLengthResponse(status, MIME_TEXT_PLAIN, in, totalBytes);
     }
 
+    protected Response makeJSResponse(FileInputStreamWithSize assetInputStream, long size) {
+        return makeJSResponse(assetInputStream, size, Response.Status.OK);
+    }
+
+    protected Response makeJSResponse(FileInputStreamWithSize assetInputStream, long size, Response.IStatus status) {
+        return newFixedLengthResponse(status, MIME_JS, assetInputStream, size);
+    }
+
+    protected Response makeCSSResponse(FileInputStreamWithSize assetInputStream, long size) {
+        return makeCSSResponse(assetInputStream, size, Response.Status.OK);
+    }
+
+    protected Response makeCSSResponse(FileInputStreamWithSize assetInputStream, long size, Response.IStatus status) {
+        return newFixedLengthResponse(status, MIME_CSS, assetInputStream, size);
+    }
+
     private static boolean noIllegalCharacters(String name) {
         return name.matches("^[a-zA-Z0-9_]+$");
     }
@@ -130,7 +146,7 @@ public class RestServer extends NanoHTTPD {
                     break;
                 case 3:
                     System.out.println("length 3, uri: " + splitUri[2]);
-                    response = algorithmEndoint(session, splitUri);
+                    response = algorithmEndoint(session, uri, splitUri);
                 default:
                     System.out.println("default");
                     break;
@@ -151,7 +167,7 @@ public class RestServer extends NanoHTTPD {
         return response;
     }
 
-    protected Response algorithmEndoint(IHTTPSession session, String[] splitUri) {
+    protected Response algorithmEndoint(IHTTPSession session, String uri, String[] splitUri) {
         Response response;
         switch (session.getMethod()) {
             case GET: {
@@ -212,5 +228,30 @@ public class RestServer extends NanoHTTPD {
 
     protected Response internalServerFault() {
         return makeTextResponse("Internal Server Error", Response.Status.INTERNAL_ERROR);
+    }
+
+    protected static final class FileInputStreamWithSize extends FileInputStream {
+        protected long size;
+
+        public FileInputStreamWithSize(FileDescriptor fdObj) {
+            super(fdObj);
+            throw new UnsupportedOperationException();
+        }
+
+        public FileInputStreamWithSize(File file) throws FileNotFoundException {
+            super(file);
+            this.size = file.getTotalSpace();
+            throw new UnsupportedOperationException();
+        }
+
+        public FileInputStreamWithSize(String name) throws FileNotFoundException {
+            super(name);
+            throw new UnsupportedOperationException();
+        }
+
+        public long getSize() {
+            return this.size;
+        }
+
     }
 }

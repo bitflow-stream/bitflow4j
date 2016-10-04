@@ -51,12 +51,10 @@ public class ClusterReader extends AbstractAlgorithm{
         } catch (IllegalArgumentException e) {
             throw new IllegalStateException("underlying clustering contains Cluster that does not an instance of SphereClusterer");
         }catch (NullPointerException e){
-            throw new IllegalStateException("underlying clusterer returned null on call to " + (useMicroClusters ? "getMicroClusteringResult()" : "getClusteringResult()" ));
+            throw new IllegalStateException("underlying clusterer returned null on call to " + (useMicroClusters ? "getMicroClusteringResult()" : "getClusteringResult()" ), e);
         }
         catch (Exception e){
             throw new IllegalStateException("underlying clusterer returned null on call to " + (useMicroClusters ? "getMicroClusteringResult()" : "getClusteringResult()"), e);
-        } catch (Exception e) {
-            throw new IllegalStateException("underlying cluster threw exception on call to " + (useMicroClusters ? "getMicroClusteringResult()" : "getClusteringResult()" ), e);
         }
     }
 

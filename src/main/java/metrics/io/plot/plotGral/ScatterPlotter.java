@@ -6,7 +6,9 @@ import de.erichseifert.gral.graphics.Orientation;
 import de.erichseifert.gral.plots.XYPlot;
 import metrics.io.plot.ColorGenerator;
 import metrics.io.plot.OutputMetricPlotter;
+import org.jfree.util.ShapeUtilities;
 
+import java.awt.geom.Ellipse2D;
 import java.io.IOException;
 import java.util.Map;
 
@@ -15,6 +17,9 @@ import java.util.Map;
  */
 public class ScatterPlotter extends AbstractGralPlotter {
 
+
+    protected XYPlot plot;
+
     @Override
     public String toString() {
         return "scatter plot Gral";
@@ -22,12 +27,12 @@ public class ScatterPlotter extends AbstractGralPlotter {
 
     @Override
     public void plotResult(OutputMetricPlotter.PlotType outputType, Map<String, GralDataContainer> map, String filename) throws IOException {
-        XYPlot plot = new XYPlot();
+        plot = new XYPlot();
         ColorGenerator cg = new ColorGenerator();
         for (final String key : map.keySet()) {
             DataTable a = map.get(key).table;
             DataSeries ds = new DataSeries(key, a);
-
+            //TODO: why create new dataseries every time?
             plot.add(ds);
             plot.getPointRenderers(ds).get(0).setColor(cg.getNextColor());
         }
@@ -44,6 +49,10 @@ public class ScatterPlotter extends AbstractGralPlotter {
 
         // Output plotGral (Swing or file)
         showPlot(plot, outputType, filename);
+    }
+
+    protected void beforeShowPlot(){
+        //sub class hook
     }
 
 }
