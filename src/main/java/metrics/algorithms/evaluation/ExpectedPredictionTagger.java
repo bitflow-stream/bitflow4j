@@ -9,12 +9,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * TODO update doc
  * This algorithm should be used, when the performance of a classification algorithm should be evaluated using the {@link WekaEvaluationWrapper} algorithm.
  * This algorithm will add the label that should be predicted for the evaluator. This algorithm requires the SrcClsMapper to be configured correctly.
  */
 public class ExpectedPredictionTagger extends AbstractAlgorithm {
-
-    private Map<String, String> mapping = new ConcurrentHashMap<>();
 
     /**
      * If this is not null, this label will be used as expected tag when the incoming Sample has a label
@@ -22,6 +21,7 @@ public class ExpectedPredictionTagger extends AbstractAlgorithm {
      * If this is null, such Samples will use their original label as expected tag.
      */
     public String defaultLabel = null;
+    private Map<String, String> mapping = new ConcurrentHashMap<>();
 
     @Override
     protected Sample executeSample(Sample sample) throws IOException {

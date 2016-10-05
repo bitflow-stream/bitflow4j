@@ -28,7 +28,7 @@ public class AlgorithmModelProvider<T extends Serializable> extends AbstractAlgo
     }
 
     @Override
-    public synchronized void start(MetricInputStream input, MetricOutputStream output) {
+    public synchronized void start(MetricInputStream input, MetricOutputStream output) throws IOException {
         super.start(input, pipe);
         wrapped.start(pipe, output);
     }
@@ -40,6 +40,7 @@ public class AlgorithmModelProvider<T extends Serializable> extends AbstractAlgo
         System.err.println("Model-Provider is waiting for " + wrapped.toString() + " to finish...");
         pipe.waitUntilClosed();
         System.err.println(toString() + " is finished, now delivering the model.");
+        //TODO changed api and deadlock
         T object = (T) wrapped.getModel();
         model.setModel(object);
         super.inputClosed(output);

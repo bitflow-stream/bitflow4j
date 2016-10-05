@@ -1,8 +1,9 @@
 package metrics.algorithms.rest;
 
 import com.google.gson.reflect.TypeToken;
-import com.sun.org.apache.xerces.internal.util.Status;
 import metrics.algorithms.Algorithm;
+import metrics.algorithms.clustering.clustering.moa.BICOClusterer;
+import metrics.algorithms.clustering.clustering.moa.MOAClusteringModel;
 import moa.cluster.Cluster;
 import moa.cluster.Clustering;
 import moa.clusterers.AbstractClusterer;
@@ -23,6 +24,7 @@ public class GrahWebServer extends RestServer {
     private final static String GRAPH_JS_ENPDOINT = "graphs.js";
     private final static String GRAPH_PREFIX = "graphs";
     private final static String GRAPHS_HTML_PATH = "html/graphs.html";
+    private static final String GRAPHS_JS_PATH = "";
 
     public GrahWebServer(String hostname, int port) {
         super(hostname, port);
@@ -34,6 +36,29 @@ public class GrahWebServer extends RestServer {
 
     @Override
     protected Response algorithmEndoint(IHTTPSession session, String uri, String[] splitUri) {
+        //TODO short hook to get fast result, delete on merge
+        Algorithm alg = this.getAlgorithm(splitUri[2]);
+        BICOClusterer alg1 = (BICOClusterer) alg;
+        Object model1 = alg1.getModel();
+        MOAClusteringModel model = (MOAClusteringModel) model1;
+        model.useMicroClusters();
+        String html1 = "<script src=\"http://d3js.org/d3.v3.min.js\"></script>\n" +
+                "<script src=\"https://syntagmatic.github.io/parallel-coordinates/d3.parcoords.js\"></script>\n" +
+                "<link rel=\"stylesheet\" type=\"text/css\" href=\"https://syntagmatic.github.io/parallel-coordinates/d3.parcoords.css\">\n" +
+                "<div id=\"example\" class=\"parcoords\" style=\"width:10000px;height:600px\"></div>\n" +
+                "\n" +
+                "<script>\n" +
+                "var data = ";
+        String html2 = ";\n" +
+                "\n" +
+                "var pc = d3.parcoords()(\"#example\")\n" +
+                "  .data(data)\n" +
+                "  .render()\n" +
+                "  .createAxes();\n" +
+                "</script>";
+        String finalS = html1 + model.getClustering().getGraphJson() + html2;
+        if (true) return makeHTMLResponse(finalS);
+        //TODO end hook
         System.out.println("URI: " + session.getUri());
         Response response = null;
         if (uri.endsWith(".html")){

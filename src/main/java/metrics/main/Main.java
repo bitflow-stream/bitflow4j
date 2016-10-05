@@ -6,7 +6,7 @@ import metrics.algorithms.*;
 import metrics.algorithms.classification.ExternalClassifier;
 import metrics.algorithms.classification.Model;
 import metrics.algorithms.clustering.*;
-import metrics.algorithms.clustering.clustering.BICOClusterer;
+import metrics.algorithms.clustering.clustering.moa.BICOClusterer;
 import metrics.algorithms.clustering.obsolete.SimplePrinter;
 import metrics.algorithms.evaluation.CrossValidationFork;
 import metrics.algorithms.evaluation.ExpectedPredictionTagger;
@@ -14,6 +14,7 @@ import metrics.algorithms.evaluation.ExtendedStreamEvaluator;
 import metrics.algorithms.filter.MetricFilterAlgorithm;
 import metrics.algorithms.normalization.FeatureStandardizer;
 import metrics.algorithms.rest.ExtendedRestServer;
+import metrics.algorithms.rest.GrahWebServer;
 import metrics.algorithms.rest.RestServer;
 import metrics.io.MetricPrinter;
 import metrics.io.file.FileGroup;
@@ -54,15 +55,48 @@ public class Main {
 //        prepareData(bono);
 //        bicoCVSplitPipeline(null);
 //        printModelPipeline(jsonFile, outputFile, null).runAndWait();
-        testClusterReader(inputFile).runAndWait();
-
+//        testClusterReader(inputFile).runAndWait();
+        graphTest(inputFile).runAndWait();
 
         Thread.sleep(1000000000L); //remove for normal close
     }
 
-    private static AlgorithmPipeline testClusterReader(String inputFile) throws Exception {
+    private static AlgorithmPipeline graphTest(String inputFile) throws IOException {
         final String normalLabel = "normal";
         BICOClusterer bico = new BICOClusterer(false, 500, 50, null).trainedLabels(Collections.singleton(normalLabel));
+        ClusterLabelingAlgorithm clusterLabeler = new ClusterLabelingAlgorithm(0.0, true);
+        ExpectedPredictionTagger tagger = new ExpectedPredictionTagger();
+        tagger.defaultLabel = ClusterConstants.NOISE_CLUSTER;
+        tagger.addMapping(normalLabel, normalLabel);
+
+        AbstractAlgorithm initialLabeller = new LabellingAlgorithm() {
+            @Override
+            protected String newLabel(Sample sample) {
+                String label = sample.getSource();
+                if (sample.hasLabel()) {
+                    if (label.equals("idle") || label.equals("load") || label.equals("overload"))
+                        return normalLabel;
+                }
+                return label;
+            }
+        };
+        GrahWebServer server = new GrahWebServer(9000);
+        server.addAlgorithm(bico, "bico");
+        server.addAlgorithm(clusterLabeler, "cluster_labeler");
+        server.start();
+        AlgorithmPipeline pipe = new AlgorithmPipeline(new File(inputFile), FileMetricReader.FILE_NAME)
+                .step(new MetricFilterAlgorithm("disk-usage///free", "disk-usage///used"))
+                .step(tagger)
+                .step(new FeatureStandardizer())
+                .step(initialLabeller)
+                .step(bico)
+                .step(clusterLabeler);
+        return pipe;
+    }
+
+    private static AlgorithmPipeline testClusterReader(String inputFile) throws Exception {
+        final String normalLabel = "normal";
+        BICOClusterer bico = new BICOClusterer(false, 20, 10, null).trainedLabels(Collections.singleton(normalLabel));
         ClusterLabelingAlgorithm clusterLabeler = new ClusterLabelingAlgorithm(0.0, true);
         ExpectedPredictionTagger tagger = new ExpectedPredictionTagger();
         tagger.defaultLabel = ClusterConstants.NOISE_CLUSTER;

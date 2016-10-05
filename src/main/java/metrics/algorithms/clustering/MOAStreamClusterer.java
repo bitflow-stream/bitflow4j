@@ -4,6 +4,7 @@ import com.yahoo.labs.samoa.instances.*;
 import metrics.Sample;
 import metrics.algorithms.AbstractAlgorithm;
 import metrics.algorithms.SampleConverger;
+import metrics.algorithms.clustering.clustering.moa.MOAClusteringModel;
 import moa.cluster.Clustering;
 import moa.clusterers.AbstractClusterer;
 
@@ -17,11 +18,9 @@ import java.util.*;
  */
 public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializable> extends AbstractAlgorithm {
 
+    protected final SampleConverger converger = new SampleConverger(); // No predefined expected header
     protected T clusterer;
     protected long sampleCount;
-
-    protected final SampleConverger converger = new SampleConverger(); // No predefined expected header
-
     // Only Samples with a label that is inside this set will be used for training the clusterer.
     // Other Samples will only query the clusterer, without changing the underlying model.
     // If this is null (by default), every Sample with a correct label is trained.
@@ -91,7 +90,6 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
      */
     protected void initializeClusterer(Sample firstSample) {
         this.setupClustererParameter(firstSample);
-
         List<Attribute> attributes = new ArrayList<>();
         for (String name : firstSample.getHeader().header) {
             attributes.add(new Attribute(name));
@@ -189,7 +187,20 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
 
     @Override
     public Object getModel() {
-        return clusterer;
+//        String[] header = converger.getExpectedHeader().header;
+        String[] convHeader = converger.getExpectedHeader().header;
+        String[] header = new String[convHeader.length + 1];
+        System.arraycopy(convHeader, 0, header, 0, convHeader.length);
+        header[convHeader.length] = "class";
+        System.out.println("GO");
+        MOAClusteringModel<T> moaClusteringModel = null;
+        try {
+            moaClusteringModel = new MOAClusteringModel<>(this.clusterer, header, true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("YADA");
+        return moaClusteringModel;
     }
 
     @SuppressWarnings("unchecked")

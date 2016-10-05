@@ -49,7 +49,7 @@ public class ClusterCounters {
     public String calculateLabel() {
         if (clusterId == -1) return ClusterConstants.NOISE_CLUSTER;
 
-        //TODO: allow multilabel clusters
+        //TODO: make decision on equal probabilities final
         String bestLabel = counters.entrySet().stream().max((entry1, entry2) -> entry1.getValue() > entry2
                 .getValue() ? 1 : -1).get().getKey();
         //the chance for the best label

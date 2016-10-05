@@ -81,6 +81,14 @@ public class RestServer extends NanoHTTPD {
         return newFixedLengthResponse(status, MIME_TEXT_PLAIN, in, totalBytes);
     }
 
+    private static boolean noIllegalCharacters(String name) {
+        return name.matches("^[a-zA-Z0-9_]+$");
+    }
+
+    private static String getlegalCharacters() {
+        return LEGAL_CHARACTERS;
+    }
+
     protected Response makeJSResponse(FileInputStreamWithSize assetInputStream, long size) {
         return makeJSResponse(assetInputStream, size, Response.Status.OK);
     }
@@ -95,14 +103,6 @@ public class RestServer extends NanoHTTPD {
 
     protected Response makeCSSResponse(FileInputStreamWithSize assetInputStream, long size, Response.IStatus status) {
         return newFixedLengthResponse(status, MIME_CSS, assetInputStream, size);
-    }
-
-    private static boolean noIllegalCharacters(String name) {
-        return name.matches("^[a-zA-Z0-9_]+$");
-    }
-
-    private static String getlegalCharacters() {
-        return LEGAL_CHARACTERS;
     }
 
     public Algorithm getAlgorithm(String name) {
@@ -184,6 +184,7 @@ public class RestServer extends NanoHTTPD {
                     response = makeTextResponse("No model for algorithm " + splitUri[2] + " found.", Response.Status.NO_CONTENT);
                     break;
                 }
+                //TODO
                 System.out.println("model not null");
                 String json = null;
                 try {

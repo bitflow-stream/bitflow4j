@@ -2,6 +2,7 @@ package metrics.algorithms.rest;
 
 import metrics.algorithms.Algorithm;
 import metrics.algorithms.clustering.ClusterReader;
+import metrics.algorithms.clustering.clustering.moa.MOAClusteringModel;
 import metrics.main.Main;
 import moa.clusterers.AbstractClusterer;
 
@@ -35,7 +36,8 @@ public class ExtendedRestServer extends RestServer {
 
     private static void startPipeAndWait(Algorithm algorithm, String outputPath) {
         //Algorithm algorithm = this.getAlgorithm("first_bico");
-        AbstractClusterer clusterer = (AbstractClusterer) algorithm.getModel();
+        //TODO apichange
+        AbstractClusterer clusterer = ((MOAClusteringModel) algorithm.getModel()).getModel();
         try {
             Main.printModelPipeline(null, outputPath + random.nextInt(), new ClusterReader(clusterer)).runAndWait();
             Thread.sleep(50000000000L);
@@ -53,13 +55,11 @@ public class ExtendedRestServer extends RestServer {
             if (first_bico == null) System.out.println("bico should not be null");
             startInThread(first_bico);
         }
-
         return super.serve(session);
     }
 
     private static class Runner implements Runnable {
         private final Algorithm a;
-
         public Runner(Algorithm a) {
             this.a = a;
         }

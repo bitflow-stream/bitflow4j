@@ -1,4 +1,4 @@
-package metrics.algorithms.clustering.clustering;
+package metrics.algorithms.clustering.clustering.moa;
 
 import com.github.javacliparser.IntOption;
 import metrics.Sample;

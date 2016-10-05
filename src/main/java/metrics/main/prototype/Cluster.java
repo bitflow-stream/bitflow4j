@@ -7,13 +7,13 @@ import metrics.algorithms.FeatureCalculationsAlgorithm;
 import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
 import metrics.algorithms.clustering.ClusterReader;
 import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
-import metrics.algorithms.clustering.clustering.BICOClusterer;
+import metrics.algorithms.clustering.clustering.moa.BICOClusterer;
+import metrics.algorithms.clustering.clustering.moa.MOAClusteringModel;
 import metrics.algorithms.evaluation.OnlineOutlierEvaluator;
 import metrics.algorithms.normalization.OnlineAutoMinMaxScaler;
 import metrics.algorithms.rest.RestServer;
 import metrics.main.AlgorithmPipeline;
 import metrics.main.analysis.OpenStackSampleSplitter;
-import moa.clusterers.AbstractClusterer;
 
 import java.io.IOException;
 import java.util.*;
@@ -116,7 +116,7 @@ public class Cluster {
                                     .step(evaluator)
                                     .step(hostnameTagger)
 
-                                    .step(new ClusterReader(() -> (AbstractClusterer) moaClusterer.getModel()).useMicroClusters().addRadius())
+                                    .step(new ClusterReader(() -> ((MOAClusteringModel) moaClusterer.getModel()).getModel()).useMicroClusters().addRadius())
                                     .consoleOutput("CSV");
 
                                     // .output(new TcpMetricsOutput(AlgorithmPipeline.getMarshaller(Analyse.TCP_OUTPUT_FORMAT), targetHost, targetPort));

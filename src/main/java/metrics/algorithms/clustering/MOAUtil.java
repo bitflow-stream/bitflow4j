@@ -3,7 +3,8 @@ package metrics.algorithms.clustering;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
-import metrics.algorithms.clustering.clustering.BICOClusterer;
+import metrics.algorithms.clustering.clustering.moa.BICOClusterer;
+import metrics.algorithms.clustering.clustering.moa.MOAClusteringModel;
 import moa.clusterers.AbstractClusterer;
 
 /**
@@ -25,6 +26,6 @@ public class MOAUtil {
         } catch (JsonSyntaxException e) {
             e.printStackTrace();
         }
-        return (AbstractClusterer) clusterer.getModel();
+        return ((MOAClusteringModel) clusterer.getModel()).getModel();
     }
 }
