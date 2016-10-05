@@ -6,7 +6,7 @@ import metrics.algorithms.Algorithm;
 import metrics.algorithms.FeatureCalculationsAlgorithm;
 import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
 import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
-import metrics.algorithms.clustering.clustering.BICOClusterer;
+import metrics.algorithms.clustering.clustering.moa.BICOClusterer;
 import metrics.algorithms.evaluation.OnlineOutlierEvaluator;
 import metrics.algorithms.normalization.OnlineAutoMinMaxScaler;
 import metrics.io.fork.MultiFork;

@@ -14,7 +14,7 @@ import metrics.algorithms.evaluation.ExtendedStreamEvaluator;
 import metrics.algorithms.filter.MetricFilterAlgorithm;
 import metrics.algorithms.normalization.FeatureStandardizer;
 import metrics.algorithms.rest.ExtendedRestServer;
-import metrics.algorithms.rest.GrahWebServer;
+import metrics.algorithms.rest.GraphWebServer;
 import metrics.algorithms.rest.RestServer;
 import metrics.io.MetricPrinter;
 import metrics.io.file.FileGroup;
@@ -80,7 +80,7 @@ public class Main {
                 return label;
             }
         };
-        GrahWebServer server = new GrahWebServer(9000);
+        GraphWebServer server = new GraphWebServer(9000);
         server.addAlgorithm(bico, "bico");
         server.addAlgorithm(clusterLabeler, "cluster_labeler");
         server.start();

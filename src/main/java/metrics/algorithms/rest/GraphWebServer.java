@@ -20,7 +20,7 @@ import java.util.Map;
 /**
  * Support for graph visualisation. Interface is available on <host>:<port>/graphs
  */
-public class GrahWebServer extends RestServer {
+public class GraphWebServer extends RestServer {
 
 //    private final static String JS_PREFIX = "js";
 //    private final static String CSS_PREFIX = "css";
@@ -32,11 +32,11 @@ public class GrahWebServer extends RestServer {
 //    private final static String GRAPHS_HTML_PATH = "html/graphs.html";
 //    private static final String GRAPHS_JS_PATH = "";
 
-    public GrahWebServer(String hostname, int port) {
+    public GraphWebServer(String hostname, int port) {
         super(hostname, port);
     }
 
-    public GrahWebServer(int port) {
+    public GraphWebServer(int port) {
         super(port);
     }
 
