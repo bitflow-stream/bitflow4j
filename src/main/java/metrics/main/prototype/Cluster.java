@@ -5,12 +5,13 @@ import metrics.algorithms.AbstractAlgorithm;
 import metrics.algorithms.Algorithm;
 import metrics.algorithms.FeatureCalculationsAlgorithm;
 import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
+import metrics.algorithms.clustering.ClusterReader;
 import metrics.algorithms.clustering.LabelAggregatorAlgorithm;
-import metrics.algorithms.clustering.clustering.BICOClusterer;
+import metrics.algorithms.clustering.clustering.moa.BICOClusterer;
+import metrics.algorithms.clustering.clustering.moa.MOAClusteringModel;
 import metrics.algorithms.evaluation.OnlineOutlierEvaluator;
 import metrics.algorithms.normalization.OnlineAutoMinMaxScaler;
 import metrics.algorithms.rest.RestServer;
-import metrics.io.net.TcpMetricsOutput;
 import metrics.main.AlgorithmPipeline;
 import metrics.main.analysis.OpenStackSampleSplitter;
 
@@ -37,20 +38,29 @@ public class Cluster {
         int targetPort = Integer.parseInt(args[3]);
         String hostname = args[4];
         String filter = args[5];
-        int num_clusters = Integer.valueOf(args[6]);
-        int num_micro_clusters = 500;
+        int num_clustes_parameter = Integer.valueOf(args[6]);
         boolean conceptChangeEnabled = Boolean.valueOf(args[7]);
         String incorrectPredictionsLog = args[8];
         Algorithm filterAlgo = Train.getFilter(filter);
         int restPort = 9000;
+        boolean useMicroclusters = true; // TODO switch to regular clusters
 
         RestServer restServer = new RestServer(restPort);
+
+        int num_clusters, num_micro_clusters;
+        if (useMicroclusters) {
+            num_clusters = 10; // Does not affect the results
+            num_micro_clusters = num_clustes_parameter;
+        } else {
+            num_clusters = num_clustes_parameter;
+            num_micro_clusters = num_clusters * 5; // TODO this is a heuristic
+        }
 
         Set<String> trainedLabels = new HashSet<>(Arrays.asList(new String[] { "idle", "load", "overload" }));
         BICOClusterer moaClusterer = new BICOClusterer(true, num_micro_clusters, num_clusters, null).trainedLabels(trainedLabels).alwaysAddDistanceMetrics();
 
-        // TODO switch to regular clusters
-        moaClusterer.useMicroclusters();
+        if (useMicroclusters)
+            moaClusterer.useMicroclusters();
 
         ClusterLabelingAlgorithm labeling = new ClusterLabelingAlgorithm(classifiedClusterThreshold, true).trainedLabels(trainedLabels);
         LabelAggregatorAlgorithm labelAggregatorAlgorithm = new LabelAggregatorAlgorithm(labelAggregationWindow);
@@ -85,8 +95,8 @@ public class Cluster {
 
         FeatureCalculationsAlgorithm extraFeatures = getExtraFeatures();
 
-        restServer.addAlgorithm(moaClusterer);
-        restServer.addAlgorithm(labeling);
+        restServer.addAlgorithm(moaClusterer, "clusterer");
+        restServer.addAlgorithm(labeling, "labeling");
         restServer.start();
 
         new AlgorithmPipeline(receivePort, Analyse.TCP_FORMAT)
@@ -105,7 +115,11 @@ public class Cluster {
                                     .step(labelAggregatorAlgorithm)
                                     .step(evaluator)
                                     .step(hostnameTagger)
-                                    .output(new TcpMetricsOutput(AlgorithmPipeline.getMarshaller(Analyse.TCP_OUTPUT_FORMAT), targetHost, targetPort));
+
+                                    .step(new ClusterReader(() -> ((MOAClusteringModel) moaClusterer.getModel()).getModel()).useMicroClusters().addRadius())
+                                    .consoleOutput("CSV");
+
+                                    // .output(new TcpMetricsOutput(AlgorithmPipeline.getMarshaller(Analyse.TCP_OUTPUT_FORMAT), targetHost, targetPort));
                             /*
                                     .fork(new TwoWayFork(),
                                             (type, out) -> out.output(

@@ -1,20 +1,22 @@
 package metrics.main;
 
+import metrics.CsvMarshaller;
 import metrics.Sample;
 import metrics.algorithms.*;
 import metrics.algorithms.classification.ExternalClassifier;
 import metrics.algorithms.classification.Model;
-import metrics.algorithms.clustering.ClusterConstants;
-import metrics.algorithms.clustering.ClusterCounter;
-import metrics.algorithms.clustering.ClusterLabelingAlgorithm;
-import metrics.algorithms.clustering.ClusteringAlgorithm;
-import metrics.algorithms.clustering.clustering.BICOClusterer;
+import metrics.algorithms.clustering.*;
+import metrics.algorithms.clustering.clustering.moa.BICOClusterer;
+import metrics.algorithms.clustering.obsolete.SimplePrinter;
 import metrics.algorithms.evaluation.CrossValidationFork;
 import metrics.algorithms.evaluation.ExpectedPredictionTagger;
 import metrics.algorithms.evaluation.ExtendedStreamEvaluator;
 import metrics.algorithms.filter.MetricFilterAlgorithm;
 import metrics.algorithms.normalization.FeatureStandardizer;
+import metrics.algorithms.rest.ExtendedRestServer;
+import metrics.algorithms.rest.GrahWebServer;
 import metrics.algorithms.rest.RestServer;
+import metrics.io.MetricPrinter;
 import metrics.io.file.FileGroup;
 import metrics.io.file.FileMetricReader;
 import metrics.io.fork.TwoWayFork;
@@ -28,6 +30,8 @@ import weka.classifiers.AbstractClassifier;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collections;
 
 @SuppressWarnings("unused")
@@ -43,10 +47,101 @@ public class Main {
     private static final DataSource<Integer> tcpData = new TcpDataSource(9999, "BIN", 1);
 
     public static void main(String[] args) throws Exception {
+        String jsonFile = "/home/malcolmx/Desktop/first_bico.json"; // change to point to correct file
+        String outputFile = "/home/malcolmx/Desktop/out.csv"; //change to point correct file
+        String inputFile = preparedDataFile(bono); // change to oint to correct file
 //        allClassifiers();
 //        allClusterers();
 //        prepareData(bono);
-        RestServer server = new RestServer(9000);
+//        bicoCVSplitPipeline(null);
+//        printModelPipeline(jsonFile, outputFile, null).runAndWait();
+//        testClusterReader(inputFile).runAndWait();
+        graphTest(inputFile).runAndWait();
+
+        Thread.sleep(1000000000L); //remove for normal close
+    }
+
+    private static AlgorithmPipeline graphTest(String inputFile) throws IOException {
+        final String normalLabel = "normal";
+        BICOClusterer bico = new BICOClusterer(false, 20, 10, null).trainedLabels(Collections.singleton(normalLabel));
+        ClusterLabelingAlgorithm clusterLabeler = new ClusterLabelingAlgorithm(0.0, true);
+        ExpectedPredictionTagger tagger = new ExpectedPredictionTagger();
+        tagger.defaultLabel = ClusterConstants.NOISE_CLUSTER;
+        tagger.addMapping(normalLabel, normalLabel);
+
+        AbstractAlgorithm initialLabeller = new LabellingAlgorithm() {
+            @Override
+            protected String newLabel(Sample sample) {
+                String label = sample.getSource();
+                if (sample.hasLabel()) {
+                    if (label.equals("idle") || label.equals("load") || label.equals("overload"))
+                        return normalLabel;
+                }
+                return label;
+            }
+        };
+        GrahWebServer server = new GrahWebServer(9000);
+        server.addAlgorithm(bico, "bico");
+        server.addAlgorithm(clusterLabeler, "cluster_labeler");
+        server.start();
+        AlgorithmPipeline pipe = new AlgorithmPipeline(new File(inputFile), FileMetricReader.FILE_NAME)
+                .step(new MetricFilterAlgorithm("disk-usage///free", "disk-usage///used"))
+                .step(tagger)
+//                .step(new FeatureStandardizer())
+                .step(initialLabeller)
+                .step(bico)
+                .step(clusterLabeler);
+        return pipe;
+    }
+
+    private static AlgorithmPipeline testClusterReader(String inputFile) throws Exception {
+        final String normalLabel = "normal";
+        BICOClusterer bico = new BICOClusterer(false, 20, 10, null).trainedLabels(Collections.singleton(normalLabel));
+        ClusterLabelingAlgorithm clusterLabeler = new ClusterLabelingAlgorithm(0.0, true);
+        ExpectedPredictionTagger tagger = new ExpectedPredictionTagger();
+        tagger.defaultLabel = ClusterConstants.NOISE_CLUSTER;
+        tagger.addMapping(normalLabel, normalLabel);
+        bico.alwaysTrain();
+        AlgorithmPipeline pipeline = new AlgorithmPipeline(new File(inputFile), FileMetricReader.FILE_NAME);
+        RestServer server = new ExtendedRestServer(9000);
+        server.addAlgorithm(bico, "first_bico");
+        server.start();
+        pipeline.step(new MetricFilterAlgorithm("disk-usage///free", "disk-usage///used"))
+                .step(new SourceLabellingAlgorithm())
+//                .step(new FeatureStandardizer())
+                .step(tagger)
+                .step(bico)
+                .step(clusterLabeler)
+                .runAndWait();
+        return pipeline;
+    }
+
+    public static AlgorithmPipeline printModelPipeline(String jsonFile, String outputFile, ClusterReader cr) throws IOException {
+        Host source = bono;
+        //String jsonFile = "/home/malcolmx/Desktop/first_bico.json"; // change to point to correct file
+        //String outputFile = "/home/malcolmx/Desktop/out.csv"; //change to point correct file
+//        String jsonString = new Scanner(jsonFile).useDelimiter("\\Z").next();
+        if (jsonFile != null && cr == null) {
+
+            String jsonString = new String(Files.readAllBytes(Paths.get(jsonFile)));
+            AbstractClusterer deserializedClusterer = MOAUtil.getClustererFromJSONString(jsonString);
+            cr = new ClusterReader(deserializedClusterer);
+        }
+        CsvMarshaller marshaller = new CsvMarshaller();
+        MetricPrinter printer = new MetricPrinter(outputFile, marshaller);
+        AlgorithmPipeline pipeline = new AlgorithmPipeline(new File(preparedDataFile(source)), FileMetricReader.FILE_NAME);
+
+        //TODO plot output
+        cr.useMicroClusters();
+        pipeline.step(cr);//.csvOutput(outputFile);
+        pipeline.step(new SimplePrinter());
+        return pipeline;
+    }
+
+    private static void bicoCVSplitPipeline(RestServer server) throws IOException, InterruptedException {
+        if (server == null) {
+            server = new RestServer(9000);
+        }
 
         Host source = bono;
         FileGroup outputs = new FileGroup(new File(newData.makeOutputDir(source), "analysis"));
@@ -73,10 +168,10 @@ public class Main {
                 return label;
             }
         };
-        server.addAlgorithm(bico);
-        server.addAlgorithm(clusterLabeler);
-        server.addAlgorithm(evalClusterLabeler);
-        server.addAlgorithm(evalBico);
+        server.addAlgorithm(bico, "first_bico");
+        server.addAlgorithm(clusterLabeler, "first_cluster_labeler");
+        server.addAlgorithm(evalClusterLabeler, "eval_cluster_labeler");
+        server.addAlgorithm(evalBico, "eval_bico");
         server.start();
         // preparedDataFile(source)
         new AlgorithmPipeline(new File(preparedDataFile(source)), FileMetricReader.FILE_NAME)
@@ -109,7 +204,6 @@ public class Main {
                                     });
                 })
                 .runAndWait();
-        Thread.sleep(100000000000L);
     }
 
     private static String preparedDataFile(Host source) throws IOException {

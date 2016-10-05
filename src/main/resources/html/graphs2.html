@@ -1,0 +1,23 @@
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="https://syntagmatic.github.io/parallel-coordinates/d3.parcoords.js"></script>
+    <script   src="https://code.jquery.com/jquery-3.1.1.min.js"   integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="   crossorigin="anonymous"></script>
+    <link rel="stylesheet" type="text/css" href="https://syntagmatic.github.io/parallel-coordinates/d3.parcoords.css">
+    <div id="example" class="parcoords" style="width:10000px;height:800px;"></div>
+    <script>
+            processData = function(response) {
+//        $( document ).ready(function() {
+                var data = [];
+//                var pc = d3.parcoords()("#example");
+
+                for( i = 0 ; i < response.length; i++){
+                    data[i] = response[i];
+                }
+//                data = JSON.parse(response);
+                d3.parcoords()("#example").data(data)
+                        .render()
+                        .createAxes();
+            };
+            console.log("hallo");
+            $.getJSON("./clustering", processData);
+//        });
+    </script>

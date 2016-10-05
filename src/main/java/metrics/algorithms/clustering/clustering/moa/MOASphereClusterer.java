@@ -1,4 +1,4 @@
-package metrics.algorithms.clustering.clustering;
+package metrics.algorithms.clustering.clustering.moa;
 
 
 import com.yahoo.labs.samoa.instances.Instance;
@@ -23,8 +23,8 @@ import java.util.stream.DoubleStream;
 public abstract class MOASphereClusterer<T extends AbstractClusterer & Serializable> extends MOAStreamClusterer<T> {
 
     protected boolean calculateDistance;
-    private boolean alwaysAddDistanceMetrics = false;
     protected boolean useMicroclusteringResult = false;
+    private boolean alwaysAddDistanceMetrics = false;
 
     public MOASphereClusterer(T clusterer){
         super(clusterer);
@@ -48,6 +48,7 @@ public abstract class MOASphereClusterer<T extends AbstractClusterer & Serializa
     }
 
     protected Map.Entry<Double, double[]> getDistance(Instance instance, Clustering clustering) throws IOException {
+        //TODO replace reflection bs with normal call...
         Map.Entry<Double, double[]> distance = null;
         Optional<Map.Entry<Double, double[]>> distanceT;
         try {
@@ -121,7 +122,13 @@ public abstract class MOASphereClusterer<T extends AbstractClusterer & Serializa
             double clusterInclusionProbability = c.getInclusionProbability(instance);
             if (inclusionProbability < clusterInclusionProbability) {
                 inclusionProbability = clusterInclusionProbability;
-                bestFitCluster = clusterNum;
+                // bestFitCluster = clusterNum;
+
+                // TODO improve this
+                bestFitCluster = (int) c.getId();
+                if (c.getId() - (double) bestFitCluster > 0.001) {
+                    throw new IllegalStateException("Cluster ID is not an int: " + c.getId());
+                }
             }
             clusterNum++;
         }

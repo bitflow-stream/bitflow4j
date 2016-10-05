@@ -1,4 +1,4 @@
-package metrics.algorithms.clustering.clustering;
+package metrics.algorithms.clustering.clustering.moa;
 
 import com.github.javacliparser.IntOption;
 import metrics.Sample;
@@ -13,6 +13,18 @@ public class StreamKMClusterer extends MOASphereClusterer<StreamKM> {
     private Integer numberOfClusters = null;
     private Integer width = null;
     private Integer randomSeed = null;
+
+    public StreamKMClusterer() {
+        super((StreamKM) ClusteringAlgorithm.STREAM_KMEANS.newInstance());
+    }
+
+    public StreamKMClusterer(boolean calculateDistance, Integer sizeCoreset, Integer numberOfClusters, Integer width, Integer randomSeed) {
+        super((StreamKM) ClusteringAlgorithm.STREAM_KMEANS.newInstance(), calculateDistance);
+        this.sizeCoreset = sizeCoreset;
+        this.numberOfClusters = numberOfClusters;
+        this.width = width;
+        this.randomSeed = randomSeed;
+    }
 
     //TODO sanetize parameters
     public StreamKMClusterer setSizeCoreset(Integer sizeCoreset) {
@@ -33,18 +45,6 @@ public class StreamKMClusterer extends MOASphereClusterer<StreamKM> {
     public StreamKMClusterer setRandomSeed(Integer randomSeed) {
         this.randomSeed = randomSeed;
         return this;
-    }
-
-    public StreamKMClusterer() {
-        super((StreamKM) ClusteringAlgorithm.STREAM_KMEANS.newInstance());
-    }
-
-    public StreamKMClusterer(boolean calculateDistance, Integer sizeCoreset, Integer numberOfClusters, Integer width, Integer randomSeed) {
-        super((StreamKM) ClusteringAlgorithm.STREAM_KMEANS.newInstance(), calculateDistance);
-        this.sizeCoreset = sizeCoreset;
-        this.numberOfClusters = numberOfClusters;
-        this.width = width;
-        this.randomSeed = randomSeed;
     }
 
     @Override

@@ -1,4 +1,4 @@
-package metrics.algorithms.clustering.clustering;
+package metrics.algorithms.clustering.clustering.moa;
 
 import com.github.javacliparser.IntOption;
 import metrics.Sample;
@@ -17,6 +17,13 @@ public class BICOClusterer extends MOASphereClusterer<BICO> {
     private volatile Integer numberOfMicroclusters;
     private volatile Integer numberOfClusters;
 
+    public BICOClusterer(boolean calculateDistance, Integer numberOfMicroclusters, Integer numberOfClusters, Integer numberOfProjections) {
+        super((BICO) ClusteringAlgorithm.BICO.newInstance(), calculateDistance);
+        this.numberOfMicroclusters = numberOfMicroclusters;
+        this.numberOfClusters = numberOfClusters;
+        this.numberOfProjections = numberOfProjections;
+    }
+
     public BICOClusterer setNumberOfProjections(Integer numberOfProjections) {
         this.numberOfProjections = numberOfProjections;
         return this;
@@ -30,13 +37,6 @@ public class BICOClusterer extends MOASphereClusterer<BICO> {
     public BICOClusterer setNumberOfClusters(Integer numberOfClusters) {
         this.numberOfClusters = numberOfClusters;
         return this;
-    }
-
-    public BICOClusterer(boolean calculateDistance, Integer numberOfMicroclusters, Integer numberOfClusters, Integer numberOfProjections) {
-        super((BICO) ClusteringAlgorithm.BICO.newInstance(), calculateDistance);
-        this.numberOfMicroclusters = numberOfMicroclusters;
-        this.numberOfClusters = numberOfClusters;
-        this.numberOfProjections = numberOfProjections;
     }
 
     public void copyClusterer(BICOClusterer source) {
