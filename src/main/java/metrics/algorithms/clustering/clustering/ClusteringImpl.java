@@ -6,7 +6,6 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import metrics.algorithms.clustering.obsolete.GraphDataWrapper;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -59,14 +58,6 @@ public class ClusteringImpl implements Clustering {
     @Override
     public List<Cluster> getClusters() {
         return clusters;
-    }
-
-    @Override
-    public GraphDataWrapper[] getGraphRepresentation() {
-//        GraphDataWrapper graphDataWrapper = new GraphDataWrapper();
-//        graphDataWrapper.name = this.getName();
-//        graphDataWrapper.values
-        throw new UnsupportedOperationException();
     }
 
     @Override

@@ -1,29 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
     <script src="http://d3js.org/d3.v3.min.js"></script>
     <script src="https://syntagmatic.github.io/parallel-coordinates/d3.parcoords.js"></script>
     <script   src="https://code.jquery.com/jquery-3.1.1.min.js"   integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="   crossorigin="anonymous"></script>
-
-    <!--script src="js/graphs.js"/-->
-
     <link rel="stylesheet" type="text/css" href="https://syntagmatic.github.io/parallel-coordinates/d3.parcoords.css">
-</head>
-<body>
-    <div id="example" style="width:10000px;height:800px;"></div>
+    <div id="example" class="parcoords" style="width:10000px;height:800px;"></div>
     <script>
-//        $( document ).ready(function() {
-            var data = [];
-            var pc = d3.parcoords()("#example");
             processData = function(response) {
+//        $( document ).ready(function() {
+                var data = [];
+//                var pc = d3.parcoords()("#example");
 
                 for( i = 0 ; i < response.length; i++){
                     data[i] = response[i];
                 }
 //                data = JSON.parse(response);
-                pc.data(data)
+                d3.parcoords()("#example").data(data)
                         .render()
                         .createAxes();
             };
@@ -31,5 +21,3 @@
             $.getJSON("./clustering", processData);
 //        });
     </script>
-</body>
-</html>

@@ -63,7 +63,7 @@ public class Main {
 
     private static AlgorithmPipeline graphTest(String inputFile) throws IOException {
         final String normalLabel = "normal";
-        BICOClusterer bico = new BICOClusterer(false, 500, 50, null).trainedLabels(Collections.singleton(normalLabel));
+        BICOClusterer bico = new BICOClusterer(false, 20, 10, null).trainedLabels(Collections.singleton(normalLabel));
         ClusterLabelingAlgorithm clusterLabeler = new ClusterLabelingAlgorithm(0.0, true);
         ExpectedPredictionTagger tagger = new ExpectedPredictionTagger();
         tagger.defaultLabel = ClusterConstants.NOISE_CLUSTER;
@@ -87,7 +87,7 @@ public class Main {
         AlgorithmPipeline pipe = new AlgorithmPipeline(new File(inputFile), FileMetricReader.FILE_NAME)
                 .step(new MetricFilterAlgorithm("disk-usage///free", "disk-usage///used"))
                 .step(tagger)
-                .step(new FeatureStandardizer())
+//                .step(new FeatureStandardizer())
                 .step(initialLabeller)
                 .step(bico)
                 .step(clusterLabeler);

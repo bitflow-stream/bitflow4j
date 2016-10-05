@@ -23,10 +23,15 @@ public class RestServer extends NanoHTTPD {
     private static final String MIME_CSS = "text/css";
     private static final String MIME_JS = "application/javascript";
     private final Map<String, Algorithm> algorithms = new ConcurrentHashMap<>();
-    Gson gson = new Gson();
+    Gson gson;
 
     public RestServer(String hostname, int port) {
         super(hostname, port);
+        this.gson = generateGson();
+    }
+
+    protected Gson generateGson() {
+        return new Gson();
     }
 
     public RestServer(int port) {
@@ -145,9 +150,10 @@ public class RestServer extends NanoHTTPD {
                     response = listAlgorithmsEndpoint();
                     break;
                 case 3:
-                    System.out.println("length 3, uri: " + splitUri[2]);
-                    response = algorithmEndoint(session, uri, splitUri);
+                    //TODO handle other endpoints
                 default:
+                    System.out.println("length 3 or more, uri: " + splitUri[2]);
+                    response = algorithmEndoint(session, uri, splitUri);
                     System.out.println("default");
                     break;
             }
@@ -224,7 +230,7 @@ public class RestServer extends NanoHTTPD {
 
     @Override
     public void start() throws IOException {
-        super.start(SOCKET_READ_TIMEOUT, false);
+        super.start(50000, false);
     }
 
     protected Response internalServerFault() {
@@ -242,7 +248,7 @@ public class RestServer extends NanoHTTPD {
         public FileInputStreamWithSize(File file) throws FileNotFoundException {
             super(file);
             this.size = file.getTotalSpace();
-            throw new UnsupportedOperationException();
+//            throw new UnsupportedOperationException();
         }
 
         public FileInputStreamWithSize(String name) throws FileNotFoundException {

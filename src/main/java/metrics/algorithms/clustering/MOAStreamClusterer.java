@@ -192,14 +192,12 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
         String[] header = new String[convHeader.length + 1];
         System.arraycopy(convHeader, 0, header, 0, convHeader.length);
         header[convHeader.length] = "class";
-        System.out.println("GO");
         MOAClusteringModel<T> moaClusteringModel = null;
         try {
             moaClusteringModel = new MOAClusteringModel<>(this.clusterer, header, true);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("YADA");
         return moaClusteringModel;
     }
 
