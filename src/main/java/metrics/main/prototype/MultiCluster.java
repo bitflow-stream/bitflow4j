@@ -174,8 +174,11 @@ public class MultiCluster {
     private static class DelayAlgorithm extends AbstractAlgorithm {
 
         private final Date start;
+        private int delaySeconds;
+        boolean started = false;
 
         public DelayAlgorithm(int delaySeconds) {
+            this.delaySeconds = delaySeconds;
             Calendar cal = Calendar.getInstance();
             cal.setTime(new Date());
             cal.add(Calendar.SECOND, delaySeconds);
@@ -185,6 +188,10 @@ public class MultiCluster {
         @Override
         protected Sample executeSample(Sample sample) throws IOException {
             if (new Date().after(start)) {
+                if (!started) {
+                    System.err.println("STARTING DELAY ALGORITHM " + delaySeconds);
+                    started = true;
+                }
                 return sample;
             } else {
                 return null;
