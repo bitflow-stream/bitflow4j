@@ -62,52 +62,54 @@ public class MultiCluster {
                                 return;
                             }
 
-                            ClusterLabelingAlgorithm labeling = new ClusterLabelingAlgorithm(classifiedClusterThreshold, true).trainedLabels(trainedLabels);
-                            LabelAggregatorAlgorithm labelAggregatorAlgorithm = new LabelAggregatorAlgorithm(labelAggregationWindow);
-                            OnlineOutlierEvaluator evaluator = new OnlineOutlierEvaluator(true, trainedLabels, "normal", "abnormal");
-                            evaluator.logIncorrectPredictions(incorrectPredictionsLog, hostname);
-                            HostnameTagger hostnameTagger = new HostnameTagger(hostname);
-
-                            BICOClusterer moaClusterer = new BICOClusterer(true, num_micro_clusters, num_clusters, null).trainedLabels(trainedLabels).alwaysAddDistanceMetrics();
-
-                            // TODO switch to regular clusters
-                            moaClusterer.useMicroclusters();
-                            OnlineAutoMinMaxScaler.ConceptChangeHandler conceptChangeHandler = (handler, feature) -> {
-                                OnlineAutoMinMaxScaler.Feature ft = handler.features.get(feature);
-                                if (!conceptChangeEnabled)
-                                    System.err.print("IGNORED: ");
-                                System.err.println("New value range of " + feature + ": " + ft.reportedMin + " - " + ft.reportedMax);
-
-                                FeatureStatistics.Feature statsFt = stats.getFeature(feature);
-                                statsFt.min = ft.reportedMin;
-                                statsFt.max = ft.reportedMax;
-
-                                try {
-                                    stats.writeFile(statsFile);
-                                } catch (IOException e) {
-                                    System.err.println("Error storing new feature stats file: " + e.getMessage());
-                                    e.printStackTrace();
-                                }
-
-                                if (conceptChangeEnabled) {
-                                    hostnameTagger.samples_since_concept_change = 0; // Reset
-                                    moaClusterer.resetClusters();
-                                    labeling.resetCounters();
-                                }
-                                return conceptChangeEnabled;
-                            };
-                            FeatureCalculationsAlgorithm extraFeatures = getExtraFeatures();
-
                             p
                                     .step(filterAlgo)
-                                    .step(new OnlineAutoMinMaxScaler(0.5, conceptChangeHandler, stats))
-                                    .step(extraFeatures)
                                     .fork(new MultiFork(targetPorts.size()),
                                             (num, sub) -> {
+
+                                                ClusterLabelingAlgorithm labeling = new ClusterLabelingAlgorithm(classifiedClusterThreshold, true).trainedLabels(trainedLabels);
+                                                LabelAggregatorAlgorithm labelAggregatorAlgorithm = new LabelAggregatorAlgorithm(labelAggregationWindow);
+                                                OnlineOutlierEvaluator evaluator = new OnlineOutlierEvaluator(true, trainedLabels, "normal", "abnormal");
+                                                evaluator.logIncorrectPredictions(incorrectPredictionsLog, hostname);
+                                                HostnameTagger hostnameTagger = new HostnameTagger(hostname);
+
+                                                BICOClusterer moaClusterer = new BICOClusterer(true, num_micro_clusters, num_clusters, null).trainedLabels(trainedLabels).alwaysAddDistanceMetrics();
+
+                                                // TODO switch to regular clusters
+                                                moaClusterer.useMicroclusters();
+
+                                                OnlineAutoMinMaxScaler.ConceptChangeHandler conceptChangeHandler = (handler, feature) -> {
+                                                    OnlineAutoMinMaxScaler.Feature ft = handler.features.get(feature);
+                                                    if (!conceptChangeEnabled)
+                                                        System.err.print("IGNORED: ");
+                                                    System.err.println("New value range of " + feature + ": " + ft.reportedMin + " - " + ft.reportedMax);
+
+                                                    FeatureStatistics.Feature statsFt = stats.getFeature(feature);
+                                                    statsFt.min = ft.reportedMin;
+                                                    statsFt.max = ft.reportedMax;
+
+                                                    try {
+                                                        stats.writeFile(statsFile);
+                                                    } catch (IOException e) {
+                                                        System.err.println("Error storing new feature stats file: " + e.getMessage());
+                                                        e.printStackTrace();
+                                                    }
+
+                                                    if (conceptChangeEnabled) {
+                                                        hostnameTagger.samples_since_concept_change = 0; // Reset
+                                                        moaClusterer.resetClusters();
+                                                        labeling.resetCounters();
+                                                    }
+                                                    return conceptChangeEnabled;
+                                                };
+                                                FeatureCalculationsAlgorithm extraFeatures = getExtraFeatures();
+
                                                 int delay = delayHours[num];
                                                 int targetPort = targetPorts.get(num);
                                                 System.err.println("Configuring sub-pipeline nr " + num + ": delay " + delay + ", target port " + targetPort);
                                                 sub
+                                                    .step(new OnlineAutoMinMaxScaler(0.5, conceptChangeHandler, stats))
+                                                    .step(extraFeatures)
                                                     .step(new DelayAlgorithm(delay * 60 * 60))
                                                     .step(moaClusterer)
                                                     .step(labeling)
