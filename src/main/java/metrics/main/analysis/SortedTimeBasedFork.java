@@ -12,6 +12,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Created by anton on 5/12/16.
@@ -21,6 +22,8 @@ import java.util.Map;
  * This way there is no need to store all Samples in memory.
  */
 public class SortedTimeBasedFork extends TwoWayFork {
+
+    private static final Logger logger = Logger.getLogger(SortedTimeBasedFork.class.getName());
 
     private final float timeframePercentage;
     private final Date lastSample;
@@ -60,7 +63,7 @@ public class SortedTimeBasedFork extends TwoWayFork {
         total++;
         Date timestamp = sample.getTimestamp();
         if (timestamp == null) {
-            System.err.println("Warning: Received Sample without timestamp, dropping...");
+            logger.warning("Received Sample without timestamp, dropping...");
             return;
         }
         if (extStart == null) {
@@ -110,18 +113,18 @@ public class SortedTimeBasedFork extends TwoWayFork {
     private void printTimerange() {
         SimpleDateFormat fmt = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
         String dur = fmtDuration(duration);
-        System.err.println("Splitting samples from [" + fmt.format(start) + "] to [" +
+        logger.info("Splitting samples from [" + fmt.format(start) + "] to [" +
                 fmt.format(lastSample) + "] (" + dur + ", " + fmtDuration(totalDuration - 2 * duration) +
                 ", " + dur + " = " + fmtDuration(totalDuration) + ")");
     }
 
     private void printStatistics() {
-        System.err.println("Samples in each time range: " + primary + ", " + dropped + ", " + secondary + " (" + total + " total)");
+        logger.info("Samples in each time range: " + primary + ", " + dropped + ", " + secondary + " (" + total + " total)");
         if (forceDropped > 0) {
-            System.err.println("Dropped " + forceDropped + " samples because following classes were" +
+            logger.info("Dropped " + forceDropped + " samples because following classes were" +
                     " not available in first time segment: " + droppedClasses);
-            System.err.println("Following classes were available in the first time segment: " + classesInPrimary);
-            System.err.println("Following classes were available in the second time segment: " + classesInSecondary);
+            logger.info("Following classes were available in the first time segment: " + classesInPrimary);
+            logger.info("Following classes were available in the second time segment: " + classesInSecondary);
         }
     }
 

@@ -1,6 +1,6 @@
 package metrics.main.prototype;
 
-import metrics.algorithms.*;
+import metrics.algorithms.Algorithm;
 import metrics.algorithms.classification.Model;
 import metrics.algorithms.classification.WekaLearner;
 import metrics.algorithms.filter.MetricFilterAlgorithm;
@@ -19,17 +19,20 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Created by anton on 6/9/16.
  */
 public class Train {
 
+    private static final Logger logger = Logger.getLogger(Train.class.getName());
+
     static final String TRAINING_INPUT_FORMAT = "BIN";
 
     public static void main(String[] args) throws IOException {
         if (args.length != 3) {
-            System.err.println("Parameters: <input " + TRAINING_INPUT_FORMAT + " file> <output file> <filter>");
+            logger.severe("Parameters: <input " + TRAINING_INPUT_FORMAT + " file> <output file> <filter>");
             return;
         }
         TrainedDataModel model = createDataModel(args[0], args[2]);
@@ -62,7 +65,7 @@ public class Train {
                 .fork(new OpenStackSampleSplitter(),
                         (name, p) -> {
                             if (!name.isEmpty()) {
-                                System.err.println("Error: received hostname from OpenstackSampleSplitter: " + name);
+                                logger.severe("Error: received hostname from OpenstackSampleSplitter: " + name);
                                 return;
                             }
 
@@ -99,7 +102,7 @@ public class Train {
     }
 
     static void storeDataModel(String cacheFile, TrainedDataModel model) throws IOException {
-        System.err.println("Storing model to " + cacheFile);
+        logger.info("Storing model to " + cacheFile);
         FileOutputStream file_out = new FileOutputStream(cacheFile);
         ObjectOutputStream obj_out = new ObjectOutputStream(file_out);
         obj_out.writeObject(model);

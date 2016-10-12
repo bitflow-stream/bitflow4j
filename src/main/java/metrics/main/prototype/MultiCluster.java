@@ -16,18 +16,21 @@ import metrics.main.analysis.OpenStackSampleSplitter;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.Logger;
 
 /**
  * Created by anton on 6/21/16.
  */
 public class MultiCluster {
 
+    private static final Logger logger = Logger.getLogger(MultiCluster.class.getName());
+
     private static final double classifiedClusterThreshold = 0.1;
     private static final long labelAggregationWindow = 4000; // Milliseconds, must be declared as long
 
     public static void main(String[] args) throws IOException {
         if (args.length != 9) {
-            System.err.println("Parameters: <receive-port> <feature ini file> <target-host> <FIRST target-port> <local hostname> <filter>"+
+            logger.severe("Parameters: <receive-port> <feature ini file> <target-host> <FIRST target-port> <local hostname> <filter>"+
                     " <num_clusters> <concept-change-enabled> <incorrect-predictions-log>");
             return;
         }
@@ -58,7 +61,7 @@ public class MultiCluster {
                 .fork(new OpenStackSampleSplitter(),
                         (name, p) -> {
                             if (!name.isEmpty()) {
-                                System.err.println("Error: received hostname from OpenstackSampleSplitter: " + name);
+                                logger.severe("Error: received hostname from OpenstackSampleSplitter: " + name);
                                 return;
                             }
 
@@ -80,9 +83,7 @@ public class MultiCluster {
 
                                                 OnlineAutoMinMaxScaler.ConceptChangeHandler conceptChangeHandler = (handler, feature) -> {
                                                     OnlineAutoMinMaxScaler.Feature ft = handler.features.get(feature);
-                                                    if (!conceptChangeEnabled)
-                                                        System.err.print("IGNORED: ");
-                                                    System.err.println("New value range of " + feature + ": " + ft.reportedMin + " - " + ft.reportedMax);
+                                                    logger.warning((conceptChangeEnabled ? "" : "IGNORED: ") + "New value range of " + feature + ": " + ft.reportedMin + " - " + ft.reportedMax);
 
                                                     FeatureStatistics.Feature statsFt = stats.getFeature(feature);
                                                     statsFt.min = ft.reportedMin;
@@ -91,7 +92,7 @@ public class MultiCluster {
                                                     try {
                                                         stats.writeFile(statsFile);
                                                     } catch (IOException e) {
-                                                        System.err.println("Error storing new feature stats file: " + e.getMessage());
+                                                        logger.severe("Error storing new feature stats file: " + e.getMessage());
                                                         e.printStackTrace();
                                                     }
 
@@ -106,7 +107,7 @@ public class MultiCluster {
 
                                                 int delay = delayHours[num];
                                                 int targetPort = targetPorts.get(num);
-                                                System.err.println("Configuring sub-pipeline nr " + num + ": delay " + delay + ", target port " + targetPort);
+                                                logger.info("Configuring sub-pipeline nr " + num + ": delay " + delay + ", target port " + targetPort);
                                                 sub
                                                     .step(new OnlineAutoMinMaxScaler(0.5, conceptChangeHandler, stats))
                                                     .step(extraFeatures)
@@ -184,7 +185,7 @@ public class MultiCluster {
         protected Sample executeSample(Sample sample) throws IOException {
             if (new Date().after(start)) {
                 if (!started) {
-                    System.err.println("STARTING DELAY ALGORITHM " + delaySeconds);
+                    logger.info("STARTING DELAY ALGORITHM " + delaySeconds);
                     started = true;
                 }
                 return sample;

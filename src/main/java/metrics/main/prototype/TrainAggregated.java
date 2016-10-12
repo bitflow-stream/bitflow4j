@@ -10,15 +10,18 @@ import metrics.main.analysis.OpenStackSampleSplitter;
 import weka.classifiers.trees.J48;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 /**
  * Created by anton on 6/26/16.
  */
 public class TrainAggregated {
 
+    private static final Logger logger = Logger.getLogger(TrainAggregated.class.getName());
+
     public static void main(String[] args) throws IOException {
         if (args.length != 4) {
-            System.err.println("Parameters: <input " + Train.TRAINING_INPUT_FORMAT + " file> <ini-file> <output file> <filter>");
+            logger.severe("Parameters: <input " + Train.TRAINING_INPUT_FORMAT + " file> <ini-file> <output file> <filter>");
             return;
         }
         String input = args[0];
@@ -40,7 +43,7 @@ public class TrainAggregated {
                 .fork(new OpenStackSampleSplitter(),
                         (name, p) -> {
                             if (!name.isEmpty()) {
-                                System.err.println("Error: received hostname from OpenstackSampleSplitter: " + name);
+                                logger.severe("Error: received hostname from OpenstackSampleSplitter: " + name);
                                 return;
                             }
 

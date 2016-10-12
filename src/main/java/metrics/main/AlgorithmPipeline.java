@@ -20,9 +20,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class AlgorithmPipeline {
+
+    private static final Logger logger = Logger.getLogger(AlgorithmPipeline.class.getName());
 
     private static final int PIPE_BUFFER = 128;
 
@@ -277,13 +280,13 @@ public class AlgorithmPipeline {
         outputStream = cacheStream;
 
         if (cacheStream.isCacheHit()) {
-            System.err.println("Reading from cache file: " + cacheFile);
+            logger.info("Reading from cache file: " + cacheFile);
             aggregator = new SequentialAggregator();
             producers.clear();
             algorithms.clear();
             producers.add(cacheStream.getCacheReader());
         } else {
-            System.err.println("Writing cache file: " + cacheFile);
+            logger.info("Writing cache file: " + cacheFile);
         }
     }
 

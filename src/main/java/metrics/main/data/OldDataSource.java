@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
@@ -18,6 +19,8 @@ import java.util.regex.Pattern;
  * This represents the experiment folder structure of the first obsolete of experiment results (experiments-old/)
  */
 public class OldDataSource extends DataSource<Host> {
+
+    private static final Logger logger = Logger.getLogger(OldDataSource.class.getName());
 
     private final boolean printFiles;
     private final boolean latestResults;
@@ -46,10 +49,10 @@ public class OldDataSource extends DataSource<Host> {
         FileMetricReader reader = new FileMetricReader(new CsvMarshaller(), conv);
         addAllHostData(reader, Config.getInstance().getExperimentSubfolder(experimentSubdir),
                 host, latestResults, allExperiments);
-        System.err.println("Reading " + reader.size() + " files");
+        logger.info("Reading " + reader.size() + " files");
         if (printFiles)
             for (File f : reader.getFiles()) {
-                System.err.println(f.toString());
+                logger.info(f.toString());
             }
         return reader;
     }

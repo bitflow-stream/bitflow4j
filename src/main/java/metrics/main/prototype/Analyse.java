@@ -1,11 +1,11 @@
 package metrics.main.prototype;
 
 import metrics.algorithms.Algorithm;
+import metrics.algorithms.classification.Model;
+import metrics.algorithms.classification.WekaOnlineClassifier;
 import metrics.algorithms.normalization.FeatureAggregator;
 import metrics.algorithms.normalization.OnlineFeatureMinMaxScaler;
 import metrics.algorithms.normalization.OnlineFeatureStandardizer;
-import metrics.algorithms.classification.Model;
-import metrics.algorithms.classification.WekaOnlineClassifier;
 import metrics.io.MetricPrinter;
 import metrics.io.fork.TwoWayFork;
 import metrics.io.net.TcpMetricsOutput;
@@ -19,11 +19,14 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.HashSet;
+import java.util.logging.Logger;
 
 /**
  * Created by anton on 6/9/16.
  */
 public class Analyse {
+
+    private static final Logger logger = Logger.getLogger(Analyse.class.getName());
 
     // This is also used in main-class Train
     public static final boolean USE_MIN_MAX_SCALING = false;
@@ -34,7 +37,7 @@ public class Analyse {
 
     public static void main(String[] args) throws IOException {
         if (args.length != 6) {
-            System.err.println("Parameters: <receive-port> <trained model file> <target-host> <target-port> <local hostname> <filter>");
+            logger.severe("Parameters: <receive-port> <trained model file> <target-host> <target-port> <local hostname> <filter>");
             return;
         }
         int receivePort = Integer.parseInt(args[0]);
@@ -58,7 +61,7 @@ public class Analyse {
                 .fork(new OpenStackSampleSplitter(),
                         (name, p) -> {
                             if (!name.isEmpty()) {
-                                System.err.println("Error: received hostname from OpenstackSampleSplitter: " + name);
+                                logger.severe("Error: received hostname from OpenstackSampleSplitter: " + name);
                                 return;
                             }
                             p
@@ -87,7 +90,7 @@ public class Analyse {
 
     static TrainedDataModel loadDataModel(String cacheFile) throws IOException {
         if (!new File(cacheFile).exists()) return null;
-        System.err.println("Trying to load model from " + cacheFile);
+        logger.info("Trying to load model from " + cacheFile);
         FileInputStream file_in = new FileInputStream(cacheFile);
         ObjectInputStream obj_in = new ObjectInputStream(file_in);
         Object obj;

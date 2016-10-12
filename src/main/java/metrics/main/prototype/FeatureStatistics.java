@@ -8,11 +8,14 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Created by anton on 6/26/16.
  */
 public class FeatureStatistics {
+
+    private static final Logger logger = Logger.getLogger(FeatureStatistics.class.getName());
 
     public static class Feature {
         public final String name;
@@ -136,14 +139,14 @@ public class FeatureStatistics {
 
     public static void main(String args[]) throws IOException {
         if (args.length != 1) {
-            System.err.println("Parameters: <ini-file>");
+            logger.severe("Parameters: <ini-file>");
             System.exit(1);
         }
         String file = args[0];
         FeatureStatistics stats = new FeatureStatistics(file);
-        System.err.println("Number of features: " + stats.allFeatures().size());
+        logger.info("Number of features: " + stats.allFeatures().size());
         for (Feature feature : stats.allFeatures()) {
-            System.err.println(feature);
+            logger.info(feature.toString());
         }
     }
 

@@ -8,11 +8,14 @@ import metrics.main.misc.ParameterHash;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.logging.Logger;
 
 /**
  * Created by anton on 4/14/16.
  */
 public class ExperimentLabellingAlgorithm extends BatchLabellingAlgorithm {
+
+    private static final Logger logger = Logger.getLogger(ExperimentLabellingAlgorithm.class.getName());
 
     private final int cutoffMinutes;
     private final String defaultLabel;
@@ -29,7 +32,7 @@ public class ExperimentLabellingAlgorithm extends BatchLabellingAlgorithm {
     protected void flushResults(MetricOutputStream output) throws IOException {
         if (cutoffMinutes > 0) {
             if (window.numSamples() < 2) {
-                System.err.println("Skipping " + toString() + ", not enough samples");
+                logger.warning("Skipping " + toString() + ", not enough samples");
                 minStart = maxEnd = null;
                 return;
             }

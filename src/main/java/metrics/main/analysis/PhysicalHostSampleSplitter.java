@@ -5,6 +5,7 @@ import metrics.io.fork.AbstractSampleSplitter;
 import metrics.main.misc.ParameterHash;
 
 import java.util.*;
+import java.util.logging.Logger;
 
 /**
  * Created by anton on 4/28/16.
@@ -14,6 +15,8 @@ import java.util.*;
  * Metrics that are related to a virtual machine will go into separate outputs.
  */
 abstract class PhysicalHostSampleSplitter extends AbstractSampleSplitter {
+
+    private static final Logger logger = Logger.getLogger(PhysicalHostSampleSplitter.class.getName());
 
     private static final String LIBVIRT_PREFIX = "libvirt/";
     private static final String OVSDB_PREFIX = "ovsdb/";
@@ -36,7 +39,7 @@ abstract class PhysicalHostSampleSplitter extends AbstractSampleSplitter {
                 hostName = libvirt_ids.get(libvirtDomain);
                 if (hostName == null) {
                     if (!warnedIds.contains(libvirtDomain)) {
-                        System.err.println("Warning: Unknown libvirt domain, ignoring metrics: " + libvirtDomain);
+                        logger.warning("Warning: Unknown libvirt domain, ignoring metrics: " + libvirtDomain);
                         warnedIds.add(libvirtDomain);
                     }
                     continue;
@@ -46,7 +49,7 @@ abstract class PhysicalHostSampleSplitter extends AbstractSampleSplitter {
                 hostName = ovsdb_ids.get(interfaceName);
                 if (hostName == null) {
                     if (!warnedIds.contains(interfaceName)) {
-                        System.err.println("Warning: Unknown OVSDB interface, ignoring metrics: " + interfaceName);
+                        logger.warning("Warning: Unknown OVSDB interface, ignoring metrics: " + interfaceName);
                         warnedIds.add(interfaceName);
                     }
                     continue;

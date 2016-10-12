@@ -9,11 +9,14 @@ import metrics.main.data.Host;
 import metrics.main.data.NewDataSource;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 /**
  * Created by anton on 6/13/16.
  */
 public class PrepareTrainingData {
+
+    private static final Logger logger = Logger.getLogger(PrepareTrainingData.class.getName());
 
     private static final DataSource<Host> data = new NewDataSource("experiments-new-2", false);
 
@@ -21,7 +24,7 @@ public class PrepareTrainingData {
 
     public static void main(String[] args) throws IOException {
         if (args.length != 3) {
-            System.err.println("Need 3 parameters: <hostname> <virtual|physical> <target-file>");
+            logger.severe("Need 3 parameters: <hostname> <virtual|physical> <target-file>");
             return;
         }
         String hostname = args[0];

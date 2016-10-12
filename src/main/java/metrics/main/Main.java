@@ -33,9 +33,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.logging.Logger;
 
 @SuppressWarnings("unused")
 public class Main {
+
+    private static final Logger logger = Logger.getLogger(Main.class.getName());
 
     private static final Host bono = new Host("bono.ims", "virtual");
     private static final Host wally131 = new Host("wally131", "physical");

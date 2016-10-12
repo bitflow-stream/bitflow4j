@@ -2,8 +2,8 @@ package metrics.main.analysis;
 
 import metrics.algorithms.classification.Model;
 import metrics.algorithms.classification.WekaClassifier;
-import metrics.algorithms.evaluation.WekaEvaluator;
 import metrics.algorithms.classification.WekaLearner;
+import metrics.algorithms.evaluation.WekaEvaluator;
 import metrics.io.fork.TwoWayFork;
 import metrics.main.AlgorithmPipeline;
 import weka.classifiers.Classifier;

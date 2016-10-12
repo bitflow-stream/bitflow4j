@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Remove the sample data, only keep timestamp and tags.
@@ -18,6 +19,8 @@ import java.util.Map;
  * Created by anton on 6/9/16.
  */
 public class SampleAnalysisOutput extends AbstractAlgorithm {
+
+    private static final Logger logger = Logger.getLogger(SampleAnalysisOutput.class.getName());
 
     public static final String TAG_HOSTNAME = "host";
 
@@ -42,7 +45,7 @@ public class SampleAnalysisOutput extends AbstractAlgorithm {
         Integer tagFieldObj = fieldIndices.get(cls);
         int tagField;
         if (tagFieldObj == null) {
-            System.err.println("Warning: Failed to find field index for cls=" + cls + " in " + Arrays.toString(header.header));
+            logger.warning("Warning: Failed to find field index for cls=" + cls + " in " + Arrays.toString(header.header));
             tagField = -1;
         } else {
             tagField = tagFieldObj;

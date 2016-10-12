@@ -10,12 +10,15 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
  * Created by anton on 4/14/16.
  */
 public class NewDataSource extends DataSource<Host> {
+
+    private static final Logger logger = Logger.getLogger(NewDataSource.class.getName());
 
     private final boolean printFiles;
     private final String experimentSubdir;
@@ -38,10 +41,10 @@ public class NewDataSource extends DataSource<Host> {
         FileMetricReader.NameConverter conv = scenarioName();
         FileMetricReader reader = new FileMetricReader(new CsvMarshaller(), conv);
         addAllHostData(reader, rootDir, host);
-        System.err.println("Reading " + reader.size() + " files");
+        logger.severe("Reading " + reader.size() + " files");
         if (printFiles)
             for (File f : reader.getFiles()) {
-                System.err.println(f.toString());
+                logger.severe(f.toString());
             }
         return reader;
     }

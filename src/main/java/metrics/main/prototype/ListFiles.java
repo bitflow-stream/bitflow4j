@@ -7,17 +7,20 @@ import metrics.main.data.NewDataSource;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Logger;
 
 /**
  * Created by anton on 6/13/16.
  */
 public class ListFiles {
 
+    private static final Logger logger = Logger.getLogger(ListFiles.class.getName());
+
     private static final DataSource<Host> data = new NewDataSource("experiments-new-2", false);
 
     public static void main(String[] args) throws IOException {
         if (args.length != 3) {
-            System.err.println("Need 3 parameters: <hostname> <virtual|physical> <separator>");
+            logger.severe("Need 3 parameters: <hostname> <virtual|physical> <separator>");
             return;
         }
         String hostname = args[0];
