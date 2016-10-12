@@ -10,11 +10,15 @@ import java.io.*;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 
 /**
  * This class will serve information on running algorithms via a rest api.
  */
 public class RestServer extends NanoHTTPD {
+
+    private static final Logger logger = Logger.getLogger(RestServer.class.getName());
+
     public static final String ALGORITHMS_ENDPOINT = "/algorithms";
     public static final String LEGAL_CHARACTERS = "a b c d e f g h i j k l m n o p q r s t u v w x y z A B C D E F G H I J K L M N O P Q R S T U V W X Y Z _";
     private static final String MIME_TEXT_HTML = "text/html";
@@ -152,9 +156,9 @@ public class RestServer extends NanoHTTPD {
                 case 3:
                     //TODO handle other endpoints
                 default:
-                    System.out.println("length 3 or more, uri: " + splitUri[2]);
+                    logger.info("length 3 or more, uri: " + splitUri[2]);
                     response = algorithmEndoint(session, uri, splitUri);
-                    System.out.println("default");
+                    logger.info("default");
                     break;
             }
 
@@ -179,19 +183,18 @@ public class RestServer extends NanoHTTPD {
             case GET: {
                 Algorithm algorithm = algorithms.get(splitUri[2]);
                 if (algorithm == null) {
-                    System.out.println("not found");
+                    logger.warning("not found");
                     response = makeTextResponse("Algorithm " + splitUri[2] + " not found.", Response.Status.NO_CONTENT);
                     break;
                 }
                 Object model = algorithm.getModel();
                 if (model == null || !(model instanceof Serializable)) {
-                    System.out.println("model null");
-                    System.out.println();
+                    logger.warning("model null");
                     response = makeTextResponse("No model for algorithm " + splitUri[2] + " found.", Response.Status.NO_CONTENT);
                     break;
                 }
                 //TODO
-                System.out.println("model not null");
+                logger.info("model not null");
                 String json = null;
                 try {
                     json = gson.toJson(model, new TypeToken<BICO>() {
@@ -199,7 +202,7 @@ public class RestServer extends NanoHTTPD {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                System.out.println("json: " + json);
+                logger.info("json: " + json);
                 response = makeJSONResponse(json);
                 break;
 

@@ -10,6 +10,7 @@ import metrics.io.window.*;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.logging.Logger;
 
 /**
  * The T-SNE maps a high-dimensional dataset to a lower number of dimensions.
@@ -18,6 +19,8 @@ import java.util.Arrays;
  * Created by anton on 5/14/16.
  */
 public class TsneAlgorithm extends WindowBatchAlgorithm {
+
+    private static final Logger logger = Logger.getLogger(TsneAlgorithm.class.getName());
 
     private final AbstractSampleWindow window;
     private final double perplexity;
@@ -52,7 +55,7 @@ public class TsneAlgorithm extends WindowBatchAlgorithm {
         TSne tsne = new FastTSne();
         double[][] result = tsne.tsne(dataset, window.numMetrics(), initial_dims, perplexity, max_iter, use_pca);
         if (result.length == 0 || result[0].length == 0) {
-            System.err.println(toString() + " produced no output");
+            logger.warning(toString() + " produced no output");
             return;
         }
         outputValues(result, output);
@@ -78,7 +81,7 @@ public class TsneAlgorithm extends WindowBatchAlgorithm {
             output.writeSample(sample);
         }
         if (values.length != window.numSamples()) {
-            System.err.println("Warning: output " + values.length + " samples, but input contained " + window.numSamples() + " samples");
+            logger.warning("output " + values.length + " samples, but input contained " + window.numSamples() + " samples");
         }
     }
 

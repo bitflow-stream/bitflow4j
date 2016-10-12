@@ -7,11 +7,14 @@ import metrics.io.AbstractMetricPrinter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.logging.Logger;
 
 /**
  * Created by anton on 6/17/16.
  */
 public class TcpMetricsOutput extends AbstractMetricPrinter {
+
+    private static final Logger logger = Logger.getLogger(TcpMetricsOutput.class.getName());
 
     private final String targetHost;
     private final int targetPort;
@@ -27,7 +30,7 @@ public class TcpMetricsOutput extends AbstractMetricPrinter {
         try {
             super.writeSample(sample);
         } catch(IOException exc) {
-            System.err.println("Failed to send sample to " + targetHost + ":" + targetPort + ": " + exc);
+            logger.severe("Failed to send sample to " + targetHost + ":" + targetPort + ": " + exc);
             closeSocket();
         }
     }
@@ -43,7 +46,7 @@ public class TcpMetricsOutput extends AbstractMetricPrinter {
             if (socket != null)
                 socket.close();
         } catch (IOException e) {
-            System.err.println("Failed to close socket: " + e);
+            logger.warning("Failed to close socket: " + e);
         } finally {
             socket = null;
             output = null;

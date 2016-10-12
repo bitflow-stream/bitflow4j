@@ -5,6 +5,7 @@ import metrics.io.fork.TwoWayFork;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.Logger;
 
 /**
  * A portion of the incoming samples is forwarded to the first output. Only samples with certain "normal" labels are used.
@@ -15,6 +16,8 @@ import java.util.*;
  * Created by anton on 9/6/16.
  */
 public class CrossValidationFork extends TwoWayFork {
+
+    private static final Logger logger = Logger.getLogger(CrossValidationFork.class.getName());
 
     // Batch of samples per label, for flushing into the output stream when this fork is closed.
     Map<String, Collection<Sample>> labeledSamples = new HashMap<>();
@@ -59,7 +62,7 @@ public class CrossValidationFork extends TwoWayFork {
     @Override
     public void close() throws IOException {
         long samplesPerLabel = validationSamples / labeledSamples.size();
-        System.err.println("Closing CrossValidationFork, flushing " + (samplesPerLabel * labeledSamples.size()) +
+        logger.info("Closing CrossValidationFork, flushing " + (samplesPerLabel * labeledSamples.size()) +
                 " additional samples with " + labeledSamples.size() + " labels");
         for (Collection<Sample> samples : labeledSamples.values()) {
             int i = 0;

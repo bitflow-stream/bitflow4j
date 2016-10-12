@@ -11,11 +11,14 @@ import metrics.io.window.SampleWindow;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.Logger;
 
 /**
  * Created by anton on 4/18/16.
  */
 public abstract class AbstractFeatureScaler extends TrainableWindowAlgorithm {
+
+    private static final Logger logger = Logger.getLogger(AbstractFeatureScaler.class.getName());
 
     private Map<String, MetricScaler> scalers = new HashMap<>();
 
@@ -116,7 +119,7 @@ public abstract class AbstractFeatureScaler extends TrainableWindowAlgorithm {
             i++;
         }
         if (!missingMetrics.isEmpty()) {
-            System.err.println("Warning: Metrics could not be scaled: " + missingMetrics);
+            logger.warning("Warning: Metrics could not be scaled: " + missingMetrics);
         }
         output.writeSample(new Sample(header, values, sample));
     }

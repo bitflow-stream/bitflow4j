@@ -1,5 +1,7 @@
 package metrics.algorithms.analysis.lasso;
 
+import java.util.logging.Logger;
+
 /**
  * This implemenation is based on: Friedman, J., Hastie, T. and Tibshirani, R.
  * (2008) Regularization Paths for Generalized Linear Models via Coordinate
@@ -9,6 +11,9 @@ package metrics.algorithms.analysis.lasso;
  */
 
 public class LassoFitGenerator {
+
+    private static final Logger logger = Logger.getLogger(LassoFitGenerator.class.getName());
+
     // This module shouldn't consume more than 8GB of memory
     private static final long MAX_AVAILABLE_MEMORY = 8L * 1024 * 1024 * 1024;
 
@@ -143,7 +148,7 @@ public class LassoFitGenerator {
         double curLambda = 0;
         double maxDelta;
         for (int iteration = 1; iteration <= numberOfLambdas; iteration++) {
-            System.out.println("Starting iteration " + iteration + " of Compression.");
+            logger.info("Starting iteration " + iteration + " of Compression.");
 
             /**********
              * Compute lambda for this round
@@ -307,7 +312,7 @@ public class LassoFitGenerator {
         fit.lambdas[0] = Math.exp(2 * Math.log(fit.lambdas[1]) - Math.log(fit.lambdas[2]));
 
         long duration = System.currentTimeMillis() - startTime;
-        System.out.println("Elapsed time for compression: " + duration);
+        logger.info("Elapsed time for compression: " + duration);
         return fit;
     }
 

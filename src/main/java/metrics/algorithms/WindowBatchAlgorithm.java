@@ -5,12 +5,15 @@ import metrics.io.MetricOutputStream;
 import metrics.io.window.AbstractSampleWindow;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 /**
  * Samples are collected in batches in then flushed. Flushing happens when the input stream closes,
  * optionally when the source field of incoming samples changes, or manually on any other condition.
  */
 public abstract class WindowBatchAlgorithm extends BatchAlgorithm {
+
+    private static final Logger logger = Logger.getLogger(WindowBatchAlgorithm.class.getName());
 
     /**
      * Compute and output results, then clear any logged data so that a new obsolete of data
@@ -50,7 +53,7 @@ public abstract class WindowBatchAlgorithm extends BatchAlgorithm {
         if (hasInfo) info += ") ";
         String sourceStr = (flushSampleSources || sources.size() <= 1) ? currentSource : sources.size() + " sources";
         String message = toString() + " computing results " + info + "from " + sourceStr + "...";
-        System.err.println(message);
+        logger.info(message);
     }
 
 }

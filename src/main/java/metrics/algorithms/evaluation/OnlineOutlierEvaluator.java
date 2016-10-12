@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
+import java.util.logging.Logger;
 
 /**
  * Evaluator for predicting one of two classes for every Sample: is it "normal" or "abnormal".
@@ -17,6 +18,8 @@ import java.util.Date;
  * Created by anton on 9/2/16.
  */
 public class OnlineOutlierEvaluator extends StreamEvaluator {
+
+    private static final Logger logger = Logger.getLogger(OnlineOutlierEvaluator.class.getName());
 
     private final Collection<String> normalLabels;
     private final String expectNormalLabel;
@@ -74,7 +77,7 @@ public class OnlineOutlierEvaluator extends StreamEvaluator {
             // Period with incorrect predictions has stopped, output a log line
             Date now = new Date();
             long duration = now.getTime() - incorrectStarted.getTime();
-            System.err.println("Incorrect prediction interval ended: Duration " + duration + ", should have been normal: " + incorrectShouldBeNormal);
+            logger.info("Incorrect prediction interval ended: Duration " + duration + ", should have been normal: " + incorrectShouldBeNormal);
             incorrectStarted = null;
             if (incorrectnessLogfile != null) {
                 try {
@@ -85,7 +88,7 @@ public class OnlineOutlierEvaluator extends StreamEvaluator {
                     out.flush();
                     out.close();
                 } catch (IOException e) {
-                    System.err.println("Failed to log incorrect prediction interval of "
+                    logger.severe("Failed to log incorrect prediction interval of "
                             + duration + "ms to " + incorrectnessLogfile + ": " + e);
                 }
             }
@@ -93,7 +96,7 @@ public class OnlineOutlierEvaluator extends StreamEvaluator {
             // Starting period with incorrect predictions
             incorrectStarted = new Date();
             incorrectShouldBeNormal = shouldBeNormal;
-            System.err.println("Incorrect prediction interval starting, should have been normal: " + incorrectShouldBeNormal);
+            logger.info("Incorrect prediction interval starting, should have been normal: " + incorrectShouldBeNormal);
         }
     }
 

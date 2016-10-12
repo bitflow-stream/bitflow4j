@@ -12,6 +12,7 @@ import metrics.main.misc.ParameterHash;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * Filter out metrics with a very low normalized standard deviation.
@@ -20,6 +21,8 @@ import java.util.List;
  * Created by anton on 4/7/16.
  */
 public class VarianceFilterAlgorithm extends WindowBatchAlgorithm {
+
+    private static final Logger logger = Logger.getLogger(VarianceFilterAlgorithm.class.getName());
 
     private final double minNormalizedDeviation;
 
@@ -56,7 +59,7 @@ public class VarianceFilterAlgorithm extends WindowBatchAlgorithm {
             }
         }
         if (validStats.isEmpty()) {
-            System.err.println(toString() + " produced no output");
+            logger.warning(toString() + " produced no output");
             return;
         }
         avgDeviation /= validStats.size();
@@ -78,8 +81,9 @@ public class VarianceFilterAlgorithm extends WindowBatchAlgorithm {
             output.writeSample(meta.newSample(header, metrics));
         }
 
-        System.err.printf("%d of %d metrics passed stdDeviation filter (%d filtered out). Avg normalized variance: %f.\n",
-                validStats.size(), window.numMetrics(), window.numMetrics() - validStats.size(), avgDeviation);
+        logger.info(validStats.size() + " of " + window.numMetrics() +
+                " metrics passed stdDeviation filter (" + (window.numMetrics() - validStats.size()) +
+                " filtered out). Avg normalized variance: " + avgDeviation);
     }
 
 }

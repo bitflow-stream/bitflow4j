@@ -15,11 +15,14 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.logging.Logger;
 
 /**
  * Created by anton on 4/23/16.
  */
 public class WekaOnlineClassifier<T extends Classifier & Serializable> extends AbstractAlgorithm {
+
+    private static final Logger logger = Logger.getLogger(WekaOnlineClassifier.class.getName());
 
     private final Model<T> model;
     private final Instances dataset;
@@ -28,7 +31,7 @@ public class WekaOnlineClassifier<T extends Classifier & Serializable> extends A
     public WekaOnlineClassifier(Model<T> model, String[] headerFields, ArrayList<String> allClasses) {
         this.model = model;
         this.dataset = createDataset(headerFields, allClasses);
-        System.err.println("Expecting header length " + headerFields.length);
+        logger.info("Expecting header length " + headerFields.length);
 
         Header expectedHeader = new Header(headerFields, true);
         converger = new SampleConverger(expectedHeader);
@@ -39,7 +42,7 @@ public class WekaOnlineClassifier<T extends Classifier & Serializable> extends A
         for (String field : headerFields) {
             instances.insertAttributeAt(new Attribute(field), instances.numAttributes());
         }
-        System.err.println("Classes in dataset: " + allClasses);
+        logger.info("Classes in dataset: " + allClasses);
         Attribute attr = new Attribute("class", allClasses);
         instances.insertAttributeAt(attr, instances.numAttributes());
         instances.setClass(instances.attribute(instances.numAttributes() - 1));

@@ -6,6 +6,7 @@ import metrics.io.MetricInputStream;
 import metrics.io.MetricOutputStream;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 /**
  * Generic implementation of the Algorithm interface.<br/>
@@ -25,6 +26,8 @@ import java.io.IOException;
  * to {@link MetricOutputStream}.
  */
 public abstract class AbstractAlgorithm implements Algorithm {
+
+    private static final Logger logger = Logger.getLogger(AbstractAlgorithm.class.getName());
 
     private static int ID_COUNTER;
 
@@ -72,7 +75,7 @@ public abstract class AbstractAlgorithm implements Algorithm {
                 throw exc;
             } catch (IOException exc) {
                 if (catchExceptions) {
-                    System.err.println("IO Error executing " + toString());
+                    logger.severe("IO Error executing " + toString());
                     exc.printStackTrace();
                 } else {
                     throw exc;
@@ -99,7 +102,7 @@ public abstract class AbstractAlgorithm implements Algorithm {
 
     protected synchronized void printStarted() {
         if (!started) {
-            System.err.println("Starting " + toString() + "...");
+            logger.info("Starting " + toString() + "...");
             started = true;
         }
     }
@@ -129,16 +132,16 @@ public abstract class AbstractAlgorithm implements Algorithm {
             try {
                 execute(input, output);
             } catch (InputStreamClosedException exc) {
-                System.err.println("Input closed for algorithm " + name);
+                logger.info("Input closed for algorithm " + name);
             } catch (Throwable exc) {
-                System.err.println("Error in " + getName());
+                logger.severe("Error in " + getName());
                 exc.printStackTrace();
             } finally {
-                System.err.println(name + " finished");
+                logger.info(name + " finished");
                 try {
                     output.close();
                 } catch (IOException e) {
-                    System.err.println("Error closing output of algorithm " + name);
+                    logger.severe("Error closing output of algorithm " + name);
                     e.printStackTrace();
                 }
             }

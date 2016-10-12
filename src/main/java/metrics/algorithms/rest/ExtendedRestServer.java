@@ -8,13 +8,15 @@ import moa.clusterers.AbstractClusterer;
 
 import java.io.IOException;
 import java.util.Random;
+import java.util.logging.Logger;
 
 /**
  * Created by Malcolm-X on 16.09.2016.
  */
-
-
 public class ExtendedRestServer extends RestServer {
+
+    private static final Logger logger = Logger.getLogger(ExtendedRestServer.class.getName());
+
     public static Random random = new Random();
     private static String outputPath = "C:\\Users\\Malcolm-X\\Desktop\\";
 
@@ -52,7 +54,7 @@ public class ExtendedRestServer extends RestServer {
     public Response serve(IHTTPSession session) {
         if (session.getUri().equals("/startclusterreader")) {
             Algorithm first_bico = this.getAlgorithm("first_bico");
-            if (first_bico == null) System.out.println("bico should not be null");
+            if (first_bico == null) logger.severe("bico should not be null");
             startInThread(first_bico);
         }
         return super.serve(session);

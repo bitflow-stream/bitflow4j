@@ -9,11 +9,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  * Created by Malcolm-X on 27.06.2016.
  */
 public class ExtendedStreamEvaluator extends StreamEvaluator {
+
+    private static final Logger logger = Logger.getLogger(ExtendedStreamEvaluator.class.getName());
 
     private Set<String> labels = new HashSet<>();
     private Map<String, Long> truePositives = new HashMap<>();
@@ -90,13 +93,13 @@ public class ExtendedStreamEvaluator extends StreamEvaluator {
             minPrecision = labelToPrecision.values().stream().mapToDouble(d -> d).min().getAsDouble();
             minRecall = labelToRecall.values().stream().mapToDouble(d -> d).min().getAsDouble();
         } else {
-            if(labels == null) System.err.println("labels null");
-            else if(labels.isEmpty()) System.err.println("labels empty");
+            if(labels == null) logger.warning("labels null");
+            else if(labels.isEmpty()) logger.warning("labels empty");
         }
     }
 
     private void printEvaluation() {
-        System.out.println(getReadableEvaluation());
+        logger.info(getReadableEvaluation());
     }
 
     @Override

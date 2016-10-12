@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  *
@@ -21,6 +22,7 @@ import java.util.Map;
  */
 public abstract class MOAStreamOutlierDetection<T extends MyBaseOutlierDetector & Serializable> extends MOAStreamClusterer<T>  {
 
+    private static final Logger logger = Logger.getLogger(MOAStreamOutlierDetection.class.getName());
 
     private final MOAOutlierNotifier outlierNotifier;
     private final HashSet<Long> outlierIds = new HashSet<>();
@@ -44,7 +46,6 @@ public abstract class MOAStreamOutlierDetection<T extends MyBaseOutlierDetector 
     protected synchronized Sample executeSample(Sample sample) throws IOException {
         this.currentSample = sample;
         Sample sampleToReturn = super.executeSample(sample);
-//        System.out.println("clusterId =" + sample.getClusterId());
         return sampleToReturn;
     }
 
@@ -63,7 +64,7 @@ public abstract class MOAStreamOutlierDetection<T extends MyBaseOutlierDetector 
 
     private void processInlier(MyBaseOutlierDetector.Outlier outlier){
 //        this.inliers++;
-        System.out.println("im here!!!");
+        logger.info("im here!!!");
         checkPrintReq();
         if(this.outlierIds.remove(outlier.id)){
             //do something with prio outlier
@@ -90,13 +91,13 @@ public abstract class MOAStreamOutlierDetection<T extends MyBaseOutlierDetector 
 
     private void checkPrintReq() {
         if(sampleCount % 100 == 0){
-            System.out.println("number of inliers: " + this.inlierIds.size());
-            System.out.println("number of outliers: " + this.outlierIds.size());
+            logger.info("number of inliers: " + this.inlierIds.size());
+            logger.info("number of outliers: " + this.outlierIds.size());
         }
     }
 
     private void processOutlier(MyBaseOutlierDetector.Outlier outlier){
-        System.out.println("im here!!!");
+        logger.info("im here!!!");
         checkPrintReq();
         if (this.outlierIds.add(outlier.id)) {
             //TODO: do something with new outlier
@@ -116,14 +117,14 @@ public abstract class MOAStreamOutlierDetection<T extends MyBaseOutlierDetector 
 
         @Override
         public void OnOutlier(MyBaseOutlierDetector.Outlier outlier) {
-            System.out.println("im here first time!!!");
+            logger.info("im here first time!!!");
             this.outlierNotifierList.forEach( notifier -> notifier.OnOutlier(outlier));
             processOutlier(outlier);
         }
 
         @Override
         public void OnInlier(MyBaseOutlierDetector.Outlier outlier) {
-            System.out.println("im here first time!!!");
+            logger.info("im here first time!!!");
             this.outlierNotifierList.forEach( notifier -> notifier.OnInlier(outlier));
             processInlier(outlier);
         }

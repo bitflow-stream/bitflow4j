@@ -5,6 +5,7 @@ import com.google.common.io.ByteStreams;
 
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.logging.Logger;
 
 /**
  * Created by anton on 5/5/16.
@@ -14,6 +15,8 @@ import java.util.Arrays;
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class ParameterHashImpl implements ParameterHash {
+
+    private static final Logger logger = Logger.getLogger(ParameterHashImpl.class.getName());
 
     private final ByteArrayDataOutput output;
     private final PrintStream writer = System.err;
@@ -34,7 +37,7 @@ public class ParameterHashImpl implements ParameterHash {
 
     private void print(String message) {
         if (printInputs)
-            writer.println(message);
+            logger.info(message);
     }
 
     @Override

@@ -9,12 +9,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.logging.Logger;
 
+import static java.util.logging.Logger.getLogger;
+
 /**
  * Created by anton on 6/13/16.
  */
 public class ListFiles {
 
-    private static final Logger logger = Logger.getLogger(ListFiles.class.getName());
+    private static final Logger logger = getLogger(ListFiles.class.getName());
 
     private static final DataSource<Host> data = new NewDataSource("experiments-new-2", false);
 
@@ -31,6 +33,7 @@ public class ListFiles {
         FileMetricReader reader = (FileMetricReader) data.createProducer(host);
         boolean started = false;
         for (File file : reader.getFiles()) {
+            // Print to STDOUT instead of logger to enable parsing the output
             if (started)
                 System.out.print(separator);
             System.out.print(file.getAbsolutePath());

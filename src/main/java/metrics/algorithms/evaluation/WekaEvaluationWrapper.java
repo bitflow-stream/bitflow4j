@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.logging.Logger;
 
 /**
  * This class can be used to evaluate any classification algorithm stack.
@@ -25,6 +26,8 @@ import java.util.TreeSet;
  * variable window size in {@link AbstractWekaAlgorithm}
  */
 public class WekaEvaluationWrapper extends AbstractWekaAlgorithm {
+
+    private static final Logger logger = Logger.getLogger(WekaEvaluationWrapper.class.getName());
 
     protected Model model;
     protected Evaluation eval;
@@ -78,7 +81,7 @@ public class WekaEvaluationWrapper extends AbstractWekaAlgorithm {
             //TODO: find out what happens here
             e.printStackTrace();
         }
-        System.out.println(eval.toSummaryString(true));
+        logger.info(eval.toSummaryString(true));
         //TODO maybe merge try catch
 
     }
@@ -92,8 +95,8 @@ public class WekaEvaluationWrapper extends AbstractWekaAlgorithm {
             instance.setDataset(testInstances);
             String expectedPrediction = sample.getTag(ClusterConstants.EXPECTED_PREDICTION_TAG);
             if(expectedPrediction == null) throw new IOException("Sample not prepared for evaluation (no expected pridiction tag present)");
-            System.out.println("predicted label to set: " + expectedPrediction);
-            System.out.println("orig label: " + sample.getLabel());
+            logger.info("predicted label to set: " + expectedPrediction);
+            logger.info("orig label: " + sample.getLabel());
             instance.setClassValue(expectedPrediction);
             testInstances.add(instance);
         }

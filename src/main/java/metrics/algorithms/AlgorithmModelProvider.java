@@ -7,6 +7,7 @@ import metrics.io.MetricPipe;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.logging.Logger;
 
 /**
  * This pseudo-algorithm waits until its input stream is closed, then takes the model from a given algorithm and puts
@@ -17,6 +18,8 @@ import java.io.Serializable;
  * Created by anton on 9/6/16.
  */
 public class AlgorithmModelProvider<T extends Serializable> extends AbstractAlgorithm {
+
+    private static final Logger logger = Logger.getLogger(AlgorithmModelProvider.class.getName());
 
     private final AbstractAlgorithm wrapped;
     private final Model<T> model;
@@ -35,11 +38,11 @@ public class AlgorithmModelProvider<T extends Serializable> extends AbstractAlgo
 
     @Override
     protected void inputClosed(MetricOutputStream output) throws IOException {
-        System.err.println("Model-Provider closing input for " + wrapped.toString());
+        logger.info("Model-Provider closing input for " + wrapped.toString());
         pipe.close();
-        System.err.println("Model-Provider is waiting for " + wrapped.toString() + " to finish...");
+        logger.info("Model-Provider is waiting for " + wrapped.toString() + " to finish...");
         pipe.waitUntilClosed();
-        System.err.println(toString() + " is finished, now delivering the model.");
+        logger.info(toString() + " is finished, now delivering the model.");
         //TODO changed api and deadlock
         T object = (T) wrapped.getModel();
         model.setModel(object);

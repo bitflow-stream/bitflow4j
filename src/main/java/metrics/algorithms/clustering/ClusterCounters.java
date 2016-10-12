@@ -2,11 +2,15 @@ package metrics.algorithms.clustering;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Created by Malcolm-X on 27.06.2016.
  */
 public class ClusterCounters {
+
+    private static final Logger logger = Logger.getLogger(ClusterCounters.class.getName());
+
     private Map<String, Integer> counters = new HashMap<>();
     private int clusterId;
     private long total;
@@ -58,7 +62,7 @@ public class ClusterCounters {
         if (bestChance >= thresholdToClassifyCluster) {
             return bestLabel;
         } else {
-            System.out.println("returning unclassified in ClusterCounter");
+            logger.warning("returning unclassified in ClusterCounter");
             return ClusterConstants.UNCLASSIFIED_CLUSTER;
         }
     }

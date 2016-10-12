@@ -6,11 +6,14 @@ import metrics.algorithms.AbstractAlgorithm;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  * Created by anton on 6/23/16.
  */
 public abstract class OnlineAbstractFeatureScaler extends AbstractAlgorithm {
+
+    private static final Logger logger = Logger.getLogger(OnlineAbstractFeatureScaler.class.getName());
 
     private Set<String> warnedMetrics = new HashSet<>();
 
@@ -29,7 +32,7 @@ public abstract class OnlineAbstractFeatureScaler extends AbstractAlgorithm {
         if (!canStandardize(name)) {
             if (!warnedMetrics.contains(name)) {
                 warnedMetrics.add(name);
-                System.err.println("WARNING: Missing stddev/average information for metric " + name + ", not standardizing!");
+                logger.warning("WARNING: Missing stddev/average information for metric " + name + ", not standardizing!");
             }
             return val;
         }

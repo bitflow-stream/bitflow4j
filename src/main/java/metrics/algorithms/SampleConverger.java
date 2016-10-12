@@ -5,6 +5,7 @@ import metrics.Sample;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Map incoming values to a specified header.
@@ -18,6 +19,8 @@ import java.util.Map;
  * Created by anton on 6/21/16.
  */
 public class SampleConverger {
+
+    private static final Logger logger = Logger.getLogger(SampleConverger.class.getName());
 
     public static final int REPORT_FILLED_UP_VALUES = 20;
 
@@ -57,7 +60,7 @@ public class SampleConverger {
             values = mappedConvergeValues(incomingHeader, values);
 
             if (filledUpValues.numSamples() % REPORT_FILLED_UP_VALUES == 0) {
-                System.err.println("Number of unavailable metrics: " + filledUpValues);
+                logger.warning("Number of unavailable metrics: " + filledUpValues);
             }
         } else if (expectedHeader != incomingHeader) {
             // Make next hasChanged faster.

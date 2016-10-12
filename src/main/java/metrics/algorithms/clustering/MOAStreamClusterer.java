@@ -11,12 +11,15 @@ import moa.clusterers.AbstractClusterer;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
+import java.util.logging.Logger;
 
 /**
  *  This abstract class can be extended to transform clusterers from the MOA framework to algorithms.
  * @author fschmidt, mbyfield
  */
 public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializable> extends AbstractAlgorithm {
+
+    private static final Logger logger = Logger.getLogger(MOAStreamClusterer.class.getName());
 
     protected final SampleConverger converger = new SampleConverger(); // No predefined expected header
     protected T clusterer;
@@ -159,7 +162,7 @@ public abstract class MOAStreamClusterer<T extends AbstractClusterer & Serializa
     protected void printClustererParameters(){
         com.github.javacliparser.Option[] options = this.clusterer.getOptions().getOptionArray();
         for (com.github.javacliparser.Option o : options) {
-            System.out.println(o.getDefaultCLIString());
+            logger.info(o.getDefaultCLIString());
         }
     }
 

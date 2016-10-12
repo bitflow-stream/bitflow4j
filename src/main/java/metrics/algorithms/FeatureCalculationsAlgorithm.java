@@ -6,6 +6,7 @@ import metrics.Sample;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Abstract algorithm designed to extend incoming Samples by "artificial" features.
@@ -16,6 +17,8 @@ import java.util.Map;
  * Created by anton on 7/26/16.
  */
 public class FeatureCalculationsAlgorithm extends AbstractAlgorithm {
+
+    private static final Logger logger = Logger.getLogger(FeatureCalculationsAlgorithm.class.getName());
 
     public interface FeatureCalculation {
         double calculate(FeatureAccess access);
@@ -41,7 +44,7 @@ public class FeatureCalculationsAlgorithm extends AbstractAlgorithm {
             try {
                 value = entry.getValue().calculate(access);
             } catch(IllegalArgumentException e) {
-                System.err.println("Feature Calculation tried to access missing metric: " + e);
+                logger.warning("Feature Calculation tried to access missing metric: " + e);
                 value = 0;
             }
             newFields[i] = entry.getKey();

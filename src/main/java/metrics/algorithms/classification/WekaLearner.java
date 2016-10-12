@@ -13,11 +13,14 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.logging.Logger;
 
 /**
  * Created by anton on 4/23/16.
  */
 public class WekaLearner<T extends Classifier & Serializable> extends AbstractWekaAlgorithm {
+
+    private static final Logger logger = Logger.getLogger(WekaLearner.class.getName());
 
     private final Model<T> model;
     private final T classifier;
@@ -50,7 +53,7 @@ public class WekaLearner<T extends Classifier & Serializable> extends AbstractWe
 
     public void printResults(File file) {
         if (file == null) {
-            System.err.println("Not producing dot graph files.");
+            logger.warning("Not producing dot graph files.");
             return;
         }
         createPng(file, classifier);
@@ -62,18 +65,18 @@ public class WekaLearner<T extends Classifier & Serializable> extends AbstractWe
                 String graph = ((Drawable) classifier).graph();
                 createPng(graph, file);
             } catch (Exception e) {
-                System.err.println("Failed to produce classification graph");
+                logger.severe("Failed to produce classification graph");
                 e.printStackTrace();
             }
         } else {
-            System.err.println("Not producing dot graph file: Instance of " + classifier.getClass().toString() + " is not Drawable");
+            logger.warning("Not producing dot graph file: Instance of " + classifier.getClass().toString() + " is not Drawable");
         }
     }
 
     public static void createPng(String dotString, File outputFile) throws
             IOException {
         String cmd[] = new String[]{Config.getInstance().getDotPath(), "-Tpng", "-o", outputFile.getAbsolutePath()};
-        System.err.println("Executing command: " + Arrays.toString(cmd));
+        logger.info("Executing command: " + Arrays.toString(cmd));
         Process dot = Runtime.getRuntime().exec(cmd);
         dot.getOutputStream().write(dotString.getBytes());
         dot.getOutputStream().close();

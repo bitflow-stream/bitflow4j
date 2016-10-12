@@ -26,7 +26,6 @@ public class WekaClassifierWrapper extends AbstractClassifier {
 
     @Override
     public double classifyInstance(Instance instance) throws Exception {
-//        if(instance == null) System.out.println("WTF null instance passed to evaluator....");
 //        int index = instances.indexOf(instance);
 //        if(index > 0) return instances.get(index).classValue();
 //        else throw new Exception("cannot classify an instance, that was not trained (this class is for evaluation only)");

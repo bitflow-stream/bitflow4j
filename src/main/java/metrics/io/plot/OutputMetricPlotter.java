@@ -7,11 +7,14 @@ import metrics.io.MetricOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Created by mwall on 14.04.16.
  */
 public class OutputMetricPlotter<T extends DataContainer> extends AbstractOutputStream implements MetricOutputStream {
+
+    private static final Logger logger = Logger.getLogger(OutputMetricPlotter.class.getName());
 
     public enum PlotType {
         IN_FRAME,
@@ -93,7 +96,7 @@ public class OutputMetricPlotter<T extends DataContainer> extends AbstractOutput
     }
 
     public void close() throws IOException {
-        System.err.println("Plotting data with " + this.plotter.toString());
+        logger.info("Plotting data with " + this.plotter.toString());
         this.plotter.plotResult(this.outputType, this.colorMap, this.filename);
         super.close();
     }

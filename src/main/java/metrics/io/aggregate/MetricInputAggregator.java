@@ -8,6 +8,7 @@ import metrics.main.misc.ParameterHash;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  * Created by anton on 4/11/16.
@@ -15,6 +16,8 @@ import java.util.Set;
  * This abstract MetricInputStream aggregates multiple other MetricInputStreams into one.
  */
 public abstract class MetricInputAggregator implements MetricInputStream {
+
+    private static final Logger logger = Logger.getLogger(MetricInputAggregator.class.getName());
 
     final Set<InputStreamProducer> producers = new HashSet<>();
 
@@ -53,10 +56,10 @@ public abstract class MetricInputAggregator implements MetricInputStream {
 
     void inputFinished(String name, Throwable exception) {
         if (exception != null) {
-            System.err.println("Input closed: " + name + ", error: " + exception.getMessage());
+            logger.info("Input closed: " + name + ", error: " + exception.getMessage());
             exception.printStackTrace();
         } else {
-            System.err.println("Input closed: " + name);
+            logger.info("Input closed: " + name);
         }
     }
 

@@ -13,10 +13,14 @@ import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static java.util.logging.Logger.getLogger;
+
 /**
  * Created by anton on 4/23/16.
  */
 public class WekaEvaluator<T extends Classifier & Serializable> extends AbstractWekaAlgorithm {
+
+    private static final Logger logger = getLogger(WekaEvaluator.class.getName());
 
     private final Model<T> model;
     private Evaluation eval = null;
@@ -47,7 +51,7 @@ public class WekaEvaluator<T extends Classifier & Serializable> extends Abstract
         try {
             result += eval.toMatrixString();
         } catch (Exception ex) {
-            Logger.getLogger(WekaEvaluator.class.getName())
+            getLogger(WekaEvaluator.class.getName())
                     .log(Level.SEVERE, null, ex);
         }
         return result;
@@ -55,7 +59,7 @@ public class WekaEvaluator<T extends Classifier & Serializable> extends Abstract
 
     public void printResults(File file) {
         // TODO print to file
-        System.out.println(resultsString());
+        logger.info(resultsString());
     }
 
 }

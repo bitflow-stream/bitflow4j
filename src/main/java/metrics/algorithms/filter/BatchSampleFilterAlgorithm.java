@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 //TODO change javadoc ref
 /**
  * This Algorithm can be used to create evaluation splits on an underlying sample stream (batch-mode only). The splits are created using a
@@ -17,6 +18,9 @@ import java.util.Map;
  * The evaluation-split contains the other 20% of the samples and an euqal number of samples the filter originally excluded.
  */
 public class BatchSampleFilterAlgorithm extends WindowBatchAlgorithm {
+
+    private static final Logger logger = Logger.getLogger(BatchSampleFilterAlgorithm.class.getName());
+
     private static final String KEY_FOR_REMAINING_SPLIT_SIZE = "remaining samples to fill validation split";
     /**
      * The sample window, additionally stores the count for each label
@@ -74,7 +78,7 @@ public class BatchSampleFilterAlgorithm extends WindowBatchAlgorithm {
             this.getTrainingSplit(output);
         }
 
-        System.out.println("filter algo pushed " + sampleCount + " Samples to pipeline");
+        logger.info("filter algo pushed " + sampleCount + " Samples to pipeline");
     }
 
     /**
@@ -85,8 +89,8 @@ public class BatchSampleFilterAlgorithm extends WindowBatchAlgorithm {
     private void getTrainingSplit(MetricOutputStream output) throws IOException {
         //TODO prepare this to use all provided filtered labels not only idle, current implementation is inconsistent
         int numberOfIdlesToInclude = (int) (trainingSplitSize * window.getCountsForLabel("idle"));
-        System.out.println("counts for label " + window.getCountsForLabel("idle"));
-        System.out.println("number of idles to include: " + numberOfIdlesToInclude);
+        logger.info("counts for label " + window.getCountsForLabel("idle"));
+        logger.info("number of idles to include: " + numberOfIdlesToInclude);
         if (numberOfIdlesToInclude <1) throw new IOException("no idle data in window, cannot filter");
         int counter = 0;
         for(Sample sample : window.samples){
@@ -148,7 +152,7 @@ public class BatchSampleFilterAlgorithm extends WindowBatchAlgorithm {
         //TODO this method will crash with small sample count or samall sample count per label only use with big samples counts
         Map<String, Integer> result = new HashMap<>();
         Map<String, Integer> counts = window.getCountsPerLabel();
-        System.out.println("calculating splitsizes for " + counts.size() + " Labels.");
+        logger.info("calculating splitsizes for " + counts.size() + " Labels.");
 
 //        int numberOfIdlesToInclude = (int) (trainingSplitSize * window.getCountsForLabel("idle"));
         int validationSplitSize = (int) ((1-trainingSplitSize) * window.getCountsForLabel("normal"));
@@ -169,9 +173,9 @@ public class BatchSampleFilterAlgorithm extends WindowBatchAlgorithm {
             splitSizeForLabel.put(stringIntegerEntry.getKey(), currentSplitSize);
         });
         splitSizeForLabel.put(KEY_FOR_REMAINING_SPLIT_SIZE, remainingSplitSize[0]);
-        System.out.println("splits per label:");
+        logger.info("splits per label:");
         for(Map.Entry<String, Integer> entries : splitSizeForLabel.entrySet()){
-            System.out.println(entries.getKey() + " : " + entries.getValue());
+            logger.info(entries.getKey() + " : " + entries.getValue());
         }
         return splitSizeForLabel;
     }

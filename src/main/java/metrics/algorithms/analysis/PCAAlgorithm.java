@@ -15,6 +15,7 @@ import metrics.main.misc.ParameterHash;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.logging.Logger;
 
 /**
  * Created by anton on 4/13/16.
@@ -23,6 +24,8 @@ import java.util.Arrays;
  * model to the entire dataset and output the results;
  */
 public class PCAAlgorithm extends WindowBatchAlgorithm {
+
+    private static final Logger logger = Logger.getLogger(PCAAlgorithm.class.getName());
 
     private static final double REPORT_VARIANCE = 0.999;
 
@@ -91,7 +94,7 @@ public class PCAAlgorithm extends WindowBatchAlgorithm {
 
     private void outputValues(double[][] values, int numCols, MetricOutputStream output) throws IOException {
         if (values.length == 0) {
-            System.err.println(toString() + " produced no output");
+            logger.warning(toString() + " produced no output");
             return;
         }
 
@@ -112,7 +115,7 @@ public class PCAAlgorithm extends WindowBatchAlgorithm {
             output.writeSample(sample);
         }
         if (values.length != window.numSamples()) {
-            System.err.println("Warning: output " + values.length + " samples, but input contained " + window.numSamples() + " samples");
+            logger.warning("Warning: output " + values.length + " samples, but input contained " + window.numSamples() + " samples");
         }
     }
 
@@ -147,20 +150,20 @@ public class PCAAlgorithm extends WindowBatchAlgorithm {
         }
 
         void printMessage(double reportVariance) {
-            System.err.println("PCA model computed, now transforming input data to "
+            logger.info("PCA model computed, now transforming input data to "
                     + dimensions + " dimension(s) with " + containedVariance + " variance contained...");
 
             double cumulative = 0.0;
             int i = 0;
-            System.err.print("Variances per component: ");
+            String info = "";
             do {
                 double variance = variances.get(i);
                 cumulative += variance;
-                if (i > 0) System.err.print(", ");
-                System.err.printf("%d: %f", i, variance);
+                if (i > 0) info += ", ";
+                info += i + ": " +  variance;
                 i++;
             } while (cumulative < reportVariance && i < variances.size() - 1);
-            System.err.println();
+            logger.info("Variances per component: " + info);
         }
     }
 

@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Created by anton on 4/28/16.
@@ -16,6 +17,8 @@ import java.util.Map;
  * MetricOutputStreams. Metrics that are not assigned to any OutputStream are dropped.
  */
 public abstract class AbstractSampleSplitter extends AbstractFork<String> {
+
+    private static final Logger logger = Logger.getLogger(AbstractSampleSplitter.class.getName());
 
     private final Map<String, Header> outHeaders = new HashMap<>();
     private final Map<String, List<Integer>> outMetrics = new HashMap<>();
@@ -54,7 +57,7 @@ public abstract class AbstractSampleSplitter extends AbstractFork<String> {
             try {
                 output = getOutputStream(outputName);
             } catch (IOException exc) {
-                System.err.println("Failed to create output stream for fork '" + outputName + "': " + exc.getMessage());
+                logger.severe("Failed to create output stream for fork '" + outputName + "': " + exc.getMessage());
                 exc.printStackTrace();
                 outHeaders.remove(outputName);
                 outMetrics.remove(outputName);

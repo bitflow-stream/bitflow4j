@@ -5,6 +5,7 @@ import metrics.io.MetricOutputStream;
 import metrics.main.misc.ParameterHash;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 /**
  * Created by anton on 5/14/16.
@@ -14,6 +15,8 @@ import java.io.IOException;
  * in the window until it is flushed (same as WindowBatchAlgorithm).
  */
 public abstract class TrainableWindowAlgorithm extends WindowBatchAlgorithm {
+
+    private static final Logger logger = Logger.getLogger(TrainableWindowAlgorithm.class.getName());
 
     private final int trainingInstances;
     private boolean trainingDone = false;
@@ -50,7 +53,7 @@ public abstract class TrainableWindowAlgorithm extends WindowBatchAlgorithm {
         } else {
             if (getWindow().numSamples() == trainingInstances && !trainingDone) {
                 // Training is finished -> first handle training samples
-                System.err.println(toString() + " finished training " + trainingInstances + " samples");
+                logger.info(toString() + " finished training " + trainingInstances + " samples");
                 flushResults(output);
                 trainingDone = true;
             }
