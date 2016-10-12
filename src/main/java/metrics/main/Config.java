@@ -1,7 +1,10 @@
 package metrics.main;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+import java.util.logging.LogManager;
 
 /**
  * Created by anton on 4/14/16.
@@ -9,6 +12,8 @@ import java.util.ResourceBundle;
  * Static configuration loaded from a resource file.
  */
 public class Config {
+
+    static final String logging_properties = "logging.properties";
 
     private String experimentFolder;
     private String outputFolder;
@@ -51,6 +56,18 @@ public class Config {
 
     public String getDotPath() {
         return dotPath;
+    }
+
+    public static void initializeLogger() {
+        try {
+            InputStream config = ClassLoader.getSystemResourceAsStream(logging_properties);
+            LogManager.getLogManager().readConfiguration(config);
+            config.close();
+        } catch (IOException e) {
+            System.err.println("Failed to initialize logger from resource " + logging_properties);
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 
 }

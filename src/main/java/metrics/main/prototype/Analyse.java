@@ -10,6 +10,7 @@ import metrics.io.MetricPrinter;
 import metrics.io.fork.TwoWayFork;
 import metrics.io.net.TcpMetricsOutput;
 import metrics.main.AlgorithmPipeline;
+import metrics.main.Config;
 import metrics.main.TrainedDataModel;
 import metrics.main.analysis.OpenStackSampleSplitter;
 import weka.classifiers.trees.J48;
@@ -25,6 +26,10 @@ import java.util.logging.Logger;
  * Created by anton on 6/9/16.
  */
 public class Analyse {
+
+    static {
+        Config.initializeLogger();
+    }
 
     private static final Logger logger = Logger.getLogger(Analyse.class.getName());
 

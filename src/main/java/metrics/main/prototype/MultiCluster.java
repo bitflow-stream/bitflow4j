@@ -12,6 +12,7 @@ import metrics.algorithms.normalization.OnlineAutoMinMaxScaler;
 import metrics.io.fork.MultiFork;
 import metrics.io.net.TcpMetricsOutput;
 import metrics.main.AlgorithmPipeline;
+import metrics.main.Config;
 import metrics.main.analysis.OpenStackSampleSplitter;
 
 import java.io.IOException;
@@ -22,6 +23,10 @@ import java.util.logging.Logger;
  * Created by anton on 6/21/16.
  */
 public class MultiCluster {
+
+    static {
+        Config.initializeLogger();
+    }
 
     private static final Logger logger = Logger.getLogger(MultiCluster.class.getName());
 

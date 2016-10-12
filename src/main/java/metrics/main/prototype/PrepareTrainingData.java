@@ -2,6 +2,7 @@ package metrics.main.prototype;
 
 import metrics.algorithms.TimestampSort;
 import metrics.main.AlgorithmPipeline;
+import metrics.main.Config;
 import metrics.main.analysis.OpenStackSampleSplitter;
 import metrics.main.analysis.SourceLabellingAlgorithm;
 import metrics.main.data.DataSource;
@@ -15,6 +16,10 @@ import java.util.logging.Logger;
  * Created by anton on 6/13/16.
  */
 public class PrepareTrainingData {
+
+    static {
+        Config.initializeLogger();
+    }
 
     private static final Logger logger = Logger.getLogger(PrepareTrainingData.class.getName());
 

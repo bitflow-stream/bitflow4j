@@ -1,6 +1,7 @@
 package metrics.main.prototype;
 
 import metrics.io.file.FileMetricReader;
+import metrics.main.Config;
 import metrics.main.data.DataSource;
 import metrics.main.data.Host;
 import metrics.main.data.NewDataSource;
@@ -15,6 +16,10 @@ import static java.util.logging.Logger.getLogger;
  * Created by anton on 6/13/16.
  */
 public class ListFiles {
+
+    static {
+        Config.initializeLogger();
+    }
 
     private static final Logger logger = getLogger(ListFiles.class.getName());
 

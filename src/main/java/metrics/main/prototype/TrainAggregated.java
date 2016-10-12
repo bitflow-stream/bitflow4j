@@ -5,6 +5,7 @@ import metrics.algorithms.classification.Model;
 import metrics.algorithms.classification.WekaLearner;
 import metrics.io.file.FileMetricReader;
 import metrics.main.AlgorithmPipeline;
+import metrics.main.Config;
 import metrics.main.TrainedDataModel;
 import metrics.main.analysis.OpenStackSampleSplitter;
 import weka.classifiers.trees.J48;
@@ -16,6 +17,10 @@ import java.util.logging.Logger;
  * Created by anton on 6/26/16.
  */
 public class TrainAggregated {
+
+    static {
+        Config.initializeLogger();
+    }
 
     private static final Logger logger = Logger.getLogger(TrainAggregated.class.getName());
 

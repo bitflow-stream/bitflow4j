@@ -13,6 +13,7 @@ import metrics.algorithms.evaluation.OnlineOutlierEvaluator;
 import metrics.algorithms.normalization.OnlineAutoMinMaxScaler;
 import metrics.algorithms.rest.RestServer;
 import metrics.main.AlgorithmPipeline;
+import metrics.main.Config;
 import metrics.main.analysis.OpenStackSampleSplitter;
 
 import java.io.IOException;
@@ -23,6 +24,10 @@ import java.util.logging.Logger;
  * Created by anton on 6/21/16.
  */
 public class Cluster {
+
+    static {
+        Config.initializeLogger();
+    }
 
     private static final Logger logger = Logger.getLogger(Cluster.class.getName());
 

@@ -38,6 +38,10 @@ import java.util.logging.Logger;
 @SuppressWarnings("unused")
 public class Main {
 
+    static {
+        Config.initializeLogger();
+    }
+
     private static final Logger logger = Logger.getLogger(Main.class.getName());
 
     private static final Host bono = new Host("bono.ims", "virtual");
@@ -50,6 +54,9 @@ public class Main {
     private static final DataSource<Integer> tcpData = new TcpDataSource(9999, "BIN", 1);
 
     public static void main(String[] args) throws Exception {
+        logger.info("STARTING MAIN");
+        logger.warning("WARNING FROM MAIN");
+
         String jsonFile = "/home/malcolmx/Desktop/first_bico.json"; // change to point to correct file
         String outputFile = "/home/malcolmx/Desktop/out.csv"; //change to point correct file
         String inputFile = preparedDataFile(bono); // change to oint to correct file

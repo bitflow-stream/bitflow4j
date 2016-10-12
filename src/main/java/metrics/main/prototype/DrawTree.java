@@ -1,6 +1,7 @@
 package metrics.main.prototype;
 
 import metrics.algorithms.classification.WekaLearner;
+import metrics.main.Config;
 import metrics.main.TrainedDataModel;
 
 import java.io.File;
@@ -12,6 +13,10 @@ import java.util.logging.Logger;
  * Created by anton on 6/23/16.
  */
 public class DrawTree {
+
+    static {
+        Config.initializeLogger();
+    }
 
     private static final Logger logger = Logger.getLogger(DrawTree.class.getName());
 
