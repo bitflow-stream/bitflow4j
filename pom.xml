@@ -76,6 +76,10 @@
     </build>
     <repositories>
         <repository>
+            <id>local-lib-repo</id>
+            <url>file://${basedir}/lib</url>
+        </repository>
+        <repository>
             <releases>
                 <enabled>false</enabled>
                 <updatePolicy>always</updatePolicy>
@@ -149,18 +153,9 @@
             <version>1.0.4</version>
         </dependency>
         <dependency>
-            <groupId>com.jujutsu.tsne</groupId>
-            <artifactId>tsne</artifactId>
-            <version>0.0.2</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/tsne-0.0.2.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>de.berlios.jmathtools</groupId>
-            <artifactId>jmathplot</artifactId>
-            <version>1.0.0</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/jmathplot-1.0.0.jar</systemPath>
+            <groupId>nz.ac.waikato.cms.weka</groupId>
+            <artifactId>LibSVM</artifactId>
+            <version>1.0.9</version>
         </dependency>
         <dependency>
             <groupId>de.lmu.ifi.dbs.elki</groupId>
@@ -181,6 +176,25 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>3.4</version>
+        </dependency>
+
+        <!-- The following are dependencies resolved from the local lib/ folder -->
+        <!-- They use the local repository defined above -->
+
+        <dependency>
+            <groupId>com.jujutsu.tsne</groupId>
+            <artifactId>tsne</artifactId>
+            <version>0.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>de.berlios.jmathtools</groupId>
+            <artifactId>jmathplot</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>ml.dmlc</groupId>
+            <artifactId>xgboost4j</artifactId>
+            <version>0.5</version>
         </dependency>
     </dependencies>
 </project>
