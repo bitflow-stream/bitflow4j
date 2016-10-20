@@ -3,10 +3,7 @@ package metrics.io.file;
 import metrics.Marshaller;
 import metrics.io.AbstractMetricPrinter;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 
 /**
  * Created by anton on 4/16/16.
@@ -32,7 +29,7 @@ public class FileMetricPrinter extends AbstractMetricPrinter {
         File file = new File(filename);
         if (!file.createNewFile())
             throw new IOException("Failed to create file " + filename);
-        return new FileOutputStream(file);
+        return new BufferedOutputStream(new FileOutputStream(file));
     }
 
 }

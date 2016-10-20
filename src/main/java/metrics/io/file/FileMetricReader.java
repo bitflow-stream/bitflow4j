@@ -7,6 +7,7 @@ import metrics.io.aggregate.InputStreamProducer;
 import metrics.io.aggregate.MetricInputAggregator;
 import metrics.main.misc.ParameterHash;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -106,7 +107,7 @@ public class FileMetricReader implements InputStreamProducer {
             File file = new File(filename);
             files.add(file);
             FileInputStream fileInput = new FileInputStream(file);
-            MetricInputStream input = new MetricReader(fileInput, source, marshaller);
+            MetricInputStream input = new MetricReader(new BufferedInputStream(fileInput), source, marshaller);
             inputs.add(input);
         }
     }
