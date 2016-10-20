@@ -1,8 +1,5 @@
 /training/
 /target/
 .idea
-data-analysis.iml
-dataAnalysis.iml
+/*.iml
 /*.csv
-/src/main/java/metrics/algorithms/classification/tree/
-/src/main/java/metrics/algorithms/clustering/CobwebClusteringAlgorithm.java
