@@ -28,7 +28,7 @@ public class SampleWindow extends AbstractSampleWindow {
     public final LinkedList<Sample> samples = new LinkedList<>();
 
     @Override
-    boolean addSample(Sample sample) {
+    public boolean addSample(Sample sample) {
         boolean changed = false;
         if (header == null) {
             header = sample.getHeader();
