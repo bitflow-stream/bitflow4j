@@ -19,12 +19,12 @@ public abstract class AbstractFork<T> extends AbstractOutputStream {
     private final Map<T, MetricOutputStream> outputs = new HashMap<>();
     private OutputStreamFactory<T> outputFactory;
 
-    AbstractFork(OutputStreamFactory<T> outputFactory) {
+    public AbstractFork(OutputStreamFactory<T> outputFactory) {
         this.outputFactory = outputFactory;
     }
 
     // The factory must be set through setOutputFactory() before first writeSample() invocation
-    AbstractFork() {
+    public AbstractFork() {
         this(null);
     }
 

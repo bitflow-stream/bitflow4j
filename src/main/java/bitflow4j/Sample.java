@@ -35,14 +35,14 @@ public class Sample {
         this(header, metrics, timestamp, null);
     }
 
-    // Create a copy of the source Sample: the meta data will be copied with a new header and new bitflow4j.
+    // Create a copy of the source Sample: the meta data will be copied with a new header and new metrics.
     public Sample(Header header, double[] metrics, Sample source) {
         this(header, metrics, source.getTimestamp(), null);
         if (source.tags != null)
             tags.putAll(source.tags);
     }
 
-    // Create a complete copy of source (reuse the bitflow4j array)
+    // Create a complete copy of source (reuse the metrics array)
     public Sample(Sample source) {
         this(source.getHeader(), source.getMetrics(), source);
     }
@@ -211,8 +211,8 @@ public class Sample {
     }
 
     /**
-     * Return a copy of the receiver with all given bitflow4j removed.
-     * If the list of bitflow4j would stay the same, the received is returned unchanged.
+     * Return a copy of the receiver with all given metrics removed.
+     * If the list of metrics would stay the same, the received is returned unchanged.
      */
     public Sample removeMetrics(Collection<String> removeMetrics) {
         String headerFields[] = getHeader().header;
