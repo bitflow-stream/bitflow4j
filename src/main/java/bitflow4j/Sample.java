@@ -159,12 +159,12 @@ public class Sample {
         if (header == null)
             throw new IOException("Sample.header is null");
         if (metrics == null)
-            throw new IOException("Sample.bitflow4j is null");
+            throw new IOException("Sample.metrics is null");
         if (timestamp == null)
             throw new IOException("Sample.timestamp is null");
         if (header.header.length != metrics.length)
             throw new IOException("Sample.header is size " + header.header.length +
-                    ", but Sample.bitflow4j is size " + metrics.length);
+                    ", but Sample.metrics is size " + metrics.length);
     }
 
     public String toString() {
@@ -177,7 +177,7 @@ public class Sample {
         }
         if (metrics != null) {
             if (started) b.append(", ");
-            b.append(metrics.length).append(" bitflow4j");
+            b.append(metrics.length).append(" metrics");
             started = true;
         }
         if (timestamp != null) {

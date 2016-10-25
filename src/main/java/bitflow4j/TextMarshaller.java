@@ -7,7 +7,7 @@ import java.io.OutputStream;
 /**
  * Created by anton on 4/6/16.
  * <p>
- * This Marshaller only Samples in a well-readable format. Intended for console-output.
+ * This Marshaller formats Samples in a human readable format. Intended for console-output.
  */
 public class TextMarshaller extends AbstractMarshaller implements Marshaller {
 

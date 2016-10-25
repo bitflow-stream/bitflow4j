@@ -4,7 +4,13 @@ package bitflow4j;
  * Created by anton on 5/3/16.
  * <p>
  * Header of a Sample. Subsequent incoming Samples should use the same Header instance as long as the Header does not
- * change.
+ * change. The header defines a String array of field names, plus an additional boolean flag indicating whether
+ * the associated samples contain tags or not. When a header is marshalled to a byte stream, special meta tags are prepended
+ * to the list of header fields:
+ * <ul>
+ * <li>the "time" field for the timestamps of associated samples</li>
+ * <li>the "tags" field for the tags of associated samples. Only if the hasTags flag is set</li>
+ * </ul>
  */
 public class Header {
 

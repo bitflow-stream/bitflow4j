@@ -8,7 +8,7 @@ import java.io.InputStream;
 /**
  * Created by anton on 4/6/16.
  * <p>
- * Base class for Marshaller implementations, offers readLine method missing in InputStream.
+ * Base class for Marshaller implementations, offers readLine() method missing in InputStream.
  */
 public abstract class AbstractMarshaller implements Marshaller {
 
