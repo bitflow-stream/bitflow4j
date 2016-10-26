@@ -29,7 +29,7 @@ public class TcpMetricsOutput extends AbstractMetricPrinter {
     public synchronized void writeSample(Sample sample) throws IOException {
         try {
             super.writeSample(sample);
-        } catch(IOException exc) {
+        } catch (IOException exc) {
             logger.severe("Failed to send sample to " + targetHost + ":" + targetPort + ": " + exc);
             closeSocket();
         }

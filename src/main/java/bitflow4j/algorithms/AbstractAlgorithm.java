@@ -33,9 +33,10 @@ public abstract class AbstractAlgorithm implements Algorithm {
 
     /**
      * Get the next unused free id.
+     *
      * @return the next unused id.
      */
-    public synchronized static int getNextId(){
+    public synchronized static int getNextId() {
         return ID_COUNTER++;
     }
 
@@ -47,6 +48,7 @@ public abstract class AbstractAlgorithm implements Algorithm {
     private synchronized static int nextInstanceNumber() {
         return algorithmInstanceCounter++;
     }
+
     private static int algorithmInstanceCounter = 0;
     private final int algorithmInstanceNumber = nextInstanceNumber();
 
@@ -112,7 +114,7 @@ public abstract class AbstractAlgorithm implements Algorithm {
         return this;
     }
 
-    public AbstractAlgorithm reset(){
+    public AbstractAlgorithm reset() {
         this.startedStacktrace = null;
         return this;
     }
@@ -166,7 +168,7 @@ public abstract class AbstractAlgorithm implements Algorithm {
 
     @Override
     @Deprecated
-    public boolean equals(Object o){
-        return o instanceof AbstractAlgorithm ? ((AbstractAlgorithm) o).getId() == this.getId() : o instanceof Integer ? this.getId() == ((Integer)o).intValue() : false;
+    public boolean equals(Object o) {
+        return o instanceof AbstractAlgorithm ? ((AbstractAlgorithm) o).getId() == this.getId() : o instanceof Integer ? this.getId() == ((Integer) o).intValue() : false;
     }
 }

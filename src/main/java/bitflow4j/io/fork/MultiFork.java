@@ -8,7 +8,7 @@ import java.io.IOException;
 
 /**
  * Forward every incoming sample to ALL sub-pipelines.
- *
+ * <p>
  * Created by anton on 4/23/16.
  */
 public class MultiFork extends AbstractFork<Integer> {
@@ -25,13 +25,13 @@ public class MultiFork extends AbstractFork<Integer> {
         this.numOutputs = numOutputs;
     }
 
-    public MultiFork(MetricOutputStream ...outputs) {
+    public MultiFork(MetricOutputStream... outputs) {
         super();
         this.numOutputs = outputs.length;
         setOutputs(outputs);
     }
 
-    public void setOutputs(MetricOutputStream ...outputs) {
+    public void setOutputs(MetricOutputStream... outputs) {
         if (outputs.length != this.numOutputs) {
             throw new IllegalArgumentException("Expected number of outputs " + this.numOutputs + ", received " + outputs.length);
         }

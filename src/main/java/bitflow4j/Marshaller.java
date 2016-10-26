@@ -23,7 +23,7 @@ public interface Marshaller {
      * Receive and parse a Sample. This assumes, that a header has been
      * previously received on this input stream using unmarshallHeader().
      *
-     * @param input The byte stream to read the sample from.
+     * @param input  The byte stream to read the sample from.
      * @param header The header that has been previously received on the same input stream.
      * @return The received sample.
      */

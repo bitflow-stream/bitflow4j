@@ -9,7 +9,7 @@ import java.util.LinkedList;
 /**
  * Implements a FIFO queue of Samples, optionally automatically flushing
  * Samples after a given number or time span is stored.
- *
+ * <p>
  * Created by anton on 5/6/16.
  */
 public abstract class AbstractSampleWindow {

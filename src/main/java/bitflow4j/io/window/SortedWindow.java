@@ -34,7 +34,7 @@ public class SortedWindow extends AbstractSampleWindow {
     @Override
     public boolean addSample(Sample sample) {
         boolean result = backingWindow.add(sample);
-        index.add(new SampleDate(backingWindow.numSamples()-1, sample.getTimestamp()));
+        index.add(new SampleDate(backingWindow.numSamples() - 1, sample.getTimestamp()));
         Collections.sort(index);
         return result;
     }
@@ -75,7 +75,7 @@ public class SortedWindow extends AbstractSampleWindow {
         SampleDate date = index.get(sampleNum);
         return backingWindow.getSampleMetadata(date.index);
     }
-    
+
     @Override
     public int numSamples() {
         return backingWindow.numSamples();

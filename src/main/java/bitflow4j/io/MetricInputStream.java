@@ -6,7 +6,7 @@ import java.io.IOException;
 
 /**
  * Basic interface for reading a stream of Samples.
- *
+ * <p>
  * Created by mwall on 30.03.16.
  */
 public interface MetricInputStream {

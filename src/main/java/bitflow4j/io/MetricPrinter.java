@@ -6,7 +6,7 @@ import java.io.*;
 
 /**
  * Simple MetricPrinter writing to a single fixed OutputStream.
- *
+ * <p>
  * Created by anton on 4/7/16.
  */
 public class MetricPrinter extends AbstractMetricPrinter {

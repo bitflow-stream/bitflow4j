@@ -237,7 +237,7 @@ public class Sample {
         }
     }
 
-    public Sample removeMetrics(String ...metrics) {
+    public Sample removeMetrics(String... metrics) {
         return removeMetrics(new HashSet<>(Arrays.asList(metrics)));
     }
 
