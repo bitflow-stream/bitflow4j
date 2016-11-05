@@ -55,7 +55,9 @@ public class RobustTcpMetricsReader implements MetricInputStream {
                 try {
                     return currentReader.readSample();
                 } catch (InputStreamClosedException e) {
-                    throw e;
+                    // This stream is never closed, continue polling the data source forever.
+                    logger.info("Connection with " + getSource() + " closed.");
+                    closeSocket();
                 } catch (IOException e) {
                     logger.fine("Error reading from " + getSource() + ": " + e);
                     closeSocket();

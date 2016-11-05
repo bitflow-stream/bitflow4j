@@ -15,10 +15,8 @@ import java.util.List;
 public class TcpMetricsDownloader implements InputStreamProducer {
 
     private final List<RobustTcpMetricsReader> readers = new ArrayList<>();
-    private final Marshaller marshaller;
 
     public TcpMetricsDownloader(String[] tcpSources, Marshaller marshaller) throws URISyntaxException {
-        this.marshaller = marshaller;
         for (String source : tcpSources) {
             readers.add(new RobustTcpMetricsReader(source, marshaller));
         }
