@@ -132,7 +132,7 @@ public abstract class AbstractAlgorithm implements Algorithm {
         public void run() {
             String name = AbstractAlgorithm.this.toString();
             try {
-                execute(input, output);
+                AbstractAlgorithm.this.execute(input, output);
             } catch (InputStreamClosedException exc) {
                 logger.info("Input closed for algorithm " + name);
             } catch (Throwable exc) {
