@@ -31,6 +31,7 @@ public class RobustTcpMetricsReader implements MetricInputStream {
         this.marshaller = marshaller;
         host = uri.getHost();
         port = uri.getPort();
+        logger.info("Polling samples from " + tcpSource);
     }
 
     public RobustTcpMetricsReader(String host, int port, Marshaller marshaller) {
