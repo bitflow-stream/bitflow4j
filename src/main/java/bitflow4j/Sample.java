@@ -215,6 +215,7 @@ public class Sample {
      * If the list of metrics would stay the same, the received is returned unchanged.
      */
     public Sample removeMetrics(Collection<String> removeMetrics) {
+        //TODO performance check
         String headerFields[] = getHeader().header;
         double metrics[] = getMetrics();
         double newMetrics[] = new double[headerFields.length];
