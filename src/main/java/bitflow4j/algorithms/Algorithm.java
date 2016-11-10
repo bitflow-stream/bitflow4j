@@ -26,8 +26,8 @@ public interface Algorithm {
         hash.writeChars(toString());
     }
 
-    Object getModel();
+    AlgorithmModel<?> getModel();
 
-    void setModel(Object model);
+    void setModel(AlgorithmModel<?> model);
 
 }
