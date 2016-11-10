@@ -152,12 +152,12 @@ public abstract class AbstractAlgorithm implements Algorithm {
     }
 
     @Override
-    public Object getModel() {
+    public AlgorithmModel<?> getModel() {
         throw new UnsupportedOperationException("Not implemented for this class");
     }
 
     @Override
-    public void setModel(Object model) {
+    public void setModel(AlgorithmModel<?> model) {
         throw new UnsupportedOperationException("Not implemented for this class");
     }
 
