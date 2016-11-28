@@ -7,6 +7,7 @@ import bitflow4j.io.AbstractMetricPrinter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -20,17 +21,25 @@ public class TcpMetricsOutput extends AbstractMetricPrinter {
     private final int targetPort;
     private Socket socket = null;
 
+    public Level connectionErrorLevel = Level.WARNING;
+
     public TcpMetricsOutput(Marshaller marshaller, String targetHost, int targetPort) {
         super(marshaller);
         this.targetHost = targetHost;
         this.targetPort = targetPort;
     }
 
+    public TcpMetricsOutput level(Level level) {
+        this.connectionErrorLevel = level;
+        return this;
+    }
+
     public synchronized void writeSample(Sample sample) throws IOException {
         try {
             super.writeSample(sample);
         } catch (IOException exc) {
-            logger.severe("Failed to send sample to " + targetHost + ":" + targetPort + ": " + exc);
+            logger.log(connectionErrorLevel,
+                    "Failed to send sample to " + targetHost + ":" + targetPort + ": " + exc);
             closeSocket();
         }
     }
