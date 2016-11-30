@@ -5,6 +5,8 @@ import bitflow4j.CsvMarshaller;
 import bitflow4j.Marshaller;
 import bitflow4j.TextMarshaller;
 import bitflow4j.algorithms.Algorithm;
+import bitflow4j.algorithms.Filter;
+import bitflow4j.algorithms.FilterImpl;
 import bitflow4j.algorithms.NoopAlgorithm;
 import bitflow4j.io.*;
 import bitflow4j.io.aggregate.*;
@@ -26,7 +28,7 @@ public class AlgorithmPipeline {
 
     private static final int PIPE_BUFFER = 128;
 
-    private final List<Algorithm> algorithms = new ArrayList<>();
+    private final List<Filter> algorithms = new ArrayList<>();
     private final List<InputStreamProducer> producers = new ArrayList<>();
     private final List<AlgorithmPipeline> forks = new ArrayList<>();
     private MetricInputAggregator aggregator;
@@ -36,6 +38,32 @@ public class AlgorithmPipeline {
     private File cacheFolder = null;
     private boolean printParameterHashes = false;
     private boolean started = false;
+
+    public AlgorithmPipeline(MetricInputAggregator aggregator) {
+        this.aggregator = aggregator;
+    }
+
+    public AlgorithmPipeline(int port, String inputMarshaller) throws IOException {
+        this(port, inputMarshaller, false);
+    }
+
+    public AlgorithmPipeline(int port, String inputMarshaller, boolean assembleSamples) throws IOException {
+        this(assembleSamples ? new ParallelAssemblingAggregator() : new ParallelAggregator());
+        producer(new TcpMetricsListener(port, getMarshaller(inputMarshaller)));
+    }
+
+    public AlgorithmPipeline(FileMetricReader fileInput) {
+        this(new SequentialAggregator());
+        producer(fileInput);
+    }
+
+    public AlgorithmPipeline(File csvFile, FileMetricReader.NameConverter conv) throws IOException {
+        this(csvFileReader(csvFile, conv));
+    }
+
+    // =========================================
+    // Constructors ============================
+    // =========================================
 
     public static Marshaller getMarshaller(String format) {
         switch (format) {
@@ -73,32 +101,6 @@ public class AlgorithmPipeline {
         return reader;
     }
 
-    // =========================================
-    // Constructors ============================
-    // =========================================
-
-    public AlgorithmPipeline(MetricInputAggregator aggregator) {
-        this.aggregator = aggregator;
-    }
-
-    public AlgorithmPipeline(int port, String inputMarshaller) throws IOException {
-        this(port, inputMarshaller, false);
-    }
-
-    public AlgorithmPipeline(int port, String inputMarshaller, boolean assembleSamples) throws IOException {
-        this(assembleSamples ? new ParallelAssemblingAggregator() : new ParallelAggregator());
-        producer(new TcpMetricsListener(port, getMarshaller(inputMarshaller)));
-    }
-
-    public AlgorithmPipeline(FileMetricReader fileInput) {
-        this(new SequentialAggregator());
-        producer(fileInput);
-    }
-
-    public AlgorithmPipeline(File csvFile, FileMetricReader.NameConverter conv) throws IOException {
-        this(csvFileReader(csvFile, conv));
-    }
-
     // ===============================================
     // Inputs ========================================
     // ===============================================
@@ -131,13 +133,14 @@ public class AlgorithmPipeline {
     // Algorithms & Forks ============================
     // ===============================================
 
-    public AlgorithmPipeline step(Algorithm algo) {
+    public AlgorithmPipeline step(Filter algo) {
         algorithms.add(algo);
         return this;
     }
 
-    public interface ForkHandler<T> {
-        void buildForkedPipeline(T key, AlgorithmPipeline subPipeline) throws IOException;
+    public AlgorithmPipeline step(Algorithm algo) {
+        algorithms.add(new FilterImpl<>(algo));
+        return this;
     }
 
     public <T> AlgorithmPipeline fork(AbstractFork<T> fork, ForkHandler<T> handler) {
@@ -165,13 +168,13 @@ public class AlgorithmPipeline {
         return this;
     }
 
-    // =========================================
-    // Outputs =================================
-    // =========================================
-
     public AlgorithmPipeline csvOutput(String filename) throws IOException {
         return fileOutput(filename, "CSV");
     }
+
+    // =========================================
+    // Outputs =================================
+    // =========================================
 
     public AlgorithmPipeline output(MetricOutputStream outputStream) {
         if (this.outputStream != null)
@@ -196,16 +199,16 @@ public class AlgorithmPipeline {
         return output(new EmptyOutputStream());
     }
 
-    // =========================================
-    // Running =================================
-    // =========================================
-
     public void waitForOutput() {
         outputStream.waitUntilClosed();
         if (postExecuteRunnable != null)
             postExecuteRunnable.run();
         forks.forEach(AlgorithmPipeline::waitForOutput);
     }
+
+    // =========================================
+    // Running =================================
+    // =========================================
 
     public void runAndWait() throws IOException {
         runApp();
@@ -215,10 +218,6 @@ public class AlgorithmPipeline {
     public void runApp() throws IOException {
         runApp(null);
     }
-
-    // =========================================
-    // Private =================================
-    // =========================================
 
     private synchronized void runApp(byte inputHash[]) throws IOException {
         if (started) {
@@ -233,10 +232,14 @@ public class AlgorithmPipeline {
             outputStream = new EmptyOutputStream();
         }
         if (algorithms.size() == 0) {
-            algorithms.add(new NoopAlgorithm());
+            algorithms.add(new FilterImpl<NoopAlgorithm>(new NoopAlgorithm()));
         }
         this.doRun();
     }
+
+    // =========================================
+    // Private =================================
+    // =========================================
 
     private void doRun() throws IOException {
         for (InputStreamProducer producer : producers)
@@ -244,7 +247,7 @@ public class AlgorithmPipeline {
 
         MetricInputStream runningInput = aggregator;
         for (int i = 0; i < algorithms.size(); i++) {
-            Algorithm algo = algorithms.get(i);
+            Filter algo = algorithms.get(i);
             MetricInputStream input = runningInput;
             MetricOutputStream output;
 
@@ -283,11 +286,12 @@ public class AlgorithmPipeline {
     }
 
     private void hashParameters(ParameterHash hash) {
+        //TODO: are hashParameters used or not ? If so, where?
         for (InputStreamProducer producer : producers)
             producer.hashParameters(hash);
         aggregator.hashParameters(hash);
-        for (Algorithm algo : algorithms)
-            algo.hashParameters(hash);
+        for (Filter algo : algorithms)
+            algo.getAlgorithm().hashParameters(hash);
     }
 
     private String getParameterHash(byte inputHash[]) {
@@ -304,6 +308,10 @@ public class AlgorithmPipeline {
         fork.hashParameters(hash);
         hash.writeChars(forkKey.toString());
         return hash.toByteArray();
+    }
+
+    public interface ForkHandler<T> {
+        void buildForkedPipeline(T key, AlgorithmPipeline subPipeline) throws IOException;
     }
 
 }
