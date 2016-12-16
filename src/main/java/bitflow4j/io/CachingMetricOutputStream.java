@@ -3,7 +3,7 @@ package bitflow4j.io;
 import bitflow4j.Marshaller;
 import bitflow4j.Sample;
 import bitflow4j.io.file.FileMetricReader;
-import bitflow4j.main.BaseAlgorithmPipeline;
+import bitflow4j.main.AlgorithmPipeline;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -18,7 +18,7 @@ import java.io.IOException;
  */
 public class CachingMetricOutputStream extends AbstractOutputStream {
 
-    private static final Marshaller CacheMarshaller = BaseAlgorithmPipeline.getMarshaller("CSV");
+    private static final Marshaller CacheMarshaller = AlgorithmPipeline.getMarshaller("CSV");
 
     private final FileMetricReader reader = new FileMetricReader(CacheMarshaller, FileMetricReader.FILE_NAME);
     private final MetricOutputStream wrappedStream;

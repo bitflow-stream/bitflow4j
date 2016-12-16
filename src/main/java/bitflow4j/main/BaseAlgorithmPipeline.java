@@ -1,9 +1,5 @@
 package bitflow4j.main;
 
-import bitflow4j.BinaryMarshaller;
-import bitflow4j.CsvMarshaller;
-import bitflow4j.Marshaller;
-import bitflow4j.TextMarshaller;
 import bitflow4j.algorithms.Algorithm;
 import bitflow4j.algorithms.Filter;
 import bitflow4j.algorithms.FilterImpl;
@@ -49,7 +45,7 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
 
     public BaseAlgorithmPipeline(int port, String inputMarshaller, boolean assembleSamples) throws IOException {
         this(assembleSamples ? new ParallelAssemblingAggregator() : new ParallelAggregator());
-        producer(new TcpMetricsListener(port, getMarshaller(inputMarshaller)));
+        producer(new TcpMetricsListener(port, AlgorithmPipeline.getMarshaller(inputMarshaller)));
     }
 
     public BaseAlgorithmPipeline(FileMetricReader fileInput) {
@@ -58,47 +54,12 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
     }
 
     public BaseAlgorithmPipeline(File csvFile, FileMetricReader.NameConverter conv) throws IOException {
-        this(csvFileReader(csvFile, conv));
-    }
-
-    // =========================================
-    // Constructors ============================
-    // =========================================
-
-    public static Marshaller getMarshaller(String format) {
-        switch (format) {
-            case "CSV":
-                return new CsvMarshaller();
-            case "BIN":
-                return new BinaryMarshaller();
-            case "TXT":
-                return new TextMarshaller();
-            default:
-                throw new IllegalStateException("Unknown marshaller format: " + format);
-        }
+        this(AlgorithmPipeline.csvFileReader(csvFile, conv));
     }
 
     @SuppressWarnings("ConstantConditions")
     public static MetricPipe newPipe() {
         return PIPE_BUFFER > 0 ? new MetricPipe(PIPE_BUFFER) : new MetricPipe();
-    }
-
-    public static FileMetricReader csvFileReader(File csvFile, FileMetricReader.NameConverter conv) throws IOException {
-        FileMetricReader reader = new FileMetricReader(getMarshaller("CSV"), conv);
-        reader.addFile(csvFile);
-        return reader;
-    }
-
-    public static FileMetricReader binaryFileReader(File binFile, FileMetricReader.NameConverter conv) throws IOException {
-        FileMetricReader reader = new FileMetricReader(getMarshaller("BIN"), conv);
-        reader.addFile(binFile);
-        return reader;
-    }
-
-    public static FileMetricReader fileReader(String file, String format, FileMetricReader.NameConverter conv) throws IOException {
-        FileMetricReader reader = new FileMetricReader(getMarshaller(format), conv);
-        reader.addFile(new File(file));
-        return reader;
     }
 
     // ===============================================
@@ -196,12 +157,12 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
 
     @Override
     public AlgorithmPipeline consoleOutput(String outputMarshaller) {
-        return output(new MetricPrinter(getMarshaller(outputMarshaller)));
+        return output(new MetricPrinter(AlgorithmPipeline.getMarshaller(outputMarshaller)));
     }
 
     @Override
     public AlgorithmPipeline fileOutput(String path, String outputMarshaller) throws IOException {
-        return output(new FileMetricPrinter(path, getMarshaller(outputMarshaller)));
+        return output(new FileMetricPrinter(path, AlgorithmPipeline.getMarshaller(outputMarshaller)));
     }
 
     @Override
@@ -250,7 +211,7 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
             outputStream = new EmptyOutputStream();
         }
         if (algorithms.size() == 0) {
-            algorithms.add(new FilterImpl<NoopAlgorithm>(new NoopAlgorithm()));
+            algorithms.add(new FilterImpl<>(new NoopAlgorithm()));
         }
         this.doRun();
     }
