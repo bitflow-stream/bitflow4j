@@ -1,5 +1,6 @@
 package bitflow4j;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -10,6 +11,17 @@ import java.io.OutputStream;
  * Converts between instances of {@link Sample} and streams of bytes.
  */
 public interface Marshaller {
+
+    /**
+     * Peek into the given BufferedInputStream and indicate whether the stream contains
+     * a header or a sample. This implies that headers and samples must be clearly distinguishable.
+     * The stream is guaranteed to be at a position where either a header or a sample should start.
+     * An exception should be thrown, if neither is the case.
+     *
+     * @param input The buffered byte stream to peek into.
+     * @return whether the next
+     */
+    boolean peekIsHeader(BufferedInputStream input) throws IOException;
 
     /**
      * Receive and parse a Header. This should be the first method to read from the given input stream.

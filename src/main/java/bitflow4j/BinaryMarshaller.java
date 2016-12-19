@@ -17,7 +17,19 @@ public class BinaryMarshaller extends AbstractMarshaller {
 
     private final String BIN_HEADER_TIME = "timB";
     private final String BIN_HEADER_TAGS = "tags";
-    private final byte[] BIN_SAMPLE_START = "X".getBytes();
+    private final byte[] BIN_SAMPLE_START = "X".getBytes(); // Must not collide with BIN_HEADER_TIME, and be shorter.
+
+    public boolean peekIsHeader(BufferedInputStream input) throws IOException {
+        byte peeked[] = peek(input, BIN_HEADER_TIME.length());
+        if (Arrays.equals(Arrays.copyOf(peeked, BIN_SAMPLE_START.length), BIN_SAMPLE_START)) {
+            return false;
+        } else if (Arrays.equals(peeked, BIN_HEADER_TIME.getBytes())) {
+            return true;
+        } else {
+            throw new IOException("Bitflow binary protocol error: Expected '" + new String(BIN_SAMPLE_START) + "' or '" +
+                    BIN_HEADER_TIME + "', but got '" + new String(peeked) + "'");
+        }
+    }
 
     public Header unmarshallHeader(InputStream input) throws IOException {
         List<String> headerList = new ArrayList<>();

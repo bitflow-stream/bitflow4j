@@ -1,10 +1,12 @@
 package bitflow4j;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 
 /**
@@ -22,6 +24,11 @@ public class CsvMarshaller extends AbstractMarshaller {
     public static final String dateFormat = "yyyy-MM-dd HH:mm:ss.SSS";
     public static final int dateLength = dateFormat.length();
     public static final SimpleDateFormat date_formatter = new SimpleDateFormat(dateFormat);
+
+    public boolean peekIsHeader(BufferedInputStream input) throws IOException {
+        byte peeked[] = peek(input, CSV_HEADER_TIME.length());
+        return Arrays.equals(peeked, CSV_HEADER_TIME.getBytes());
+    }
 
     public Header unmarshallHeader(InputStream input) throws IOException {
         String[] fields = readLine(input).split(separator);

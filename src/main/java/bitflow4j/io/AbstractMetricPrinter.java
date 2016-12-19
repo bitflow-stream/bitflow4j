@@ -28,21 +28,30 @@ public abstract class AbstractMetricPrinter extends AbstractOutputStream {
     public synchronized void writeSample(Sample sample) throws IOException {
         Header header = sample.getHeader();
         OutputStream output = this.output; // Avoid race condition
-        if (output == null || sample.headerChanged(lastHeader)) {
-            this.output = nextOutputStream();
-            output = this.output;
-            marshaller.marshallHeader(output, header);
-            lastHeader = header;
+        try {
+            if (output == null || sample.headerChanged(lastHeader)) {
+                this.output = nextOutputStream();
+                output = this.output;
+                marshaller.marshallHeader(output, header);
+                lastHeader = header;
+            }
+            marshaller.marshallSample(output, sample);
+        } catch (IOException e) {
+            closeStream();
+            throw e;
         }
-        marshaller.marshallSample(output, sample);
     }
 
-    public void close() throws IOException {
+    protected void closeStream() throws IOException {
         OutputStream output = this.output; // Avoid race condition
         if (output != null) {
             this.output = null;
             output.close();
         }
+    }
+
+    public void close() throws IOException {
+        closeStream();
         super.close();
     }
 

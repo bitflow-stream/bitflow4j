@@ -2,6 +2,7 @@ package bitflow4j;
 
 import bitflow4j.io.InputStreamClosedException;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -28,6 +29,21 @@ public abstract class AbstractMarshaller implements Marshaller {
             buffer.append((char) chr);
         }
         return buffer.toString();
+    }
+
+    static byte[] peek(BufferedInputStream input, int numBytes) throws IOException {
+        input.mark(numBytes);
+        byte[] readBytes = new byte[numBytes];
+        try {
+            int readNum = input.read(readBytes);
+            if (readNum <= 0)
+                throw new InputStreamClosedException();
+            else if (readNum != readBytes.length)
+                throw new IOException("While trying to peek " + numBytes + " bytes, received only " + readNum);
+            return readBytes;
+        } finally {
+            input.reset();
+        }
     }
 
 }
