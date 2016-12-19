@@ -27,9 +27,6 @@ public abstract class AbstractMetricPrinter extends AbstractOutputStream {
 
     public synchronized void writeSample(Sample sample) throws IOException {
         Header header = sample.getHeader();
-        if (header.numFields() <= 0) {
-            return;
-        }
         OutputStream output = this.output; // Avoid race condition
         if (output == null || sample.headerChanged(lastHeader)) {
             this.output = nextOutputStream();

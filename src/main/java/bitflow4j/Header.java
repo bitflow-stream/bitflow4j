@@ -5,17 +5,9 @@ package bitflow4j;
  * <p>
  * Header of a Sample. Subsequent incoming Samples should use the same Header instance as long as the Header does not
  * change. The header defines a String array of field names, plus an additional boolean flag indicating whether
- * the associated samples contain tags or not. When a header is marshalled to a byte stream, special meta tags are prepended
- * to the list of header fields:
- * <ul>
- * <li>the "time" field for the timestamps of associated samples</li>
- * <li>the "tags" field for the tags of associated samples. Only if the hasTags flag is set</li>
- * </ul>
+ * the associated samples contain tags or not.
  */
 public class Header {
-
-    public static final String HEADER_TIME = "time";
-    public static final String HEADER_TAGS = "tags";
 
     public static final Header EMPTY_HEADER = new Header(new String[0], true);
 
@@ -35,35 +27,8 @@ public class Header {
         this.hasTags = hasTags;
     }
 
-    public static Header unmarshallHeader(String fields[]) {
-        if (fields.length < 1 || !fields[0].equals(HEADER_TIME)) {
-            throw new IllegalArgumentException("First field in header must be " + HEADER_TIME);
-        }
-        boolean hasTags = fields.length >= 2 && fields[1].equals(HEADER_TAGS);
-
-        int specialFields = hasTags ? 2 : 1;
-        String header[] = new String[fields.length - specialFields];
-        System.arraycopy(fields, specialFields, header, 0, header.length);
-        return new Header(header, hasTags);
-    }
-
-    public int numSpecialFields() {
-        return hasTags ? 2 : 1;
-    }
-
-    public String[] getSpecialFields() {
-        String result[] = new String[numSpecialFields()];
-        result[0] = HEADER_TIME;
-        if (hasTags) result[1] = HEADER_TAGS;
-        return result;
-    }
-
-    public int numFields() {
-        return header.length + numSpecialFields();
-    }
-
     public boolean hasChanged(Header oldHeader) {
-        if (oldHeader == null || numFields() != oldHeader.numFields()) {
+        if (oldHeader == null || header.length != oldHeader.header.length) {
             return true;
         } else if (this != oldHeader) {
             if (hasTags != oldHeader.hasTags) {

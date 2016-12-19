@@ -6,9 +6,8 @@ import java.util.*;
 /**
  * Created by mwall on 30.03.16.
  * <p>
- * Represents one vector of data.
- * The header contains labels for the values. It does not contain special fields like
- * {@link Header#HEADER_TIME}, although these fields are also transported over the network.
+ * Represents one vector of data. The header contains labels for the values.
+ * In addition to the values, the Sample also contains a timestamp and a Map of tags (key-value pairs).
  */
 public class Sample {
 

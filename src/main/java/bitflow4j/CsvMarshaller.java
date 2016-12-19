@@ -14,6 +14,8 @@ import java.util.Date;
  */
 public class CsvMarshaller extends AbstractMarshaller {
 
+    private static final String CSV_HEADER_TIME = "time";
+    private static final String CSV_HEADER_TAGS = "tags";
     private static final String separator = ",";
     private static final byte[] separatorBytes = separator.getBytes();
 
@@ -23,7 +25,16 @@ public class CsvMarshaller extends AbstractMarshaller {
 
     public Header unmarshallHeader(InputStream input) throws IOException {
         String[] fields = readLine(input).split(separator);
-        return Header.unmarshallHeader(fields);
+
+        if (fields.length < 1 || !fields[0].equals(CSV_HEADER_TIME)) {
+            throw new IllegalArgumentException("First field in CSV header must be " + CSV_HEADER_TIME);
+        }
+        boolean hasTags = fields.length >= 2 && fields[1].equals(CSV_HEADER_TAGS);
+
+        int specialFields = hasTags ? 2 : 1;
+        String header[] = new String[fields.length - specialFields];
+        System.arraycopy(fields, specialFields, header, 0, header.length);
+        return new Header(header, hasTags);
     }
 
     public Sample unmarshallSample(InputStream input, Header header) throws IOException {
@@ -54,11 +65,12 @@ public class CsvMarshaller extends AbstractMarshaller {
         }
 
         // Parse regular values
-        int special = header.numSpecialFields();
-        metricValues = new double[metricStrings.length - special];
-        for (int i = header.numSpecialFields(); i < metricStrings.length; i++) {
+        int start = 1;
+        if (header.hasTags) start++;
+        metricValues = new double[metricStrings.length - start];
+        for (int i = start; i < metricStrings.length; i++) {
             try {
-                metricValues[i - special] = Double.valueOf(metricStrings[i]);
+                metricValues[i - start] = Double.valueOf(metricStrings[i]);
             } catch (NumberFormatException exc) {
                 throw new IOException(exc);
             }
@@ -81,12 +93,14 @@ public class CsvMarshaller extends AbstractMarshaller {
     }
 
     public void marshallHeader(OutputStream output, Header header) throws IOException {
-        String[] special = header.getSpecialFields();
-        if (special.length > 0) {
-            printStrings(output, special);
-            if (header.header.length > 0)
-                output.write(separatorBytes);
+        output.write(CSV_HEADER_TIME.getBytes());
+        if (header.hasTags) {
+            output.write(lineSepBytes);
+            output.write(CSV_HEADER_TAGS.getBytes());
         }
+
+        if (header.header.length > 0)
+            output.write(separatorBytes);
         printStrings(output, header.header);
         output.write(lineSepBytes);
     }
