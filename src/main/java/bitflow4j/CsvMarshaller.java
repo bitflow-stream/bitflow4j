@@ -23,7 +23,12 @@ public class CsvMarshaller extends AbstractMarshaller {
 
     public static final String dateFormat = "yyyy-MM-dd HH:mm:ss.SSS";
     public static final int dateLength = dateFormat.length();
-    public static final SimpleDateFormat date_formatter = new SimpleDateFormat(dateFormat);
+
+    public static SimpleDateFormat newDateFormatter() {
+        return new SimpleDateFormat(dateFormat);
+    }
+
+    public final SimpleDateFormat date_formatter = newDateFormatter();
 
     public boolean peekIsHeader(BufferedInputStream input) throws IOException {
         byte peeked[] = peek(input, CSV_HEADER_TIME.length());
