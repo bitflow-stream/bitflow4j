@@ -1,34 +1,19 @@
 package bitflow4j.io.net;
 
 import bitflow4j.Marshaller;
-import bitflow4j.io.aggregate.InputStreamProducer;
-import bitflow4j.io.aggregate.MetricInputAggregator;
-import bitflow4j.main.ParameterHash;
+import bitflow4j.io.ActiveInputStream;
 
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by anton on 04.11.16.
  */
-public class TcpMetricsDownloader implements InputStreamProducer {
-
-    private final List<RobustTcpMetricsReader> readers = new ArrayList<>();
+public class TcpMetricsDownloader extends ActiveInputStream {
 
     public TcpMetricsDownloader(String[] tcpSources, Marshaller marshaller) throws URISyntaxException {
         for (String source : tcpSources) {
-            readers.add(new RobustTcpMetricsReader(source, marshaller));
+            new ReaderThread(source, new TcpMetricsReader(source, marshaller)).start();
         }
-    }
-
-    @Override
-    public void start(MetricInputAggregator aggregator) {
-        aggregator.producerStarting(this);
-        for (RobustTcpMetricsReader reader : readers) {
-            aggregator.addInput(reader.getSource(), reader);
-        }
-        aggregator.producerFinished(this);
     }
 
 }

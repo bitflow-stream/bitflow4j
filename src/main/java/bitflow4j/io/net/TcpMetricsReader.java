@@ -15,9 +15,9 @@ import java.util.logging.Logger;
 /**
  * Created by anton on 04.11.16.
  */
-public class RobustTcpMetricsReader implements MetricInputStream {
+public class TcpMetricsReader implements MetricInputStream {
 
-    private static final Logger logger = Logger.getLogger(RobustTcpMetricsReader.class.getName());
+    private static final Logger logger = Logger.getLogger(TcpMetricsReader.class.getName());
 
     private final Marshaller marshaller;
     private final String host;
@@ -26,7 +26,7 @@ public class RobustTcpMetricsReader implements MetricInputStream {
     private Socket currentSocket;
     public long retryTimeoutMillis = 1000;
 
-    public RobustTcpMetricsReader(String tcpSource, Marshaller marshaller) throws URISyntaxException {
+    public TcpMetricsReader(String tcpSource, Marshaller marshaller) throws URISyntaxException {
         URI uri = new URI("protocol://" + tcpSource);
         this.marshaller = marshaller;
         host = uri.getHost();
@@ -34,7 +34,7 @@ public class RobustTcpMetricsReader implements MetricInputStream {
         logger.info("Polling samples from " + tcpSource);
     }
 
-    public RobustTcpMetricsReader(String host, int port, Marshaller marshaller) {
+    public TcpMetricsReader(String host, int port, Marshaller marshaller) {
         this.marshaller = marshaller;
         this.host = host;
         this.port = port;

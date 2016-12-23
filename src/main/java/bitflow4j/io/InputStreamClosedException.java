@@ -17,4 +17,5 @@ public class InputStreamClosedException extends IOException {
     public InputStreamClosedException(Exception cause) {
         super("Input stream closed", cause);
     }
+
 }

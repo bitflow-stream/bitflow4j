@@ -1,22 +1,23 @@
 package bitflow4j.io.file;
 
 import bitflow4j.Marshaller;
+import bitflow4j.Sample;
+import bitflow4j.io.InputStreamClosedException;
 import bitflow4j.io.MetricInputStream;
 import bitflow4j.io.MetricReader;
-import bitflow4j.io.aggregate.InputStreamProducer;
-import bitflow4j.io.aggregate.MetricInputAggregator;
-import bitflow4j.main.ParameterHash;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
@@ -24,7 +25,9 @@ import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
 /**
  * Created by anton on 4/7/16.
  */
-public class FileMetricReader implements InputStreamProducer {
+public class FileMetricReader implements MetricInputStream {
+
+    private static final Logger logger = Logger.getLogger(FileMetricReader.class.getName());
 
     public interface NameConverter {
         String convert(File file);
@@ -43,14 +46,19 @@ public class FileMetricReader implements InputStreamProducer {
     public static final NameConverter FILE_PATH = File::getPath;
     public static final NameConverter FILE_NAME = File::getName;
 
-    private final List<MetricInputStream> inputs = new ArrayList<>();
+    private final List<MetricReader> inputs = new ArrayList<>();
     private final List<File> files = new ArrayList<>();
+
+    private Iterator<MetricReader> inputIterator;
+    private MetricReader currentInput;
 
     private final Marshaller marshaller;
     private final NameConverter converter;
 
     public FileMetricReader(Marshaller marshaller, NameConverter converter) {
         this.marshaller = marshaller;
+        if (converter == null)
+            converter = FILE_NAME;
         this.converter = converter;
     }
 
@@ -100,15 +108,15 @@ public class FileMetricReader implements InputStreamProducer {
     public void addFile(String path) throws IOException {
         String source = converter == null ? null : converter.convert(new File(path));
         FileGroup group = new FileGroup(path);
-        Collection<String> filenames = group.listFiles();
-        if (filenames.isEmpty())
+        Collection<String> fileNames = group.listFiles();
+        if (fileNames.isEmpty())
             throw new IOException("File not found: " + path);
-        for (String filename : filenames) {
+        for (String filename : fileNames) {
             File file = new File(filename);
             files.add(file);
-            FileInputStream fileInput = new FileInputStream(file);
-            MetricInputStream input = new MetricReader(new BufferedInputStream(fileInput), source, marshaller);
-            inputs.add(input);
+            InputStream fileInput = new FileInputStream(file);
+            MetricReader reader = new MetricReader(fileInput, source, marshaller);
+            inputs.add(reader);
         }
     }
 
@@ -120,15 +128,43 @@ public class FileMetricReader implements InputStreamProducer {
         return Collections.unmodifiableList(files);
     }
 
-    // Must be called after all add* invocations.
-    public void start(MetricInputAggregator aggregator) {
-        aggregator.producerStarting(this);
-        for (int i = 0; i < inputs.size(); i++) {
-            String name = converter == null ? null : converter.convert(files.get(i));
-            MetricInputStream input = inputs.get(i);
-            aggregator.addInput(name, input);
+    @Override
+    public synchronized Sample readSample() throws IOException {
+        if (currentInput == null) {
+            closeInput();
+            currentInput = nextInput();
         }
-        aggregator.producerFinished(this);
+        if (currentInput == null)
+            throw new InputStreamClosedException();
+        try {
+            return currentInput.readSample();
+        } catch (InputStreamClosedException e) {
+            // One file finished, start reading the next.
+            closeInput();
+            return readSample();
+        }
+    }
+
+    private void closeInput() {
+        MetricReader input = currentInput;
+        currentInput = null;
+        if (input != null) {
+            try {
+                input.close();
+                logger.info("Closed file " + input.sourceName);
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, "Error closing file", e);
+            }
+        }
+    }
+
+    private MetricReader nextInput() {
+        if (inputIterator == null)
+            inputIterator = inputs.iterator();
+        if (!inputIterator.hasNext()) {
+            return null;
+        }
+        return inputIterator.next();
     }
 
 }

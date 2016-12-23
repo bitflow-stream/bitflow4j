@@ -1,58 +1,36 @@
 package bitflow4j.algorithms;
 
-import bitflow4j.Sample;
-import bitflow4j.main.ParameterHash;
+import bitflow4j.io.AbstractOutputStream;
+import bitflow4j.io.MetricOutputStream;
 
 import java.io.IOException;
-import java.util.logging.Logger;
 
+public abstract class AbstractAlgorithm extends AbstractOutputStream implements Algorithm {
 
-public abstract class AbstractAlgorithm implements Algorithm {
-    private static final Logger logger = Logger.getLogger(AbstractAlgorithm.class.getName());
-    protected FilterImpl worker = null;
+    protected MetricOutputStream output;
 
-    /**
-     * This method must be called by the Filter instance that is associated with this algorithm.
-     * @param worker the worker
-     */
     @Override
-    public void init(FilterImpl worker) {
-        this.worker = worker;
+    public void setOutput(MetricOutputStream output) {
+        this.output = output;
     }
 
+    @Override
     public String toString() {
-        return getClass().getSimpleName() + " (Instance " + (worker == null ? ("not initialized") : (worker.id)) + ")";
+        return "a " + getClass().getSimpleName();
     }
 
-
-    public Sample writeSample(Sample sample) throws IOException {
-        return sample;
+    public synchronized void close() throws IOException {
+        super.close();
+        if (output != null) {
+            output.close();
+        }
     }
 
-    @Override
-    public void close() throws IOException {
-
-    }
-
-    @Override
-    public AlgorithmModel<?> getModel() {
-        throw new UnsupportedOperationException("Not implemented for this class");
-    }
-
-    @Override
-    public void setModel(AlgorithmModel<?> model) {
-        throw new UnsupportedOperationException("Not implemented for this class");
-    }
-
-    @Deprecated
-    public int getId() {
-        return this.worker.id;
-    }
-
-    @Override
-    @Deprecated
-    public boolean equals(Object o) {
-        return o instanceof AbstractAlgorithm ? ((AbstractAlgorithm) o).getId() == this.getId() : o instanceof Integer ? this.getId() == ((Integer) o).intValue() : false;
+    public synchronized void waitUntilClosed() {
+        super.waitUntilClosed();
+        if (output != null) {
+            output.waitUntilClosed();
+        }
     }
 
 }

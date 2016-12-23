@@ -1,10 +1,9 @@
 package bitflow4j.io.net;
 
 import bitflow4j.Marshaller;
+import bitflow4j.io.ActiveInputStream;
 import bitflow4j.io.MetricReader;
-import bitflow4j.io.aggregate.InputStreamProducer;
 import bitflow4j.io.aggregate.MetricInputAggregator;
-import bitflow4j.main.ParameterHash;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -14,7 +13,7 @@ import java.util.logging.Logger;
 /**
  * Created by anton on 4/6/16.
  */
-public class TcpMetricsListener implements InputStreamProducer {
+public class TcpMetricsListener extends ActiveInputStream {
 
     private static final Logger logger = Logger.getLogger(TcpMetricsListener.class.getName());
 
@@ -37,7 +36,6 @@ public class TcpMetricsListener implements InputStreamProducer {
 
     public void start(MetricInputAggregator aggregator) {
         this.aggregator = aggregator;
-        aggregator.producerStarting(this);
         forkAcceptConnections();
     }
 
@@ -77,7 +75,7 @@ public class TcpMetricsListener implements InputStreamProducer {
     private String acceptConnection(Socket socket) throws IOException {
         String remote = socket.getRemoteSocketAddress().toString(); // TODO try reverse DNS? More descriptive name?
         MetricReader input = new MetricReader(socket.getInputStream(), remote, marshaller);
-        aggregator.addInput(remote, input);
+        new ReaderThread(remote, input).start();
         return remote;
     }
 
@@ -87,7 +85,6 @@ public class TcpMetricsListener implements InputStreamProducer {
             // TODO cannot close the socket here, because connections might still be open.
             // Just ignoring new incoming connections.
             logger.warning("Accepted " + numConnections + " connection(s). Ignoring further connections.");
-            aggregator.producerFinished(this);
             return true;
         }
         return false;

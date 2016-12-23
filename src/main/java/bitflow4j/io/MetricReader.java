@@ -20,7 +20,7 @@ public class MetricReader implements MetricInputStream {
 
     private final Marshaller marshaller;
     private final BufferedInputStream input;
-    private final String sourceName;
+    public final String sourceName;
     private Header header = null;
 
     public MetricReader(InputStream input, String sourceName, Marshaller marshaller) throws IOException {
@@ -54,6 +54,10 @@ public class MetricReader implements MetricInputStream {
                 throw exc;
             }
         }
+    }
+
+    public void close() throws IOException {
+        input.close();
     }
 
 }

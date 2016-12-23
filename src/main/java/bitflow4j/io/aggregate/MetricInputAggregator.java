@@ -3,7 +3,6 @@ package bitflow4j.io.aggregate;
 import bitflow4j.Sample;
 import bitflow4j.io.InputStreamClosedException;
 import bitflow4j.io.MetricInputStream;
-import bitflow4j.main.ParameterHash;
 
 import java.io.IOException;
 import java.util.HashSet;

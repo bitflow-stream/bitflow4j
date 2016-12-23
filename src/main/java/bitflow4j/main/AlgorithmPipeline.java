@@ -5,12 +5,11 @@ import bitflow4j.CsvMarshaller;
 import bitflow4j.Marshaller;
 import bitflow4j.TextMarshaller;
 import bitflow4j.algorithms.Algorithm;
-import bitflow4j.algorithms.Filter;
-import bitflow4j.io.MetricInputStream;
-import bitflow4j.io.MetricOutputStream;
-import bitflow4j.io.aggregate.InputStreamProducer;
+import bitflow4j.io.*;
+import bitflow4j.io.file.FileMetricPrinter;
 import bitflow4j.io.file.FileMetricReader;
 import bitflow4j.io.fork.AbstractFork;
+import bitflow4j.io.net.TcpMetricsListener;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,33 +19,72 @@ import java.io.IOException;
  */
 public interface AlgorithmPipeline {
 
-    AlgorithmPipeline input(String name, MetricInputStream input);
+    // ============== Input ==============
 
-    AlgorithmPipeline producer(InputStreamProducer producer);
+    AlgorithmPipeline input(MetricInputStream input);
 
-    AlgorithmPipeline cache(File cacheFolder);
+    default AlgorithmPipeline inputFiles(String format, FileMetricReader.NameConverter conv, String... files) throws IOException {
+        FileMetricReader reader = new FileMetricReader(AlgorithmPipeline.getMarshaller(format), conv);
+        for (String file : files)
+            reader.addFile(new File(file));
+        return input(reader);
+    }
 
-    AlgorithmPipeline cache(File cacheFolder, boolean printParameterHashes);
+    default AlgorithmPipeline inputFiles(String format, String... files) throws IOException {
+        return inputFiles(format, FileMetricReader.FILE_NAME, files);
+    }
 
-    AlgorithmPipeline step(Filter algo);
+    default AlgorithmPipeline inputBinary(String... files) throws IOException {
+        return inputFiles("BIN", files);
+    }
+
+    default AlgorithmPipeline inputCsv(String... files) throws IOException {
+        return inputFiles("CSV", files);
+    }
+
+    default AlgorithmPipeline inputListen(int port, String format) throws IOException {
+        return input(new TcpMetricsListener(port, AlgorithmPipeline.getMarshaller(format)));
+    }
+
+    // ============== Steps ==============
 
     AlgorithmPipeline step(Algorithm algo);
 
     <T> AlgorithmPipeline fork(AbstractFork<T> fork, ForkHandler<T> handler);
 
-    AlgorithmPipeline postExecute(Runnable runnable);
+    interface ForkHandler<T> {
+        void buildForkedPipeline(T key, AlgorithmPipeline subPipeline) throws IOException;
+    }
 
-    AlgorithmPipeline csvOutput(String filename) throws IOException;
+    // ============== Output ==============
 
     AlgorithmPipeline output(MetricOutputStream outputStream);
 
-    AlgorithmPipeline consoleOutput(String outputMarshaller);
+    default AlgorithmPipeline consoleOutput(String outputMarshaller) {
+        return output(new MetricPrinter(AlgorithmPipeline.getMarshaller(outputMarshaller)));
+    }
 
-    AlgorithmPipeline fileOutput(String path, String outputMarshaller) throws IOException;
+    default AlgorithmPipeline consoleOutput() {
+        return consoleOutput("CSV");
+    }
 
-    AlgorithmPipeline fileOutput(File file, String outputMarshaller) throws IOException;
+    default AlgorithmPipeline fileOutput(String path, String outputMarshaller) throws IOException {
+        return output(new FileMetricPrinter(path, AlgorithmPipeline.getMarshaller(outputMarshaller)));
+    }
 
-    AlgorithmPipeline emptyOutput();
+    default AlgorithmPipeline fileOutput(File file, String outputMarshaller) throws IOException {
+        return fileOutput(file.toString(), outputMarshaller);
+    }
+
+    default AlgorithmPipeline csvOutput(String filename) throws IOException {
+        return fileOutput(filename, "CSV");
+    }
+
+    default AlgorithmPipeline emptyOutput() {
+        return output(new EmptyOutputStream());
+    }
+
+    // ============== Execute ==============
 
     void waitForOutput();
 
@@ -54,9 +92,7 @@ public interface AlgorithmPipeline {
 
     void runApp() throws IOException;
 
-    public interface ForkHandler<T> {
-        void buildForkedPipeline(T key, AlgorithmPipeline subPipeline) throws IOException;
-    }
+    // ============== Helpers ==============
 
     static Marshaller getMarshaller(String format) {
         switch (format) {
@@ -71,22 +107,11 @@ public interface AlgorithmPipeline {
         }
     }
 
-    static FileMetricReader csvFileReader(File csvFile, FileMetricReader.NameConverter conv) throws IOException {
-        FileMetricReader reader = new FileMetricReader(AlgorithmPipeline.getMarshaller("CSV"), conv);
-        reader.addFile(csvFile);
-        return reader;
-    }
+    int PIPE_BUFFER = 128;
 
-    static FileMetricReader binaryFileReader(File binFile, FileMetricReader.NameConverter conv) throws IOException {
-        FileMetricReader reader = new FileMetricReader(AlgorithmPipeline.getMarshaller("BIN"), conv);
-        reader.addFile(binFile);
-        return reader;
-    }
-
-    static FileMetricReader fileReader(String file, String format, FileMetricReader.NameConverter conv) throws IOException {
-        FileMetricReader reader = new FileMetricReader(AlgorithmPipeline.getMarshaller(format), conv);
-        reader.addFile(new File(file));
-        return reader;
+    @SuppressWarnings("ConstantConditions")
+    static MetricPipe newPipe() {
+        return PIPE_BUFFER > 0 ? new MetricPipe(PIPE_BUFFER) : new MetricPipe();
     }
 
 }

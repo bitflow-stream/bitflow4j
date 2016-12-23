@@ -1,17 +1,15 @@
 package bitflow4j.main;
 
 import bitflow4j.algorithms.Algorithm;
-import bitflow4j.algorithms.Filter;
-import bitflow4j.algorithms.FilterImpl;
 import bitflow4j.algorithms.NoopAlgorithm;
-import bitflow4j.io.*;
-import bitflow4j.io.aggregate.*;
-import bitflow4j.io.file.FileMetricPrinter;
-import bitflow4j.io.file.FileMetricReader;
+import bitflow4j.filter.Filter;
+import bitflow4j.filter.ThreadedFilter;
+import bitflow4j.io.EmptyOutputStream;
+import bitflow4j.io.MetricInputStream;
+import bitflow4j.io.MetricOutputStream;
+import bitflow4j.io.MetricPipe;
 import bitflow4j.io.fork.AbstractFork;
-import bitflow4j.io.net.TcpMetricsListener;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,72 +20,23 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
 
     private static final Logger logger = Logger.getLogger(BaseAlgorithmPipeline.class.getName());
 
-    private static final int PIPE_BUFFER = 128;
-
-    private final List<Filter> algorithms = new ArrayList<>();
-    private final List<InputStreamProducer> producers = new ArrayList<>();
+    private MetricInputStream inputStream;
+    private final List<Algorithm> algorithms = new ArrayList<>();
     private final List<AlgorithmPipeline> forks = new ArrayList<>();
-    private MetricInputAggregator aggregator;
     private MetricOutputStream outputStream;
-    private Runnable postExecuteRunnable = null;
 
-    private File cacheFolder = null;
-    private boolean printParameterHashes = false;
     private boolean started = false;
-
-    public BaseAlgorithmPipeline(MetricInputAggregator aggregator) {
-        this.aggregator = aggregator;
-    }
-
-    public BaseAlgorithmPipeline(int port, String inputMarshaller) throws IOException {
-        this(port, inputMarshaller, false);
-    }
-
-    public BaseAlgorithmPipeline(int port, String inputMarshaller, boolean assembleSamples) throws IOException {
-        this(assembleSamples ? new ParallelAssemblingAggregator() : new ParallelAggregator());
-        producer(new TcpMetricsListener(port, AlgorithmPipeline.getMarshaller(inputMarshaller)));
-    }
-
-    public BaseAlgorithmPipeline(FileMetricReader fileInput) {
-        this(new SequentialAggregator());
-        producer(fileInput);
-    }
-
-    public BaseAlgorithmPipeline(File csvFile, FileMetricReader.NameConverter conv) throws IOException {
-        this(AlgorithmPipeline.csvFileReader(csvFile, conv));
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    public static MetricPipe newPipe() {
-        return PIPE_BUFFER > 0 ? new MetricPipe(PIPE_BUFFER) : new MetricPipe();
-    }
 
     // ===============================================
     // Inputs ========================================
     // ===============================================
 
     @Override
-    public AlgorithmPipeline input(String name, MetricInputStream input) {
-        aggregator.addInput(name, input);
+    public AlgorithmPipeline input(MetricInputStream input) {
+        if (this.inputStream != null)
+            throw new IllegalStateException("outputStream was already configured");
+        this.inputStream = input;
         return this;
-    }
-
-    @Override
-    public AlgorithmPipeline producer(InputStreamProducer producer) {
-        producers.add(producer);
-        return this;
-    }
-
-    @Override
-    public AlgorithmPipeline cache(File cacheFolder) {
-        this.cacheFolder = cacheFolder;
-        return this;
-    }
-
-    @Override
-    public AlgorithmPipeline cache(File cacheFolder, boolean printParameterHashes) {
-        this.printParameterHashes = true;
-        return cache(cacheFolder);
     }
 
     // ===============================================
@@ -95,22 +44,17 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
     // ===============================================
 
     @Override
-    public AlgorithmPipeline step(Filter algo) {
-        algorithms.add(algo);
-        return this;
-    }
-
-    @Override
     public AlgorithmPipeline step(Algorithm algo) {
-        algorithms.add(new FilterImpl<>(algo));
+        algorithms.add(algo);
         return this;
     }
 
     @Override
     public <T> AlgorithmPipeline fork(AbstractFork<T> fork, ForkHandler<T> handler) {
         fork.setOutputFactory(key -> {
-            MetricPipe pipe = newPipe();
-            BaseAlgorithmPipeline subPipeline = new BaseAlgorithmPipeline(new SingleInputAggregator(pipe));
+            MetricPipe pipe = AlgorithmPipeline.newPipe();
+            BaseAlgorithmPipeline subPipeline = new BaseAlgorithmPipeline();
+            subPipeline.input(pipe);
             handler.buildForkedPipeline(key, subPipeline);
             forks.add(subPipeline);
             if (subPipeline.algorithms.isEmpty() && subPipeline.outputStream != null) {
@@ -125,17 +69,6 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
         return output(fork);
     }
 
-    @Override
-    public AlgorithmPipeline postExecute(Runnable runnable) {
-        postExecuteRunnable = runnable;
-        return this;
-    }
-
-    @Override
-    public AlgorithmPipeline csvOutput(String filename) throws IOException {
-        return fileOutput(filename, "CSV");
-    }
-
     // =========================================
     // Outputs =================================
     // =========================================
@@ -146,34 +79,6 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
             throw new IllegalStateException("outputStream was already configured");
         this.outputStream = outputStream;
         return this;
-    }
-
-    @Override
-    public AlgorithmPipeline consoleOutput(String outputMarshaller) {
-        return output(new MetricPrinter(AlgorithmPipeline.getMarshaller(outputMarshaller)));
-    }
-
-    @Override
-    public AlgorithmPipeline fileOutput(String path, String outputMarshaller) throws IOException {
-        return output(new FileMetricPrinter(path, AlgorithmPipeline.getMarshaller(outputMarshaller)));
-    }
-
-    @Override
-    public AlgorithmPipeline fileOutput(File file, String outputMarshaller) throws IOException {
-        return fileOutput(file.toString(), outputMarshaller);
-    }
-
-    @Override
-    public AlgorithmPipeline emptyOutput() {
-        return output(new EmptyOutputStream());
-    }
-
-    @Override
-    public void waitForOutput() {
-        outputStream.waitUntilClosed();
-        if (postExecuteRunnable != null)
-            postExecuteRunnable.run();
-        forks.forEach(AlgorithmPipeline::waitForOutput);
     }
 
     // =========================================
@@ -191,16 +96,22 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
             return;
         }
         started = true;
-        if (aggregator.size() == 0 && producers.isEmpty()) {
+        if (inputStream == null) {
             throw new IllegalStateException("No inputs selected");
         }
         if (outputStream == null) {
             outputStream = new EmptyOutputStream();
         }
         if (algorithms.size() == 0) {
-            algorithms.add(new FilterImpl<>(new NoopAlgorithm()));
+            step(new NoopAlgorithm());
         }
         this.doRun();
+    }
+
+    @Override
+    public void waitForOutput() {
+        outputStream.waitUntilClosed();
+        forks.forEach(AlgorithmPipeline::waitForOutput);
     }
 
     // =========================================
@@ -208,24 +119,22 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
     // =========================================
 
     private void doRun() throws IOException {
-        for (InputStreamProducer producer : producers)
-            producer.start(aggregator);
-
-        MetricInputStream runningInput = aggregator;
+        MetricInputStream runningInput = inputStream;
         for (int i = 0; i < algorithms.size(); i++) {
-            Filter algo = algorithms.get(i);
+            Algorithm algo = algorithms.get(i);
             MetricInputStream input = runningInput;
             MetricOutputStream output;
 
             if (i < algorithms.size() - 1) {
-                MetricPipe pipe = newPipe();
+                MetricPipe pipe = AlgorithmPipeline.newPipe();
                 runningInput = pipe;
                 output = pipe;
             } else {
-                output = this.outputStream;
+                output = outputStream;
             }
 
-            algo.start(input, output);
+            Filter filter = new ThreadedFilter(input);
+            filter.start(algo, output);
         }
     }
 
