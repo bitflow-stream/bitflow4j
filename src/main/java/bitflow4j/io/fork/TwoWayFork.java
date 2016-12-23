@@ -2,7 +2,6 @@ package bitflow4j.io.fork;
 
 import bitflow4j.Sample;
 import bitflow4j.io.MetricOutputStream;
-import bitflow4j.main.ParameterHash;
 
 import java.io.IOException;
 import java.util.Random;

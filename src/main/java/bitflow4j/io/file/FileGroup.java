@@ -1,7 +1,5 @@
 package bitflow4j.io.file;
 
-import com.google.common.io.ByteArrayDataOutput;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
