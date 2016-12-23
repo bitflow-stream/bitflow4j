@@ -3,7 +3,6 @@ package bitflow4j.algorithms;
 import bitflow4j.Sample;
 import bitflow4j.io.MetricInputStream;
 import bitflow4j.io.MetricOutputStream;
-import bitflow4j.main.ParameterHash;
 
 import java.io.IOException;
 
@@ -30,15 +29,6 @@ public interface Filter<T extends Algorithm> extends AutoCloseable {
 
     @Override
     String toString();
-
-    /**
-     * Unused artifact.
-     * If this method is used again, the call should be delegated to the underlying algorithm.
-     *
-     * @param hash
-     */
-    @Deprecated
-    void hashParameters(ParameterHash hash);
 
     /**
      * This method can be called by the underlying algorithm in order to write a new sample to the Filters output pipe.

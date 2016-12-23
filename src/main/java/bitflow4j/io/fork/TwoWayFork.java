@@ -69,9 +69,4 @@ public class TwoWayFork extends AbstractFork<TwoWayFork.ForkType> {
         }
     }
 
-    @Override
-    public void hashParameters(ParameterHash hash) {
-        super.hashParameters(hash);
-        hash.writeFloat(redirectedPortion);
-    }
 }

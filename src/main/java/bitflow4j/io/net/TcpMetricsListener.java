@@ -93,12 +93,4 @@ public class TcpMetricsListener implements InputStreamProducer {
         return false;
     }
 
-    public void hashParameters(ParameterHash hash) {
-        InputStreamProducer.super.hashParameters(hash);
-        hash.writeInt(maxNumConnections);
-        hash.writeClassName(marshaller);
-        if (tcpSocket != null)
-            hash.writeInt(tcpSocket.getLocalPort());
-    }
-
 }

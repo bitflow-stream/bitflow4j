@@ -44,9 +44,4 @@ public class MultiFork extends AbstractFork<Integer> {
         }
     }
 
-    @Override
-    public void hashParameters(ParameterHash hash) {
-        super.hashParameters(hash);
-        hash.writeInt(numOutputs);
-    }
 }

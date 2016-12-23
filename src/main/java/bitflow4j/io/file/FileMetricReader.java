@@ -131,12 +131,4 @@ public class FileMetricReader implements InputStreamProducer {
         aggregator.producerFinished(this);
     }
 
-    public void hashParameters(ParameterHash hash) {
-        InputStreamProducer.super.hashParameters(hash);
-        for (File file : files)
-            hash.writeChars(file.toString());
-        hash.writeClassName(marshaller);
-        hash.writeClassName(converter);
-    }
-
 }

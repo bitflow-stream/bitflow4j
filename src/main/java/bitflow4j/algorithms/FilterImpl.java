@@ -133,11 +133,6 @@ public class FilterImpl<T extends Algorithm> implements Filter<T> {
     }
 
     @Override
-    public void hashParameters(ParameterHash hash) {
-        if (started) this.algorithm.hashParameters(hash);
-    }
-
-    @Override
     public void writeSample(Sample sample) throws IOException {
         output.writeSample(sample);
     }

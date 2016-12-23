@@ -15,8 +15,4 @@ public interface InputStreamProducer {
      */
     void start(MetricInputAggregator aggregator);
 
-    default void hashParameters(ParameterHash hash) {
-        hash.writeClassName(this);
-    }
-
 }

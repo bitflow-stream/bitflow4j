@@ -108,10 +108,4 @@ public class FileGroup {
         return files;
     }
 
-    public void hashParameters(ByteArrayDataOutput bytes) {
-        bytes.writeChars(folder == null ? "" : folder.toString());
-        bytes.writeChars(fileStart);
-        bytes.writeChars(fileEnd);
-    }
-
 }

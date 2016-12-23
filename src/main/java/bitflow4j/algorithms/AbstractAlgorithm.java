@@ -55,8 +55,4 @@ public abstract class AbstractAlgorithm implements Algorithm {
         return o instanceof AbstractAlgorithm ? ((AbstractAlgorithm) o).getId() == this.getId() : o instanceof Integer ? this.getId() == ((Integer) o).intValue() : false;
     }
 
-    @Override
-    public void hashParameters(ParameterHash hash) {
-        //nothing
-    }
 }

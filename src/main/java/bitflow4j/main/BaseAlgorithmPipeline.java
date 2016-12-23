@@ -90,11 +90,6 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
         return cache(cacheFolder);
     }
 
-    @Override
-    public String getParameterHash() {
-        return getParameterHash(null);
-    }
-
     // ===============================================
     // Algorithms & Forks ============================
     // ===============================================
@@ -118,14 +113,12 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
             BaseAlgorithmPipeline subPipeline = new BaseAlgorithmPipeline(new SingleInputAggregator(pipe));
             handler.buildForkedPipeline(key, subPipeline);
             forks.add(subPipeline);
-            byte inputHash[] = getForkHashBytes(fork, key);
             if (subPipeline.algorithms.isEmpty() && subPipeline.outputStream != null) {
                 // Optimization: If there are no algorithms, skip the entire output and connect the output directly
-                subPipeline.applyCache(inputHash);
                 subPipeline.started = true;
                 return subPipeline.outputStream;
             } else {
-                subPipeline.runApp(inputHash);
+                subPipeline.runApp();
                 return pipe;
             }
         });
@@ -193,17 +186,11 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
         waitForOutput();
     }
 
-    @Override
-    public void runApp() throws IOException {
-        runApp(null);
-    }
-
-    private synchronized void runApp(byte inputHash[]) throws IOException {
+    public synchronized void runApp() throws IOException {
         if (started) {
             return;
         }
         started = true;
-        applyCache(inputHash);
         if (aggregator.size() == 0 && producers.isEmpty()) {
             throw new IllegalStateException("No inputs selected");
         }
@@ -240,53 +227,6 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
 
             algo.start(input, output);
         }
-    }
-
-    private void applyCache(byte inputHash[]) throws IOException {
-        if (cacheFolder == null)
-            return;
-        if (!cacheFolder.isDirectory() && !cacheFolder.mkdirs())
-            throw new IOException("Failed to create cache folder " + cacheFolder);
-
-        String filename = getParameterHash(inputHash) + ".csv";
-        File cacheFile = new File(cacheFolder, filename);
-        CachingMetricOutputStream cacheStream = new CachingMetricOutputStream(cacheFile, outputStream);
-        outputStream = cacheStream;
-
-        if (cacheStream.isCacheHit()) {
-            logger.info("Reading from cache file: " + cacheFile);
-            aggregator = new SequentialAggregator();
-            producers.clear();
-            algorithms.clear();
-            producers.add(cacheStream.getCacheReader());
-        } else {
-            logger.info("Writing cache file: " + cacheFile);
-        }
-    }
-
-    private void hashParameters(ParameterHash hash) {
-        //TODO: are hashParameters used or not ? If so, where?
-        for (InputStreamProducer producer : producers)
-            producer.hashParameters(hash);
-        aggregator.hashParameters(hash);
-        for (Filter algo : algorithms)
-            algo.getAlgorithm().hashParameters(hash);
-    }
-
-    private String getParameterHash(byte inputHash[]) {
-        ParameterHash hash = new ParameterHashImpl(printParameterHashes);
-        if (inputHash != null)
-            hash.write(inputHash);
-        hashParameters(hash);
-        return hash.toFilename();
-    }
-
-    private byte[] getForkHashBytes(AbstractFork<?> fork, Object forkKey) {
-        ParameterHash hash = new ParameterHashImpl(printParameterHashes);
-        hashParameters(hash);
-        fork.hashParameters(hash);
-        hash.writeChars(forkKey.toString());
-        return hash.toByteArray();
     }
 
 }

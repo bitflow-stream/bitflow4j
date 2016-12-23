@@ -28,8 +28,6 @@ public interface AlgorithmPipeline {
 
     AlgorithmPipeline cache(File cacheFolder, boolean printParameterHashes);
 
-    String getParameterHash();
-
     AlgorithmPipeline step(Filter algo);
 
     AlgorithmPipeline step(Algorithm algo);

@@ -31,11 +31,4 @@ public class TcpMetricsDownloader implements InputStreamProducer {
         aggregator.producerFinished(this);
     }
 
-    @Override
-    public void hashParameters(ParameterHash hash) {
-        for (RobustTcpMetricsReader reader : readers) {
-            hash.write(reader.getSource().getBytes());
-        }
-    }
-
 }

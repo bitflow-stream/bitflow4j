@@ -83,9 +83,4 @@ public abstract class AbstractFork<T> extends AbstractOutputStream {
         return result;
     }
 
-    public void hashParameters(ParameterHash hash) {
-        hash.writeClassName(this);
-        hash.writeClassName(outputFactory);
-    }
-
 }

@@ -24,11 +24,6 @@ public interface Algorithm extends AutoCloseable {
 //    @Deprecated
 //    void start(MetricInputStream input, MetricOutputStream output) throws IOException;
 
-//    @Deprecated
-//    default void hashParameters(ParameterHash hash) {
-//        hash.writeChars(toString());
-//    }
-
     AlgorithmModel<?> getModel();
 
     void setModel(AlgorithmModel<?> model);
@@ -44,6 +39,4 @@ public interface Algorithm extends AutoCloseable {
     @Override
     void close() throws IOException;
 
-    @Deprecated
-    void hashParameters(ParameterHash hash);
 }

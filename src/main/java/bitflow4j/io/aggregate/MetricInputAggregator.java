@@ -69,8 +69,4 @@ public abstract class MetricInputAggregator implements MetricInputStream {
         }
     }
 
-    public void hashParameters(ParameterHash hash) {
-        hash.writeClassName(this);
-    }
-
 }
