@@ -54,13 +54,6 @@ public class BinaryMarshaller extends AbstractMarshaller {
         try {
             DataInputStream data = new DataInputStream(input);
 
-            byte[] sampleStart = new byte[BIN_SAMPLE_START.length];
-            data.readFully(sampleStart);
-            if (!Arrays.equals(sampleStart, BIN_SAMPLE_START)) {
-                throw new IOException("Bitflow binary protocol error: Expected sample start ('" + new String(BIN_SAMPLE_START) +
-                        "'), but received '" + new String(sampleStart) + "')");
-            }
-
             Date timestamp = new Date(data.readLong() / 1000000);
             String tags = null;
             if (header.hasTags) {
@@ -74,6 +67,15 @@ public class BinaryMarshaller extends AbstractMarshaller {
             return Sample.unmarshallSample(header, metrics, timestamp, tags);
         } catch (EOFException exc) {
             throw new InputStreamClosedException(exc);
+        }
+    }
+
+    protected void readSampleStart(DataInputStream data) throws IOException {
+        byte[] sampleStart = new byte[BIN_SAMPLE_START.length];
+        data.readFully(sampleStart);
+        if (!Arrays.equals(sampleStart, BIN_SAMPLE_START)) {
+            throw new IOException("Bitflow binary protocol error: Expected sample start ('" + new String(BIN_SAMPLE_START) +
+                    "'), but received '" + new String(sampleStart) + "')");
         }
     }
 

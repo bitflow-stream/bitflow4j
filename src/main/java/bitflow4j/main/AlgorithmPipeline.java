@@ -1,9 +1,6 @@
 package bitflow4j.main;
 
-import bitflow4j.BinaryMarshaller;
-import bitflow4j.CsvMarshaller;
-import bitflow4j.Marshaller;
-import bitflow4j.TextMarshaller;
+import bitflow4j.*;
 import bitflow4j.algorithms.Algorithm;
 import bitflow4j.io.*;
 import bitflow4j.io.file.FileMetricPrinter;
@@ -100,6 +97,8 @@ public interface AlgorithmPipeline {
                 return new CsvMarshaller();
             case "BIN":
                 return new BinaryMarshaller();
+            case "BINOLD":
+                return new OldBinaryMarshaller();
             case "TXT":
                 return new TextMarshaller();
             default:

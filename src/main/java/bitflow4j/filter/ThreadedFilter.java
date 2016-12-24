@@ -37,7 +37,11 @@ public class ThreadedFilter implements Filter {
         if (startedStacktrace != null) {
             throw new IllegalStateException("Algorithm was already started: " + toString(), startedStacktrace);
         }
-        this.algorithm.setOutput(output);
+        if (algorithm == null) {
+            throw new NullPointerException("Algorithm instance is null");
+        }
+        this.algorithm = algorithm;
+        algorithm.setOutput(output);
         startedStacktrace = new Exception("This is the stack when first starting this algorithm");
         logger.info("Starting " + this + "...");
         Runner thread = new Runner();

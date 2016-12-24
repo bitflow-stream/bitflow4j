@@ -3,7 +3,6 @@ package bitflow4j.io.net;
 import bitflow4j.Marshaller;
 import bitflow4j.io.ActiveInputStream;
 import bitflow4j.io.MetricReader;
-import bitflow4j.io.aggregate.MetricInputAggregator;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -21,7 +20,6 @@ public class TcpMetricsListener extends ActiveInputStream {
     private final int maxNumConnections;
     private final Marshaller marshaller;
     private final ServerSocket tcpSocket;
-    private MetricInputAggregator aggregator;
 
     public TcpMetricsListener(int port, Marshaller marshaller) throws IOException {
         this(port, marshaller, 1);
@@ -32,10 +30,6 @@ public class TcpMetricsListener extends ActiveInputStream {
         this.marshaller = marshaller;
         this.tcpSocket = new ServerSocket(port);
         logger.info("Listening on port " + port);
-    }
-
-    public void start(MetricInputAggregator aggregator) {
-        this.aggregator = aggregator;
         forkAcceptConnections();
     }
 
