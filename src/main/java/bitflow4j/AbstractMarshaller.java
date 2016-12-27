@@ -2,7 +2,6 @@ package bitflow4j;
 
 import bitflow4j.io.InputStreamClosedException;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -21,7 +20,6 @@ public abstract class AbstractMarshaller implements Marshaller {
     static String readLine(InputStream input) throws IOException {
         int chr;
         StringBuilder buffer = new StringBuilder(512);
-
         while ((chr = input.read()) != lineSep) {
             if (chr < 0) {
                 throw new InputStreamClosedException();
@@ -31,15 +29,26 @@ public abstract class AbstractMarshaller implements Marshaller {
         return buffer.toString();
     }
 
-    static byte[] peek(BufferedInputStream input, int numBytes) throws IOException {
+    static byte[] peek(InputStream input, int numBytes) throws IOException {
+        if (!input.markSupported())
+            throw new IllegalArgumentException("Cannot peek from a " + input.getClass().getName() + ", since it does not support mark/reset");
+
         input.mark(numBytes);
         byte[] readBytes = new byte[numBytes];
+
         try {
-            int readNum = input.read(readBytes);
-            if (readNum <= 0)
-                throw new InputStreamClosedException();
-            else if (readNum != readBytes.length)
-                throw new IOException("While trying to peek " + numBytes + " bytes, received only " + readNum);
+            int n = 0;
+            while (n < numBytes) {
+                int count = input.read(readBytes, n, numBytes - n);
+                if (count < 0) {
+                    if (n == 0) {
+                        throw new InputStreamClosedException();
+                    } else {
+                        throw new IOException("While trying to peek " + numBytes + " bytes, got EOF after " + n);
+                    }
+                }
+                n += count;
+            }
             return readBytes;
         } finally {
             input.reset();

@@ -17,11 +17,12 @@ public class BinaryMarshaller extends AbstractMarshaller {
 
     private final String BIN_HEADER_TIME = "timB";
     private final String BIN_HEADER_TAGS = "tags";
-    private final byte[] BIN_SAMPLE_START = "X".getBytes(); // Must not collide with BIN_HEADER_TIME, and be shorter.
+    private final byte[] BIN_SAMPLE_START = "X".getBytes(); // Must not collide with BIN_HEADER_TIME, and should be shorter
 
-    public boolean peekIsHeader(BufferedInputStream input) throws IOException {
+    public boolean peekIsHeader(InputStream input) throws IOException {
         byte peeked[] = peek(input, BIN_HEADER_TIME.length());
-        if (Arrays.equals(Arrays.copyOf(peeked, BIN_SAMPLE_START.length), BIN_SAMPLE_START)) {
+        byte shorterCopy[] = Arrays.copyOf(peeked, BIN_SAMPLE_START.length);
+        if (Arrays.equals(shorterCopy, BIN_SAMPLE_START)) {
             return false;
         } else if (Arrays.equals(peeked, BIN_HEADER_TIME.getBytes())) {
             return true;
@@ -53,6 +54,7 @@ public class BinaryMarshaller extends AbstractMarshaller {
     public Sample unmarshallSample(InputStream input, Header header) throws IOException {
         try {
             DataInputStream data = new DataInputStream(input);
+            readSampleStart(data);
 
             Date timestamp = new Date(data.readLong() / 1000000);
             String tags = null;

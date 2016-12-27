@@ -19,11 +19,11 @@ public class MetricReader implements MetricInputStream {
     private static final Logger logger = Logger.getLogger(MetricReader.class.getName());
 
     private final Marshaller marshaller;
-    private final BufferedInputStream input;
+    private final InputStream input;
     public final String sourceName;
     private Header header = null;
 
-    public MetricReader(InputStream input, String sourceName, Marshaller marshaller) throws IOException {
+    public MetricReader(InputStream input, String sourceName, Marshaller marshaller) {
         this.marshaller = marshaller;
         this.sourceName = sourceName;
         this.input = new BufferedInputStream(input);

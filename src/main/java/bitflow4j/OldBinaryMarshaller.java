@@ -1,8 +1,8 @@
 package bitflow4j;
 
-import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 
 /**
@@ -16,7 +16,7 @@ public class OldBinaryMarshaller extends BinaryMarshaller {
 
     static final String OLD_BIN_HEADER_TIME = "time";
 
-    public boolean peekIsHeader(BufferedInputStream input) throws IOException {
+    public boolean peekIsHeader(InputStream input) throws IOException {
         // This format cannot correctly distinguish between a header and a sample
         // if the binary timestamp happens to collide with the bytes for the string "time".
         byte peeked[] = peek(input, OLD_BIN_HEADER_TIME.length());

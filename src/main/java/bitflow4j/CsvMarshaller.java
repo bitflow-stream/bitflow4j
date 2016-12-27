@@ -1,6 +1,5 @@
 package bitflow4j;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -30,7 +29,7 @@ public class CsvMarshaller extends AbstractMarshaller {
 
     public final SimpleDateFormat date_formatter = newDateFormatter();
 
-    public boolean peekIsHeader(BufferedInputStream input) throws IOException {
+    public boolean peekIsHeader(InputStream input) throws IOException {
         byte peeked[] = peek(input, CSV_HEADER_TIME.length());
         return Arrays.equals(peeked, CSV_HEADER_TIME.getBytes());
     }
@@ -63,7 +62,7 @@ public class CsvMarshaller extends AbstractMarshaller {
         String timestampAsString = metricStrings[0];
         try {
             if (timestampAsString.length() < dateLength) {
-                throw new IOException("Failed to parse timestamp field");
+                throw new IOException("CSV timestamp field is too short: " + timestampAsString);
             }
             timestamp = date_formatter.parse(timestampAsString.substring(0, dateLength));
         } catch (ParseException exc) {
@@ -107,7 +106,7 @@ public class CsvMarshaller extends AbstractMarshaller {
     public void marshallHeader(OutputStream output, Header header) throws IOException {
         output.write(CSV_HEADER_TIME.getBytes());
         if (header.hasTags) {
-            output.write(lineSepBytes);
+            output.write(separatorBytes);
             output.write(CSV_HEADER_TAGS.getBytes());
         }
 

@@ -1,6 +1,5 @@
 package bitflow4j;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -18,7 +17,7 @@ public class TextMarshaller extends AbstractMarshaller implements Marshaller {
     private static final byte[] OPEN_BYTES = " (".getBytes();
     private static final byte[] CLOSE_BYTES = ")".getBytes();
 
-    public boolean peekIsHeader(BufferedInputStream input) throws IOException {
+    public boolean peekIsHeader(InputStream input) throws IOException {
         throw new UnsupportedOperationException("TextMarshaller does not support unmarshalling");
     }
 

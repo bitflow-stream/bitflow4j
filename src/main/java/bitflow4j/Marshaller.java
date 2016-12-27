@@ -1,6 +1,5 @@
 package bitflow4j;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -21,7 +20,7 @@ public interface Marshaller {
      * @param input The buffered byte stream to peek into.
      * @return whether the next
      */
-    boolean peekIsHeader(BufferedInputStream input) throws IOException;
+    boolean peekIsHeader(InputStream input) throws IOException;
 
     /**
      * Receive and parse a Header. This should be the first method to read from the given input stream.
