@@ -2,6 +2,7 @@ package bitflow4j.io.net;
 
 import bitflow4j.Marshaller;
 import bitflow4j.io.ActiveInputStream;
+import bitflow4j.main.TaskPool;
 
 import java.net.URISyntaxException;
 
@@ -10,9 +11,9 @@ import java.net.URISyntaxException;
  */
 public class TcpMetricsDownloader extends ActiveInputStream {
 
-    public TcpMetricsDownloader(String[] tcpSources, Marshaller marshaller) throws URISyntaxException {
+    public TcpMetricsDownloader(TaskPool pool, String[] tcpSources, Marshaller marshaller) throws URISyntaxException {
         for (String source : tcpSources) {
-            new ReaderThread(source, new TcpMetricsReader(source, marshaller)).start();
+            readSamples(pool, source, new TcpMetricsReader(source, marshaller));
         }
     }
 

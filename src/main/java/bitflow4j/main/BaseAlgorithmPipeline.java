@@ -11,6 +11,7 @@ import bitflow4j.io.MetricPipe;
 import bitflow4j.io.fork.AbstractFork;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -22,21 +23,38 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
 
     private MetricInputStream inputStream;
     private final List<Algorithm> algorithms = new ArrayList<>();
-    private final List<AlgorithmPipeline> forks = new ArrayList<>();
+    private final List<BaseAlgorithmPipeline> forks = new ArrayList<>();
     private MetricOutputStream outputStream;
 
+    private final TaskPool pool;
     private boolean started = false;
+
+    public BaseAlgorithmPipeline(TaskPool pool) {
+        this.pool = pool;
+    }
+
+    public BaseAlgorithmPipeline() {
+        this(new TaskPool());
+    }
 
     // ===============================================
     // Inputs ========================================
     // ===============================================
 
     @Override
-    public AlgorithmPipeline input(MetricInputStream input) {
+    public BaseAlgorithmPipeline input(MetricInputStream input) {
         if (this.inputStream != null)
             throw new IllegalStateException("outputStream was already configured");
         this.inputStream = input;
         return this;
+    }
+
+    public BaseAlgorithmPipeline inputListen(int port, String format) throws IOException {
+        return (BaseAlgorithmPipeline) inputListen(pool, port, format);
+    }
+
+    public BaseAlgorithmPipeline inputDownload(String sources[], String format) throws URISyntaxException {
+        return (BaseAlgorithmPipeline) inputDownload(pool, sources, format);
     }
 
     // ===============================================
@@ -53,7 +71,7 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
     public <T> AlgorithmPipeline fork(AbstractFork<T> fork, ForkHandler<T> handler) {
         fork.setOutputFactory(key -> {
             MetricPipe pipe = AlgorithmPipeline.newPipe();
-            BaseAlgorithmPipeline subPipeline = new BaseAlgorithmPipeline();
+            BaseAlgorithmPipeline subPipeline = new BaseAlgorithmPipeline(pool);
             subPipeline.input(pipe);
             handler.buildForkedPipeline(key, subPipeline);
             forks.add(subPipeline);
@@ -89,9 +107,10 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
     public void runAndWait() throws IOException {
         runApp();
         waitForOutput();
+        pool.waitForTasks();
     }
 
-    public synchronized void runApp() throws IOException {
+    private synchronized void runApp() throws IOException {
         if (started) {
             return;
         }
@@ -108,10 +127,9 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
         this.doRun();
     }
 
-    @Override
-    public void waitForOutput() {
+    private void waitForOutput() {
         outputStream.waitUntilClosed();
-        forks.forEach(AlgorithmPipeline::waitForOutput);
+        forks.forEach(BaseAlgorithmPipeline::waitForOutput);
     }
 
     // =========================================
@@ -133,7 +151,7 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
                 output = outputStream;
             }
 
-            Filter filter = new ThreadedFilter(input);
+            Filter filter = new ThreadedFilter(pool, input);
             filter.start(algo, output);
         }
     }

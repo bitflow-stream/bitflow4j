@@ -6,10 +6,12 @@ import bitflow4j.io.*;
 import bitflow4j.io.file.FileMetricPrinter;
 import bitflow4j.io.file.FileMetricReader;
 import bitflow4j.io.fork.AbstractFork;
+import bitflow4j.io.net.TcpMetricsDownloader;
 import bitflow4j.io.net.TcpMetricsListener;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 /**
  * Created by Malcolm-X on 14.12.2016.
@@ -39,8 +41,12 @@ public interface AlgorithmPipeline {
         return inputFiles("CSV", files);
     }
 
-    default AlgorithmPipeline inputListen(int port, String format) throws IOException {
-        return input(new TcpMetricsListener(port, AlgorithmPipeline.getMarshaller(format)));
+    default AlgorithmPipeline inputListen(TaskPool pool, int port, String format) throws IOException {
+        return input(new TcpMetricsListener(pool, port, AlgorithmPipeline.getMarshaller(format)));
+    }
+
+    default AlgorithmPipeline inputDownload(TaskPool pool, String sources[], String format) throws URISyntaxException {
+        return input(new TcpMetricsDownloader(pool, sources, AlgorithmPipeline.getMarshaller(format)));
     }
 
     // ============== Steps ==============
@@ -83,11 +89,7 @@ public interface AlgorithmPipeline {
 
     // ============== Execute ==============
 
-    void waitForOutput();
-
     void runAndWait() throws IOException;
-
-    void runApp() throws IOException;
 
     // ============== Helpers ==============
 

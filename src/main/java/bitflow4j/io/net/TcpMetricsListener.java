@@ -3,6 +3,7 @@ package bitflow4j.io.net;
 import bitflow4j.Marshaller;
 import bitflow4j.io.ActiveInputStream;
 import bitflow4j.io.MetricReader;
+import bitflow4j.main.TaskPool;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -20,12 +21,14 @@ public class TcpMetricsListener extends ActiveInputStream {
     private final int maxNumConnections;
     private final Marshaller marshaller;
     private final ServerSocket tcpSocket;
+    private final TaskPool pool;
 
-    public TcpMetricsListener(int port, Marshaller marshaller) throws IOException {
-        this(port, marshaller, 1);
+    public TcpMetricsListener(TaskPool pool, int port, Marshaller marshaller) throws IOException {
+        this(pool, port, marshaller, -1);
     }
 
-    public TcpMetricsListener(int port, Marshaller marshaller, int numConnections) throws IOException {
+    public TcpMetricsListener(TaskPool pool, int port, Marshaller marshaller, int numConnections) throws IOException {
+        this.pool = pool;
         this.maxNumConnections = numConnections;
         this.marshaller = marshaller;
         this.tcpSocket = new ServerSocket(port);
@@ -34,13 +37,7 @@ public class TcpMetricsListener extends ActiveInputStream {
     }
 
     private void forkAcceptConnections() {
-        Thread t = new Thread() {
-            public void run() {
-                TcpMetricsListener.this.acceptConnections();
-            }
-        };
-        t.setDaemon(true);
-        t.start();
+        pool.startDaemon("TCP listener on " + tcpSocket, this::acceptConnections);
     }
 
     private void acceptConnections() {
@@ -69,7 +66,7 @@ public class TcpMetricsListener extends ActiveInputStream {
     private String acceptConnection(Socket socket) throws IOException {
         String remote = socket.getRemoteSocketAddress().toString(); // TODO try reverse DNS? More descriptive name?
         MetricReader input = new MetricReader(socket.getInputStream(), remote, marshaller);
-        new ReaderThread(remote, input).start();
+        readSamples(pool, remote, input);
         return remote;
     }
 

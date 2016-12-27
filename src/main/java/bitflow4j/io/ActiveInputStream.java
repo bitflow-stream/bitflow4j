@@ -1,6 +1,8 @@
 package bitflow4j.io;
 
 import bitflow4j.Sample;
+import bitflow4j.io.net.TcpMetricsReader;
+import bitflow4j.main.TaskPool;
 
 import java.io.IOException;
 import java.util.logging.Level;
@@ -25,21 +27,33 @@ public abstract class ActiveInputStream implements MetricInputStream {
         return pipe.readSample();
     }
 
-    protected class ReaderThread extends Thread {
+    protected void readSamples(TaskPool pool, String name, MetricInputStream input) {
+        pool.start(name, new SampleReader(name, input));
+    }
+
+    private class SampleReader implements TaskPool.InterruptibleRunnable {
 
         private final MetricInputStream input;
         private final String name;
 
-        public ReaderThread(String name, MetricInputStream input) {
+        public SampleReader(String name, MetricInputStream input) {
             this.input = input;
             this.name = name;
         }
 
-        public void run() {
-            while (true) {
+        public void run(TaskPool.Wait wait) {
+            // TODO Kind of a hack
+            if (input instanceof TcpMetricsReader) {
+                ((TcpMetricsReader) input).useTaskPool(wait);
+            }
+            while (wait.running()) {
                 try {
                     Sample sample = input.readSample();
-                    pipe.writeSample(sample);
+                    if (wait.running())
+                        pipe.writeSample(sample);
+                } catch (InputStreamClosedException e) {
+                    logger.info("Input " + name + " closed");
+                    return;
                 } catch (IOException e) {
                     logger.log(Level.SEVERE, "Error reading from " + name, e);
                     return;

@@ -5,6 +5,7 @@ import bitflow4j.algorithms.Algorithm;
 import bitflow4j.io.InputStreamClosedException;
 import bitflow4j.io.MetricInputStream;
 import bitflow4j.io.MetricOutputStream;
+import bitflow4j.main.TaskPool;
 
 import java.io.IOException;
 import java.util.logging.Level;
@@ -18,13 +19,15 @@ public class ThreadedFilter implements Filter {
 
     private static final Logger logger = Logger.getLogger(ThreadedFilter.class.getName());
 
+    private final TaskPool pool;
     MetricInputStream input;
     private Algorithm algorithm;
     private Exception startedStacktrace = null;
     public boolean catchExceptions = false;
 
-    public ThreadedFilter(MetricInputStream input) {
+    public ThreadedFilter(TaskPool pool, MetricInputStream input) {
         this.input = input;
+        this.pool = pool;
     }
 
     public Filter catchExceptions() {
@@ -44,10 +47,7 @@ public class ThreadedFilter implements Filter {
         algorithm.setOutput(output);
         startedStacktrace = new Exception("This is the stack when first starting this algorithm");
         logger.info("Starting " + this + "...");
-        Runner thread = new Runner();
-        thread.setDaemon(false);
-        thread.setName("Algorithm Thread '" + this + "'");
-        thread.start();
+        pool.start(toString(), this::safeExecute);
     }
 
     @SuppressWarnings("InfiniteLoopStatement")
@@ -70,6 +70,25 @@ public class ThreadedFilter implements Filter {
         }
     }
 
+    private void safeExecute() {
+        String name = algorithm.toString();
+        try {
+            ThreadedFilter.this.execute();
+        } catch (InputStreamClosedException exc) {
+            logger.info("Input closed for algorithm " + name);
+        } catch (IOException exc) {
+            logger.severe("Error in " + name);
+            exc.printStackTrace();
+        } finally {
+            logger.info(name + " finished");
+            try {
+                close();
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, "Error closing algorithm " + algorithm, e);
+            }
+        }
+    }
+
     @Override
     public void close() throws IOException {
         Filter.closeAlgorithm(algorithm);
@@ -83,27 +102,6 @@ public class ThreadedFilter implements Filter {
             return "Unstarted ThreadedFilter";
         else
             return "ThreadedFilter for algorithm: " + algorithm;
-    }
-
-    private class Runner extends Thread {
-        public void run() {
-            String name = ThreadedFilter.this.algorithm.toString();
-            try {
-                ThreadedFilter.this.execute();
-            } catch (InputStreamClosedException exc) {
-                logger.info("Input closed for algorithm " + name);
-            } catch (Throwable exc) {
-                logger.severe("Error in " + getName());
-                exc.printStackTrace();
-            } finally {
-                logger.info(name + " finished");
-                try {
-                    close();
-                } catch (IOException e) {
-                    logger.log(Level.SEVERE, "Error closing algorithm " + algorithm, e);
-                }
-            }
-        }
     }
 
 }

@@ -5,6 +5,7 @@ import bitflow4j.Sample;
 import bitflow4j.io.InputStreamClosedException;
 import bitflow4j.io.MetricInputStream;
 import bitflow4j.io.MetricReader;
+import bitflow4j.main.TaskPool;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -25,6 +26,7 @@ public class TcpMetricsReader implements MetricInputStream {
     private MetricReader currentReader;
     private Socket currentSocket;
     public long retryTimeoutMillis = 1000;
+    private TaskPool.Wait wait;
 
     public TcpMetricsReader(String tcpSource, Marshaller marshaller) throws URISyntaxException {
         URI uri = new URI("protocol://" + tcpSource);
@@ -40,9 +42,22 @@ public class TcpMetricsReader implements MetricInputStream {
         this.port = port;
     }
 
+    public TcpMetricsReader useTaskPool(TaskPool.Wait wait) {
+        this.wait = wait;
+        return this;
+    }
+
+    private void checkShutdown() throws IOException {
+        // TODO somehow shutdown more gracefully. Maybe add special exception.
+        if (wait != null && !wait.running()) {
+            throw new IOException("Shutting down");
+        }
+    }
+
     @Override
     public Sample readSample() throws IOException {
         while (true) {
+            checkShutdown();
             if (currentReader == null) {
                 try {
                     currentSocket = new Socket(host, port);
@@ -52,6 +67,7 @@ public class TcpMetricsReader implements MetricInputStream {
                     closeSocket();
                 }
             }
+            checkShutdown();
             if (currentReader != null) {
                 try {
                     return currentReader.readSample();
@@ -60,14 +76,19 @@ public class TcpMetricsReader implements MetricInputStream {
                     logger.info("Connection with " + getSource() + " closed.");
                     closeSocket();
                 } catch (IOException e) {
-                    logger.fine("Error reading from " + getSource() + ": " + e);
+                    logger.warning("Error reading from " + getSource() + ": " + e);
                     closeSocket();
                 }
             }
-            try {
-                Thread.sleep(retryTimeoutMillis);
-            } catch (InterruptedException e) {
-                // Ignore
+            if (wait != null) {
+                wait.sleep(retryTimeoutMillis);
+                checkShutdown();
+            } else {
+                try {
+                    Thread.sleep(retryTimeoutMillis);
+                } catch (InterruptedException e) {
+                    // Ignore
+                }
             }
         }
     }
