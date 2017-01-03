@@ -3,6 +3,7 @@ package bitflow4j.main;
 import bitflow4j.algorithms.Algorithm;
 import bitflow4j.algorithms.NoopAlgorithm;
 import bitflow4j.filter.Filter;
+import bitflow4j.filter.SimpleFilter;
 import bitflow4j.filter.ThreadedFilter;
 import bitflow4j.io.EmptyOutputStream;
 import bitflow4j.io.MetricInputStream;
@@ -21,6 +22,7 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
 
     private static final Logger logger = Logger.getLogger(BaseAlgorithmPipeline.class.getName());
 
+    private boolean parallel = false;
     private MetricInputStream inputStream;
     private final List<Algorithm> algorithms = new ArrayList<>();
     private final List<BaseAlgorithmPipeline> forks = new ArrayList<>();
@@ -35,6 +37,11 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
 
     public BaseAlgorithmPipeline() {
         this(new TaskPool());
+    }
+
+    public BaseAlgorithmPipeline parallel() {
+        parallel = true;
+        return this;
     }
 
     // ===============================================
@@ -71,20 +78,25 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
     public <T> AlgorithmPipeline fork(AbstractFork<T> fork, ForkHandler<T> handler) {
         fork.setOutputFactory(key -> {
             MetricPipe pipe = AlgorithmPipeline.newPipe();
-            BaseAlgorithmPipeline subPipeline = new BaseAlgorithmPipeline(pool);
+            BaseAlgorithmPipeline subPipeline = newSubpipeline();
             subPipeline.input(pipe);
             handler.buildForkedPipeline(key, subPipeline);
-            forks.add(subPipeline);
             if (subPipeline.algorithms.isEmpty() && subPipeline.outputStream != null) {
                 // Optimization: If there are no algorithms, skip the entire output and connect the output directly
                 subPipeline.started = true;
                 return subPipeline.outputStream;
             } else {
-                subPipeline.runApp();
+                subPipeline.run();
                 return pipe;
             }
         });
         return output(fork);
+    }
+
+    public BaseAlgorithmPipeline newSubpipeline() {
+        BaseAlgorithmPipeline subPipeline = new BaseAlgorithmPipeline(pool);
+        forks.add(subPipeline);
+        return subPipeline;
     }
 
     // =========================================
@@ -105,18 +117,18 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
 
     @Override
     public void runAndWait() throws IOException {
-        runApp();
+        run();
         waitForOutput();
         pool.waitForTasks();
     }
 
-    private synchronized void runApp() throws IOException {
+    public synchronized void run() throws IOException {
         if (started) {
             return;
         }
         started = true;
         if (inputStream == null) {
-            throw new IllegalStateException("No inputs selected");
+            logger.warning("Pipeline running without active input stream");
         }
         if (outputStream == null) {
             outputStream = new EmptyOutputStream();
@@ -124,19 +136,37 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
         if (algorithms.size() == 0) {
             step(new NoopAlgorithm());
         }
-        this.doRun();
+
+        if (parallel)
+            doRunParallel();
+        else
+            doRunRecursive();
     }
+
+
+    // =========================================
+    // Private =================================
+    // =========================================
 
     private void waitForOutput() {
         outputStream.waitUntilClosed();
         forks.forEach(BaseAlgorithmPipeline::waitForOutput);
     }
 
-    // =========================================
-    // Private =================================
-    // =========================================
+    private void doRunRecursive() throws IOException {
+        MetricOutputStream output = outputStream;
+        for (int i = algorithms.size() - 1; i > 0; i--) {
+            Algorithm algo = algorithms.get(i);
+            Filter filter = new SimpleFilter();
+            filter.start(algo, output);
+            output = algo;
+        }
+        // Only one thread is started, which will pull samples from the input
+        // and push them through the entire stack of Algorithms.
+        startThreadedAlgorithm(inputStream, output, algorithms.get(0));
+    }
 
-    private void doRun() throws IOException {
+    private void doRunParallel() throws IOException {
         MetricInputStream runningInput = inputStream;
         for (int i = 0; i < algorithms.size(); i++) {
             Algorithm algo = algorithms.get(i);
@@ -151,9 +181,18 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
                 output = outputStream;
             }
 
-            Filter filter = new ThreadedFilter(pool, input);
-            filter.start(algo, output);
+            startThreadedAlgorithm(input, output, algo);
         }
+    }
+
+    private void startThreadedAlgorithm(MetricInputStream input, MetricOutputStream output, Algorithm algo) throws IOException {
+        Filter filter;
+        if (input == null) {
+            filter = new SimpleFilter();
+        } else {
+            filter = new ThreadedFilter(pool, input);
+        }
+        filter.start(algo, output);
     }
 
 }
