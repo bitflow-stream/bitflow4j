@@ -105,19 +105,33 @@ public class FileMetricReader implements MetricInputStream {
                 });
     }
 
-    public void addFile(String path) throws IOException {
-        String source = converter == null ? null : converter.convert(new File(path));
+    public void addFileGroup(String path) throws IOException {
         FileGroup group = new FileGroup(path);
         Collection<String> fileNames = group.listFiles();
         if (fileNames.isEmpty())
             throw new IOException("File not found: " + path);
         for (String filename : fileNames) {
-            File file = new File(filename);
-            files.add(file);
-            InputStream fileInput = new FileInputStream(file);
-            MetricReader reader = new MetricReader(fileInput, source, marshaller);
-            inputs.add(reader);
+            addFile(path, filename);
         }
+    }
+
+    public void addFileGroup(File file) throws IOException {
+        addFileGroup(file.toString());
+    }
+
+    private void addFile(String inputNameBase, String path) throws IOException {
+        File file = new File(path);
+        if (!file.exists())
+            throw new IOException("File not found: " + path);
+        files.add(file);
+        InputStream fileInput = new FileInputStream(file);
+        String source = converter == null ? null : converter.convert(new File(inputNameBase));
+        MetricReader reader = new MetricReader(fileInput, source, marshaller);
+        inputs.add(reader);
+    }
+
+    public void addFile(String path) throws IOException {
+        addFile(path, path);
     }
 
     public void addFile(File file) throws IOException {
