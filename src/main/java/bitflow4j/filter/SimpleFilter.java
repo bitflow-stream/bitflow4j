@@ -27,12 +27,6 @@ public class SimpleFilter implements Filter {
     }
 
     @Override
-    public void close() throws Exception {
-        Filter.closeAlgorithm(algorithm);
-        algorithm = null;
-    }
-
-    @Override
     public String toString() {
         if (algorithm == null)
             return "Unstarted SimpleFilter";

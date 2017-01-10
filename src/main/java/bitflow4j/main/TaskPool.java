@@ -98,7 +98,6 @@ public class TaskPool {
     }
 
     public void waitForTasks() {
-        wait.waitForShutdown();
         for (Runner runner : runners) {
             while (true) {
                 try {

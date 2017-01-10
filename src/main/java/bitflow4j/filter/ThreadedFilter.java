@@ -50,6 +50,21 @@ public class ThreadedFilter implements Filter {
         pool.start(toString(), this::safeExecute);
     }
 
+    private void safeExecute() {
+        String name = algorithm.toString();
+        try {
+            ThreadedFilter.this.execute();
+        } catch (InputStreamClosedException exc) {
+            logger.info("Input closed for algorithm " + name);
+        } catch (IOException exc) {
+            logger.severe("Error in " + name);
+            exc.printStackTrace();
+        } finally {
+            logger.info(name + " finished");
+            close();
+        }
+    }
+
     @SuppressWarnings("InfiniteLoopStatement")
     private void execute() throws IOException {
         while (true) {
@@ -57,7 +72,6 @@ public class ThreadedFilter implements Filter {
                 Sample sample = input.readSample();
                 algorithm.writeSample(sample);
             } catch (InputStreamClosedException exc) {
-                close();
                 throw exc;
             } catch (IOException exc) {
                 if (catchExceptions) {
@@ -70,29 +84,16 @@ public class ThreadedFilter implements Filter {
         }
     }
 
-    private void safeExecute() {
-        String name = algorithm.toString();
-        try {
-            ThreadedFilter.this.execute();
-        } catch (InputStreamClosedException exc) {
-            logger.info("Input closed for algorithm " + name);
-        } catch (IOException exc) {
-            logger.severe("Error in " + name);
-            exc.printStackTrace();
-        } finally {
-            logger.info(name + " finished");
+    private void close() {
+        if (algorithm != null) {
             try {
-                close();
+                algorithm.close();
+                algorithm.waitUntilClosed();
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Error closing algorithm " + algorithm, e);
             }
+            algorithm = null;
         }
-    }
-
-    @Override
-    public void close() throws IOException {
-        Filter.closeAlgorithm(algorithm);
-        algorithm = null;
         startedStacktrace = null;
     }
 

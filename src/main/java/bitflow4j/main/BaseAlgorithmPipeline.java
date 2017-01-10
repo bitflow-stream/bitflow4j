@@ -119,6 +119,7 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
     public void runAndWait() throws IOException {
         run();
         waitForOutput();
+        pool.stop("Algorithms finished");
         pool.waitForTasks();
     }
 
