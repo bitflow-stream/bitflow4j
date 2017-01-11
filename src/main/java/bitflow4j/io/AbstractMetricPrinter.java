@@ -6,6 +6,8 @@ import bitflow4j.Sample;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Implements MetricOutputStream using an instance Marshaller to marshall Sample instances
@@ -14,6 +16,8 @@ import java.io.OutputStream;
  * Created by anton on 4/6/16.
  */
 public abstract class AbstractMetricPrinter extends AbstractOutputStream {
+
+    private static final Logger logger = Logger.getLogger(AbstractMetricPrinter.class.getName());
 
     private final Marshaller marshaller;
     protected OutputStream output = null;
@@ -30,6 +34,7 @@ public abstract class AbstractMetricPrinter extends AbstractOutputStream {
         OutputStream output = this.output; // Avoid race condition
         try {
             if (output == null || sample.headerChanged(lastHeader)) {
+                closeStream();
                 this.output = nextOutputStream();
                 output = this.output;
                 marshaller.marshallHeader(output, header);
@@ -46,7 +51,11 @@ public abstract class AbstractMetricPrinter extends AbstractOutputStream {
         OutputStream output = this.output; // Avoid race condition
         if (output != null) {
             this.output = null;
-            output.close();
+            try {
+                output.close();
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, "Failed to close output stream", e);
+            }
         }
     }
 
