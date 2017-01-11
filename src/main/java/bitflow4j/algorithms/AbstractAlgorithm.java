@@ -1,5 +1,6 @@
 package bitflow4j.algorithms;
 
+import bitflow4j.Sample;
 import bitflow4j.io.AbstractOutputStream;
 import bitflow4j.io.MetricOutputStream;
 
@@ -17,6 +18,13 @@ public abstract class AbstractAlgorithm extends AbstractOutputStream implements 
     @Override
     public String toString() {
         return "a " + getClass().getSimpleName();
+    }
+
+    @Override
+    public void writeSample(Sample sample) throws IOException {
+        if (output != null) {
+            output.writeSample(sample);
+        }
     }
 
     public synchronized void close() throws IOException {
