@@ -6,7 +6,7 @@ import bitflow4j.io.MetricOutputStream;
 
 import java.io.IOException;
 
-public abstract class AbstractAlgorithm extends AbstractOutputStream implements Algorithm {
+public abstract class AbstractAlgorithm<T> extends AbstractOutputStream implements Algorithm<T> {
 
     protected MetricOutputStream output;
 
