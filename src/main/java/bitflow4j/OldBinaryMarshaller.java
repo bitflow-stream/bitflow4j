@@ -9,7 +9,7 @@ import java.util.Arrays;
  * Reads old binary format. Left for backwards-compatibility with
  * files in the old format. The marshall*() operations still write the new binary
  * format.
- *
+ * <p>
  * Created by anton on 23.12.16.
  */
 public class OldBinaryMarshaller extends BinaryMarshaller {
