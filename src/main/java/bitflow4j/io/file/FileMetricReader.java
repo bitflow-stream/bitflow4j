@@ -1,5 +1,6 @@
 package bitflow4j.io.file;
 
+import bitflow4j.Header;
 import bitflow4j.Marshaller;
 import bitflow4j.Sample;
 import bitflow4j.io.InputStreamClosedException;
@@ -54,6 +55,8 @@ public class FileMetricReader implements MetricInputStream {
 
     private final Marshaller marshaller;
     private final NameConverter converter;
+
+    private Header previousHeader = null;
 
     public FileMetricReader(Marshaller marshaller, NameConverter converter) {
         this.marshaller = marshaller;
@@ -163,6 +166,7 @@ public class FileMetricReader implements MetricInputStream {
         MetricReader input = currentInput;
         currentInput = null;
         if (input != null) {
+            previousHeader = input.currentHeader();
             try {
                 input.close();
                 logger.info("Closed file " + input.sourceName);
@@ -178,7 +182,11 @@ public class FileMetricReader implements MetricInputStream {
         if (!inputIterator.hasNext()) {
             return null;
         }
-        return inputIterator.next();
+        MetricReader next = inputIterator.next();
+        if (previousHeader != null) {
+            next.setCurrentHeader(previousHeader);
+        }
+        return next;
     }
 
 }

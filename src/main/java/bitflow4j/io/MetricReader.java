@@ -29,6 +29,14 @@ public class MetricReader implements MetricInputStream {
         this.input = new BufferedInputStream(input);
     }
 
+    public void setCurrentHeader(Header header) {
+        this.header = header;
+    }
+
+    public Header currentHeader() {
+        return header;
+    }
+
     public Sample readSample() throws IOException {
         while (true) {
             try {
