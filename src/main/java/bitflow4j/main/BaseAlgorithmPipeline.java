@@ -75,7 +75,7 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
     }
 
     @Override
-    public <T> AlgorithmPipeline fork(AbstractFork<T> fork, ForkHandler<T> handler) {
+    public <T> void configureFork(AbstractFork<T> fork, ForkHandler<T> handler) {
         fork.setOutputFactory(key -> {
             MetricPipe pipe = AlgorithmPipeline.newPipe();
             BaseAlgorithmPipeline subPipeline = newSubpipeline();
@@ -90,7 +90,6 @@ public class BaseAlgorithmPipeline implements AlgorithmPipeline {
                 return pipe;
             }
         });
-        return output(fork);
     }
 
     public BaseAlgorithmPipeline newSubpipeline() {

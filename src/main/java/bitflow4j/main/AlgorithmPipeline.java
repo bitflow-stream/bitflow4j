@@ -53,10 +53,15 @@ public interface AlgorithmPipeline {
 
     AlgorithmPipeline step(Algorithm algo);
 
-    <T> AlgorithmPipeline fork(AbstractFork<T> fork, ForkHandler<T> handler);
+    <T> void configureFork(AbstractFork<T> fork, ForkHandler<T> handler);
 
     interface ForkHandler<T> {
         void buildForkedPipeline(T key, AlgorithmPipeline subPipeline) throws IOException;
+    }
+
+    default <T> AlgorithmPipeline fork(AbstractFork<T> fork, ForkHandler<T> handler) {
+        configureFork(fork, handler);
+        return output(fork);
     }
 
     // ============== Output ==============
