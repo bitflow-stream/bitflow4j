@@ -49,8 +49,7 @@ public class MetricReader implements MetricInputStream {
                         throw new IOException("Input stream '" + sourceName + "' contains Sample before first Header");
                     }
                     Sample sample = marshaller.unmarshallSample(input, header);
-                    if (!sample.hasSource())
-                        sample.setSource(sourceName);
+                    sample.setSource(sourceName);
                     return sample;
                 }
             } catch (InputStreamClosedException exc) {
