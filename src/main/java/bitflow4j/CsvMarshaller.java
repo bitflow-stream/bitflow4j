@@ -3,8 +3,13 @@ package bitflow4j;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
 import java.util.Arrays;
 import java.util.Date;
 
@@ -20,14 +25,20 @@ public class CsvMarshaller extends AbstractMarshaller {
     private static final String separator = ",";
     private static final byte[] separatorBytes = separator.getBytes();
 
-    public static final String dateFormat = "yyyy-MM-dd HH:mm:ss.SSS";
-    public static final int dateLength = dateFormat.length();
+    public static final String shortDateFormat = "yyyy-MM-dd HH:mm:ss";
+    public static final String outputDateFormat = shortDateFormat + ".SSS";
+    public static final int minDateLength = shortDateFormat.length();
+    public static final int maxDateLength = minDateLength + 10;
 
     public static SimpleDateFormat newDateFormatter() {
-        return new SimpleDateFormat(dateFormat);
+        return new SimpleDateFormat(outputDateFormat);
     }
 
-    public final SimpleDateFormat date_formatter = newDateFormatter();
+    public final SimpleDateFormat output_date_formatter = newDateFormatter();
+    private final DateTimeFormatter input_date_formatter =
+            new DateTimeFormatterBuilder()
+                    .appendPattern(shortDateFormat)
+                    .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true).toFormatter();
 
     public boolean peekIsHeader(InputStream input) throws IOException {
         byte peeked[] = peek(input, CSV_HEADER_TIME.length());
@@ -61,11 +72,15 @@ public class CsvMarshaller extends AbstractMarshaller {
         // Parse special fields
         String timestampAsString = metricStrings[0];
         try {
-            if (timestampAsString.length() < dateLength) {
+            if (timestampAsString.length() < minDateLength) {
                 throw new IOException("CSV timestamp field is too short: " + timestampAsString);
             }
-            timestamp = date_formatter.parse(timestampAsString.substring(0, dateLength));
-        } catch (ParseException exc) {
+            if (timestampAsString.length() > maxDateLength) {
+                timestampAsString = timestampAsString.substring(0, maxDateLength);
+            }
+            LocalDate local = LocalDate.parse(timestampAsString, input_date_formatter);
+            timestamp = Date.from(local.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        } catch (DateTimeParseException exc) {
             throw new IOException(exc);
         }
         if (header.hasTags) {
@@ -118,7 +133,7 @@ public class CsvMarshaller extends AbstractMarshaller {
 
     public void marshallSample(OutputStream output, Sample sample) throws IOException {
         Header header = sample.getHeader();
-        String dateStr = date_formatter.format(sample.getTimestamp());
+        String dateStr = output_date_formatter.format(sample.getTimestamp());
         output.write(dateStr.getBytes());
         if (header.hasTags) {
             output.write(separatorBytes);
