@@ -46,6 +46,7 @@ public class FileMetricReader implements MetricInputStream {
 
     public static final NameConverter FILE_PATH = File::getPath;
     public static final NameConverter FILE_NAME = File::getName;
+    public static final NameConverter FILE_DIRECTORY_NAME = (File file) -> file.getParentFile().getName();
 
     private final List<MetricReader> inputs = new ArrayList<>();
     private final List<File> files = new ArrayList<>();
