@@ -241,11 +241,14 @@ public class Sample {
         return removeMetrics(new HashSet<>(Arrays.asList(metrics)));
     }
 
-    public Sample removeMetricsWithPrefix(String prefix) {
+    public Sample removeMetricsWithPrefix(String ...prefixes) {
         Set<String> removeMetrics = new HashSet<>();
         for (String metric : getHeader().header) {
-            if (metric.startsWith(prefix)) {
-                removeMetrics.add(metric);
+            for (String prefix : prefixes) {
+                if (metric.startsWith(prefix)) {
+                    removeMetrics.add(metric);
+                    break;
+                }
             }
         }
         return removeMetrics(removeMetrics);
