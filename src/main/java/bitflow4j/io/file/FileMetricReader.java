@@ -155,7 +155,11 @@ public class FileMetricReader implements MetricInputStream {
         if (currentInput == null)
             throw new InputStreamClosedException();
         try {
-            return currentInput.readSample();
+            Sample result = currentInput.readSample();
+            if (fileFinishedHook != null)
+                result.setTag(INPUT_FILE_SAMPLE_ID_TAG, String.valueOf(readSamples));
+            readSamples++;
+            return result;
         } catch (InputStreamClosedException e) {
             // One file finished, start reading the next.
             closeInput();
@@ -169,6 +173,10 @@ public class FileMetricReader implements MetricInputStream {
         if (input != null) {
             previousHeader = input.currentHeader();
             try {
+                if (fileFinishedHook != null) {
+                    fileFinishedHook.finishedFileInput(readSamples);
+                    readSamples = 0;
+                }
                 input.close();
                 logger.info("Closed file " + input.sourceName);
             } catch (IOException e) {
@@ -188,6 +196,24 @@ public class FileMetricReader implements MetricInputStream {
             next.setCurrentHeader(previousHeader);
         }
         return next;
+    }
+
+    // TODO hack to enable synchronized reading of files.
+    // Must be handled differently in the future.
+
+    public static final String INPUT_FILE_SAMPLE_ID_TAG = "input-file-sample-id";
+
+    public interface FileInputFinishedHook {
+        // Implementation can block here, the next file will be started only after
+        // this method returns
+        void finishedFileInput(int numSampleIds);
+    }
+
+    private FileInputFinishedHook fileFinishedHook = null;
+    private int readSamples = 0;
+
+    public void setFileInputNotification(FileInputFinishedHook hook) {
+        fileFinishedHook = hook;
     }
 
 }
