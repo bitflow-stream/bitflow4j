@@ -1,56 +1,93 @@
 package bitflow4j.io.net;
 
-import bitflow4j.Marshaller;
-import bitflow4j.io.ActiveInputStream;
 import bitflow4j.io.MetricReader;
-import bitflow4j.main.TaskPool;
+import bitflow4j.io.ThreadedSampleSource;
+import bitflow4j.io.marshall.Marshaller;
+import bitflow4j.task.ParallelTask;
+import bitflow4j.task.TaskPool;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * Created by anton on 4/6/16.
  */
-public class TcpMetricsListener extends ActiveInputStream {
+public class TcpMetricsListener extends ThreadedSampleSource {
 
     private static final Logger logger = Logger.getLogger(TcpMetricsListener.class.getName());
 
     private int numConnections = 0;
     private final int maxNumConnections;
+    private final int port;
     private final Marshaller marshaller;
-    private final ServerSocket tcpSocket;
-    private final TaskPool pool;
 
-    public TcpMetricsListener(TaskPool pool, int port, Marshaller marshaller) throws IOException {
-        this(pool, port, marshaller, -1);
+    private ConnectionAcceptor connectionAcceptor;
+
+    public TcpMetricsListener(int port, Marshaller marshaller) throws IOException {
+        this(port, marshaller, -1);
     }
 
-    public TcpMetricsListener(TaskPool pool, int port, Marshaller marshaller, int numConnections) throws IOException {
-        this.pool = pool;
+    public TcpMetricsListener(int port, Marshaller marshaller, int numConnections) throws IOException {
         this.maxNumConnections = numConnections;
         this.marshaller = marshaller;
-        this.tcpSocket = new ServerSocket(port);
+        this.port = port;
         logger.info("Listening on port " + port);
-        forkAcceptConnections();
     }
 
-    private void forkAcceptConnections() {
-        pool.startDaemon("TCP listener on " + tcpSocket, this::acceptConnections);
+    public void start(TaskPool pool) throws IOException {
+        ServerSocket tcpSocket = new ServerSocket(port);
+        connectionAcceptor = new ConnectionAcceptor(tcpSocket);
+        pool.start("TCP listener on " + tcpSocket, connectionAcceptor);
+        super.start(pool);
     }
 
-    private void acceptConnections() {
+    @Override
+    public void shutDown() {
+        if (connectionAcceptor != null) {
+            connectionAcceptor.stop();
+        }
+        super.shutDown();
+    }
+
+    private class ConnectionAcceptor implements ParallelTask {
+        private final ServerSocket socket;
+
+        private ConnectionAcceptor(ServerSocket socket) {
+            this.socket = socket;
+        }
+
+        @Override
+        public void start(TaskPool pool) throws IOException {
+            acceptConnections(pool, socket);
+        }
+
+        public void stop() {
+            try {
+                socket.close();
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, "Failed to close TCP server socket", e);
+            }
+        }
+    }
+
+    private void acceptConnections(TaskPool pool, ServerSocket tcpSocket) {
         while (true) {
             Socket socket = null;
             try {
+                if (tcpSocket.isClosed())
+                    break;
                 socket = tcpSocket.accept();
                 if (socket.isConnected()) {
-                    String remote = acceptConnection(socket);
+                    String remote = acceptConnection(pool, socket);
                     logger.info("Accepted connection from " + remote);
                     if (checkNumConnections()) break;
                 }
             } catch (Exception exc) {
+                if (tcpSocket.isClosed())
+                    break;
                 logger.severe("Error accepting connection: " + exc.getMessage());
                 if (socket != null) {
                     try {
@@ -63,9 +100,16 @@ public class TcpMetricsListener extends ActiveInputStream {
         }
     }
 
-    private String acceptConnection(Socket socket) throws IOException {
+    private String acceptConnection(TaskPool pool, Socket socket) throws IOException {
         String remote = socket.getRemoteSocketAddress().toString(); // TODO try reverse DNS? More descriptive name?
-        MetricReader input = new MetricReader(socket.getInputStream(), remote, marshaller);
+        MetricReader.NamedInputStream namedStream =
+                new MetricReader.NamedInputStream(socket.getInputStream(), remote);
+        MetricReader input = new MetricReader(pool, marshaller) {
+            @Override
+            protected NamedInputStream nextInput() throws IOException {
+                return namedStream;
+            }
+        };
         readSamples(pool, remote, input);
         return remote;
     }

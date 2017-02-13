@@ -1,6 +1,6 @@
 package bitflow4j.io.file;
 
-import bitflow4j.Marshaller;
+import bitflow4j.io.marshall.Marshaller;
 import bitflow4j.io.AbstractMetricPrinter;
 
 import java.io.*;
@@ -8,7 +8,7 @@ import java.io.*;
 /**
  * Created by anton on 4/16/16.
  * <p>
- * This MetricOutputStream starts a new file for every incoming header.
+ * This SampleSink starts a new file for every incoming header.
  * This is better suited for writing files than MetricPrinter, which will print every
  * incoming header into the same file.
  */

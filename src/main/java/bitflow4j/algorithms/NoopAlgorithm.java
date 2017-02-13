@@ -1,6 +1,6 @@
 package bitflow4j.algorithms;
 
-import bitflow4j.Sample;
+import bitflow4j.sample.Sample;
 
 import java.io.IOException;
 

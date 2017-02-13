@@ -1,23 +1,17 @@
 package bitflow4j.io.file;
 
-import bitflow4j.Header;
-import bitflow4j.Marshaller;
-import bitflow4j.Sample;
-import bitflow4j.io.InputStreamClosedException;
-import bitflow4j.io.MetricInputStream;
 import bitflow4j.io.MetricReader;
+import bitflow4j.io.ThreadedSampleSource;
+import bitflow4j.io.marshall.Marshaller;
+import bitflow4j.task.TaskPool;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -26,7 +20,7 @@ import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
 /**
  * Created by anton on 4/7/16.
  */
-public class FileMetricReader implements MetricInputStream {
+public class FileMetricReader extends ThreadedSampleSource {
 
     private static final Logger logger = Logger.getLogger(FileMetricReader.class.getName());
 
@@ -48,16 +42,10 @@ public class FileMetricReader implements MetricInputStream {
     public static final NameConverter FILE_NAME = File::getName;
     public static final NameConverter FILE_DIRECTORY_NAME = (File file) -> file.getParentFile().getName();
 
-    private final List<MetricReader> inputs = new ArrayList<>();
     private final List<File> files = new ArrayList<>();
-
-    private Iterator<MetricReader> inputIterator;
-    private MetricReader currentInput;
-
+    private final List<String> sourceNames = new ArrayList<>();
     private final Marshaller marshaller;
     private final NameConverter converter;
-
-    private Header previousHeader = null;
 
     public FileMetricReader(Marshaller marshaller, NameConverter converter) {
         this.marshaller = marshaller;
@@ -70,8 +58,45 @@ public class FileMetricReader implements MetricInputStream {
         this(marshaller, FILE_NAME);
     }
 
+    @Override
+    public void start(TaskPool pool) throws IOException {
+        FileSampleReader reader = new FileSampleReader(pool, marshaller);
+        readSamples(pool, "Read " + files.size() + " files", reader);
+
+        // All readers have been added, so we can immediately start waiting for them to finish
+        shutDown();
+        super.start(pool);
+    }
+
+    private class FileSampleReader extends MetricReader {
+
+        private final Iterator<File> files;
+        private final Iterator<String> sourceNames;
+
+        public FileSampleReader(TaskPool pool, Marshaller marshaller) {
+            super(pool, marshaller);
+            files = FileMetricReader.this.files.iterator();
+            sourceNames = FileMetricReader.this.sourceNames.iterator();
+        }
+
+        @Override
+        protected NamedInputStream nextInput() throws IOException {
+            if (!files.hasNext())
+                return null;
+            File inputFile = files.next();
+            InputStream inputStream = new FileInputStream(inputFile);
+            inputStream = new BufferedInputStream(inputStream);
+            String sourceName = sourceNames.next();
+            return new NamedInputStream(inputStream, sourceName);
+        }
+    }
+
     public int size() {
         return files.size();
+    }
+
+    public List<File> getFiles() {
+        return Collections.unmodifiableList(files);
     }
 
     public void addFiles(String root, Pattern pattern) throws IOException {
@@ -123,17 +148,6 @@ public class FileMetricReader implements MetricInputStream {
         addFileGroup(file.toString());
     }
 
-    private void addFile(String inputNameBase, String path) throws IOException {
-        File file = new File(path);
-        if (!file.exists())
-            throw new IOException("File not found: " + path);
-        files.add(file);
-        InputStream fileInput = new FileInputStream(file);
-        String source = converter == null ? null : converter.convert(new File(inputNameBase));
-        MetricReader reader = new MetricReader(fileInput, source, marshaller);
-        inputs.add(reader);
-    }
-
     public void addFile(String path) throws IOException {
         addFile(path, path);
     }
@@ -142,78 +156,13 @@ public class FileMetricReader implements MetricInputStream {
         addFile(file.toString());
     }
 
-    public List<File> getFiles() {
-        return Collections.unmodifiableList(files);
-    }
-
-    @Override
-    public synchronized Sample readSample() throws IOException {
-        if (currentInput == null) {
-            closeInput();
-            currentInput = nextInput();
-        }
-        if (currentInput == null)
-            throw new InputStreamClosedException();
-        try {
-            Sample result = currentInput.readSample();
-            if (fileFinishedHook != null)
-                result.setTag(INPUT_FILE_SAMPLE_ID_TAG, String.valueOf(readSamples));
-            readSamples++;
-            return result;
-        } catch (InputStreamClosedException e) {
-            // One file finished, start reading the next.
-            closeInput();
-            return readSample();
-        }
-    }
-
-    private void closeInput() {
-        MetricReader input = currentInput;
-        currentInput = null;
-        if (input != null) {
-            previousHeader = input.currentHeader();
-            try {
-                if (fileFinishedHook != null) {
-                    fileFinishedHook.finishedFileInput(readSamples);
-                    readSamples = 0;
-                }
-                input.close();
-                logger.info("Closed file " + input.sourceName);
-            } catch (IOException e) {
-                logger.log(Level.SEVERE, "Error closing file", e);
-            }
-        }
-    }
-
-    private MetricReader nextInput() {
-        if (inputIterator == null)
-            inputIterator = inputs.iterator();
-        if (!inputIterator.hasNext()) {
-            return null;
-        }
-        MetricReader next = inputIterator.next();
-        if (previousHeader != null) {
-            next.setCurrentHeader(previousHeader);
-        }
-        return next;
-    }
-
-    // TODO hack to enable synchronized reading of files.
-    // Must be handled differently in the future.
-
-    public static final String INPUT_FILE_SAMPLE_ID_TAG = "input-file-sample-id";
-
-    public interface FileInputFinishedHook {
-        // Implementation can block here, the next file will be started only after
-        // this method returns
-        void finishedFileInput(int numSampleIds);
-    }
-
-    private FileInputFinishedHook fileFinishedHook = null;
-    private int readSamples = 0;
-
-    public void setFileInputNotification(FileInputFinishedHook hook) {
-        fileFinishedHook = hook;
+    private void addFile(String inputNameBase, String path) throws IOException {
+        File file = new File(path);
+        if (!file.exists())
+            throw new IOException("File not found: " + path);
+        String source = converter == null ? null : converter.convert(new File(inputNameBase));
+        files.add(file);
+        sourceNames.add(source);
     }
 
 }

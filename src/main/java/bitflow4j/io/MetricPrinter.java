@@ -1,6 +1,6 @@
 package bitflow4j.io;
 
-import bitflow4j.Marshaller;
+import bitflow4j.io.marshall.Marshaller;
 
 import java.io.*;
 

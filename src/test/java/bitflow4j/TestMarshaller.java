@@ -1,8 +1,13 @@
 package bitflow4j;
 
-import bitflow4j.io.InputStreamClosedException;
+import bitflow4j.io.marshall.InputStreamClosedException;
 import bitflow4j.io.MetricPrinter;
 import bitflow4j.io.MetricReader;
+import bitflow4j.sample.Header;
+import bitflow4j.sample.Sample;
+import bitflow4j.io.marshall.BinaryMarshaller;
+import bitflow4j.io.marshall.CsvMarshaller;
+import bitflow4j.io.marshall.Marshaller;
 import javafx.util.Pair;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.junit.Assert;
@@ -69,15 +74,14 @@ public class TestMarshaller extends TestWithSamples {
         }
 
         ByteArrayInputStream inbuf = new ByteArrayInputStream(buf.toByteArray());
-        MetricReader reader = new MetricReader(inbuf, "test", marshaller);
+        MetricReader reader = MetricReader.singleInput(null, marshaller, "test", inbuf);
 
         List<Sample> receivedSamples = new ArrayList<>();
         while (true) {
-            try {
-                receivedSamples.add(reader.readSample());
-            } catch (InputStreamClosedException exc) {
+            Sample sample = reader.readSample();
+            if (sample == null)
                 break;
-            }
+            receivedSamples.add(sample);
         }
 
         List<Sample> expected = flatten(headers);

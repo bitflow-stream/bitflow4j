@@ -1,8 +1,9 @@
 package bitflow4j.io;
 
-import bitflow4j.Header;
-import bitflow4j.Marshaller;
-import bitflow4j.Sample;
+import bitflow4j.sample.AbstractSampleSink;
+import bitflow4j.sample.Header;
+import bitflow4j.io.marshall.Marshaller;
+import bitflow4j.sample.Sample;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -10,12 +11,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Implements MetricOutputStream using an instance Marshaller to marshall Sample instances
+ * Implements SampleSink using an instance Marshaller to marshall Sample instances
  * into a byte-oriented OutputStream like a file or network connection.
  * <p>
  * Created by anton on 4/6/16.
  */
-public abstract class AbstractMetricPrinter extends AbstractOutputStream {
+public abstract class AbstractMetricPrinter extends AbstractSampleSink {
 
     private static final Logger logger = Logger.getLogger(AbstractMetricPrinter.class.getName());
 
@@ -59,7 +60,7 @@ public abstract class AbstractMetricPrinter extends AbstractOutputStream {
         }
     }
 
-    public void close() throws IOException {
+    public void stclosep() throws IOException {
         closeStream();
         super.close();
     }

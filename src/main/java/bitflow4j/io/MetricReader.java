@@ -1,10 +1,11 @@
 package bitflow4j.io;
 
-import bitflow4j.Header;
-import bitflow4j.Marshaller;
-import bitflow4j.Sample;
+import bitflow4j.io.marshall.InputStreamClosedException;
+import bitflow4j.io.marshall.Marshaller;
+import bitflow4j.sample.Header;
+import bitflow4j.sample.Sample;
+import bitflow4j.task.TaskPool;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.Logger;
@@ -13,58 +14,122 @@ import java.util.logging.Logger;
  * Created by anton on 4/6/16.
  * <p>
  * Reads Samples from a single InputStream instance until it is closed.
+ * This does not implement SampleSource, but can be used for implementations.
  */
-public class MetricReader implements MetricInputStream {
+public abstract class MetricReader {
 
     private static final Logger logger = Logger.getLogger(MetricReader.class.getName());
 
+    protected final TaskPool pool;
     private final Marshaller marshaller;
-    private final InputStream input;
-    public final String sourceName;
+    private boolean closed = false;
+
+    private String sourceName;
+    private InputStream currentInput;
     private Header header = null;
 
-    public MetricReader(InputStream input, String sourceName, Marshaller marshaller) {
+    // TODO HACK should be removed, see usages of this
+    public Runnable inputClosedHook;
+
+    public MetricReader(TaskPool pool, Marshaller marshaller) {
         this.marshaller = marshaller;
-        this.sourceName = sourceName;
-        this.input = new BufferedInputStream(input);
+        this.pool = pool;
     }
 
-    public void setCurrentHeader(Header header) {
-        this.header = header;
+    public static MetricReader singleInput(TaskPool pool, Marshaller marshaller, String name, InputStream input) {
+        return new MetricReader(pool, marshaller) {
+            boolean returned = false;
+
+            @Override
+            protected NamedInputStream nextInput() throws IOException {
+                if (returned) return null;
+                returned = true;
+                return new NamedInputStream(input, name);
+            }
+        };
     }
 
-    public Header currentHeader() {
-        return header;
+    public static class NamedInputStream {
+        public final InputStream stream;
+        public final String name;
+
+        public NamedInputStream(InputStream stream, String name) {
+            this.stream = stream;
+            this.name = name;
+        }
     }
 
+    protected abstract NamedInputStream nextInput() throws IOException;
+
+    // Returning null here means all inputs were finished without error
     public Sample readSample() throws IOException {
-        while (true) {
-            try {
-                boolean isHeader = marshaller.peekIsHeader(input);
-                if (isHeader) {
-                    header = marshaller.unmarshallHeader(input);
-                    logger.info("Incoming header of '" + sourceName + "' updated to " + header.header.length + " metrics");
-                } else {
-                    if (header == null) {
-                        throw new IOException("Input stream '" + sourceName + "' contains Sample before first Header");
-                    }
-                    Sample sample = marshaller.unmarshallSample(input, header);
-                    sample.setSource(sourceName);
-                    return sample;
+        Sample sample = null;
+        while (!closed && (sample = doReadSample()) == null) ;
+        return sample;
+    }
+
+    private Sample doReadSample() throws IOException {
+        InputStream input;
+        // Make sure that after this synchronized block, currentInput and input point to the same object
+        synchronized (this) {
+            if (closed) {
+                return null;
+            }
+            input = currentInput;
+            if (input == null) {
+                NamedInputStream named = nextInput();
+                if (named == null) {
+                    // No more inputs
+                    close();
+                    return null;
                 }
-            } catch (InputStreamClosedException exc) {
-                try {
-                    input.close();
-                } catch (IOException e) {
-                    // Ignore, we don't know if the stream was already closed.
+                input = named.stream;
+                currentInput = input;
+                sourceName = named.name;
+            }
+        }
+
+        try {
+            boolean isHeader = marshaller.peekIsHeader(input);
+            if (isHeader) {
+                header = marshaller.unmarshallHeader(input);
+                logger.info("Incoming header of '" + sourceName + "' updated to " + header.header.length + " metrics");
+                return null;
+            } else {
+                if (header == null) {
+                    throw new IOException("Input stream '" + sourceName + "' contains Sample before first Header");
                 }
-                throw exc;
+                Sample sample = marshaller.unmarshallSample(input, header);
+                sample.setSource(sourceName);
+                return sample;
+            }
+        } catch (IOException e) {
+            closeCurrentInput();
+            if (closed || e instanceof InputStreamClosedException) {
+                // If stream is closed on purpose from the outside, ignore the exception
+                return null;
+            } else {
+                // In case of errors, the caller will have to explicitly close this reader
+                throw e;
             }
         }
     }
 
-    public void close() throws IOException {
-        input.close();
+    public synchronized void close() throws IOException {
+        closed = true;
+        closeCurrentInput();
+    }
+
+    private synchronized void closeCurrentInput() throws IOException {
+        if (currentInput != null) {
+            logger.info("Closed input " + sourceName);
+            Runnable hook = inputClosedHook;
+            if (hook != null) {
+                hook.run();
+            }
+            currentInput.close();
+            currentInput = null;
+        }
     }
 
 }
