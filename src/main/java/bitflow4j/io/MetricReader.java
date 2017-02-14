@@ -6,6 +6,7 @@ import bitflow4j.sample.Header;
 import bitflow4j.sample.Sample;
 import bitflow4j.task.TaskPool;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.Logger;
@@ -83,7 +84,7 @@ public abstract class MetricReader {
                     close();
                     return null;
                 }
-                input = named.stream;
+                input = new BufferedInputStream(named.stream);
                 currentInput = input;
                 sourceName = named.name;
             }

@@ -1,6 +1,5 @@
 package bitflow4j.io.net;
 
-import bitflow4j.io.MetricReader;
 import bitflow4j.io.ThreadedSampleSource;
 import bitflow4j.io.marshall.Marshaller;
 import bitflow4j.task.TaskPool;
@@ -28,14 +27,18 @@ public class TcpMetricsDownloader extends ThreadedSampleSource {
     public void start(TaskPool pool) throws IOException {
         for (int i = 0; i < tcpSources.length; i++) {
             String source = tcpSources[i];
-            MetricReader reader = new TcpMetricsReader(source, pool, marshaller);
-            readSamples(pool, source, readers.get(i));
+            TcpMetricsReader reader = new TcpMetricsReader(source, pool, marshaller);
+            readers.add(reader);
+            readSamples(pool, source, reader);
         }
+    }
 
+    @Override
+    public void run() throws IOException {
         // All readers have been added, so we can immediately start waiting for them to finish
         // Since the connection is continuously re-established, this should not actually happen.
         shutDown();
-        super.start(pool);
+        super.run();
     }
 
 }

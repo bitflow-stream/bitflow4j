@@ -41,7 +41,6 @@ public class TcpMetricsListener extends ThreadedSampleSource {
         ServerSocket tcpSocket = new ServerSocket(port);
         connectionAcceptor = new ConnectionAcceptor(tcpSocket);
         pool.start("TCP listener on " + tcpSocket, connectionAcceptor);
-        super.start(pool);
     }
 
     @Override
@@ -52,8 +51,15 @@ public class TcpMetricsListener extends ThreadedSampleSource {
         super.shutDown();
     }
 
+    @Override
+    protected void readerException() {
+        // Avoid shutting down because of Exception in connections.
+        // This SampleSource runs forever (until user shuts down the program).
+    }
+
     private class ConnectionAcceptor implements ParallelTask {
         private final ServerSocket socket;
+        private TaskPool pool;
 
         private ConnectionAcceptor(ServerSocket socket) {
             this.socket = socket;
@@ -61,6 +67,11 @@ public class TcpMetricsListener extends ThreadedSampleSource {
 
         @Override
         public void start(TaskPool pool) throws IOException {
+            this.pool = pool;
+        }
+
+        @Override
+        public void run() throws IOException {
             acceptConnections(pool, socket);
         }
 

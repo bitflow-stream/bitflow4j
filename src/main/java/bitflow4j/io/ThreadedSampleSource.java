@@ -37,7 +37,7 @@ public abstract class ThreadedSampleSource extends AbstractSampleSource implemen
     }
 
     @Override
-    public void start(TaskPool pool) throws IOException {
+    public void run() throws IOException {
         // Wait for the shutdown and start the close() sequence with our direct output
         synchronized (this) {
             while (!shuttingDown)
@@ -82,7 +82,7 @@ public abstract class ThreadedSampleSource extends AbstractSampleSource implemen
             reader.inputClosedHook = ThreadedSampleSource.this::handleClosedInput;
         }
 
-        public boolean execute(TaskPool pool) throws IOException {
+        public boolean executeIteration() throws IOException {
             try {
                 if (!pool.isRunning())
                     return false;

@@ -9,12 +9,18 @@ public abstract class LoopTask implements ParallelTask {
 
     protected boolean stop = false;
     private boolean exited = false;
+    protected TaskPool pool;
 
-    protected abstract boolean execute(TaskPool pool) throws IOException;
+    protected abstract boolean executeIteration() throws IOException;
 
     @Override
     public void start(TaskPool pool) throws IOException {
-        while (!stop && execute(pool)) ;
+        this.pool = pool;
+    }
+
+    @Override
+    public void run() throws IOException {
+        while (!stop && executeIteration()) ;
         synchronized (this) {
             exited = true;
             notifyAll();

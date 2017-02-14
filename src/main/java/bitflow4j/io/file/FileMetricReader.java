@@ -5,7 +5,10 @@ import bitflow4j.io.ThreadedSampleSource;
 import bitflow4j.io.marshall.Marshaller;
 import bitflow4j.task.TaskPool;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -62,10 +65,13 @@ public class FileMetricReader extends ThreadedSampleSource {
     public void start(TaskPool pool) throws IOException {
         FileSampleReader reader = new FileSampleReader(pool, marshaller);
         readSamples(pool, "Read " + files.size() + " files", reader);
+    }
 
+    @Override
+    public void run() throws IOException {
         // All readers have been added, so we can immediately start waiting for them to finish
         shutDown();
-        super.start(pool);
+        super.run();
     }
 
     private class FileSampleReader extends MetricReader {
@@ -85,7 +91,6 @@ public class FileMetricReader extends ThreadedSampleSource {
                 return null;
             File inputFile = files.next();
             InputStream inputStream = new FileInputStream(inputFile);
-            inputStream = new BufferedInputStream(inputStream);
             String sourceName = sourceNames.next();
             return new NamedInputStream(inputStream, sourceName);
         }

@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
@@ -136,18 +137,21 @@ public class AlgorithmPipeline {
     // Running =================================
     // =========================================
 
-    public void runAndWait() throws IOException {
+    public void runAndWait() {
         runAndWait(new TaskPool());
     }
 
-    public void runAndWait(TaskPool pool) throws IOException {
+    public void runAndWait(TaskPool pool) {
         try {
             run(pool);
+            logger.info("Tasks have been started");
             sink.waitUntilClosed();
-        } finally {
-            pool.stop("Algorithms finished");
-            pool.waitForTasks();
+            logger.info("The sink is closed");
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error starting pipeline", e);
         }
+        pool.stop("Algorithms finished");
+        pool.waitForTasks();
     }
 
     public void run(TaskPool pool) throws IOException {
@@ -173,7 +177,7 @@ public class AlgorithmPipeline {
         // Initialize and start all pipeline steps
         // Start in reverse order to make sure the sinks are initialized before the sources start pushing data into them
         for (Task task : Lists.reverse(tasks)) {
-            task.start(pool);
+            pool.start(task.toString(), task);
         }
     }
 

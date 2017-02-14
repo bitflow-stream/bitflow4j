@@ -53,7 +53,7 @@ public class SampleFork extends AbstractAlgorithm {
     @Override
     public void doClose() throws IOException {
         for (AlgorithmPipeline pipe : subpipelines.values()) {
-            // The source is explicitely set to EmptySource below (which implements StoppableSampleSource)
+            // The source is explicitly set to EmptySource below (which implements StoppableSampleSource)
             ((StoppableSampleSource) pipe.source).stop();
             pipe.sink.waitUntilClosed();
         }

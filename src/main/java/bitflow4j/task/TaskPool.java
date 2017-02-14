@@ -21,12 +21,11 @@ public class TaskPool {
         if (!running) {
             throw new IllegalStateException("This TaskPool has already been stopped");
         }
+        task.start(this);
         if (task instanceof ParallelTask) {
-            Runner runner = new Runner(name, task);
+            Runner runner = new Runner(name, (ParallelTask) task);
             runners.add(runner);
             runner.start();
-        } else {
-            task.start(this);
         }
         if (task instanceof StoppableTask) {
             stoppable.add((StoppableTask) task);
@@ -91,16 +90,16 @@ public class TaskPool {
 
     private class Runner extends Thread {
 
-        private final Task task;
+        private final ParallelTask task;
 
-        Runner(String name, Task task) {
+        Runner(String name, ParallelTask task) {
             this.task = task;
             setName(name);
         }
 
         public void run() {
             try {
-                task.start(TaskPool.this);
+                task.run();
             } catch (Exception e) {
                 logger.log(Level.WARNING, "Exception in Task " + getName(), e);
             }
