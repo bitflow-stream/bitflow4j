@@ -64,7 +64,7 @@ public class FileMetricReader extends ThreadedSampleSource {
     @Override
     public void start(TaskPool pool) throws IOException {
         FileSampleReader reader = new FileSampleReader(pool, marshaller);
-        readSamples(pool, "Read " + files.size() + " files", reader);
+        readSamples(pool, reader);
     }
 
     @Override
@@ -83,6 +83,11 @@ public class FileMetricReader extends ThreadedSampleSource {
             super(pool, marshaller);
             files = FileMetricReader.this.files.iterator();
             sourceNames = FileMetricReader.this.sourceNames.iterator();
+        }
+
+        @Override
+        public String toString() {
+            return "Read " + FileMetricReader.this.files.size() + " files";
         }
 
         @Override

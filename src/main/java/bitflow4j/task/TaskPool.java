@@ -17,13 +17,11 @@ public class TaskPool {
     private final List<StoppableTask> stoppable = new ArrayList<>();
     private boolean running = true;
 
-    public synchronized void start(String name, Task task) throws IOException {
-        if (!running) {
-            throw new IllegalStateException("This TaskPool has already been stopped");
-        }
+    public synchronized void start(Task task) throws IOException {
+        assertRunning();
         task.start(this);
         if (task instanceof ParallelTask) {
-            Runner runner = new Runner(name, (ParallelTask) task);
+            Runner runner = new Runner((ParallelTask) task);
             runners.add(runner);
             runner.start();
         }
@@ -33,6 +31,7 @@ public class TaskPool {
     }
 
     public synchronized void stop(String reason) {
+        if (!running) return;
         logger.info("Shutting down: " + reason);
         running = false;
         for (StoppableTask task : stoppable) {
@@ -47,6 +46,12 @@ public class TaskPool {
 
     public boolean isRunning() {
         return running;
+    }
+
+    public void assertRunning() {
+        if (!running) {
+            throw new IllegalStateException("This TaskPool has already been stopped");
+        }
     }
 
     /**
@@ -92,16 +97,19 @@ public class TaskPool {
 
         private final ParallelTask task;
 
-        Runner(String name, ParallelTask task) {
+        Runner(ParallelTask task) {
             this.task = task;
-            setName(name);
+            setName(task.toString());
         }
 
         public void run() {
             try {
                 task.run();
+                TaskPool.this.stop("Task finished: " + task);
             } catch (Exception e) {
-                logger.log(Level.WARNING, "Exception in Task " + getName(), e);
+                String msg = "Exception in Task " + task;
+                logger.log(Level.WARNING, msg, e);
+                TaskPool.this.stop(msg);
             }
         }
 

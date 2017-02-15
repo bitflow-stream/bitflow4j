@@ -40,7 +40,7 @@ public class TcpMetricsListener extends ThreadedSampleSource {
     public void start(TaskPool pool) throws IOException {
         ServerSocket tcpSocket = new ServerSocket(port);
         connectionAcceptor = new ConnectionAcceptor(tcpSocket);
-        pool.start("TCP listener on " + tcpSocket, connectionAcceptor);
+        pool.start(connectionAcceptor);
     }
 
     @Override
@@ -63,6 +63,11 @@ public class TcpMetricsListener extends ThreadedSampleSource {
 
         private ConnectionAcceptor(ServerSocket socket) {
             this.socket = socket;
+        }
+
+        @Override
+        public String toString() {
+            return "TCP listener on " + socket;
         }
 
         @Override
@@ -117,11 +122,16 @@ public class TcpMetricsListener extends ThreadedSampleSource {
                 new MetricReader.NamedInputStream(socket.getInputStream(), remote);
         MetricReader input = new MetricReader(pool, marshaller) {
             @Override
+            public String toString() {
+                return "Receiving samples from " + remote;
+            }
+
+            @Override
             protected NamedInputStream nextInput() throws IOException {
                 return namedStream;
             }
         };
-        readSamples(pool, remote, input);
+        readSamples(pool, input);
         return remote;
     }
 

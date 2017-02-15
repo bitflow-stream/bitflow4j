@@ -42,6 +42,11 @@ public abstract class MetricReader {
             boolean returned = false;
 
             @Override
+            public String toString() {
+                return name;
+            }
+
+            @Override
             protected NamedInputStream nextInput() throws IOException {
                 if (returned) return null;
                 returned = true;
