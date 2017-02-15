@@ -13,6 +13,7 @@ import bitflow4j.sample.SampleSink;
 import bitflow4j.sample.SampleSource;
 import bitflow4j.task.Task;
 import bitflow4j.task.TaskPool;
+import bitflow4j.task.UserSignalTask;
 import com.google.common.collect.Lists;
 
 import java.io.File;
@@ -137,6 +138,18 @@ public class AlgorithmPipeline {
     // Running =================================
     // =========================================
 
+    public void runAndWait(boolean handleSignals) {
+        TaskPool pool = new TaskPool();
+        if (handleSignals)
+            try {
+                pool.start(new UserSignalTask());
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, "Failed to listen for User Signals", e);
+                return;
+            }
+        runAndWait(pool);
+    }
+
     public void runAndWait() {
         runAndWait(new TaskPool());
     }
@@ -144,13 +157,12 @@ public class AlgorithmPipeline {
     public void runAndWait(TaskPool pool) {
         try {
             run(pool);
-            logger.info("Tasks have been started");
             sink.waitUntilClosed();
-            logger.info("The sink is closed");
+            pool.stop("Algorithms finished");
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error starting pipeline", e);
+            pool.stop("Error starting pipeline");
         }
-        pool.stop("Algorithms finished");
         pool.waitForTasks();
     }
 
@@ -177,7 +189,7 @@ public class AlgorithmPipeline {
         // Initialize and start all pipeline steps
         // Start in reverse order to make sure the sinks are initialized before the sources start pushing data into them
         for (Task task : Lists.reverse(tasks)) {
-            pool.start(task.toString(), task);
+            pool.start(task);
         }
     }
 

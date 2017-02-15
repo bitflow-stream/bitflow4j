@@ -30,10 +30,10 @@ public abstract class ThreadedSampleSource extends AbstractSampleSource implemen
     private final List<LoopTask> tasks = new ArrayList<>();
     private boolean shuttingDown = false;
 
-    protected void readSamples(TaskPool pool, String name, MetricReader reader) throws IOException {
+    protected void readSamples(TaskPool pool, MetricReader reader) throws IOException {
         LoopTask task = new LoopSampleReader(reader);
         tasks.add(task);
-        pool.start(name, task);
+        pool.start(task);
     }
 
     @Override
@@ -80,6 +80,11 @@ public abstract class ThreadedSampleSource extends AbstractSampleSource implemen
             this.reader = reader;
             this.sink = ThreadedSampleSource.this.output();
             reader.inputClosedHook = ThreadedSampleSource.this::handleClosedInput;
+        }
+
+        @Override
+        public String toString() {
+            return reader.toString();
         }
 
         public boolean executeIteration() throws IOException {

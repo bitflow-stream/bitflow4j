@@ -7,6 +7,8 @@ import java.io.IOException;
  */
 public interface Task {
 
+    // This method should only be called by a TaskPool.
+    // A Task can be started through taskPool.start(task).
     void start(TaskPool pool) throws IOException;
 
 }
