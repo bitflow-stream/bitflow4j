@@ -6,6 +6,7 @@ import bitflow4j.task.TaskPool;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -39,6 +40,11 @@ public class TcpMetricsDownloader extends ThreadedSampleSource {
         // Since the connection is continuously re-established, this should not actually happen.
         shutDown();
         super.run();
+    }
+
+    @Override
+    public String toString() {
+        return "TCP downloader: " + Arrays.toString(tcpSources);
     }
 
 }

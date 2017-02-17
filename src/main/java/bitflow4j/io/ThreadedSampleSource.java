@@ -100,7 +100,8 @@ public abstract class ThreadedSampleSource extends AbstractSampleSource implemen
                 }
                 return true;
             } catch (Exception e) {
-                logger.log(Level.SEVERE, "Exception in " + ThreadedSampleSource.this, e);
+                logger.log(Level.SEVERE, "Exception in " + reader.toString() +
+                        ", running as part of: " + ThreadedSampleSource.this, e);
                 readerException();
                 return false;
             }
