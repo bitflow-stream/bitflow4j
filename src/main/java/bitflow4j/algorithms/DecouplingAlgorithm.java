@@ -36,7 +36,13 @@ public class DecouplingAlgorithm extends AbstractAlgorithm {
 
     @Override
     public void writeSample(Sample sample) throws IOException {
-        queue.add(sample);
+        while (true) {
+            try {
+                queue.put(sample);
+                break;
+            } catch (InterruptedException ignored) {
+            }
+        }
     }
 
     @Override
@@ -62,10 +68,18 @@ public class DecouplingAlgorithm extends AbstractAlgorithm {
 
         @Override
         protected boolean executeIteration() throws IOException {
-            Sample sample = queue.poll();
+            Sample sample;
+            while (true) {
+                try {
+                    sample = queue.take();
+                    break;
+                } catch (InterruptedException ignored) {
+                }
+            }
             if (sample == closedMarker) {
                 synchronized (closedMarker) {
                     finishedFlushing = true;
+                    super.stop();
                     closedMarker.notifyAll();
                 }
                 return false;
@@ -77,7 +91,6 @@ public class DecouplingAlgorithm extends AbstractAlgorithm {
         @Override
         public void stop() {
             queue.add(closedMarker);
-            super.stop();
         }
 
     }
