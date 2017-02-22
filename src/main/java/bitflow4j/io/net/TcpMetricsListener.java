@@ -34,10 +34,10 @@ public class TcpMetricsListener extends ThreadedSampleSource {
         this.maxNumConnections = numConnections;
         this.marshaller = marshaller;
         this.port = port;
-        logger.info("Listening on port " + port);
     }
 
     public void start(TaskPool pool) throws IOException {
+        logger.info("Listening on port " + port);
         ServerSocket tcpSocket = new ServerSocket(port);
         connectionAcceptor = new ConnectionAcceptor(tcpSocket);
         pool.start(connectionAcceptor);
