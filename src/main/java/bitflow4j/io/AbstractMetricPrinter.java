@@ -1,8 +1,8 @@
 package bitflow4j.io;
 
+import bitflow4j.io.marshall.Marshaller;
 import bitflow4j.sample.AbstractSampleSink;
 import bitflow4j.sample.Header;
-import bitflow4j.io.marshall.Marshaller;
 import bitflow4j.sample.Sample;
 
 import java.io.IOException;
@@ -48,7 +48,7 @@ public abstract class AbstractMetricPrinter extends AbstractSampleSink {
         }
     }
 
-    protected void closeStream() throws IOException {
+    protected void closeStream() {
         OutputStream output = this.output; // Avoid race condition
         if (output != null) {
             this.output = null;
@@ -60,7 +60,7 @@ public abstract class AbstractMetricPrinter extends AbstractSampleSink {
         }
     }
 
-    public void stclosep() throws IOException {
+    public void close() {
         closeStream();
         super.close();
     }
