@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -81,8 +81,8 @@ public class CsvMarshaller extends AbstractMarshaller {
             if (timestampAsString.length() > maxDateLength) {
                 timestampAsString = timestampAsString.substring(0, maxDateLength);
             }
-            LocalDate local = LocalDate.parse(timestampAsString, input_date_formatter);
-            timestamp = Date.from(local.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            LocalDateTime local = LocalDateTime.parse(timestampAsString, input_date_formatter);
+            timestamp = Date.from(local.atZone(ZoneId.systemDefault()).toInstant());
         } catch (DateTimeParseException exc) {
             throw new IOException(exc);
         }
