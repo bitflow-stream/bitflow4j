@@ -128,13 +128,14 @@ public abstract class MetricReader {
 
     private synchronized void closeCurrentInput() throws IOException {
         if (currentInput != null) {
+            InputStream input = currentInput;
+            currentInput = null;
             logger.info("Closed input " + sourceName);
             Runnable hook = inputClosedHook;
             if (hook != null) {
                 hook.run();
             }
-            currentInput.close();
-            currentInput = null;
+            input.close();
         }
     }
 

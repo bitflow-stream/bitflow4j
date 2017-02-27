@@ -31,9 +31,16 @@ public abstract class ThreadedSampleSource extends AbstractSampleSource implemen
     private boolean shuttingDown = false;
 
     protected void readSamples(TaskPool pool, MetricReader reader) throws IOException {
+        readSamples(pool, reader, false);
+    }
+
+    protected void readSamples(TaskPool pool, MetricReader reader, boolean keepAlive) throws IOException {
+
+        logger.info("READING SAMPLES FROM " + reader + " TO " + output());
+
         LoopTask task = new LoopSampleReader(reader);
         tasks.add(task);
-        pool.start(task);
+        pool.start(task, keepAlive);
     }
 
     @Override

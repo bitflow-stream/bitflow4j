@@ -18,10 +18,14 @@ public class TaskPool {
     private boolean running = true;
 
     public synchronized void start(Task task) throws IOException {
+        start(task, false);
+    }
+
+    public synchronized void start(Task task, boolean keepAlive) throws IOException {
         assertRunning();
         task.start(this);
         if (task instanceof ParallelTask) {
-            Runner runner = new Runner((ParallelTask) task);
+            Runner runner = new Runner((ParallelTask) task, keepAlive);
             runners.add(runner);
             runner.start();
         }
@@ -96,20 +100,24 @@ public class TaskPool {
     private class Runner extends Thread {
 
         private final ParallelTask task;
+        private final boolean keepAlive;
 
-        Runner(ParallelTask task) {
+        Runner(ParallelTask task, boolean keepAlive) {
             this.task = task;
+            this.keepAlive = keepAlive;
             setName(task.toString());
         }
 
         public void run() {
             try {
                 task.run();
-                TaskPool.this.stop("Task finished: " + task);
+                if (!keepAlive)
+                    TaskPool.this.stop("Task finished: " + task);
             } catch (Exception e) {
                 String msg = "Exception in Task " + task;
                 logger.log(Level.WARNING, msg, e);
-                TaskPool.this.stop(msg);
+                if (!keepAlive)
+                    TaskPool.this.stop(msg);
             }
         }
 

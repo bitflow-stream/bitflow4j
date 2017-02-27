@@ -121,17 +121,23 @@ public class TcpMetricsListener extends ThreadedSampleSource {
         MetricReader.NamedInputStream namedStream =
                 new MetricReader.NamedInputStream(socket.getInputStream(), remote);
         MetricReader input = new MetricReader(pool, marshaller) {
+
+            boolean started = false;
+
             @Override
             public String toString() {
                 return "Receiving samples from " + remote;
             }
 
             @Override
-            protected NamedInputStream nextInput() throws IOException {
+            protected synchronized NamedInputStream nextInput() throws IOException {
+                if (started)
+                    return null;
+                started = true;
                 return namedStream;
             }
         };
-        readSamples(pool, input);
+        readSamples(pool, input, true);
         return remote;
     }
 

@@ -30,7 +30,7 @@ public class TcpMetricsDownloader extends ThreadedSampleSource {
             String source = tcpSources[i];
             TcpMetricsReader reader = new TcpMetricsReader(source, pool, marshaller);
             readers.add(reader);
-            readSamples(pool, reader);
+            readSamples(pool, reader, true);
         }
     }
 
