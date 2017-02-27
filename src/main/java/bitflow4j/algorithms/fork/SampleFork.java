@@ -23,7 +23,7 @@ public class SampleFork extends AbstractAlgorithm {
 
     private final ForkDistributor distributor;
     private final PipelineBuilder builder;
-    private ForkMerger merger;
+    private SynchronizingSink merger;
     private TaskPool pool = new TaskPool();
 
     private final Map<Object, AlgorithmPipeline> subpipelines = new HashMap<>();
@@ -35,7 +35,7 @@ public class SampleFork extends AbstractAlgorithm {
 
     @Override
     public void start(TaskPool pool) throws IOException {
-        merger = new ForkMerger(output());
+        merger = new SynchronizingSink(output());
         super.start(pool);
     }
 

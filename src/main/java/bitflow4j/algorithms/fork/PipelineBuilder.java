@@ -9,6 +9,6 @@ import java.io.IOException;
  */
 public interface PipelineBuilder {
 
-    void build(Object key, AlgorithmPipeline subPipeline, ForkMerger output) throws IOException;
+    void build(Object key, AlgorithmPipeline subPipeline, SynchronizingSink output) throws IOException;
 
 }

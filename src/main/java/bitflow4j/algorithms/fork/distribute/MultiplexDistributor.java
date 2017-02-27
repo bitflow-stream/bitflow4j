@@ -1,7 +1,7 @@
 package bitflow4j.algorithms.fork.distribute;
 
-import bitflow4j.sample.Sample;
 import bitflow4j.algorithms.fork.ForkDistributor;
+import bitflow4j.sample.Sample;
 
 /**
  * Created by anton on 13.02.17.

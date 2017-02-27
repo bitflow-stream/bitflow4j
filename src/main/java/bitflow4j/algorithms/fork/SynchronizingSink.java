@@ -9,13 +9,13 @@ import java.io.IOException;
 /**
  * Created by anton on 13.02.17.
  */
-public class ForkMerger extends AbstractSampleSink {
+public class SynchronizingSink extends AbstractSampleSink {
 
     // This is intentionally public, so that implementations of PipelineBuilder can
     // configure the sink of the sub-pipeline depending on what comes directly after the fork.
     public final SampleSink originalOutgoingSink;
 
-    public ForkMerger(SampleSink sink) {
+    public SynchronizingSink(SampleSink sink) {
         this.originalOutgoingSink = sink;
     }
 
