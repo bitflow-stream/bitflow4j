@@ -131,10 +131,9 @@ public class JDBCConnectorImpl implements JDBCConnector {
 
     @Override
     public JDBCConnector executeReadQuery() throws SQLException {
-        System.out.println("executing query");
         this.sqlSelectStatement = String.format(BASE_SELECT_STATEMENT, dbTable);
         this.selectResultSet = executeQuery(sqlSelectStatement);
-        if (this.selectResultSet == null) System.out.println("ERROR: result set null");
+        if (this.selectResultSet == null) logger.severe("ERROR while executing query: result set null");
         return this;
     }
 
@@ -175,15 +174,12 @@ public class JDBCConnectorImpl implements JDBCConnector {
     public Collection<Sample> readSamples() throws SQLException {
 //        String query = String.format(dbTable, BASE_SELECT_STATEMENT);
 //        ResultSet resultSet = executeQuery(this.sqlSelectStatement);
-        System.out.println("reading samples");
-        System.out.println("SQL statement: " + sqlSelectStatement);
         return parseSelectionResult(this.selectResultSet);
     }
 
     private Collection<Sample> parseSelectionResult(ResultSet resultSet) throws SQLException {
-        System.out.println("parsing selection result");
         if (resultSet == null) {
-            System.out.println("ERROR: empty resultset in parseSelectionResult()");
+            logger.severe("ERROR: empty resultset in parseSelectionResult()");
             return null;
         }
         List<Sample> result = new ArrayList<>(resultSet.getFetchSize());
@@ -195,7 +191,6 @@ public class JDBCConnectorImpl implements JDBCConnector {
     }
 
     private Sample parseSelectionRow(ResultSet resultSet) throws SQLException {
-//        System.out.println("parsing selection row");
         Header header;
         String[] headerStrings;
         double[] values;
@@ -206,25 +201,18 @@ public class JDBCConnectorImpl implements JDBCConnector {
         int numberOfColumns = resultSetMetaData.getColumnCount();
         headerStrings = new String[numberOfColumns - 2];
         values = new double[numberOfColumns - 2];
-//        System.out.println("number of columns: " + numberOfColumns);
         int offset = 0;
         //TODO timestamp and tags will get fixed position at end
         for (int i = 1; i <= numberOfColumns; i++) {
             String columnName = resultSetMetaData.getColumnName(i);
             if (columnName.equals(TIMESTAMP_COL)) {
-//                System.out.println("processing timestamp");
                 timestamp = new Date(resultSet.getLong(i)); //TODO make sure to save Timestamp as Date?
-//                System.out.println("timestamp: " + timestamp);
                 offset += 1;
             } else if (columnName.equals(TAG_COL)) {
-//                System.out.println("processing tag col");
                 String tagString = resultSet.getString(i);
                 tags = parseTagString(tagString);
-//                System.out.println("tagstring: " + tagString);
-//                System.out.println("#(tags): " + tags.size() + 1);
                 offset += 1;
             } else {
-//                System.out.println("processing col: " + columnName);
                 headerStrings[i - 1 - offset] = columnName;
                 values[i - 1 - offset] = resultSet.getDouble(i);
 
@@ -232,17 +220,11 @@ public class JDBCConnectorImpl implements JDBCConnector {
         }
         header = new Header(headerStrings);
         Sample resultSample = new Sample(header, values, timestamp, tags);
-//        System.out.println("Resulting sample: " + resultSample);
         return resultSample;
     }
 
     private Map<String, String> parseTagString(String encodedTags) {
-        //TODO fix split
         String[] tagTokens = encodedTags.split("(,)|(=)");
-        for (String s : tagTokens
-            ) {
-            System.out.println(s);
-        }
         //unsafe for malformatted tagStrings
         Map<String, String> result = new HashMap<>(tagTokens.length / 2);
         for (int i = 0; i < tagTokens.length / 2; i++) {
