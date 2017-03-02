@@ -40,7 +40,7 @@ public interface JDBCConnector {
 
     void setDbTable(String dbTable);
 
-    Sample nextSample();
+    Sample nextSample() throws SQLException;
 
     public enum DB {
         MYSQL(),//("com.mysql.jdbc.Driver"),

@@ -1,12 +1,14 @@
 package bitflow4j.io.database;
 
 import bitflow4j.sample.AbstractSampleSource;
+import bitflow4j.sample.Sample;
 import bitflow4j.sample.StoppableSampleSource;
 import bitflow4j.task.StoppableLoopTask;
 import bitflow4j.task.StoppableTask;
 import bitflow4j.task.TaskPool;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.logging.Logger;
 
 /**
@@ -42,8 +44,14 @@ public abstract class JDBCSampleSource extends AbstractSampleSource implements S
     private class JDBCReaderTask extends StoppableLoopTask {
         @Override
         protected boolean executeIteration() throws IOException {
-            connector.nextSample();
-            //TODO sample sink
+            Sample sampleReadInIteration;
+            try {
+                sampleReadInIteration = connector.nextSample();
+            } catch (SQLException e) {
+                throw new IOException(e);
+            }
+            if (sampleReadInIteration == null) return false;
+            output().writeSample(sampleReadInIteration);
             return true;
         }
     }

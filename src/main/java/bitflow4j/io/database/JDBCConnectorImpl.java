@@ -15,11 +15,11 @@ import java.util.logging.Logger;
 public class JDBCConnectorImpl implements JDBCConnector {
 
 
-    private static final String BASE_INSERT_STATEMENT = "INSERT INTO %s (%s) VALUES (%s);";
-    private static final String BASE_SELECT_STATEMENT = "SELECT * FROM %s;";
     //    private static final String BASE_ALTER_QUERY = "ALTER TABLE public.\"Samples\" ADD COLUMN tags text;";
     private static final String TIMESTAMP_COL = "timestamp";
     private static final String TAG_COL = "tags";
+    private static final String BASE_INSERT_STATEMENT = "INSERT INTO %s (\"%s\",\"" + TIMESTAMP_COL + "\",\"" + TAG_COL + "\") VALUES (%s);";
+    private static final String BASE_SELECT_STATEMENT = "SELECT * FROM %s;";
     private static final Logger logger = Logger.getLogger(JDBCConnectorImpl.class.getName());
     private static final char LINE_SEPERATOR = '\n';
     int selectNumberOfColumns;
@@ -78,7 +78,7 @@ public class JDBCConnectorImpl implements JDBCConnector {
     @Override
     public JDBCConnector setDb(DB db) {
         this.db = db;
-        //TODO maybe remove DB completely, check need of mvn dependencies
+        //TODO maybe remove DB completely, check need of mvn dependencies, depends on table setup
         return this;
     }
 
@@ -127,7 +127,8 @@ public class JDBCConnectorImpl implements JDBCConnector {
     public void writeSample(Sample sample) throws SQLException {
         String valuesToInsert = buildValueString(sample);
         String columnsToInsert = buildColumnString(sample);
-        String query = String.format(dbTable, valuesToInsert, BASE_INSERT_STATEMENT);
+        String query = String.format(BASE_INSERT_STATEMENT, dbTable, columnsToInsert, valuesToInsert);
+        System.out.println("query String: " + query);
         ResultSet resultSet = executeQuery(query);
         //TODO parse and handle result (e.g. any errors)
     }
@@ -135,38 +136,21 @@ public class JDBCConnectorImpl implements JDBCConnector {
     private String buildColumnString(Sample sample) {
         //TODO fix illegal characters for column names
         StringBuilder resultBuilder = new StringBuilder();
-        return String.join(",", sample.getHeader().header);
+        return String.join("\",\"", sample.getHeader().header);
     }
 
     private String buildValueString(Sample sample) {
         StringBuilder resultBuilder = new StringBuilder();
-        String parsedTags = buildTagString(sample.getTags());
-//        for (double metric : sample.getMetrics()) {
-//            resultBuilder.append(metric);
-//            resultBuilder.append(",");
-//        }
+//        String parsedTags = buildTagString(sample.getTags());
+        for (double metric : sample.getMetrics()) {
+            resultBuilder.append(metric);
+            resultBuilder.append(",");
+        }
         resultBuilder.append(sample.getTimestamp().getTime());
         resultBuilder.append(",");
-        resultBuilder.append(parsedTags);
+        resultBuilder.append(buildTagString(sample.getTags()));
         return resultBuilder.toString();
     }
-
-//    public Collection<Sample> readSamples() throws SQLException {
-//        return parseSelectionResult(this.selectResultSet);
-//    }
-
-//    private Collection<Sample> parseSelectionResult(ResultSet resultSet) throws SQLException {
-//        if (resultSet == null) {
-//            logger.severe("ERROR: empty resultset in parseSelectionResult()");
-//            return null;
-//        }
-//        List<Sample> result = new ArrayList<>(resultSet.getFetchSize());
-//        while (resultSet.next()) {
-//            Sample sampleFromRow = parseSelectionRow(resultSet);
-//            result.add(sampleFromRow);
-//        }
-//        return result;
-//    }
 
     private Sample processSelectionRow() throws SQLException {
         return this.selectResultSet.next() == true ? parseSelectionRow() : null;
@@ -204,15 +188,18 @@ public class JDBCConnectorImpl implements JDBCConnector {
 
     private String buildTagString(Map<String, String> tags) {
         StringBuilder resultBuilder = new StringBuilder();
+        resultBuilder.append("\'");
         tags.entrySet().forEach(entry -> {
             resultBuilder.append(entry.getKey());
             resultBuilder.append("=");
             resultBuilder.append(entry.getValue());
             resultBuilder.append(",");
         });
-        //not clean
-        int lastIndexofSeparator = resultBuilder.lastIndexOf(";");
+        //TODO not "clean"
+        int lastIndexofSeparator = resultBuilder.lastIndexOf(",");
         resultBuilder.delete(lastIndexofSeparator, lastIndexofSeparator + 1);
+        //clean
+        resultBuilder.append("\'");
         return resultBuilder.toString();
     }
 
@@ -285,9 +272,8 @@ public class JDBCConnectorImpl implements JDBCConnector {
     }
 
     @Override
-    public Sample nextSample() {
-        //TODO
-        return null;
+    public Sample nextSample() throws SQLException {
+        return processSelectionRow();
     }
 
     @Override
