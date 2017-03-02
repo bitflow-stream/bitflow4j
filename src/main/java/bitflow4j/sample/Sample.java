@@ -63,6 +63,17 @@ public class Sample {
         return result;
     }
 
+    public static String escapeTagString(String tag) {
+        if (tag == null) {
+            return "NULL";
+        }
+        return tag.replaceAll("[ =\n,]", "_");
+    }
+
+    public static Sample newEmptySample() {
+        return new Sample(new Header(new String[0], false), new double[0], new Date());
+    }
+
     public Map<String, String> getTags() {
         return tags;
     }
@@ -100,12 +111,20 @@ public class Sample {
         return getTag(TAG_SOURCE);
     }
 
+    public void setSource(String source) {
+        setTag(TAG_SOURCE, source);
+    }
+
     public boolean hasSource() {
         return getSource() != null;
     }
 
     public String getLabel() {
         return getTag(TAG_LABEL);
+    }
+
+    public void setLabel(String label) {
+        setTag(TAG_LABEL, label);
     }
 
     public boolean hasLabel() {
@@ -116,14 +135,6 @@ public class Sample {
         return header.hasChanged(oldHeader);
     }
 
-    public void setSource(String source) {
-        setTag(TAG_SOURCE, source);
-    }
-
-    public void setLabel(String label) {
-        setTag(TAG_LABEL, label);
-    }
-
     public int getIntTag(String tag) throws IOException {
         int val;
         try {
@@ -132,13 +143,6 @@ public class Sample {
             throw new IOException("Failed to convert tag " + tag + " to int: " + e);
         }
         return val;
-    }
-
-    public static String escapeTagString(String tag) {
-        if (tag == null) {
-            return "NULL";
-        }
-        return tag.replaceAll("[ =\n,]", "_");
     }
 
     public String tagString() {
@@ -183,12 +187,9 @@ public class Sample {
             if (started) b.append(", ");
             b.append(timestamp);
         }
+        b.append(", ");
         b.append(tagString());
         return b.append(")").toString();
-    }
-
-    public static Sample newEmptySample() {
-        return new Sample(new Header(new String[0], false), new double[0], new Date());
     }
 
     public Sample extend(String[] newFields, double newValues[]) {
