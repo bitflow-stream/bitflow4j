@@ -21,40 +21,27 @@ public class JDBCConnectorImpl implements JDBCConnector {
     private static final String TIMESTAMP_COL = "timestamp";
     private static final String TAG_COL = "tags";
     private static final Logger logger = Logger.getLogger(JDBCConnectorImpl.class.getName());
-    private static final String ORACLE_DRIVER = "oracle.jdbc.driver.OracleDriver";
-    private static final String POSTGRES_DRIVER = "org.postgresql.Driver";
-    private static final String MYSQL_DRIVER = "com.mysql.jdbc.Driver";
-    private static final String H2_DRIVER = "org.h2.Driver";
     private static final char LINE_SEPERATOR = '\n';
     private State state;
-    private String dbDriverName;
+    private DB db;
     private String dbName;
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
     private ResultSet selectResultSet;
+    private PreparedStatement stm;
     //todo h2
-//    private String sqlInsertStatement;
     private String sqlSelectStatement;
     private String dbTable;
     private Connection connection;
-
-    public JDBCConnectorImpl(String dbDriver, String dbName, String dbUrl, String dbUser, String dbPassword, String dbTable) {
-//        this.dbDriverName = dbDriver;
-        this.dbName = dbName;
-        this.dbUrl = dbUrl;
-        this.dbUser = dbUser;
-        this.dbPassword = dbPassword;
-        if (dbTable != null) this.dbTable = dbTable;
-        this.init();
-    }
+    private Collection<Mode> mode;
 
     public JDBCConnectorImpl(DB db, String dbName, String dbUrl, String dbUser, String dbPassword, String dbTable) {
         this.dbName = dbName;
         this.dbUrl = dbUrl;
         this.dbUser = dbUser;
         this.dbPassword = dbPassword;
-//        this.setDb(db);
+        this.db = db;
         if (dbTable != null) this.dbTable = dbTable;
         this.init();
     }
@@ -63,11 +50,19 @@ public class JDBCConnectorImpl implements JDBCConnector {
         this.init();
     }
 
+    private boolean canRead() {
+        //TODO
+        return false;
+    }
+
+    private boolean canWrite() {
+        //TODO
+        return false;
+    }
     /**
      * Initializes all empty fields
      */
     private void init() {
-//        if(dbName == null || dbUrl == null || dbUser == null || dbPassword == null) throw new IllegalStateException("Not all mandatory parameters are set");
         if (this.dbName == null) this.dbName = "bitflow4j-sample-db";
         if (this.dbTable == null) this.dbTable = "Samples";
         if (this.dbUser == null) this.dbUser = "root";
@@ -78,54 +73,46 @@ public class JDBCConnectorImpl implements JDBCConnector {
     }
 
     @Override
-    public JDBCConnector setDbDriver(String dbDriver) {
-//        this.dbDriverName = dbDriver;
-        throw new UnsupportedOperationException("Not supported yet!");
-//        return this;
-    }
-
-    @Override
     public JDBCConnector setDb(DB db) {
-        switch (db) {
-            case MYSQL:
-                prepareMSQLDb();
-                break;
-            case POSTGRES:
-                preparePostgresDb();
-                break;
-            case ORACLE:
-                prepareOracleDb();
-                break;
-            case H2:
-                prepareH2Db();
-            default:
-        }
-        try {
-            Class.forName(this.dbDriverName);
-        } catch (ClassNotFoundException e) {
-            logger.severe(e.getMessage());
-        }
-//        prepareDbConnection();
+        this.db = db;
+//        switch (db) {
+//            case MYSQL:
+//                prepareMSQLDb();
+//                break;
+//            case POSTGRES:
+//                preparePostgresDb();
+//                break;
+//            case ORACLE:
+//                prepareOracleDb();
+//                break;
+//            case H2:
+//                prepareH2Db();
+//            default:
+//        }
+//        try {
+//            Class.forName(this.dbDriverName);
+//        } catch (ClassNotFoundException e) {
+//            logger.severe(e.getMessage());
+//        }
         return this;
-//        throw new UnsupportedOperationException("Not supported yet!");
     }
 
-    private void prepareH2Db() {
-        this.dbDriverName = H2_DRIVER;
-
-    }
-
-    private void prepareOracleDb() {
-        this.dbDriverName = ORACLE_DRIVER;
-    }
-
-    private void preparePostgresDb() {
-        this.dbDriverName = POSTGRES_DRIVER;
-    }
-
-    private void prepareMSQLDb() {
-        this.dbDriverName = MYSQL_DRIVER;
-    }
+//    private void prepareH2Db() {
+//        this.dbDriverName = H2_DRIVER;
+//
+//    }
+//
+//    private void prepareOracleDb() {
+//        this.dbDriverName = ORACLE_DRIVER;
+//    }
+//
+//    private void preparePostgresDb() {
+//        this.dbDriverName = POSTGRES_DRIVER;
+//    }
+//
+//    private void prepareMSQLDb() {
+//        this.dbDriverName = MYSQL_DRIVER;
+//    }
 
     @Override
     public JDBCConnector connect() throws SQLException, IllegalStateException {
@@ -144,20 +131,22 @@ public class JDBCConnectorImpl implements JDBCConnector {
 
     @Override
     public JDBCConnector executeReadQuery() throws SQLException {
+        System.out.println("executing query");
         this.sqlSelectStatement = String.format(BASE_SELECT_STATEMENT, dbTable);
         this.selectResultSet = executeQuery(sqlSelectStatement);
+        if (this.selectResultSet == null) System.out.println("ERROR: result set null");
         return this;
     }
 
     private synchronized ResultSet executeQuery(String sqlQuery) throws SQLException {
         Statement sqlStatement = null;
         sqlStatement = connection.createStatement();
+        sqlStatement.execute(sqlQuery);
         return sqlStatement.getResultSet();
     }
 
     public void writeSample(Sample sample) throws SQLException {
         String valuesToInsert = buildValueString(sample);
-        //TODO handle changing headers
         String columnsToInsert = buildColumnString(sample);
         String query = String.format(dbTable, valuesToInsert, BASE_INSERT_STATEMENT);
         ResultSet resultSet = executeQuery(query);
@@ -177,8 +166,7 @@ public class JDBCConnectorImpl implements JDBCConnector {
 //            resultBuilder.append(metric);
 //            resultBuilder.append(",");
 //        }
-        //TODO check correct format of timestamp
-        resultBuilder.append(sample.getTimestamp());
+        resultBuilder.append(sample.getTimestamp().getTime());
         resultBuilder.append(",");
         resultBuilder.append(parsedTags);
         return resultBuilder.toString();
@@ -187,11 +175,13 @@ public class JDBCConnectorImpl implements JDBCConnector {
     public Collection<Sample> readSamples() throws SQLException {
 //        String query = String.format(dbTable, BASE_SELECT_STATEMENT);
 //        ResultSet resultSet = executeQuery(this.sqlSelectStatement);
+        System.out.println("reading samples");
         System.out.println("SQL statement: " + sqlSelectStatement);
         return parseSelectionResult(this.selectResultSet);
     }
 
     private Collection<Sample> parseSelectionResult(ResultSet resultSet) throws SQLException {
+        System.out.println("parsing selection result");
         if (resultSet == null) {
             System.out.println("ERROR: empty resultset in parseSelectionResult()");
             return null;
@@ -199,12 +189,13 @@ public class JDBCConnectorImpl implements JDBCConnector {
         List<Sample> result = new ArrayList<>(resultSet.getFetchSize());
         while (resultSet.next()) {
             Sample sampleFromRow = parseSelectionRow(resultSet);
+            result.add(sampleFromRow);
         }
         return result;
     }
 
     private Sample parseSelectionRow(ResultSet resultSet) throws SQLException {
-
+//        System.out.println("parsing selection row");
         Header header;
         String[] headerStrings;
         double[] values;
@@ -215,28 +206,43 @@ public class JDBCConnectorImpl implements JDBCConnector {
         int numberOfColumns = resultSetMetaData.getColumnCount();
         headerStrings = new String[numberOfColumns - 2];
         values = new double[numberOfColumns - 2];
+//        System.out.println("number of columns: " + numberOfColumns);
         int offset = 0;
         //TODO timestamp and tags will get fixed position at end
-        for (int i = 0; i < numberOfColumns; i++) {
+        for (int i = 1; i <= numberOfColumns; i++) {
             String columnName = resultSetMetaData.getColumnName(i);
             if (columnName.equals(TIMESTAMP_COL)) {
-                //TODO maybe remove timestamp and tags from resultset
-                timestamp = resultSet.getDate(i); //TODO make sure to save Timestamp as Date
+//                System.out.println("processing timestamp");
+                timestamp = new Date(resultSet.getLong(i)); //TODO make sure to save Timestamp as Date?
+//                System.out.println("timestamp: " + timestamp);
                 offset += 1;
             } else if (columnName.equals(TAG_COL)) {
-                tags = parseTagString(resultSet.getString(i));
+//                System.out.println("processing tag col");
+                String tagString = resultSet.getString(i);
+                tags = parseTagString(tagString);
+//                System.out.println("tagstring: " + tagString);
+//                System.out.println("#(tags): " + tags.size() + 1);
                 offset += 1;
             } else {
-                headerStrings[i - offset] = columnName;
-                values[i - offset] = resultSet.getDouble(i);
+//                System.out.println("processing col: " + columnName);
+                headerStrings[i - 1 - offset] = columnName;
+                values[i - 1 - offset] = resultSet.getDouble(i);
+
             }
         }
         header = new Header(headerStrings);
-        return new Sample(header, values, timestamp, tags);
+        Sample resultSample = new Sample(header, values, timestamp, tags);
+//        System.out.println("Resulting sample: " + resultSample);
+        return resultSample;
     }
 
     private Map<String, String> parseTagString(String encodedTags) {
-        String[] tagTokens = encodedTags.split("(;)|(=)");
+        //TODO fix split
+        String[] tagTokens = encodedTags.split("(,)|(=)");
+        for (String s : tagTokens
+            ) {
+            System.out.println(s);
+        }
         //unsafe for malformatted tagStrings
         Map<String, String> result = new HashMap<>(tagTokens.length / 2);
         for (int i = 0; i < tagTokens.length / 2; i++) {
@@ -245,18 +251,13 @@ public class JDBCConnectorImpl implements JDBCConnector {
         return result;
     }
 
-//    private Header parseHeader(ResultSet resultSet) throws SQLException {
-//        TODO make sure columns contain the tags field, handle null tags
-//
-//    }
-
     private String buildTagString(Map<String, String> tags) {
         StringBuilder resultBuilder = new StringBuilder();
         tags.entrySet().forEach(entry -> {
             resultBuilder.append(entry.getKey());
             resultBuilder.append("=");
             resultBuilder.append(entry.getValue());
-            resultBuilder.append(";");
+            resultBuilder.append(",");
         });
         //not clean
         int lastIndexofSeparator = resultBuilder.lastIndexOf(";");
@@ -316,9 +317,8 @@ public class JDBCConnectorImpl implements JDBCConnector {
         return dbName;
     }
 
-    public String getDbDriverName() {
-        throw new UnsupportedOperationException("not yet!");
-//        return dbDriverName;
+    public DB getDb() {
+        return db;
     }
 
     @Override
@@ -334,6 +334,12 @@ public class JDBCConnectorImpl implements JDBCConnector {
     }
 
     @Override
+    public Sample nextSample() {
+        //TODO
+        return null;
+    }
+
+    @Override
     public String toString() {
         StringBuilder resultBuilder = new StringBuilder();
         resultBuilder.append("#JDBCConnectorImpl#\n");
@@ -341,6 +347,9 @@ public class JDBCConnectorImpl implements JDBCConnector {
         resultBuilder.append(state);
         resultBuilder.append(LINE_SEPERATOR);
         resultBuilder.append("db: ");
+        resultBuilder.append(this.db);
+        resultBuilder.append(LINE_SEPERATOR);
+        resultBuilder.append("database name: ");
         resultBuilder.append(this.dbName);
         resultBuilder.append(LINE_SEPERATOR);
         resultBuilder.append("db user: ");
@@ -356,7 +365,7 @@ public class JDBCConnectorImpl implements JDBCConnector {
         resultBuilder.append(dbTable);
         resultBuilder.append(LINE_SEPERATOR);
         resultBuilder.append("driver: ");
-        resultBuilder.append(dbDriverName);
+        resultBuilder.append(db.getDriver());
         resultBuilder.append(LINE_SEPERATOR);
         resultBuilder.append("select statement: ");
         resultBuilder.append(sqlSelectStatement);
@@ -370,7 +379,11 @@ public class JDBCConnectorImpl implements JDBCConnector {
     }
 
     public enum State {
-        INITIALIZED, CONNECTED;
+        INITIALIZED, CONNECTED, READY
+    }
+
+    public enum Mode {
+        R, W
     }
 
 }

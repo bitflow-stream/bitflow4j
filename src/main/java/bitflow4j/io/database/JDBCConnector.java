@@ -9,8 +9,6 @@ import java.util.Collection;
  * Created by malcolmx on 17.02.17.
  */
 public interface JDBCConnector {
-    JDBCConnector setDb(DB db);
-
     JDBCConnector connect() throws SQLException;
 
     String getDbPassword();
@@ -35,15 +33,26 @@ public interface JDBCConnector {
 
     Collection<Sample> readSamples() throws SQLException;
 
-    String getDbDriverName();
+    DB getDb();
 
-    JDBCConnector setDbDriver(String dbDriver);
+    JDBCConnector setDb(DB db);
 
     String getDbTable();
 
     void setDbTable(String dbTable);
 
+    Sample nextSample();
+
     public enum DB {
-        MYSQL, POSTGRES, ORACLE, H2;
+        MYSQL("com.mysql.jdbc.Driver"), POSTGRES("org.postgresql.Driver"), ORACLE("oracle.jdbc.driver.OracleDriver"), H2("org.h2.Driver"), SQLite("");
+        private String driver;
+
+        DB(String driver) {
+            this.driver = driver;
+        }
+
+        public String getDriver() {
+            return driver;
+        }
     }
 }
