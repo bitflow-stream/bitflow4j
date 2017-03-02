@@ -3,7 +3,6 @@ package bitflow4j.io.database;
 import bitflow4j.sample.Sample;
 
 import java.sql.SQLException;
-import java.util.Collection;
 
 /**
  * Created by malcolmx on 17.02.17.
@@ -31,7 +30,7 @@ public interface JDBCConnector {
 
     void writeSample(Sample sample) throws SQLException;
 
-    Collection<Sample> readSamples() throws SQLException;
+//    Collection<Sample> readSamples() throws SQLException;
 
     DB getDb();
 

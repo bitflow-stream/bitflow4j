@@ -4,8 +4,8 @@ import bitflow4j.sample.Header;
 import bitflow4j.sample.Sample;
 
 import java.sql.*;
-import java.sql.Date;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
@@ -22,6 +22,9 @@ public class JDBCConnectorImpl implements JDBCConnector {
     private static final String TAG_COL = "tags";
     private static final Logger logger = Logger.getLogger(JDBCConnectorImpl.class.getName());
     private static final char LINE_SEPERATOR = '\n';
+    int selectNumberOfColumns;
+    private Header header;
+    private ResultSetMetaData selectResultSetMetaData;
     private State state;
     private DB db;
     private String dbName;
@@ -30,11 +33,11 @@ public class JDBCConnectorImpl implements JDBCConnector {
     private String dbPassword;
     private ResultSet selectResultSet;
     private PreparedStatement stm;
-    //todo h2
     private String sqlSelectStatement;
     private String dbTable;
     private Connection connection;
     private Mode mode;
+    //TODO introduce prepared statements
 
     public JDBCConnectorImpl(DB db, String dbName, String dbUrl, String dbUser, String dbPassword, String dbTable) {
         this.dbName = dbName;
@@ -75,44 +78,9 @@ public class JDBCConnectorImpl implements JDBCConnector {
     @Override
     public JDBCConnector setDb(DB db) {
         this.db = db;
-//        switch (db) {
-//            case MYSQL:
-//                prepareMSQLDb();
-//                break;
-//            case POSTGRES:
-//                preparePostgresDb();
-//                break;
-//            case ORACLE:
-//                prepareOracleDb();
-//                break;
-//            case H2:
-//                prepareH2Db();
-//            default:
-//        }
-//        try {
-//            Class.forName(this.dbDriverName);
-//        } catch (ClassNotFoundException e) {
-//            logger.severe(e.getMessage());
-//        }
+        //TODO maybe remove DB completely, check need of mvn dependencies
         return this;
     }
-
-//    private void prepareH2Db() {
-//        this.dbDriverName = H2_DRIVER;
-//
-//    }
-//
-//    private void prepareOracleDb() {
-//        this.dbDriverName = ORACLE_DRIVER;
-//    }
-//
-//    private void preparePostgresDb() {
-//        this.dbDriverName = POSTGRES_DRIVER;
-//    }
-//
-//    private void prepareMSQLDb() {
-//        this.dbDriverName = MYSQL_DRIVER;
-//    }
 
     @Override
     public JDBCConnector connect() throws SQLException, IllegalStateException {
@@ -133,8 +101,20 @@ public class JDBCConnectorImpl implements JDBCConnector {
     public JDBCConnector executeReadQuery() throws SQLException {
         this.sqlSelectStatement = String.format(BASE_SELECT_STATEMENT, dbTable);
         this.selectResultSet = executeQuery(sqlSelectStatement);
+        this.selectResultSetMetaData = selectResultSet.getMetaData();
+        this.selectNumberOfColumns = selectResultSetMetaData.getColumnCount();
+        this.header = parseHeader();
         if (this.selectResultSet == null) logger.severe("ERROR while executing query: result set null");
         return this;
+    }
+
+    private Header parseHeader() throws SQLException {
+        String[] header = new String[selectNumberOfColumns - 2];
+        for (int i = 1; i <= selectNumberOfColumns - 2; i++) {
+            String columnName = selectResultSetMetaData.getColumnName(i);
+            header[i - 1] = columnName;
+        }
+        return new Header(header);
     }
 
     private synchronized ResultSet executeQuery(String sqlQuery) throws SQLException {
@@ -171,55 +151,45 @@ public class JDBCConnectorImpl implements JDBCConnector {
         return resultBuilder.toString();
     }
 
-    public Collection<Sample> readSamples() throws SQLException {
-//        String query = String.format(dbTable, BASE_SELECT_STATEMENT);
-//        ResultSet resultSet = executeQuery(this.sqlSelectStatement);
-        return parseSelectionResult(this.selectResultSet);
+//    public Collection<Sample> readSamples() throws SQLException {
+//        return parseSelectionResult(this.selectResultSet);
+//    }
+
+//    private Collection<Sample> parseSelectionResult(ResultSet resultSet) throws SQLException {
+//        if (resultSet == null) {
+//            logger.severe("ERROR: empty resultset in parseSelectionResult()");
+//            return null;
+//        }
+//        List<Sample> result = new ArrayList<>(resultSet.getFetchSize());
+//        while (resultSet.next()) {
+//            Sample sampleFromRow = parseSelectionRow(resultSet);
+//            result.add(sampleFromRow);
+//        }
+//        return result;
+//    }
+
+    private Sample processSelectionRow() throws SQLException {
+        return this.selectResultSet.next() == true ? parseSelectionRow() : null;
     }
 
-    private Collection<Sample> parseSelectionResult(ResultSet resultSet) throws SQLException {
-        if (resultSet == null) {
-            logger.severe("ERROR: empty resultset in parseSelectionResult()");
-            return null;
-        }
-        List<Sample> result = new ArrayList<>(resultSet.getFetchSize());
-        while (resultSet.next()) {
-            Sample sampleFromRow = parseSelectionRow(resultSet);
-            result.add(sampleFromRow);
-        }
-        return result;
-    }
-
-    private Sample parseSelectionRow(ResultSet resultSet) throws SQLException {
-        Header header;
-        String[] headerStrings;
+    private Sample parseSelectionRow() throws SQLException {
         double[] values;
         Date timestamp = null;
         Map<String, String> tags = null;
-
-        ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
-        int numberOfColumns = resultSetMetaData.getColumnCount();
-        headerStrings = new String[numberOfColumns - 2];
-        values = new double[numberOfColumns - 2];
-//        int offset = 0;
-        timestamp = new Date(resultSet.getLong(TIMESTAMP_COL)); //TODO make sure to save Timestamp as Date?
-        String tagString = resultSet.getString(TAG_COL);
+        values = new double[selectNumberOfColumns - 2];
+        timestamp = new Date(this.selectResultSet.getLong(TIMESTAMP_COL)); //TODO make sure to save Timestamp as Date?
+        String tagString = this.selectResultSet.getString(TAG_COL);
         tags = parseTagString(tagString);
-        for (int i = 1; i <= numberOfColumns - 2; i++) {
-            String columnName = resultSetMetaData.getColumnName(i);
-//            if (columnName.equals(TIMESTAMP_COL)) {
-//                offset += 1;
-//            } else if (columnName.equals(TAG_COL)) {
-//                offset += 1;
-//            } else {
-            headerStrings[i - 1] = columnName;
-            values[i - 1] = resultSet.getDouble(i);
-
-//            }
-        }
-        header = new Header(headerStrings);
+        this.makeValues(values);
+        //TODO make copy of String array (header) to avoid side-effects
         Sample resultSample = new Sample(header, values, timestamp, tags);
         return resultSample;
+    }
+
+    private void makeValues(double[] values) throws SQLException {
+        for (int i = 1; i <= selectNumberOfColumns - 2; i++) {
+            values[i - 1] = this.selectResultSet.getDouble(i);
+        }
     }
 
     private Map<String, String> parseTagString(String encodedTags) {
