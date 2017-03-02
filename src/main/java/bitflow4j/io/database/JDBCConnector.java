@@ -44,15 +44,19 @@ public interface JDBCConnector {
     Sample nextSample();
 
     public enum DB {
-        MYSQL("com.mysql.jdbc.Driver"), POSTGRES("org.postgresql.Driver"), ORACLE("oracle.jdbc.driver.OracleDriver"), H2("org.h2.Driver"), SQLite("");
-        private String driver;
+        MYSQL(),//("com.mysql.jdbc.Driver"),
+        POSTGRES(),//("org.postgresql.Driver"),
+        ORACLE()//("oracle.jdbc.driver.OracleDriver")
+        , H2()//("org.h2.Driver")
+        , SQLite()//("");
+//        private String driver;
+//
+//        DB(String driver) {
+//            this.driver = driver;
+//        }
 
-        DB(String driver) {
-            this.driver = driver;
-        }
-
-        public String getDriver() {
-            return driver;
-        }
+//        public String getDriver() {
+//            return driver;
+//        }
     }
 }

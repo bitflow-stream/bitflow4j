@@ -34,7 +34,7 @@ public class JDBCConnectorImpl implements JDBCConnector {
     private String sqlSelectStatement;
     private String dbTable;
     private Connection connection;
-    private Collection<Mode> mode;
+    private Mode mode;
 
     public JDBCConnectorImpl(DB db, String dbName, String dbUrl, String dbUser, String dbPassword, String dbTable) {
         this.dbName = dbName;
@@ -201,22 +201,21 @@ public class JDBCConnectorImpl implements JDBCConnector {
         int numberOfColumns = resultSetMetaData.getColumnCount();
         headerStrings = new String[numberOfColumns - 2];
         values = new double[numberOfColumns - 2];
-        int offset = 0;
-        //TODO timestamp and tags will get fixed position at end
-        for (int i = 1; i <= numberOfColumns; i++) {
+//        int offset = 0;
+        timestamp = new Date(resultSet.getLong(TIMESTAMP_COL)); //TODO make sure to save Timestamp as Date?
+        String tagString = resultSet.getString(TAG_COL);
+        tags = parseTagString(tagString);
+        for (int i = 1; i <= numberOfColumns - 2; i++) {
             String columnName = resultSetMetaData.getColumnName(i);
-            if (columnName.equals(TIMESTAMP_COL)) {
-                timestamp = new Date(resultSet.getLong(i)); //TODO make sure to save Timestamp as Date?
-                offset += 1;
-            } else if (columnName.equals(TAG_COL)) {
-                String tagString = resultSet.getString(i);
-                tags = parseTagString(tagString);
-                offset += 1;
-            } else {
-                headerStrings[i - 1 - offset] = columnName;
-                values[i - 1 - offset] = resultSet.getDouble(i);
+//            if (columnName.equals(TIMESTAMP_COL)) {
+//                offset += 1;
+//            } else if (columnName.equals(TAG_COL)) {
+//                offset += 1;
+//            } else {
+            headerStrings[i - 1] = columnName;
+            values[i - 1] = resultSet.getDouble(i);
 
-            }
+//            }
         }
         header = new Header(headerStrings);
         Sample resultSample = new Sample(header, values, timestamp, tags);
@@ -249,7 +248,7 @@ public class JDBCConnectorImpl implements JDBCConnector {
 
     @Override
     public JDBCConnector setDbName(String dbName) {
-        if (this.state == State.CONNECTED)
+        if (this.state == State.CONNECTED || this.state == State.READY)
             throw new IllegalStateException("Cannot change dbName while connected to db. Disconnect first and then reconnect.");
         this.dbName = dbName;
         return this;
@@ -257,7 +256,7 @@ public class JDBCConnectorImpl implements JDBCConnector {
 
     @Override
     public JDBCConnector setDbUrl(String dbUrl) {
-        if (this.state == State.CONNECTED)
+        if (this.state == State.CONNECTED || this.state == State.READY)
             throw new IllegalStateException("Cannot change dbUrl while connected to db. Disconnect first and then reconnect.");
         this.dbUrl = dbUrl;
         return this;
@@ -265,7 +264,7 @@ public class JDBCConnectorImpl implements JDBCConnector {
 
     @Override
     public JDBCConnector setDbUser(String dbUser) {
-        if (this.state == State.CONNECTED)
+        if (this.state == State.CONNECTED || this.state == State.READY)
             throw new IllegalStateException("Cannot change dbUser while connected to db. Disconnect first and then reconnect.");
         this.dbUser = dbUser;
         return this;
@@ -273,7 +272,7 @@ public class JDBCConnectorImpl implements JDBCConnector {
 
     @Override
     public JDBCConnector setDbPassword(String dbPassword) {
-        if (this.state == State.CONNECTED)
+        if (this.state == State.CONNECTED || this.state == State.READY)
             throw new IllegalStateException("Cannot change dbPassword while connected to db. Disconnect first and then reconnect.");
         this.dbPassword = dbPassword;
         return this;
@@ -310,7 +309,7 @@ public class JDBCConnectorImpl implements JDBCConnector {
 
     @Override
     public void setDbTable(String dbTable) {
-        if (this.state == State.CONNECTED)
+        if (this.state == State.CONNECTED || this.state == State.READY)
             throw new IllegalStateException("Cannot change dbTable while connected to db. Disconnect first and then reconnect.");
         this.dbTable = dbTable;
     }
@@ -346,9 +345,6 @@ public class JDBCConnectorImpl implements JDBCConnector {
         resultBuilder.append("db table: ");
         resultBuilder.append(dbTable);
         resultBuilder.append(LINE_SEPERATOR);
-        resultBuilder.append("driver: ");
-        resultBuilder.append(db.getDriver());
-        resultBuilder.append(LINE_SEPERATOR);
         resultBuilder.append("select statement: ");
         resultBuilder.append(sqlSelectStatement);
         resultBuilder.append(LINE_SEPERATOR);
@@ -365,7 +361,7 @@ public class JDBCConnectorImpl implements JDBCConnector {
     }
 
     public enum Mode {
-        R, W
+        R, W, RW
     }
 
 }
