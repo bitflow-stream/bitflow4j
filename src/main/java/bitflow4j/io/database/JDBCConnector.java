@@ -26,7 +26,7 @@ public interface JDBCConnector {
 
     JDBCConnector setDbName(String dbName);
 
-    JDBCConnector executeReadQuery() throws SQLException;
+    JDBCConnector prepareRead() throws SQLException;
 
     void writeSample(Sample sample) throws SQLException;
 

@@ -22,6 +22,7 @@ public class JDBCConnectorImpl implements JDBCConnector {
     private static final String TAG_COL = "tags";
     private static final String BASE_INSERT_STATEMENT = "INSERT INTO %s (\"%s\",\"" + TIMESTAMP_COL + "\",\"" + TAG_COL + "\") VALUES (%s);";
     private static final String BASE_SELECT_STATEMENT = "SELECT * FROM %s;";
+    //TODO add schema support
     private static final String BASE_CREATE_STATEMENT = "CREATE TABLE IF NOT EXIST %s (\"timestamp\" %s,\"tags\" %s)";
     private static final String BASE_ALTER_STATEMENT = "ALTER TABLE %s ADD (%s) ";
     private static final Logger logger = Logger.getLogger(JDBCConnectorImpl.class.getName());
@@ -108,7 +109,7 @@ public class JDBCConnectorImpl implements JDBCConnector {
     }
 
     @Override
-    public JDBCConnector executeReadQuery() throws SQLException {
+    public JDBCConnector prepareRead() throws SQLException {
         this.sqlSelectStatement = String.format(BASE_SELECT_STATEMENT, dbTableSelect);
         this.selectResultSet = executeQuery(sqlSelectStatement);
         this.selectResultSetMetaData = selectResultSet.getMetaData();
@@ -122,6 +123,7 @@ public class JDBCConnectorImpl implements JDBCConnector {
     //                 INSERT
     //####################################################
 
+    //TODO change to new table name
     public void writeSample(Sample sample) throws SQLException {
         String valuesToInsert = buildValueString(sample);
         String columnsToInsert = buildColumnString(sample);
@@ -175,14 +177,21 @@ public class JDBCConnectorImpl implements JDBCConnector {
         return resultBuilder.toString();
     }
 
+    public JDBCConnectorImpl prepareInsert() throws SQLException {
+        this.createTable();
+        return this;
+    }
+
 
     //####################################################
     //                 CREATE
     //####################################################
 
-    private void createTable() {
-
+    private void createTable() throws SQLException {
+        String query = String.format(BASE_CREATE_STATEMENT, this.dbTableInsert, db.longType(), db.stringType());
 //        PreparedStatement preparedStatement = connection.prepareStatement();
+        //TODO use correct execute and handle result: fix later
+        ResultSet resultSet = executeQuery(query);
     }
 
     //####################################################
@@ -199,6 +208,8 @@ public class JDBCConnectorImpl implements JDBCConnector {
     private void addColumns(List<String> columns) throws SQLException {
         String columnsToAdd = buildColumnString(columns);
         String query = String.format(BASE_ALTER_STATEMENT, dbTableInsert, columnsToAdd);
+        //TODO change to update
+        ResultSet resultSet = executeQuery(query);
     }
 
     private String buildColumnString(List<String> columns) {
@@ -356,14 +367,14 @@ public class JDBCConnectorImpl implements JDBCConnector {
         this.state = State.INITIALIZED;
         return this;
     }
-
-    private boolean checkIfTableExists() throws SQLException {
-        ResultSet resultSet = connection.getMetaData().getTables(null, this.dbSchemaSelect, this.dbTableSelect, new String[]{"TABLE"});
-        if (resultSet.next()) {
-            if (resultSet.getString("TABLE_NAME").equals(this.dbTableSelect)) return true;
-        }
-        return false;
-    }
+//
+//    private boolean checkIfTableExists() throws SQLException {
+//        ResultSet resultSet = connection.getMetaData().getTables(null, this.dbSchemaSelect, this.dbTableSelect, new String[]{"TABLE"});
+//        if (resultSet.next()) {
+//            if (resultSet.getString("TABLE_NAME").equals(this.dbTableSelect)) return true;
+//        }
+//        return false;
+//    }
 
     @Override
     public String toString() {
