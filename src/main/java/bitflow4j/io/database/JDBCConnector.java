@@ -36,26 +36,50 @@ public interface JDBCConnector {
 
     JDBCConnector setDb(DB db);
 
-    String getDbTable();
+    JDBCConnector setDbSchema(String schema);
 
-    void setDbTable(String dbTable);
+    String getDbSchemaSelect();
+
+    String getDbTableSelect();
+
+    void setDbTableSelect(String dbTableSelect);
 
     Sample nextSample() throws SQLException;
 
     public enum DB {
-        MYSQL(),//("com.mysql.jdbc.Driver"),
-        POSTGRES(),//("org.postgresql.Driver"),
-        ORACLE()//("oracle.jdbc.driver.OracleDriver")
-        , H2()//("org.h2.Driver")
-        , SQLite()//("");
-//        private String driver;
-//
-//        DB(String driver) {
-//            this.driver = driver;
-//        }
+        MYSQL("DOUBLE", "BIGINT", "TEXT"),//("com.mysql.jdbc.Driver"),
+        POSTGRES("double precision", "bigint", "text"),//("org.postgresql.Driver"),
+        //        ORACLE("real", "", ""),//("oracle.jdbc.driver.OracleDriver")   -- support maybe later, Strings allways have a max length
+        H2("DOUBLE", "BIGINT", "VARCHAR")//("org.h2.Driver")
+        , SQLite("REAL", "INTEGER", "TEXT")//("");
+        ;
+        private String doubleTypeString;
 
 //        public String getDriver() {
 //            return driver;
 //        }
+private String stringTypeString;
+        private String longTypeString;
+
+        //        private String driver;
+//
+        DB(String doubleTypeString, String longTypeString, String stringTypeString) {
+//            this.driver = driver;
+            this.doubleTypeString = doubleTypeString;
+            this.longTypeString = longTypeString;
+            this.stringTypeString = stringTypeString;
+        }
+
+        public String doubleType() {
+            return this.doubleTypeString;
+        }
+
+        public String longType() {
+            return this.longTypeString;
+        }
+
+        public String stringType() {
+            return this.stringTypeString;
+        }
     }
 }
