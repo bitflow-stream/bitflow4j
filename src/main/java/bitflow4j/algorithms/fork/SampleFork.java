@@ -9,6 +9,7 @@ import bitflow4j.sample.StoppableSampleSource;
 import bitflow4j.task.TaskPool;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -46,7 +47,14 @@ public class SampleFork extends AbstractAlgorithm {
         for (Object key : keys) {
             AlgorithmPipeline pipe = getPipeline(key);
             SampleSink sink = pipe.steps.isEmpty() ? pipe.sink : pipe.steps.get(0);
-            sink.writeSample(sample);
+
+            // Cloning the sample is necessary because the sub-pipelines might
+            // change the metrics independent of each other
+            // TODO optimize all Algorithms to reuse the metrics array instead of copying
+            // Make sure the samples are copied where necessary, like here.
+            double outMetrics[] = Arrays.copyOf(sample.getMetrics(), sample.getMetrics().length);
+            Sample outSample = new Sample(sample.getHeader(), outMetrics, sample);
+            sink.writeSample(outSample);
         }
     }
 
