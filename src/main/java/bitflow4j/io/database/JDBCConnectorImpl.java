@@ -4,10 +4,8 @@ import bitflow4j.sample.Header;
 import bitflow4j.sample.Sample;
 
 import java.sql.*;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.Date;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -22,12 +20,13 @@ public class JDBCConnectorImpl implements JDBCConnector {
     private static final String TAG_COL = "tags";
     private static final String BASE_INSERT_STATEMENT = "INSERT INTO %s (\"%s\",\"" + TIMESTAMP_COL + "\",\"" + TAG_COL + "\") VALUES (%s);";
     private static final String BASE_SELECT_STATEMENT = "SELECT * FROM %s;";
-    //TODO add schema support
     private static final String BASE_CREATE_STATEMENT = "CREATE TABLE IF NOT EXIST %s (\"timestamp\" %s,\"tags\" %s)";
     private static final String BASE_ALTER_STATEMENT = "ALTER TABLE %s ADD (%s) ";
     private static final Logger logger = Logger.getLogger(JDBCConnectorImpl.class.getName());
     private static final char LINE_SEPERATOR = '\n';
-    int selectNumberOfColumns;
+    private int selectNumberOfColumns;
+
+    private Sample lastWrittenSample = null;
     private String dbSchemaSelect;
     private String dbSchemaInsert;
     private Header header;
@@ -48,7 +47,6 @@ public class JDBCConnectorImpl implements JDBCConnector {
     private String dbTableInsert;
     private Connection connection;
     private Mode mode;
-    //TODO introduce prepared statements
 
     public JDBCConnectorImpl(DB db, String dbName, String dbUrl, String dbUser, String dbPassword, String dbSchema, String dbTable) {
         this.dbSchemaSelect = dbSchema; //TODO add schema to other methods
@@ -83,17 +81,16 @@ public class JDBCConnectorImpl implements JDBCConnector {
         Date timestamp = null;
         Map<String, String> tags = null;
         values = new double[selectNumberOfColumns - 2];
-        timestamp = new Date(this.selectResultSet.getLong(TIMESTAMP_COL)); //TODO make sure to save Timestamp as Date?
+        timestamp = new Date(this.selectResultSet.getLong(TIMESTAMP_COL));
         String tagString = this.selectResultSet.getString(TAG_COL);
         tags = parseTagString(tagString);
         this.makeValues(values);
-        //TODO make copy of String array (header) to avoid side-effects
         Sample resultSample = new Sample(header, values, timestamp, tags);
         return resultSample;
     }
 
     private void makeValues(double[] values) throws SQLException {
-        for (int i = 1; i <= selectNumberOfColumns - 2; i++) {
+        for (int i = 3; i <= selectNumberOfColumns; i++) {
             values[i - 1] = this.selectResultSet.getDouble(i);
         }
     }
@@ -122,16 +119,21 @@ public class JDBCConnectorImpl implements JDBCConnector {
     //####################################################
     //                 INSERT
     //####################################################
-
-    //TODO change to new table name
+    //TODO lock table
     public void writeSample(Sample sample) throws SQLException {
+        if (lastWrittenSample == null || sample.headerChanged(lastWrittenSample.getHeader())) {
+            checkTableColumns(sample);
+        }
+
         String valuesToInsert = buildValueString(sample);
         String columnsToInsert = buildColumnString(sample);
-        String query = String.format(BASE_INSERT_STATEMENT, dbTableSelect, columnsToInsert, valuesToInsert);
+        String query = String.format(BASE_INSERT_STATEMENT, dbTableInsert, columnsToInsert, valuesToInsert);
         System.out.println("query String: " + query);
         ResultSet resultSet = executeQuery(query);
+        lastWrittenSample = sample;
         //TODO parse and handle result (e.g. any errors)
     }
+
     private Header parseHeader() throws SQLException {
         String[] header = new String[selectNumberOfColumns - 2];
         for (int i = 1; i <= selectNumberOfColumns - 2; i++) {
@@ -198,11 +200,25 @@ public class JDBCConnectorImpl implements JDBCConnector {
     //                 ALTER
     //####################################################
 
-    private List<String> findNewColumns(String[] oldStrings, String[] newStrings) {
-        List<String> oldCols = Arrays.asList(oldStrings);
-        List<String> newCols = Arrays.asList(newStrings);
-        oldCols.removeAll(newCols);
-        return oldCols;
+    private boolean checkTableColumns(Sample sample) throws SQLException {
+        String[] oldCols;
+        String[] newCols;
+        ResultSet resultSet = connection.getMetaData().getColumns(null, this.dbSchemaInsert, this.dbTableInsert, null);
+        int i = 1;
+        List<String> columns = new ArrayList<>(resultSet.getFetchSize());
+        List<String> sampleColumns = Arrays.asList(sample.getHeader().header);
+        while (resultSet.next()) {
+//            String columnName = resultSet.getString(i);
+//            if(i == 1 && !columnName.equals(TIMESTAMP_COL) || i==2 && !columnName.equals(TAG_COL)) return false;
+            columns.add(resultSet.getString(i++));
+        }
+        findNewColumns(columns, sampleColumns);
+        //TODO current wip and change return value
+        return false;
+    }
+
+    private void findNewColumns(List<String> oldCols, List<String> newCols) {
+        newCols.removeAll(oldCols);
     }
 
     private void addColumns(List<String> columns) throws SQLException {
@@ -288,7 +304,6 @@ public class JDBCConnectorImpl implements JDBCConnector {
     @Override
     public JDBCConnector setDb(DB db) {
         this.db = db;
-        //TODO maybe remove DB completely, check need of mvn dependencies, depends on table setup
         return this;
     }
 
