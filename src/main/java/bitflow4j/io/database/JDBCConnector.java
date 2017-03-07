@@ -28,6 +28,8 @@ public interface JDBCConnector {
 
     JDBCConnector setDbName(String dbName);
 
+    JDBCConnector setDbSchemaInsert(String schema);
+
     JDBCConnector prepareRead() throws SQLException;
 
     void writeSample(Sample sample) throws SQLException;
@@ -38,15 +40,19 @@ public interface JDBCConnector {
 
     JDBCConnector setDb(DB db);
 
-    JDBCConnector setDbSchema(String schema);
+    JDBCConnectorImpl prepareInsert() throws SQLException;
 
     String getDbSchemaSelect();
+
+    JDBCConnector setDbSchemaSelect(String schema);
 
     String getDbTableSelect();
 
     void setDbTableSelect(String dbTableSelect);
 
     Sample nextSample() throws SQLException;
+
+    void setDbTableInsert(String dbTableInsert);
 
     public enum DB {
         MYSQL("DOUBLE", "BIGINT", "TEXT"),//("com.mysql.jdbc.Driver"),
