@@ -10,6 +10,8 @@ import java.sql.SQLException;
 public interface JDBCConnector {
     JDBCConnector connect() throws SQLException;
 
+    JDBCConnector disconnect() throws SQLException;
+
     String getDbPassword();
 
     JDBCConnector setDbPassword(String dbPassword);
@@ -55,10 +57,10 @@ public interface JDBCConnector {
         ;
         private String doubleTypeString;
 
-//        public String getDriver() {
+        //        public String getDriver() {
 //            return driver;
 //        }
-private String stringTypeString;
+        private String stringTypeString;
         private String longTypeString;
 
         //        private String driver;

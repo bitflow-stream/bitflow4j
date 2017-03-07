@@ -232,7 +232,7 @@ public class JDBCConnectorImpl implements JDBCConnector {
         StringBuilder resultBuilder = new StringBuilder();
         String columnType = db.doubleType();
         for (String column :
-            columns) {
+                columns) {
             resultBuilder.append("column");
             resultBuilder.append(" ");
             resultBuilder.append(columnType);
@@ -376,6 +376,7 @@ public class JDBCConnectorImpl implements JDBCConnector {
         return this;
     }
 
+    @Override
     public JDBCConnector disconnect() throws SQLException {
         if (this.state != State.CONNECTED) return this;
         this.connection.close();
