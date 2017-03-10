@@ -67,6 +67,12 @@ public class FileMetricReader extends ThreadedSampleSource {
         readSamples(pool, reader);
     }
 
+    protected boolean readerException() {
+        // When reading files, shut down on the first read error.
+        stopTasks();
+        return false;
+    }
+
     @Override
     public void run() throws IOException {
         // All readers have been added, so we can immediately start waiting for them to finish

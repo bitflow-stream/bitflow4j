@@ -37,7 +37,7 @@ public class TcpMetricsDownloader extends ThreadedSampleSource {
     @Override
     public void run() throws IOException {
         // All readers have been added, so we can immediately start waiting for them to finish
-        // Since the connection is continuously re-established, this should not actually happen.
+        // Since the connections are continuously re-established, this should not actually happen.
         shutDown();
         super.run();
     }

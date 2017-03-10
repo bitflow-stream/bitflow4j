@@ -1,11 +1,12 @@
 package bitflow4j.io.net;
 
+import bitflow4j.io.AbstractMetricPrinter;
 import bitflow4j.io.marshall.Marshaller;
 import bitflow4j.sample.Sample;
-import bitflow4j.io.AbstractMetricPrinter;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -16,6 +17,8 @@ import java.util.logging.Logger;
 public class TcpMetricsOutput extends AbstractMetricPrinter {
 
     private static final Logger logger = Logger.getLogger(TcpMetricsOutput.class.getName());
+
+    public static final int TCP_CONNECT_TIMEOUT_MILLIS = 3000;
 
     private final String targetHost;
     private final int targetPort;
@@ -38,16 +41,22 @@ public class TcpMetricsOutput extends AbstractMetricPrinter {
         try {
             super.writeSample(sample);
         } catch (IOException exc) {
-            logger.log(connectionErrorLevel,
-                    "Failed to send sample to " + targetHost + ":" + targetPort + ": " + exc);
+            logger.log(connectionErrorLevel, "Failed to send sample to " + targetHost + ":" + targetPort + ": " + exc);
             closeSocket();
         }
     }
 
     protected OutputStream nextOutputStream() throws IOException {
-        closeSocket();
-        socket = new Socket(targetHost, targetPort);
-        return socket.getOutputStream();
+        try {
+            closeSocket();
+            socket = new Socket();
+            socket.connect(new InetSocketAddress(targetHost, targetPort), TCP_CONNECT_TIMEOUT_MILLIS);
+            return socket.getOutputStream();
+        } catch (IOException exc) {
+            logger.log(connectionErrorLevel, "Failed to connect to " + targetHost + ":" + targetPort + ": ", exc);
+            closeSocket();
+            return null;
+        }
     }
 
     private void closeSocket() {

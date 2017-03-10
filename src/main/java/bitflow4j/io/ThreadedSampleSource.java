@@ -70,9 +70,9 @@ public abstract class ThreadedSampleSource extends AbstractSampleSource implemen
         }
     }
 
-    protected void readerException() {
-        // By default, shut down when an Exception occurs
-        stopTasks();
+    protected boolean readerException() {
+        // By default, do not shut down when an Exception occurs, keep going until the user shuts us down.
+        return true;
     }
 
     private class LoopSampleReader extends LoopTask {
@@ -106,8 +106,7 @@ public abstract class ThreadedSampleSource extends AbstractSampleSource implemen
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "Exception in " + reader.toString() +
                         ", running as part of: " + ThreadedSampleSource.this, e);
-                readerException();
-                return false;
+                return readerException();
             }
         }
 
