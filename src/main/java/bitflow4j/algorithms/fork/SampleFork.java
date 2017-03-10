@@ -24,7 +24,7 @@ public class SampleFork extends AbstractAlgorithm {
 
     private final ForkDistributor distributor;
     private final PipelineBuilder builder;
-    private SynchronizingSink merger;
+    private final Object sinkLock = new Object();
     private final TaskPool pool = new TaskPool();
 
     private final Map<Object, AlgorithmPipeline> subPipelines = new HashMap<>();
@@ -32,12 +32,6 @@ public class SampleFork extends AbstractAlgorithm {
     public SampleFork(ForkDistributor distributor, PipelineBuilder builder) {
         this.distributor = distributor;
         this.builder = builder;
-    }
-
-    @Override
-    public void start(TaskPool pool) throws IOException {
-        merger = new SynchronizingSink(output());
-        super.start(pool);
     }
 
     @Override
@@ -74,6 +68,7 @@ public class SampleFork extends AbstractAlgorithm {
             return subPipelines.get(key);
         }
         AlgorithmPipeline pipeline = new AlgorithmPipeline();
+        SynchronizingSink merger = new SynchronizingSink(sinkLock, output());
         builder.build(key, pipeline, merger);
         if (pipeline.source != null) {
             logger.log(Level.WARNING,
