@@ -40,7 +40,7 @@ public class FileGroup {
     }
 
     public Pattern getFilePattern(String suffix) {
-        return Pattern.compile("^" + fileStart + "(\\-" + suffix + ")?" + fileEnd + "$");
+        return Pattern.compile("^" + fileStart + "(-" + suffix + ")?" + fileEnd + "$");
     }
 
     public Pattern getFilePattern() {

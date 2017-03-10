@@ -25,7 +25,7 @@ public class TcpMetricsListener extends ThreadedSampleSource {
 
     private ConnectionAcceptor connectionAcceptor;
 
-    public TcpMetricsListener(int port, Marshaller marshaller) throws IOException {
+    public TcpMetricsListener(int port, Marshaller marshaller) {
         this.marshaller = marshaller;
         this.port = port;
     }

@@ -22,7 +22,7 @@ public class TcpMetricsReader extends MetricReader {
     private final String host;
     private final int port;
     private final String sourceName;
-    public long retryTimeoutMillis = 1000;
+    public static final long retryTimeoutMillis = 1000;
 
     public TcpMetricsReader(String tcpSource, TaskPool pool, Marshaller marshaller) throws IOException {
         super(pool, marshaller);

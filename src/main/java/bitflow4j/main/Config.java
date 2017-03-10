@@ -42,8 +42,8 @@ public class Config {
         dotPath = resources.getString("dot_path");
     }
 
-    public String getExperimentSubfolder(String subfolder) {
-        return getExperimentFolder() + "/" + subfolder;
+    public String getExperimentSubFolder(String subFolder) {
+        return getExperimentFolder() + "/" + subFolder;
     }
 
     private String getExperimentFolder() {

@@ -20,8 +20,8 @@ public class SampleWindow extends AbstractSampleWindow {
         super(windowSize);
     }
 
-    public SampleWindow(long windowTimespan) {
-        super(windowTimespan);
+    public SampleWindow(long windowTimeSpan) {
+        super(windowTimeSpan);
     }
 
     private Header header = null;

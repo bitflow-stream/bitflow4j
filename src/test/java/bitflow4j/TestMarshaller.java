@@ -36,17 +36,17 @@ public class TestMarshaller extends TestWithSamples {
             }
         }
 
-        ByteArrayInputStream inbuf = new ByteArrayInputStream(buf.toByteArray());
+        ByteArrayInputStream inBuffer = new ByteArrayInputStream(buf.toByteArray());
 
         List<Sample> receivedSamples = new ArrayList<>();
         Header header = null;
         while (true) {
             try {
-                if (marshaller.peekIsHeader(inbuf)) {
-                    header = marshaller.unmarshallHeader(inbuf);
+                if (marshaller.peekIsHeader(inBuffer)) {
+                    header = marshaller.unmarshallHeader(inBuffer);
                 } else {
                     Assert.assertNotNull(header);
-                    receivedSamples.add(marshaller.unmarshallSample(inbuf, header));
+                    receivedSamples.add(marshaller.unmarshallSample(inBuffer, header));
                 }
             } catch (InputStreamClosedException exc) {
                 break;
@@ -55,10 +55,6 @@ public class TestMarshaller extends TestWithSamples {
 
         List<Sample> expected = flatten(headers);
         Assert.assertTrue(EqualsBuilder.reflectionEquals(expected, receivedSamples));
-    }
-
-    private void testIndividualHeadersDirect(Marshaller marshaller) throws IOException {
-
     }
 
     private void testAllHeaders(Marshaller marshaller) throws IOException {
@@ -73,8 +69,8 @@ public class TestMarshaller extends TestWithSamples {
             }
         }
 
-        ByteArrayInputStream inbuf = new ByteArrayInputStream(buf.toByteArray());
-        MetricReader reader = MetricReader.singleInput(null, marshaller, "test", inbuf);
+        ByteArrayInputStream inBuffer = new ByteArrayInputStream(buf.toByteArray());
+        MetricReader reader = MetricReader.singleInput(null, marshaller, "test", inBuffer);
 
         List<Sample> receivedSamples = new ArrayList<>();
         while (true) {
@@ -88,10 +84,6 @@ public class TestMarshaller extends TestWithSamples {
         Assert.assertTrue(EqualsBuilder.reflectionEquals(expected, receivedSamples));
     }
 
-    private void testIndividualHeaders(Marshaller marshaller) throws IOException {
-
-    }
-
     @Test
     public void testBinaryAllHeaders() throws IOException {
         testAllHeaders(new BinaryMarshaller());
@@ -103,16 +95,6 @@ public class TestMarshaller extends TestWithSamples {
     }
 
     @Test
-    public void testBinaryIndividualHeaders() throws IOException {
-        testIndividualHeaders(new BinaryMarshaller());
-    }
-
-    @Test
-    public void testCsvIndividualHeaders() throws IOException {
-        testIndividualHeaders(new CsvMarshaller());
-    }
-
-    @Test
     public void testBinaryAllHeadersDirect() throws IOException {
         testAllHeadersDirect(new BinaryMarshaller());
     }
@@ -120,16 +102,6 @@ public class TestMarshaller extends TestWithSamples {
     @Test
     public void testCsvAllHeadersDirect() throws IOException {
         testAllHeadersDirect(new CsvMarshaller());
-    }
-
-    @Test
-    public void testBinaryIndividualHeadersDirect() throws IOException {
-        testIndividualHeadersDirect(new BinaryMarshaller());
-    }
-
-    @Test
-    public void testCsvIndividualHeadersDirect() throws IOException {
-        testIndividualHeadersDirect(new CsvMarshaller());
     }
 
 }

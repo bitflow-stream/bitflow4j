@@ -28,8 +28,8 @@ public class MultiHeaderWindow<T extends MetricWindow> extends AbstractSampleWin
         this.factory = factory;
     }
 
-    public MultiHeaderWindow(long windowTimespan, MetricWindowFactory<T> factory) {
-        super(windowTimespan);
+    public MultiHeaderWindow(long windowTimeSpan, MetricWindowFactory<T> factory) {
+        super(windowTimeSpan);
         this.factory = factory;
     }
 
@@ -114,9 +114,7 @@ public class MultiHeaderWindow<T extends MetricWindow> extends AbstractSampleWin
     @Override
     public void clear() {
         super.clear();
-        for (T window : metrics.values()) {
-            window.clear();
-        }
+        metrics.values().forEach(MetricWindow::clear);
         length = 0;
         samples.clear();
         metrics.clear();

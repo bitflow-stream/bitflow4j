@@ -57,7 +57,7 @@ public class FileMetricReader extends ThreadedSampleSource {
         this.converter = converter;
     }
 
-    public FileMetricReader(Marshaller marshaller) throws IOException {
+    public FileMetricReader(Marshaller marshaller) {
         this(marshaller, FILE_NAME);
     }
 

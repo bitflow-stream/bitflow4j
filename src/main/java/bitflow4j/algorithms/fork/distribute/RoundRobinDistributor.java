@@ -8,16 +8,16 @@ import bitflow4j.algorithms.fork.ForkDistributor;
  */
 public class RoundRobinDistributor implements ForkDistributor {
 
-    private final int numSubpipelines;
+    private final int numSubPipelines;
     private int counter = 0;
 
-    public RoundRobinDistributor(int numSubpipelines) {
-        this.numSubpipelines = numSubpipelines;
+    public RoundRobinDistributor(int numSubPipelines) {
+        this.numSubPipelines = numSubPipelines;
     }
 
     @Override
     public Object[] distribute(Sample sample) {
-        return new Object[]{counter++ % numSubpipelines};
+        return new Object[]{counter++ % numSubPipelines};
     }
 
 }

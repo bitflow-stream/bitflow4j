@@ -7,7 +7,7 @@ import bitflow4j.algorithms.fork.ForkDistributor;
  * Created by anton on 5/2/16.
  * <p>
  * The TagDistributor distributes incoming Samples based on tag values stored in the samples.
- * The default functionality is to use the value of one given tag as the subpipeline key, but
+ * The default functionality is to use the value of one given tag as the sub-pipeline key, but
  * multiple tags can also be defined. In that case the values will be concatenated, and a separator string
  * will be added between the individual values.
  */

@@ -25,9 +25,9 @@ public class SampleFork extends AbstractAlgorithm {
     private final ForkDistributor distributor;
     private final PipelineBuilder builder;
     private SynchronizingSink merger;
-    private TaskPool pool = new TaskPool();
+    private final TaskPool pool = new TaskPool();
 
-    private final Map<Object, AlgorithmPipeline> subpipelines = new HashMap<>();
+    private final Map<Object, AlgorithmPipeline> subPipelines = new HashMap<>();
 
     public SampleFork(ForkDistributor distributor, PipelineBuilder builder) {
         this.distributor = distributor;
@@ -60,7 +60,7 @@ public class SampleFork extends AbstractAlgorithm {
 
     @Override
     public void doClose() throws IOException {
-        for (AlgorithmPipeline pipe : subpipelines.values()) {
+        for (AlgorithmPipeline pipe : subPipelines.values()) {
             // The source is explicitly set to EmptySource below (which implements StoppableSampleSource)
             ((StoppableSampleSource) pipe.source).stop();
             pipe.sink.waitUntilClosed();
@@ -70,14 +70,14 @@ public class SampleFork extends AbstractAlgorithm {
     }
 
     private AlgorithmPipeline getPipeline(Object key) throws IOException {
-        if (subpipelines.containsKey(key)) {
-            return subpipelines.get(key);
+        if (subPipelines.containsKey(key)) {
+            return subPipelines.get(key);
         }
         AlgorithmPipeline pipeline = new AlgorithmPipeline();
         builder.build(key, pipeline, merger);
         if (pipeline.source != null) {
             logger.log(Level.WARNING,
-                    "The source field of the subpipeline for {1} will be ignored, it is set to {2}", new Object[]{key, pipeline.source});
+                    "The source field of the sub-pipeline for {1} will be ignored, it is set to {2}", new Object[]{key, pipeline.source});
         }
         pipeline.source = new EmptySource();
         if (pipeline.sink == null) {
@@ -85,7 +85,7 @@ public class SampleFork extends AbstractAlgorithm {
         }
 
         pipeline.run(pool);
-        subpipelines.put(key, pipeline);
+        subPipelines.put(key, pipeline);
         return pipeline;
     }
 

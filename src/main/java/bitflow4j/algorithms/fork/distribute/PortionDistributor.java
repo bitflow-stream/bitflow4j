@@ -10,8 +10,8 @@ import java.util.Random;
  */
 public class PortionDistributor implements ForkDistributor {
 
-    public static Object MAIN_KEY = 0;
-    public static Object SECONDARY_KEY = 1;
+    public static final Object MAIN_KEY = 0;
+    public static final Object SECONDARY_KEY = 1;
 
     private final float redirectedPortion;
     private final Random rnd = new Random();

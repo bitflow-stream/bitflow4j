@@ -17,7 +17,7 @@ public class UserSignalTask implements ParallelTask, SignalHandler, StoppableTas
 
     private static final Logger logger = Logger.getLogger(UserSignalTask.class.getName());
 
-    public static String ALL_SIGNALS[] = new String[]{
+    public static final String ALL_SIGNALS[] = new String[]{
             "HUP", "INT", "TERM"
     };
 
@@ -50,8 +50,8 @@ public class UserSignalTask implements ParallelTask, SignalHandler, StoppableTas
     }
 
     private void registerSignal(String signal) {
-        Signal diagSignal = new Signal(signal);
-        SignalHandler oldHandler = Signal.handle(diagSignal, this);
+        Signal signalInstance = new Signal(signal);
+        SignalHandler oldHandler = Signal.handle(signalInstance, this);
         oldHandlers.put(signal, oldHandler);
     }
 
@@ -64,7 +64,7 @@ public class UserSignalTask implements ParallelTask, SignalHandler, StoppableTas
             }
         }
         if (dumpStacktraceTimeout > 0) {
-            dumpStacktracesAfter(dumpStacktraceTimeout);
+            dumpStackTracesAfter(dumpStacktraceTimeout);
         }
     }
 
@@ -95,21 +95,21 @@ public class UserSignalTask implements ParallelTask, SignalHandler, StoppableTas
 
     // Dump stack traces in a daemon thread, after waiting a number of milli seconds.
     // Intention: debugging shutdown sequence, when all Thread don't exit within a short period of time, like they should.
-    public static void dumpStacktracesAfter(long millis) {
+    public static void dumpStackTracesAfter(long millis) {
         Thread thread = new Thread() {
             public void run() {
                 try {
                     Thread.sleep(millis);
                 } catch (InterruptedException ignored) {
                 }
-                dumpStacktraces();
+                dumpStackTraces();
             }
         };
         thread.setDaemon(true);
         thread.start();
     }
 
-    public static void dumpStacktraces() {
+    public static void dumpStackTraces() {
         ThreadInfo[] threads = ManagementFactory.getThreadMXBean().dumpAllThreads(true, true);
         System.err.println("\n\n ================== Dumping all Thread stack traces ==================");
         for (ThreadInfo thread : threads) {

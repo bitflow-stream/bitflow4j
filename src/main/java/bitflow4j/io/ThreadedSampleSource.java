@@ -50,9 +50,7 @@ public abstract class ThreadedSampleSource extends AbstractSampleSource implemen
                 } catch (InterruptedException ignored) {
                 }
         }
-        for (LoopTask task : tasks) {
-            task.waitForExit();
-        }
+        tasks.forEach(LoopTask::waitForExit);
         output().close();
     }
 
@@ -65,9 +63,7 @@ public abstract class ThreadedSampleSource extends AbstractSampleSource implemen
 
     protected void stopTasks() {
         shutDown();
-        for (LoopTask task : tasks) {
-            task.stop();
-        }
+        tasks.forEach(LoopTask::stop);
     }
 
     protected boolean readerException() {

@@ -10,9 +10,9 @@ public class MultiplexDistributor implements ForkDistributor {
 
     private final Object[] keys;
 
-    public MultiplexDistributor(int numSubpipelines) {
-        keys = new Object[numSubpipelines];
-        for (int i = 0; i < numSubpipelines; i++) {
+    public MultiplexDistributor(int numSubPipelines) {
+        keys = new Object[numSubPipelines];
+        for (int i = 0; i < numSubPipelines; i++) {
             keys[i] = i;
         }
     }

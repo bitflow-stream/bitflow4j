@@ -3,7 +3,6 @@ package bitflow4j.algorithms;
 import bitflow4j.sample.SampleSink;
 import bitflow4j.sample.SampleSource;
 
-import java.io.IOException;
 import java.util.logging.Logger;
 
 /**
@@ -27,7 +26,7 @@ public interface Algorithm<T> extends SampleSource, SampleSink {
         logger.warning("setModel() called for " + getClass() + ", but is ignored. Model: " + model);
     }
 
-    default void stop() throws IOException {
+    default void stop() {
         // Algorithms should only be stopped through the close() method of SampleSink
         throw new UnsupportedOperationException("stop() should not be called on implementations of Algorithm");
     }
