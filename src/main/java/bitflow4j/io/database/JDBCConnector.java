@@ -34,7 +34,7 @@ public class JDBCConnector {
     private ResultSetMetaData selectResultSetMetaData;
     private State state;
     private DB db;
-    private String dbName;
+    //    private String dbName;
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
@@ -50,7 +50,7 @@ public class JDBCConnector {
     public JDBCConnector(DB db, String dbName, String dbUrl, String dbUser, String dbPassword, String dbSchemaSelect, String dbSchemaInsert, String dbTableSelect, String dbTableInsert) {
         this.dbSchemaSelect = dbSchemaSelect; //TODO add schema to other methods
         this.dbSchemaInsert = dbSchemaInsert; //TODO add schema to other methods
-        this.dbName = dbName.toLowerCase();
+//        this.dbName = dbName.toLowerCase();
         this.dbUrl = dbUrl;
         this.dbUser = dbUser;
         this.dbPassword = dbPassword;
@@ -107,6 +107,7 @@ public class JDBCConnector {
 
     public JDBCConnector prepareRead() throws SQLException {
         this.sqlSelectStatement = String.format(BASE_SELECT_STATEMENT, selectTableQualifier);
+        System.out.println("SQL Select Statement: " + sqlSelectStatement.toString());
         this.selectResultSet = executeQuery(sqlSelectStatement);
         this.selectResultSetMetaData = selectResultSet.getMetaData();
         this.selectNumberOfColumns = selectResultSetMetaData.getColumnCount();
@@ -126,7 +127,7 @@ public class JDBCConnector {
         }
 
         String valuesToInsert = buildValueString(sample);
-        String columnsToInsert = buildColumnString(sample);
+        String columnsToInsert = buildColumnStrings(sample);
         String query = String.format(BASE_INSERT_STATEMENT, insertTableQualifier, columnsToInsert, valuesToInsert);
         System.out.println("query String: " + query);
         ResultSet resultSet = executeQuery(query);
@@ -143,7 +144,7 @@ public class JDBCConnector {
         return new Header(header);
     }
 
-    private String buildColumnString(Sample sample) {
+    private String buildColumnStrings(Sample sample) {
         //TODO fix illegal characters for column names
         StringBuilder resultBuilder = new StringBuilder();
         return String.join("\",\"", sample.getHeader().header);
@@ -222,31 +223,35 @@ public class JDBCConnector {
 
 
     private void addColumns(List<String> columns) throws SQLException {
-        String columnsToAdd = buildColumnString(columns);
-        String query = String.format(BASE_ALTER_STATEMENT, insertTableQualifier, columnsToAdd);
+        buildColumnStrings(columns);
+        for (String columnToAdd : columns) {
+            String query = String.format(BASE_ALTER_STATEMENT, insertTableQualifier, columnToAdd);
+            System.out.println("add columns query: " + query);
+            ResultSet resultSet = executeQuery(query);
+        }
         //TODO change to update
-        System.out.println("add columns query: " + query);
-        ResultSet resultSet = executeQuery(query);
     }
 
-    private String buildColumnString(List<String> columns) {
-        StringBuilder resultBuilder = new StringBuilder();
+    private void buildColumnStrings(List<String> columns) {
+//        String[] resultQueries = new String[columns.size()];
         String columnType = db.doubleType();
-        for (String column :
-            columns) {
+        for (int i = 0; i < columns.size(); i++) {
+            StringBuilder resultBuilder = new StringBuilder();
             resultBuilder.append("ADD \"");
-            resultBuilder.append(column);
+            resultBuilder.append(columns.get(i));
             resultBuilder.append("\"");
             resultBuilder.append(" ");
             resultBuilder.append(columnType);
-            resultBuilder.append(",");
+            String columnString = resultBuilder.toString();
+            System.out.println("buildColumns for alter, column string: " + columnString);
+            columns.set(i, columnString);
+//  resultBuilder.append(",");
         }
-        resultBuilder.deleteCharAt(resultBuilder.length() - 1);
+//        resultBuilder.deleteCharAt(resultBuilder.length() - 1);
 //        int lastIndexofSeparator = resultBuilder.lastIndexOf(",");
 //        resultBuilder.delete(lastIndexofSeparator, lastIndexofSeparator + 1);
-        String result = resultBuilder.toString();
-        System.out.println("buildColumns for alter, column string: " + result);
-        return result; //resultBuilder.toString();
+//        return columns; //resultBuilder.toString();
+        return;
     }
 
     //####################################################
@@ -320,16 +325,16 @@ public class JDBCConnector {
     //####################################################
     //                 SETTER
 
-    public String getDbName() {
-        return dbName;
-    }
+//    public String getDbName() {
+//        return dbName;
+//    }
 
-    public JDBCConnector setDbName(String dbName) {
-        if (this.state == State.CONNECTED || this.state == State.READY)
-            throw new IllegalStateException("Cannot change dbName while connected to db. Disconnect first and then reconnect.");
-        this.dbName = dbName;
-        return this;
-    }
+//    public JDBCConnector setDbName(String dbName) {
+//        if (this.state == State.CONNECTED || this.state == State.READY)
+//            throw new IllegalStateException("Cannot change dbName while connected to db. Disconnect first and then reconnect.");
+//        this.dbName = dbName;
+//        return this;
+//    }
 
     public DB getDb() {
         return db;
@@ -387,13 +392,13 @@ public class JDBCConnector {
             table.append(".");
         }
         table.append("\"");
-        table.append(this.dbTableInsert);
+        table.append(this.dbTableSelect);
         table.append("\"");
         this.selectTableQualifier = table.toString();
     }
 
     private void init() {
-        if (this.dbName == null) this.dbName = "bitflow4j-sample-db";
+//        if (this.dbName == null) this.dbName = "bitflow4j-sample-db";
         if (this.dbTableSelect == null) this.dbTableSelect = "SamplesIn";
         if (this.dbTableInsert == null) this.dbTableInsert = "SamplesOut";
         if (this.dbUser == null) this.dbUser = "root";
@@ -406,7 +411,8 @@ public class JDBCConnector {
     }
 
     public JDBCConnector connect() throws SQLException, IllegalStateException {
-        if (state != State.INITIALIZED) this.init();
+//        if (state != State.INITIALIZED) this.init();
+        if (state == State.CONNECTED) return this;
         this.connection = DriverManager.getConnection(this.dbUrl, this.dbUser, this.dbPassword);
         this.state = State.CONNECTED;
         return this;
@@ -437,9 +443,9 @@ public class JDBCConnector {
         resultBuilder.append("db: ");
         resultBuilder.append(this.db);
         resultBuilder.append(LINE_SEPERATOR);
-        resultBuilder.append("database name: ");
-        resultBuilder.append(this.dbName);
-        resultBuilder.append(LINE_SEPERATOR);
+//        resultBuilder.append("database name: ");
+//        resultBuilder.append(this.dbName);
+//        resultBuilder.append(LINE_SEPERATOR);
         resultBuilder.append("db user: ");
         resultBuilder.append(dbUser);
         resultBuilder.append(LINE_SEPERATOR);
@@ -494,6 +500,7 @@ public class JDBCConnector {
             this.longTypeString = longTypeString;
             this.stringTypeString = stringTypeString;
         }
+
 
         public String doubleType() {
             return this.doubleTypeString;

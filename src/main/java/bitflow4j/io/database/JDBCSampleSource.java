@@ -26,6 +26,11 @@ public abstract class JDBCSampleSource extends AbstractSampleSource implements S
 
     @Override
     public void start(TaskPool pool) throws IOException {
+        try {
+            connector.connect().prepareRead();
+        } catch (SQLException e) {
+            throw new IOException(e);
+        }
         pool.start(this.task);
     }
 

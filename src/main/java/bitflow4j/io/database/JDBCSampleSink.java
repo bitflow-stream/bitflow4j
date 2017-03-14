@@ -33,10 +33,15 @@ public abstract class JDBCSampleSink extends AbstractSampleSink implements Stopp
     public void writeSample(Sample sample) throws IOException {
         // TODO check if connection is established and optionally connect
         // On exception: disconnect + still throw exception
+
         try {
-            connector.writeSample(sample);
+            connector.connect().prepareInsert().writeSample(sample);
         } catch (SQLException e) {
-            throw new IOException(e);
+            try {
+                connector.disconnect();
+            } finally {
+                throw new IOException(e);
+            }
         }
     }
 
