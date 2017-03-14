@@ -36,7 +36,6 @@ public class SampleFork extends AbstractAlgorithm {
 
     @Override
     public void writeSample(Sample sample) throws IOException {
-        // TODO parallelism could be supported here
         Object keys[] = distributor.distribute(sample);
         for (Object key : keys) {
             AlgorithmPipeline pipe = getPipeline(key);
