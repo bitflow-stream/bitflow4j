@@ -9,7 +9,7 @@ import java.util.*;
 import java.util.logging.Logger;
 
 /**
- * Created by malcolmx on 17.02.17.
+ * Connector for arbitrary sql databases. Used by JDBCSampleSink and JDBCSampleSource
  */
 public class JDBCConnector {
 
@@ -17,7 +17,7 @@ public class JDBCConnector {
     //    private static final String BASE_ALTER_QUERY = "ALTER TABLE public.\"Samples\" ADD COLUMN tags text;";
     private static final String TIMESTAMP_COL = "timestamp";
     private static final String TAG_COL = "tags";
-    private static final String BASE_INSERT_STATEMENT = "INSERT INTO %s (\"%s\",\"" + TIMESTAMP_COL + "\",\"" + TAG_COL + "\") VALUES (%s);";
+    private static final String BASE_INSERT_STATEMENT = "INSERT INTO %s (%s\"" + TIMESTAMP_COL + "\",\"" + TAG_COL + "\") VALUES (%s);";
     private static final String BASE_SELECT_STATEMENT = "SELECT * FROM %s;";
     private static final String BASE_CREATE_STATEMENT = "CREATE TABLE IF NOT EXISTS %s (\"timestamp\" %s,\"tags\" %s);";
     private static final String BASE_ALTER_STATEMENT = "ALTER TABLE %s %s;";
@@ -39,7 +39,7 @@ public class JDBCConnector {
     private String dbUser;
     private String dbPassword;
     private ResultSet selectResultSet;
-    private String sqlSelectStatement;
+    private String sqlSelectQuery;
     private String dbTableSelect;
     private String dbTableInsert;
     private Connection connection;
@@ -83,8 +83,8 @@ public class JDBCConnector {
         Map<String, String> tags = parseTagString(tagString);
         values = new double[selectNumberOfColumns - 2];
         this.makeValues(values);
-        Sample resultSample = new Sample(header, values, timestamp, tags);
-        return resultSample;
+//        Sample resultSample = new Sample(header, values, timestamp, tags);
+        return new Sample(header, values, timestamp, tags); //resultSample;
     }
 
     private void makeValues(double[] values) throws SQLException {
@@ -104,9 +104,9 @@ public class JDBCConnector {
     }
 
     public JDBCConnector prepareRead() throws SQLException {
-        this.sqlSelectStatement = String.format(BASE_SELECT_STATEMENT, selectTableQualifier);
-        System.out.println("SQL Select Statement: " + sqlSelectStatement.toString());
-        this.selectResultSet = executeQuery(sqlSelectStatement);
+        this.sqlSelectQuery = String.format(BASE_SELECT_STATEMENT, selectTableQualifier);
+        System.out.println("SQL Select Statement: " + sqlSelectQuery);
+        this.selectResultSet = executeQuery(sqlSelectQuery);
         this.selectResultSetMetaData = selectResultSet.getMetaData();
         this.selectNumberOfColumns = selectResultSetMetaData.getColumnCount();
         this.header = parseHeader();
@@ -145,7 +145,8 @@ public class JDBCConnector {
     private String buildColumnStrings(Sample sample) {
         //TODO fix illegal characters for column names
 //        StringBuilder resultBuilder = new StringBuilder();
-        return String.join("\",\"", (CharSequence[]) (sample.getHeader().header));
+        String[] currentHeader = sample.getHeader().header;
+        return (currentHeader == null || currentHeader.length == 0) ? "" : "\"" + String.join("\",\"", (CharSequence[]) (currentHeader)) + "\",";
     }
 
     private String buildValueString(Sample sample) {
@@ -227,7 +228,7 @@ public class JDBCConnector {
             String query = String.format(BASE_ALTER_STATEMENT, insertTableQualifier, columnToAdd);
             System.out.println("add columns query: " + query);
             try {
-                ResultSet resultSet = executeQuery(query);
+                executeQuery(query);
             } catch (SQLException e) {
                 logger.severe(e.getMessage());//TODO replace after manual table query has been added
             }
@@ -248,7 +249,6 @@ public class JDBCConnector {
 //        int lastIndexofSeparator = resultBuilder.lastIndexOf(",");
 //        resultBuilder.delete(lastIndexofSeparator, lastIndexofSeparator + 1);
 //        return columns; //resultBuilder.toString();
-        return;
     }
 
     //####################################################
@@ -256,8 +256,7 @@ public class JDBCConnector {
     //####################################################
 
     private synchronized ResultSet executeQuery(String sqlQuery) throws SQLException {
-        Statement sqlStatement = null;
-        sqlStatement = connection.createStatement();
+        Statement sqlStatement = connection.createStatement();
         sqlStatement.execute(sqlQuery);
         return sqlStatement.getResultSet();
     }
@@ -432,41 +431,16 @@ public class JDBCConnector {
 
     @Override
     public String toString() {
-        StringBuilder resultBuilder = new StringBuilder();
-        resultBuilder.append("#JDBCConnectorImpl#\n");
-        resultBuilder.append("state: ");
-        resultBuilder.append(state);
-        resultBuilder.append(LINE_SEPERATOR);
-        resultBuilder.append("db: ");
-        resultBuilder.append(this.db);
-        resultBuilder.append(LINE_SEPERATOR);
-//        resultBuilder.append("database name: ");
-//        resultBuilder.append(this.dbName);
-//        resultBuilder.append(LINE_SEPERATOR);
-        resultBuilder.append("db user: ");
-        resultBuilder.append(dbUser);
-        resultBuilder.append(LINE_SEPERATOR);
-        resultBuilder.append("db password: ");
-        resultBuilder.append(dbPassword);
-        resultBuilder.append(LINE_SEPERATOR);
-        resultBuilder.append("db url: ");
-        resultBuilder.append(dbUrl);
-        resultBuilder.append(LINE_SEPERATOR);
-        resultBuilder.append("db table: ");
-        resultBuilder.append(dbTableSelect);
-        resultBuilder.append(LINE_SEPERATOR);
-        resultBuilder.append("select statement: ");
-        resultBuilder.append(sqlSelectStatement);
-        resultBuilder.append(LINE_SEPERATOR);
-        resultBuilder.append("connection: ");
-        resultBuilder.append(connection == null ? "null" : connection.toString());
-        resultBuilder.append(LINE_SEPERATOR);
-        resultBuilder.append("select result set: ");
-        resultBuilder.append(selectResultSet == null ? "null" : selectResultSet.toString());
-        return resultBuilder.toString();
+        return "#JDBCConnectorImpl#\n state: " + state + LINE_SEPERATOR + "db: " + this.db +
+//            LINE_SEPERATOR + "database name: " + this.dbName +
+            LINE_SEPERATOR + "db user: " + dbUser + LINE_SEPERATOR + "db password: " + dbPassword +
+            LINE_SEPERATOR + "db url: " + dbUrl + LINE_SEPERATOR + "db table: " + dbTableSelect +
+            LINE_SEPERATOR + "select statement: " + sqlSelectQuery + LINE_SEPERATOR + "connection: " +
+            connection == null ? "null" : connection.toString() + LINE_SEPERATOR + "select result set: ";
+//          +  selectResultSet == null ? "null" : selectResultSet.toString();
     }
 
-    public enum State {
+    private enum State {
         INITIALIZED, CONNECTED, READY
     }
 
