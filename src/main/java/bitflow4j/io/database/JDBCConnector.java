@@ -30,7 +30,7 @@ public class JDBCConnector {
     private String dbSchemaSelect;
     private String dbSchemaInsert;
     private Header header;
-    private List<String> currentColumns;
+    //    private List<String> currentColumns;
     private ResultSetMetaData selectResultSetMetaData;
     private State state;
     private DB db;
@@ -43,11 +43,11 @@ public class JDBCConnector {
     private String dbTableSelect;
     private String dbTableInsert;
     private Connection connection;
-    private Mode mode;
+    //    private Mode mode;
     private String insertTableQualifier;
     private String selectTableQualifier;
 
-    public JDBCConnector(DB db, String dbName, String dbUrl, String dbUser, String dbPassword, String dbSchemaSelect, String dbSchemaInsert, String dbTableSelect, String dbTableInsert) {
+    public JDBCConnector(DB db, String dbUrl, String dbUser, String dbPassword, String dbSchemaSelect, String dbSchemaInsert, String dbTableSelect, String dbTableInsert) {
         this.dbSchemaSelect = dbSchemaSelect; //TODO add schema to other methods
         this.dbSchemaInsert = dbSchemaInsert; //TODO add schema to other methods
 //        this.dbName = dbName.toLowerCase();
@@ -73,17 +73,15 @@ public class JDBCConnector {
     }
 
     private Sample processSelectionRow() throws SQLException {
-        return this.selectResultSet.next() == true ? parseSelectionRow() : null;
+        return this.selectResultSet.next() ? parseSelectionRow() : null;
     }
 
     private Sample parseSelectionRow() throws SQLException {
         double[] values;
-        Date timestamp = null;
-        Map<String, String> tags = null;
-        values = new double[selectNumberOfColumns - 2];
-        timestamp = new Date(this.selectResultSet.getLong(TIMESTAMP_COL));
+        Date timestamp = new Date(this.selectResultSet.getLong(TIMESTAMP_COL));
         String tagString = this.selectResultSet.getString(TAG_COL);
-        tags = parseTagString(tagString);
+        Map<String, String> tags = parseTagString(tagString);
+        values = new double[selectNumberOfColumns - 2];
         this.makeValues(values);
         Sample resultSample = new Sample(header, values, timestamp, tags);
         return resultSample;
@@ -130,7 +128,7 @@ public class JDBCConnector {
         String columnsToInsert = buildColumnStrings(sample);
         String query = String.format(BASE_INSERT_STATEMENT, insertTableQualifier, columnsToInsert, valuesToInsert);
         System.out.println("query String: " + query);
-        ResultSet resultSet = executeQuery(query);
+        executeQuery(query);
         lastWrittenSample = sample;
         //TODO parse and handle result (e.g. any errors)
     }
@@ -146,8 +144,8 @@ public class JDBCConnector {
 
     private String buildColumnStrings(Sample sample) {
         //TODO fix illegal characters for column names
-        StringBuilder resultBuilder = new StringBuilder();
-        return String.join("\",\"", sample.getHeader().header);
+//        StringBuilder resultBuilder = new StringBuilder();
+        return String.join("\",\"", (CharSequence[]) (sample.getHeader().header));
     }
 
     private String buildValueString(Sample sample) {
@@ -193,7 +191,8 @@ public class JDBCConnector {
     private void createTable() throws SQLException {
         String query = String.format(BASE_CREATE_STATEMENT, this.insertTableQualifier, db.longType(), db.stringType());
         //TODO use correct execute and handle result: fix later
-        ResultSet resultSet = executeQuery(query);
+//        ResultSet resultSet =
+        executeQuery(query);
     }
 
     //####################################################
@@ -227,7 +226,11 @@ public class JDBCConnector {
         for (String columnToAdd : columns) {
             String query = String.format(BASE_ALTER_STATEMENT, insertTableQualifier, columnToAdd);
             System.out.println("add columns query: " + query);
-            ResultSet resultSet = executeQuery(query);
+            try {
+                ResultSet resultSet = executeQuery(query);
+            } catch (SQLException e) {
+                logger.severe(e.getMessage());//TODO replace after manual table query has been added
+            }
         }
         //TODO change to update
     }
@@ -236,13 +239,7 @@ public class JDBCConnector {
 //        String[] resultQueries = new String[columns.size()];
         String columnType = db.doubleType();
         for (int i = 0; i < columns.size(); i++) {
-            StringBuilder resultBuilder = new StringBuilder();
-            resultBuilder.append("ADD \"");
-            resultBuilder.append(columns.get(i));
-            resultBuilder.append("\"");
-            resultBuilder.append(" ");
-            resultBuilder.append(columnType);
-            String columnString = resultBuilder.toString();
+            String columnString = "ADD \"" + columns.get(i) + "\" " + columnType;
             System.out.println("buildColumns for alter, column string: " + columnString);
             columns.set(i, columnString);
 //  resultBuilder.append(",");
@@ -391,9 +388,9 @@ public class JDBCConnector {
             table.append(this.dbSchemaSelect);
             table.append(".");
         }
-        table.append("\"");
+//        table.append("\"");
         table.append(this.dbTableSelect);
-        table.append("\"");
+//        table.append("\"");
         this.selectTableQualifier = table.toString();
     }
 
