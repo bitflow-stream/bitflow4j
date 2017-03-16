@@ -124,6 +124,16 @@ public class Sample {
         setTag(TAG_LABEL, label);
     }
 
+    public Map<String, String> getAllTags() {return tags;}
+
+    public void setAllTags(Map<String, String> tagsMap)
+    {
+        tags.clear();
+
+        for (Map.Entry<String, String> tag : tagsMap.entrySet())
+            tags.put(tag.getKey(), tag.getValue());
+    }
+
     public int getIntTag(String tag) throws IOException {
         int val;
         try {
