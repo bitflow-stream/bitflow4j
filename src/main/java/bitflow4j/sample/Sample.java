@@ -124,14 +124,9 @@ public class Sample {
         setTag(TAG_LABEL, label);
     }
 
-    public Map<String, String> getAllTags() {return tags;}
-
-    public void setAllTags(Map<String, String> tagsMap)
-    {
+    public void setAllTags(Map<String, String> tagsMap) {
         tags.clear();
-
-        for (Map.Entry<String, String> tag : tagsMap.entrySet())
-            tags.put(tag.getKey(), tag.getValue());
+        tags.putAll(tagsMap);
     }
 
     public int getIntTag(String tag) throws IOException {
@@ -251,7 +246,7 @@ public class Sample {
         return removeMetrics(new HashSet<>(Arrays.asList(metrics)));
     }
 
-    public Sample removeMetricsWithPrefix(String ...prefixes) {
+    public Sample removeMetricsWithPrefix(String... prefixes) {
         Set<String> removeMetrics = new HashSet<>();
         for (String metric : getHeader().header) {
             for (String prefix : prefixes) {
