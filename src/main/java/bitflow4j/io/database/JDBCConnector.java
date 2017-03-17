@@ -17,9 +17,15 @@ public class JDBCConnector {
     //    private static final String BASE_ALTER_QUERY = "ALTER TABLE public.\"Samples\" ADD COLUMN tags text;";
     private static final String TIMESTAMP_COL = "timestamp";
     private static final String TAG_COL = "tags";
-    private static final String BASE_INSERT_STATEMENT = "INSERT INTO %s (%s\"" + TIMESTAMP_COL + "\",\"" + TAG_COL + "\") VALUES (%s);";
+    //    private static final String BASE_INSERT_STATEMENT = "INSERT INTO %s (%s\"" + TIMESTAMP_COL + "\",\"" + TAG_COL + "\") VALUES (%s);";
+    private static final String BASE_INSERT_STATEMENT = "INSERT INTO %s (%s`" + TIMESTAMP_COL + "`,`" + TAG_COL + "`) VALUES (%s);";
+    //    private static final String BASE_INSERT_STATEMENT = "INSERT INTO %s (%s'" + TIMESTAMP_COL + "','" + TAG_COL + "') VALUES (%s);";
+//    private static final String BASE_INSERT_STATEMENT = "INSERT INTO %s (%s" + TIMESTAMP_COL + "," + TAG_COL + ") VALUES (%s);";
     private static final String BASE_SELECT_STATEMENT = "SELECT * FROM %s;";
-    private static final String BASE_CREATE_STATEMENT = "CREATE TABLE IF NOT EXISTS %s (\"timestamp\" %s,\"tags\" %s);";
+    //    private static final String BASE_CREATE_STATEMENT = "CREATE TABLE IF NOT EXISTS %s ('timestamp' %s,'tags' %s);";
+    private static final String BASE_CREATE_STATEMENT = "CREATE TABLE IF NOT EXISTS %s (`timestamp` %s,`tags` %s);";
+    //    private static final String BASE_CREATE_STATEMENT = "CREATE TABLE IF NOT EXISTS %s (\"timestamp\" %s,\"tags\" %s);";
+//    private static final String BASE_CREATE_STATEMENT = "CREATE TABLE IF NOT EXISTS %s (timestamp %s,tags %s);";
     private static final String BASE_ALTER_STATEMENT = "ALTER TABLE %s %s;";
 
     private static final Logger logger = Logger.getLogger(JDBCConnector.class.getName());
@@ -35,6 +41,7 @@ public class JDBCConnector {
     private State state;
     private DB db;
     //    private String dbName;
+    private char sqlEscapeCharacter; //TODO use correct escape character for db
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
@@ -146,7 +153,10 @@ public class JDBCConnector {
         //TODO fix illegal characters for column names
 //        StringBuilder resultBuilder = new StringBuilder();
         String[] currentHeader = sample.getHeader().header;
-        return (currentHeader == null || currentHeader.length == 0) ? "" : "\"" + String.join("\",\"", (CharSequence[]) (currentHeader)) + "\",";
+//        return (currentHeader == null || currentHeader.length == 0) ? "" :String.join(",", (CharSequence[]) (currentHeader)) + ",";
+        return (currentHeader == null || currentHeader.length == 0) ? "" : "`" + String.join("`,`", (CharSequence[]) (currentHeader)) + "`,";
+//        return (currentHeader == null || currentHeader.length == 0) ? "" : "'" + String.join("','", (CharSequence[]) (currentHeader)) + "',";
+//        return (currentHeader == null || currentHeader.length == 0) ? "" : "\"" + String.join("\",\"", (CharSequence[]) (currentHeader)) + "\",";
     }
 
     private String buildValueString(Sample sample) {
@@ -191,6 +201,7 @@ public class JDBCConnector {
 
     private void createTable() throws SQLException {
         String query = String.format(BASE_CREATE_STATEMENT, this.insertTableQualifier, db.longType(), db.stringType());
+        System.out.println("sql create table query: " + query);
         //TODO use correct execute and handle result: fix later
 //        ResultSet resultSet =
         executeQuery(query);
@@ -240,7 +251,10 @@ public class JDBCConnector {
 //        String[] resultQueries = new String[columns.size()];
         String columnType = db.doubleType();
         for (int i = 0; i < columns.size(); i++) {
-            String columnString = "ADD \"" + columns.get(i) + "\" " + columnType;
+//            String columnString = "ADD " + columns.get(i) + " " + columnType;
+            String columnString = "ADD `" + columns.get(i) + "` " + columnType;
+//            String columnString = "ADD '" + columns.get(i) + "' " + columnType;
+//            String columnString = "ADD \"" + columns.get(i) + "\" " + columnType;
             System.out.println("buildColumns for alter, column string: " + columnString);
             columns.set(i, columnString);
 //  resultBuilder.append(",");
