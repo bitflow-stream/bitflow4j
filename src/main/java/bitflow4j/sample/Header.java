@@ -15,7 +15,7 @@ public class Header {
     public final boolean hasTags;
 
     public Header(String[] header, Header oldHeader) {
-        this(header, oldHeader.hasTags);
+        this(header, header.length > 0);
     }
 
     public Header(String[] header) {
