@@ -1,13 +1,10 @@
 package bitflow4j;
 
-import bitflow4j.io.marshall.InputStreamClosedException;
 import bitflow4j.io.MetricPrinter;
 import bitflow4j.io.MetricReader;
+import bitflow4j.io.marshall.*;
 import bitflow4j.sample.Header;
 import bitflow4j.sample.Sample;
-import bitflow4j.io.marshall.BinaryMarshaller;
-import bitflow4j.io.marshall.CsvMarshaller;
-import bitflow4j.io.marshall.Marshaller;
 import javafx.util.Pair;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.junit.Assert;
@@ -39,7 +36,7 @@ public class TestMarshaller extends TestWithSamples {
         ByteArrayInputStream inBuffer = new ByteArrayInputStream(buf.toByteArray());
 
         List<Sample> receivedSamples = new ArrayList<>();
-        Header header = null;
+        UnmarshalledHeader header = null;
         while (true) {
             try {
                 if (marshaller.peekIsHeader(inBuffer)) {

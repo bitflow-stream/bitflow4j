@@ -54,7 +54,7 @@ public class Sample {
     public static Map<String, String> parseTags(String tags) throws IOException {
         Map<String, String> result = new HashMap<>();
         if (tags != null && !tags.isEmpty()) {
-            String parts[] = tags.split("[= ]");
+            String parts[] = tags.split("[= ]", -1);
             if (parts.length % 2 != 0) {
                 throw new IOException("Illegal tags string: " + tags);
             }
@@ -91,9 +91,6 @@ public class Sample {
 
     public void setTag(String name, String value) {
         tags.put(name, value);
-        if (!header.hasTags()) {
-            header.setHasTags(true);
-        }
     }
 
     public boolean hasTag(String name) {
@@ -138,6 +135,10 @@ public class Sample {
         for (Map.Entry<String, String> tag : tagsMap.entrySet()) {
             setTag(tag.getKey(), tag.getValue());
         }
+    }
+
+    public boolean hasTags() {
+        return !tags.isEmpty();
     }
 
     public int getIntTag(String tag) throws IOException {
@@ -213,7 +214,7 @@ public class Sample {
     }
 
     public static Sample newEmptySample() {
-        return new Sample(new Header(new String[0], false), new double[0], new Date());
+        return new Sample(new Header(new String[0]), new double[0], new Date());
     }
 
     public Sample extend(String[] newFields, double newValues[]) {
@@ -225,7 +226,7 @@ public class Sample {
         int incomingFields = getHeader().header.length;
         String[] headerNames = Arrays.copyOf(getHeader().header, incomingFields + newFields.length);
         System.arraycopy(newFields, 0, headerNames, incomingFields, newFields.length);
-        Header outHeader = new Header(headerNames, getHeader());
+        Header outHeader = new Header(headerNames);
 
         // Extend Metrics
         double[] outMetrics = Arrays.copyOf(getMetrics(), headerNames.length);
@@ -258,7 +259,7 @@ public class Sample {
         } else {
             newMetrics = Arrays.copyOf(newMetrics, j);
             newHeaderFields = Arrays.copyOf(newHeaderFields, j);
-            return new Sample(new Header(newHeaderFields, getHeader()), newMetrics, this);
+            return new Sample(new Header(newHeaderFields), newMetrics, this);
         }
     }
 

@@ -48,8 +48,8 @@ public class CsvMarshaller extends AbstractMarshaller {
         return Arrays.equals(peeked, CSV_HEADER_TIME.getBytes());
     }
 
-    public Header unmarshallHeader(InputStream input) throws IOException {
-        String[] fields = readLine(input).split(separator);
+    public UnmarshalledHeader unmarshallHeader(InputStream input) throws IOException {
+        String[] fields = readLine(input).split(separator, -1);
 
         if (fields.length < 1 || !fields[0].equals(CSV_HEADER_TIME)) {
             throw new IllegalArgumentException("First field in CSV header must be " + CSV_HEADER_TIME);
@@ -59,12 +59,12 @@ public class CsvMarshaller extends AbstractMarshaller {
         int specialFields = hasTags ? 2 : 1;
         String header[] = new String[fields.length - specialFields];
         System.arraycopy(fields, specialFields, header, 0, header.length);
-        return new Header(header, hasTags);
+        return new UnmarshalledHeader(new Header(header), hasTags);
     }
 
-    public Sample unmarshallSample(InputStream input, Header header) throws IOException {
+    public Sample unmarshallSample(InputStream input, UnmarshalledHeader header) throws IOException {
         String sampleStr = readLine(input);
-        String[] metricStrings = sampleStr.split(separator);
+        String[] metricStrings = sampleStr.split(separator, -1);
         if (metricStrings.length < 1)
             throw new IOException("Illegal CSV Sample: " + sampleStr);
 
@@ -86,16 +86,16 @@ public class CsvMarshaller extends AbstractMarshaller {
         } catch (DateTimeParseException exc) {
             throw new IOException(exc);
         }
-        if (header.hasTags()) {
+        if (header.hasTags) {
             if (metricStrings.length < 2) {
-                throw new IOException("Sample has no tags: " + sampleStr);
+                throw new IOException("Sample has no tags: " + sampleStr + " ==> " + Arrays.toString(metricStrings));
             }
             tags = metricStrings[1];
         }
 
         // Parse regular values
         int start = 1;
-        if (header.hasTags()) start++;
+        if (header.hasTags) start++;
         metricValues = new double[metricStrings.length - start];
         for (int i = start; i < metricStrings.length; i++) {
             try {
@@ -105,7 +105,7 @@ public class CsvMarshaller extends AbstractMarshaller {
             }
         }
 
-        return Sample.unmarshallSample(header, metricValues, timestamp, tags);
+        return Sample.unmarshallSample(header.header, metricValues, timestamp, tags);
     }
 
     private void printString(OutputStream output, String string, boolean separate) throws IOException {
@@ -123,10 +123,8 @@ public class CsvMarshaller extends AbstractMarshaller {
 
     public void marshallHeader(OutputStream output, Header header) throws IOException {
         output.write(CSV_HEADER_TIME.getBytes());
-        if (header.hasTags()) {
-            output.write(separatorBytes);
-            output.write(CSV_HEADER_TAGS.getBytes());
-        }
+        output.write(separatorBytes);
+        output.write(CSV_HEADER_TAGS.getBytes());
 
         if (header.header.length > 0)
             output.write(separatorBytes);
@@ -138,10 +136,10 @@ public class CsvMarshaller extends AbstractMarshaller {
         Header header = sample.getHeader();
         String dateStr = output_date_formatter.format(sample.getTimestamp());
         output.write(dateStr.getBytes());
-        if (header.hasTags()) {
-            output.write(separatorBytes);
-            output.write(sample.tagString().getBytes());
-        }
+
+        // Write tags
+        output.write(separatorBytes);
+        output.write(sample.tagString().getBytes());
 
         double[] values = sample.getMetrics();
         for (double value : values) {
