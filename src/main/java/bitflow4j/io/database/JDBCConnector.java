@@ -18,12 +18,14 @@ public class JDBCConnector {
     private static final String TIMESTAMP_COL = "timestamp";
     private static final String TAG_COL = "tags";
     //    private static final String BASE_INSERT_STATEMENT = "INSERT INTO %s (%s\"" + TIMESTAMP_COL + "\",\"" + TAG_COL + "\") VALUES (%s);";
-    private static final String BASE_INSERT_STATEMENT = "INSERT INTO %s (%s`" + TIMESTAMP_COL + "`,`" + TAG_COL + "`) VALUES (%s);";
+    private static final String BASE_INSERT_STATEMENT = "INSERT INTO %s (%s" + TIMESTAMP_COL + "," + TAG_COL + ") VALUES (%s);";
+//    private static final String BASE_INSERT_STATEMENT = "INSERT INTO %s (%s`" + TIMESTAMP_COL + "`,`" + TAG_COL + "`) VALUES (%s);";
     //    private static final String BASE_INSERT_STATEMENT = "INSERT INTO %s (%s'" + TIMESTAMP_COL + "','" + TAG_COL + "') VALUES (%s);";
 //    private static final String BASE_INSERT_STATEMENT = "INSERT INTO %s (%s" + TIMESTAMP_COL + "," + TAG_COL + ") VALUES (%s);";
     private static final String BASE_SELECT_STATEMENT = "SELECT * FROM %s;";
     //    private static final String BASE_CREATE_STATEMENT = "CREATE TABLE IF NOT EXISTS %s ('timestamp' %s,'tags' %s);";
-    private static final String BASE_CREATE_STATEMENT = "CREATE TABLE IF NOT EXISTS %s (`timestamp` %s,`tags` %s);";
+    private static final String BASE_CREATE_STATEMENT = "CREATE TABLE IF NOT EXISTS %s (" + TIMESTAMP_COL + " %s," + TAG_COL + " %s);";
+//    private static final String BASE_CREATE_STATEMENT = "CREATE TABLE IF NOT EXISTS %s (`timestamp` %s,`tags` %s);";
     //    private static final String BASE_CREATE_STATEMENT = "CREATE TABLE IF NOT EXISTS %s (\"timestamp\" %s,\"tags\" %s);";
 //    private static final String BASE_CREATE_STATEMENT = "CREATE TABLE IF NOT EXISTS %s (timestamp %s,tags %s);";
     private static final String BASE_ALTER_STATEMENT = "ALTER TABLE %s %s;";
@@ -41,7 +43,6 @@ public class JDBCConnector {
     private State state;
     private DB db;
     //    private String dbName;
-    private char sqlEscapeCharacter; //TODO use correct escape character for db
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
@@ -154,7 +155,8 @@ public class JDBCConnector {
 //        StringBuilder resultBuilder = new StringBuilder();
         String[] currentHeader = sample.getHeader().header;
 //        return (currentHeader == null || currentHeader.length == 0) ? "" :String.join(",", (CharSequence[]) (currentHeader)) + ",";
-        return (currentHeader == null || currentHeader.length == 0) ? "" : "`" + String.join("`,`", (CharSequence[]) (currentHeader)) + "`,";
+        return (currentHeader == null || currentHeader.length == 0) ? "" : db.escapeCharacter + String.join(db.escapeCharacter + "," + db.escapeCharacter, (CharSequence[]) (currentHeader)) + db.escapeCharacter + ",";
+//        return (currentHeader == null || currentHeader.length == 0) ? "" : "`" + String.join("`,`", (CharSequence[]) (currentHeader)) + "`,";
 //        return (currentHeader == null || currentHeader.length == 0) ? "" : "'" + String.join("','", (CharSequence[]) (currentHeader)) + "',";
 //        return (currentHeader == null || currentHeader.length == 0) ? "" : "\"" + String.join("\",\"", (CharSequence[]) (currentHeader)) + "\",";
     }
@@ -252,7 +254,8 @@ public class JDBCConnector {
         String columnType = db.doubleType();
         for (int i = 0; i < columns.size(); i++) {
 //            String columnString = "ADD " + columns.get(i) + " " + columnType;
-            String columnString = "ADD `" + columns.get(i) + "` " + columnType;
+            String columnString = "ADD " + db.escapeCharacter + columns.get(i) + db.escapeCharacter + " " + columnType;
+//            String columnString = "ADD `" + columns.get(i) + "` " + columnType;
 //            String columnString = "ADD '" + columns.get(i) + "' " + columnType;
 //            String columnString = "ADD \"" + columns.get(i) + "\" " + columnType;
             System.out.println("buildColumns for alter, column string: " + columnString);
@@ -463,11 +466,11 @@ public class JDBCConnector {
     }
 
     public enum DB {
-        MYSQL("DOUBLE", "BIGINT", "TEXT"),//("com.mysql.jdbc.Driver"),
-        POSTGRES("double precision", "bigint", "text"),//("org.postgresql.Driver"),
+        MYSQL("DOUBLE", "BIGINT", "TEXT", '`'),//("com.mysql.jdbc.Driver"),
+        POSTGRES("double precision", "bigint", "text", '"'),//("org.postgresql.Driver"),
         //        ORACLE("real", "", ""),//("oracle.jdbc.driver.OracleDriver")   -- support maybe later, Strings allways have a max length
-        H2("DOUBLE", "BIGINT", "VARCHAR")//("org.h2.Driver")
-        , SQLite("REAL", "INTEGER", "TEXT")//("");
+        H2("DOUBLE", "BIGINT", "VARCHAR", '"')//("org.h2.Driver")
+        , SQLite("REAL", "INTEGER", "TEXT", '"')//("");
         ;
         private String doubleTypeString;
 
@@ -476,14 +479,15 @@ public class JDBCConnector {
 //        }
         private String stringTypeString;
         private String longTypeString;
-
+        private char escapeCharacter;
         //        private String driver;
 //
-        DB(String doubleTypeString, String longTypeString, String stringTypeString) {
+        DB(String doubleTypeString, String longTypeString, String stringTypeString, char escapeCharacter) {
 //            this.driver = driver;
             this.doubleTypeString = doubleTypeString;
             this.longTypeString = longTypeString;
             this.stringTypeString = stringTypeString;
+            this.escapeCharacter = escapeCharacter;
         }
 
 
@@ -497,6 +501,10 @@ public class JDBCConnector {
 
         public String stringType() {
             return this.stringTypeString;
+        }
+
+        public char escapeCharacter() {
+            return this.escapeCharacter;
         }
     }
 
