@@ -50,6 +50,9 @@ public class FileMetricReader extends ThreadedSampleSource {
     private final Marshaller marshaller;
     private final NameConverter converter;
 
+    private TaskPool taskPool;
+    private boolean keepAlive = false;
+
     public FileMetricReader(Marshaller marshaller, NameConverter converter) {
         this.marshaller = marshaller;
         if (converter == null)
@@ -61,22 +64,34 @@ public class FileMetricReader extends ThreadedSampleSource {
         this(marshaller, FILE_NAME);
     }
 
+    public FileMetricReader keepAlive() {
+        this.keepAlive = true;
+        return this;
+    }
+
     @Override
     public void start(TaskPool pool) throws IOException {
+        this.taskPool = pool;
         FileSampleReader reader = new FileSampleReader(pool, marshaller);
-        readSamples(pool, reader);
+        readSamples(pool, reader, true);
     }
 
     protected boolean readerException() {
         // When reading files, shut down on the first read error.
-        stopTasks();
+        if (!keepAlive) {
+            stopTasks();
+        }
         return false;
     }
 
     @Override
     public void run() throws IOException {
         // All readers have been added, so we can immediately start waiting for them to finish
-        shutDown();
+        if (keepAlive) {
+            taskPool.waitForShutdown();
+        } else {
+            shutDown();
+        }
         super.run();
     }
 

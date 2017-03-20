@@ -17,7 +17,7 @@ public class Sample {
     public static final String TAG_SEPARATOR = " ";
 
     private final Date timestamp;
-    private Header header;
+    private final Header header;
     private final double[] metrics;
     private final Map<String, String> tags;
 
@@ -91,9 +91,8 @@ public class Sample {
 
     public void setTag(String name, String value) {
         tags.put(name, value);
-        if (!header.hasTags) {
-            Header newHeader = new Header(getHeader().header, true);
-            this.header = newHeader;
+        if (!header.hasTags()) {
+            header.setHasTags(true);
         }
     }
 

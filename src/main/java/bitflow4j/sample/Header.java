@@ -12,10 +12,10 @@ public class Header {
     public static final Header EMPTY_HEADER = new Header(new String[0], true);
 
     public final String[] header;
-    public final boolean hasTags;
+    private boolean hasTags;
 
     public Header(String[] header, Header oldHeader) {
-        this(header, oldHeader.hasTags);
+        this(header, oldHeader.hasTags());
     }
 
     public Header(String[] header) {
@@ -42,6 +42,14 @@ public class Header {
             }
         }
         return false;
+    }
+
+    public boolean hasTags() {
+        return hasTags;
+    }
+
+    public void setHasTags(boolean hasTags) {
+        this.hasTags = hasTags;
     }
 
     public boolean equals(Object other) {
