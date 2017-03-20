@@ -129,6 +129,10 @@ public class Sample {
         setTag(TAG_LABEL, label);
     }
 
+    public void deleteLabel() {
+        deleteTag(TAG_LABEL);
+    }
+
     public Map<String, String> getAllTags() {
         return tags;
     }
