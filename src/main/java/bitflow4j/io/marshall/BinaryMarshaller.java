@@ -59,7 +59,7 @@ public class BinaryMarshaller extends AbstractMarshaller {
 
             Date timestamp = new Date(data.readLong() / 1000000);
             String tags = null;
-            if (header.hasTags) {
+            if (header.hasTags()) {
                 tags = readLine(input);
             }
 
@@ -85,7 +85,7 @@ public class BinaryMarshaller extends AbstractMarshaller {
     public void marshallHeader(OutputStream output, Header header) throws IOException {
         output.write(BIN_HEADER_TIME.getBytes());
         output.write(lineSepBytes);
-        if (header.hasTags) {
+        if (header.hasTags()) {
             output.write(BIN_HEADER_TAGS.getBytes());
             output.write(lineSepBytes);
         }
@@ -103,7 +103,7 @@ public class BinaryMarshaller extends AbstractMarshaller {
         Date timestamp = sample.getTimestamp();
         data.write(BIN_SAMPLE_START);
         data.writeLong(timestamp == null ? 0 : timestamp.getTime() * 1000000);
-        if (header.hasTags) {
+        if (header.hasTags()) {
             String tags = sample.tagString();
             if (tags == null) tags = "";
             data.write(tags.getBytes());

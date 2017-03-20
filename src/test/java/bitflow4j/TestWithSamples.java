@@ -69,7 +69,7 @@ public class TestWithSamples {
             Date date = new Date(time);
 
             Sample sample = new Sample(header, metrics, date);
-            if (header.hasTags) {
+            if (header.hasTags()) {
                 // TODO add more variation and edge case with the tags
                 sample.setTag("key" + random.nextInt(), "val" + random.nextInt());
                 sample.setTag("key" + random.nextInt(), "val" + random.nextInt());

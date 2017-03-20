@@ -40,7 +40,7 @@ public class TextMarshaller extends AbstractMarshaller implements Marshaller {
         sample.checkConsistency();
 
         output.write(sample.getTimestamp().toString().getBytes());
-        if (sample.getHeader().hasTags) {
+        if (sample.getHeader().hasTags()) {
             output.write(OPEN_BYTES);
             output.write(sample.tagString().getBytes());
             output.write(CLOSE_BYTES);
