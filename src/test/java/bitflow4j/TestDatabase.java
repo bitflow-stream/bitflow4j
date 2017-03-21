@@ -38,7 +38,8 @@ public class TestDatabase extends TestWithSamples {
         AlgorithmPipeline testWritePipeline = new AlgorithmPipeline().input(testSampleSource).output(jdbcSampleSink);
         AlgorithmPipeline testReadPipeline = new AlgorithmPipeline().input(jdbcSampleSource).output(testSampleSink);
         testWritePipeline.runAndWait();
-        testWritePipeline.runAndWait();
+        System.out.println("finished write pipeline test");
+        testReadPipeline.runAndWait();
         List<Sample> samplesWritten = testSampleSource.samples;
         List<Sample> samplesRead = testSampleSink.samplesRead;
 
