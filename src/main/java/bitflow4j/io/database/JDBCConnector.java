@@ -113,7 +113,7 @@ public class JDBCConnector {
 
     public JDBCConnector prepareRead() throws SQLException {
         this.sqlSelectQuery = String.format(BASE_SELECT_STATEMENT, selectTableQualifier);
-        System.out.println("SQL Select Statement: " + sqlSelectQuery);
+//        System.out.println("SQL Select Statement: " + sqlSelectQuery);
         this.selectResultSet = executeQuery(sqlSelectQuery);
         this.selectResultSetMetaData = selectResultSet.getMetaData();
         this.selectNumberOfColumns = selectResultSetMetaData.getColumnCount();
@@ -135,7 +135,7 @@ public class JDBCConnector {
         String valuesToInsert = buildValueString(sample);
         String columnsToInsert = buildColumnStrings(sample);
         String query = String.format(BASE_INSERT_STATEMENT, insertTableQualifier, columnsToInsert, valuesToInsert);
-        System.out.println("query String: " + query);
+//        System.out.println("query String: " + query);
         executeQuery(query);
         lastWrittenSample = sample;
         //TODO parse and handle result (e.g. any errors)
@@ -185,7 +185,7 @@ public class JDBCConnector {
         });
         //TODO not "clean"
         int lastIndexofSeparator = resultBuilder.lastIndexOf(",");
-        resultBuilder.delete(lastIndexofSeparator, lastIndexofSeparator + 1);
+        if (lastIndexofSeparator >= 0) resultBuilder.delete(lastIndexofSeparator, lastIndexofSeparator + 1);
         //clean
         resultBuilder.append("\'");
         return resultBuilder.toString();
@@ -203,7 +203,7 @@ public class JDBCConnector {
 
     private void createTable() throws SQLException {
         String query = String.format(BASE_CREATE_STATEMENT, this.insertTableQualifier, db.longType(), db.stringType());
-        System.out.println("sql create table query: " + query);
+//        System.out.println("sql create table query: " + query);
         //TODO use correct execute and handle result: fix later
 //        ResultSet resultSet =
         executeQuery(query);
@@ -217,20 +217,20 @@ public class JDBCConnector {
         ResultSet resultSet = connection.getMetaData().getColumns(null, this.dbSchemaInsert, this.dbTableInsert, null);//this.dbTableInsert
         List<String> columns = new ArrayList<>(resultSet.getFetchSize());
         List<String> sampleColumns = new ArrayList<>(Arrays.asList(sample.getHeader().header));
-        System.out.println("printing column result");
+//        System.out.println("printing column result");
         while (resultSet.next()) {
             String currColumn = resultSet.getString("COLUMN_NAME");
-            System.out.println(currColumn);
+//            System.out.println(currColumn);
             columns.add(currColumn);
         }
-        System.out.println("In check table columns ");
-        System.out.println("sample columns");
-        for (String s : sampleColumns) System.out.println(s);
-        System.out.println("table columns");
-        for (String s : columns) System.out.println(s);
+//        System.out.println("In check table columns ");
+//        System.out.println("sample columns");
+//        for (String s : sampleColumns) System.out.println(s);
+//        System.out.println("table columns");
+//        for (String s : columns) System.out.println(s);
         sampleColumns.removeAll(columns);
-        System.out.println("result columns");
-        for (String s : sampleColumns) System.out.println(s);
+//        System.out.println("result columns");
+//        for (String s : sampleColumns) System.out.println(s);
         return sampleColumns;
     }
 
@@ -239,7 +239,7 @@ public class JDBCConnector {
         buildColumnStrings(columns);
         for (String columnToAdd : columns) {
             String query = String.format(BASE_ALTER_STATEMENT, insertTableQualifier, columnToAdd);
-            System.out.println("add columns query: " + query);
+//            System.out.println("add columns query: " + query);
             try {
                 executeQuery(query);
             } catch (SQLException e) {
@@ -258,7 +258,7 @@ public class JDBCConnector {
 //            String columnString = "ADD `" + columns.get(i) + "` " + columnType;
 //            String columnString = "ADD '" + columns.get(i) + "' " + columnType;
 //            String columnString = "ADD \"" + columns.get(i) + "\" " + columnType;
-            System.out.println("buildColumns for alter, column string: " + columnString);
+//            System.out.println("buildColumns for alter, column string: " + columnString);
             columns.set(i, columnString);
 //  resultBuilder.append(",");
         }

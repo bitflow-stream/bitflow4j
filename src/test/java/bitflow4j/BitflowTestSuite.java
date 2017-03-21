@@ -4,7 +4,7 @@ import org.junit.runners.Suite;
 
 @org.junit.runner.RunWith(Suite.class)
 @Suite.SuiteClasses({
-        TestWithSamples.class,
+    TestWithSamples.class, TestDatabase.class,
 })
 public class BitflowTestSuite {
 }

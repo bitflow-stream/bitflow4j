@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 /**
  * Created by malcolmx on 15.02.17.
  */
-public abstract class JDBCSampleSink extends AbstractSampleSink implements StoppableTask {
+public class JDBCSampleSink extends AbstractSampleSink implements StoppableTask {
 
     private static final Logger logger = Logger.getLogger(JDBCSampleSink.class.getName());
     private final JDBCConnector connector;

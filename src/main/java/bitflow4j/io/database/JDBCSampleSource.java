@@ -13,7 +13,7 @@ import java.util.logging.Logger;
 /**
  * JDBC Sample Source
  */
-public abstract class JDBCSampleSource extends AbstractSampleSource implements StoppableTask {
+public class JDBCSampleSource extends AbstractSampleSource implements StoppableTask {
 
     private static final Logger logger = Logger.getLogger(JDBCSampleSource.class.getName());
     private final JDBCReaderTask task;
