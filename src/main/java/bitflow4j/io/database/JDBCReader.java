@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 /**
  * Created by malcolmx on 21.03.17.
  */
-public class JDBCReader extends Connector {
+public class JDBCReader extends Connector<JDBCReader> {
     private static final String BASE_SELECT_STATEMENT = "SELECT * FROM %s;";
     private static final Logger logger = Logger.getLogger(JDBCReader.class.getName());
     private ResultSet selectResultSet;

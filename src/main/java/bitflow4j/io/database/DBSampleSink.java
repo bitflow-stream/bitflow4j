@@ -5,6 +5,7 @@ import bitflow4j.sample.Sample;
 import bitflow4j.task.StoppableTask;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.logging.Logger;
 
 /**
@@ -21,11 +22,11 @@ public class DBSampleSink extends AbstractSampleSink implements StoppableTask {
 
     @Override
     public void stop() throws IOException {
-//        try {
-//            connector.disconnect();
-//        } catch (SQLException e) {
-//            throw new IOException(e);
-//        }
+        try {
+            writer.disconnect();
+        } catch (SQLException e) {
+            throw new IOException(e);
+        }
     }
 
     @Override
@@ -33,14 +34,14 @@ public class DBSampleSink extends AbstractSampleSink implements StoppableTask {
         // TODO check if connection is established and optionally connect
         // On exception: disconnect + still throw exception
 
-//        try {
-//            connector.connect().prepareInsert().writeSample(sample);
-//        } catch (SQLException e) {
-//            try {
-//                connector.disconnect();
-//            } finally {
-//                throw new IOException(e);
-//            }
-//        }
+        try {
+            writer.connect().prepareInsert().writeSample(sample);
+        } catch (SQLException e) {
+            try {
+                writer.disconnect();
+            } finally {
+                throw new IOException(e);
+            }
+        }
     }
 }

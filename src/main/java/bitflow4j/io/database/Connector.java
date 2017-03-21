@@ -5,7 +5,7 @@ import java.sql.*;
 /**
  * Created by malcolmx on 21.03.17.
  */
-public abstract class Connector {
+public abstract class Connector<T extends Connector> {
     protected static final String TIMESTAMP_COL = "timestamp";
     protected static final String TAG_COL = "tags";
 
@@ -31,19 +31,19 @@ public abstract class Connector {
         this.state = State.INITIALIZED;
     }
 
-    public Connector connect() throws SQLException {
-        if (state == State.CONNECTED) return this;
+    public T connect() throws SQLException {
+        if (state == State.CONNECTED) return (T) this;
         this.connection = DriverManager.getConnection(this.url, this.user, this.password);
         if (this.schema != null) this.connection.setSchema(schema);
         this.state = State.CONNECTED;
-        return this;
+        return (T) this;
     }
 
-    public Connector disconnect() throws SQLException {
-        if (this.state != State.CONNECTED) return this;
+    public T disconnect() throws SQLException {
+        if (this.state != State.CONNECTED) return (T) this;
         if (!this.connection.isClosed()) this.connection.close();
         this.state = State.INITIALIZED;
-        return this;
+        return (T) this;
     }
 
     protected ResultSet executeQuery(String sqlQuery) throws SQLException {

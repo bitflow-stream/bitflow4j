@@ -13,7 +13,7 @@ import java.util.logging.Logger;
 /**
  * Created by malcolmx on 21.03.17.
  */
-public class JDBCWriter extends Connector {
+public class JDBCWriter extends Connector<JDBCWriter> {
     private static final String BASE_INSERT_STATEMENT = "INSERT INTO %s (%s" + TIMESTAMP_COL + "," + TAG_COL + ") VALUES (%s);";
     private static final String BASE_CREATE_STATEMENT = "CREATE TABLE IF NOT EXISTS %s (" + TIMESTAMP_COL + " %s," + TAG_COL + " %s);";
     private static final String BASE_ALTER_STATEMENT = "ALTER TABLE %s %s;";
@@ -39,6 +39,11 @@ public class JDBCWriter extends Connector {
         executeQuery(query);
         lastWrittenSample = sample;
         //TODO parse and handle result (e.g. any errors)
+    }
+
+    public JDBCWriter prepareInsert() throws SQLException {
+        this.createTable();
+        return this;
     }
 
     private String buildColumnStrings(Sample sample) {
@@ -80,11 +85,6 @@ public class JDBCWriter extends Connector {
         //clean
         resultBuilder.append("\'");
         return resultBuilder.toString();
-    }
-
-    public Connector prepareInsert() throws SQLException {
-        this.createTable();
-        return this;
     }
 
     //####################################################
