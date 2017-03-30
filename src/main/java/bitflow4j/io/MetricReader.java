@@ -32,6 +32,8 @@ public abstract class MetricReader {
     // TODO HACK should be removed, see usages of this
     public Runnable inputClosedHook;
 
+    public boolean suppressHeaderUpdateLogs = false;
+
     public MetricReader(TaskPool pool, Marshaller marshaller) {
         this.marshaller = marshaller;
         this.pool = pool;
@@ -99,7 +101,8 @@ public abstract class MetricReader {
             boolean isHeader = marshaller.peekIsHeader(input);
             if (isHeader) {
                 header = marshaller.unmarshallHeader(input);
-                logger.info("Incoming header of '" + sourceName + "' updated to " + header.header.numFields() + " metrics");
+                if (!suppressHeaderUpdateLogs)
+                    logger.info("Incoming header of '" + sourceName + "' updated to " + header.header.numFields() + " metrics");
                 return null;
             } else {
                 if (header == null) {

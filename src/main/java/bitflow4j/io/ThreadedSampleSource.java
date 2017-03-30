@@ -30,11 +30,14 @@ public abstract class ThreadedSampleSource extends AbstractSampleSource implemen
     private final List<LoopTask> tasks = new ArrayList<>();
     private boolean shuttingDown = false;
 
+    public boolean suppressHeaderUpdateLogs = false;
+
     protected void readSamples(TaskPool pool, MetricReader reader) throws IOException {
         readSamples(pool, reader, false);
     }
 
     protected void readSamples(TaskPool pool, MetricReader reader, boolean keepAlive) throws IOException {
+        reader.suppressHeaderUpdateLogs = suppressHeaderUpdateLogs;
         LoopTask task = new LoopSampleReader(reader);
         tasks.add(task);
         pool.start(task, keepAlive);
