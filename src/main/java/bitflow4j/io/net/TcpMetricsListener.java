@@ -86,7 +86,8 @@ public class TcpMetricsListener extends ThreadedSampleSource {
                 socket = tcpSocket.accept();
                 if (socket.isConnected()) {
                     String remote = acceptConnection(pool, socket);
-                    logger.info("Accepted connection from " + remote);
+                    if (!suppressHeaderUpdateLogs)
+                        logger.info("Accepted connection from " + remote);
                 }
             } catch (Exception exc) {
                 if (tcpSocket.isClosed())

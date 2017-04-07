@@ -133,7 +133,8 @@ public abstract class MetricReader {
         if (currentInput != null) {
             InputStream input = currentInput;
             currentInput = null;
-            logger.info("Closed input " + sourceName);
+            if (!suppressHeaderUpdateLogs)
+                logger.info("Closed input " + sourceName);
             Runnable hook = inputClosedHook;
             if (hook != null) {
                 hook.run();
