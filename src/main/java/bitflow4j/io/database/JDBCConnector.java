@@ -64,7 +64,7 @@ public class JDBCConnector {
         this.dbPassword = dbPassword;
         this.db = db;
         if (dbTableSelect != null) this.dbTableSelect = dbTableSelect.toLowerCase();
-        if (dbTableInsert != null) this.dbTableSelect = dbTableInsert.toLowerCase();
+        if (dbTableInsert != null) this.dbTableInsert = dbTableInsert.toLowerCase();
         this.init();
     }
 
@@ -412,11 +412,11 @@ public class JDBCConnector {
 
     private void init() {
 //        if (this.dbName == null) this.dbName = "bitflow4j-sample-db";
-        if (this.dbTableSelect == null) this.dbTableSelect = "SamplesIn";
-        if (this.dbTableInsert == null) this.dbTableInsert = "SamplesOut";
-        if (this.dbUser == null) this.dbUser = "root";
-        if (this.dbPassword == null) this.dbPassword = "";
-        if (this.dbUrl == null) this.dbUrl = "jdbc:h2:~/bitflow4j-sample-db";
+//        if (this.dbTableSelect == null) this.dbTableSelect = "SamplesIn";
+//        if (this.dbTableInsert == null) this.dbTableInsert = "SamplesOut";
+//        if (this.dbUser == null) this.dbUser = "root";
+//        if (this.dbPassword == null) this.dbPassword = "";
+//        if (this.dbUrl == null) this.dbUrl = "jdbc:h2:~/bitflow4j-sample-db";
 
         this.buildInsertTableQualifier();
         this.buildSelectTableQualifier();

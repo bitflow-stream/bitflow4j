@@ -59,8 +59,10 @@ public class JDBCSampleSource extends AbstractSampleSource implements StoppableT
                 throw new IOException(e);
             }
 
-            if (sampleReadInIteration == null || !pool.isRunning())
+            if (sampleReadInIteration == null || !pool.isRunning()) {
+                output().close();
                 return false;
+            }
             output().writeSample(sampleReadInIteration);
             return true;
         }

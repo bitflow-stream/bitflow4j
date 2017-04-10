@@ -6,7 +6,8 @@ package bitflow4j.io.database;
 public enum DB {
     MYSQL("DOUBLE", "BIGINT", "TEXT", '`'),
     POSTGRES("double precision", "bigint", "text", '"'),
-    H2("DOUBLE", "BIGINT", "VARCHAR", '"'), SQLite("REAL", "INTEGER", "TEXT", '"');
+    H2("DOUBLE", "BIGINT", "VARCHAR", '"'),
+    SQLite("REAL", "INTEGER", "TEXT", '"');
     private String doubleTypeString;
 
 

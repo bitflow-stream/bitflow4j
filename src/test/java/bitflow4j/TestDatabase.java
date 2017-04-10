@@ -19,7 +19,9 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by malcolmx on 21.03.17.
@@ -42,7 +44,7 @@ public class TestDatabase extends TestWithSamples {
         testReadPipeline.runAndWait();
         List<Sample> samplesWritten = testSampleSource.samples;
         List<Sample> samplesRead = testSampleSink.samplesRead;
-
+        Assert.assertTrue("Test failed because the samples written to the database and the samples read from the database where different.", samplesEqual(samplesRead, samplesWritten));
     }
 
     private void compareSamples(List<Sample> samplesWritten, List<Sample> samplesRead) {
@@ -59,6 +61,46 @@ public class TestDatabase extends TestWithSamples {
         boolean success = file.delete();
         if (success) System.out.println("deleted successfully");
         else System.out.println("delete failed");
+    }
+
+    private boolean samplesEqual(List<Sample> samples1, List<Sample> samples2) {
+        if (samples1.size() != samples2.size()) return false;
+        for (int i = 0; i < samples1.size(); i++) {
+            if (!sampleEquals(samples1.get(i), samples2.get(i))) return false;
+        }
+        return true;
+    }
+
+    private boolean sampleEquals(Sample sample1, Sample sample2) {
+        if (Arrays.equals(sample1.getHeader().header, sample2.getHeader().header)) {
+            if (Arrays.equals(sample1.getMetrics(), sample2.getMetrics())) {
+                if (tagsEqual(sample1.getTags(), sample2.getTags()))
+                    return true;
+                else System.out.println("failed because tags different");
+            } else System.out.println("failed because metrics different");
+        } else System.out.println("Failed because header different");
+        return false;
+
+    }
+
+    private int[] findHeaderMapping(String[] header1, String[] header2) {
+        if (header1.length != header2.length) return null;
+        int[] mapping = new int[header1.length];
+        for (int i = 0; i < header1.length; i++) {
+            String headerField = header1[i];
+//            for (int k = 0; k < header2.length; k++){
+//            }
+            int index = Arrays.binarySearch(header2, headerField);
+            if (index < 0) return null;
+            mapping[i] = index; // cannot handle duplicate headers
+        }
+        return mapping;
+    }
+
+
+    private boolean tagsEqual(Map<String, String> tags1, Map<String, String> tags2) {
+        if ((tags1 == null || tags1.isEmpty()) && (tags2 == null || tags2.isEmpty())) return true;
+        return tags1.equals(tags2);
     }
 
     private class TestSampleSource extends AbstractSampleSource {
@@ -90,6 +132,7 @@ public class TestDatabase extends TestWithSamples {
                     cursor++;
                     return true;
                 }
+                output().close();
                 return false;
             }
         }

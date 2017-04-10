@@ -21,8 +21,8 @@ public class JDBCWriter extends Connector<JDBCWriter> {
 
     private Sample lastWrittenSample;
 
-    public JDBCWriter(DB db, String url, String table, String schema, String user, String password) {
-        super(db, url, table, schema, user, password);
+    public JDBCWriter(DB db, String url, String schema, String table, String user, String password) {
+        super(db, url, schema, table, user, password);
     }
 
     //TODO lock table
@@ -34,7 +34,7 @@ public class JDBCWriter extends Connector<JDBCWriter> {
 
         String valuesToInsert = buildValueString(sample);
         String columnsToInsert = buildColumnStrings(sample);
-        String query = String.format(BASE_INSERT_STATEMENT, table, columnsToInsert, valuesToInsert);
+        String query = String.format(BASE_INSERT_STATEMENT, tableQualifier, columnsToInsert, valuesToInsert);
 //        System.out.println("query String: " + query);
         executeQuery(query);
         lastWrittenSample = sample;
@@ -92,7 +92,7 @@ public class JDBCWriter extends Connector<JDBCWriter> {
     //####################################################
 
     private void createTable() throws SQLException {
-        String query = String.format(BASE_CREATE_STATEMENT, this.table, db.longType(), db.stringType());
+        String query = String.format(BASE_CREATE_STATEMENT, this.tableQualifier, db.longType(), db.stringType());
 //        System.out.println("sql create table query: " + query);
         //TODO use correct execute and handle result: fix later
 //        ResultSet resultSet =
@@ -104,7 +104,7 @@ public class JDBCWriter extends Connector<JDBCWriter> {
     //####################################################
 
     private List<String> checkTableColumns(Sample sample) throws SQLException {
-        ResultSet resultSet = connection.getMetaData().getColumns(null, this.schema, this.table, null);//this.dbTableInsert
+        ResultSet resultSet = connection.getMetaData().getColumns(null, null, this.tableQualifier, null);//this.dbTableInsert TODO: check if it works without schema and provided name
         List<String> columns = new ArrayList<>(resultSet.getFetchSize());
         List<String> sampleColumns = new ArrayList<>(Arrays.asList(sample.getHeader().header));
 //        System.out.println("printing column result");
@@ -127,7 +127,7 @@ public class JDBCWriter extends Connector<JDBCWriter> {
     private void addColumns(List<String> columns) throws SQLException {
         buildColumnStrings(columns);
         for (String columnToAdd : columns) {
-            String query = String.format(BASE_ALTER_STATEMENT, table, columnToAdd);
+            String query = String.format(BASE_ALTER_STATEMENT, tableQualifier, columnToAdd);
 //            System.out.println("add columns query: " + query);
             try {
                 executeQuery(query);

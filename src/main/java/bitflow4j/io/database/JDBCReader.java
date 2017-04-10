@@ -23,8 +23,8 @@ public class JDBCReader extends Connector<JDBCReader> {
     private int selectNumberOfColumns;
     private Header header;
 
-    public JDBCReader(DB db, String url, String table, String schema, String user, String password) {
-        super(db, url, table, schema, user, password);
+    public JDBCReader(DB db, String url, String schema, String table, String user, String password) {
+        super(db, url, schema, table, user, password);
     }
 
     public Sample nextSample() throws SQLException {
@@ -32,7 +32,7 @@ public class JDBCReader extends Connector<JDBCReader> {
     }
 
     public Connector prepareRead() throws SQLException {
-        this.sqlSelectQuery = String.format(BASE_SELECT_STATEMENT, table);
+        this.sqlSelectQuery = String.format(BASE_SELECT_STATEMENT, tableQualifier);
 //        System.out.println("SQL Select Statement: " + sqlSelectQuery);
         this.selectResultSet = executeQuery(sqlSelectQuery);
         this.selectResultSetMetaData = selectResultSet.getMetaData();
@@ -63,7 +63,7 @@ public class JDBCReader extends Connector<JDBCReader> {
         }
     }
 
-    private Map<String, String> parseTagString(String encodedTags) {
+    private Map<String, String> parseTagString(String encodedTags) { //TODO check if it is ok to return empty map or if null must be given
         String[] tagTokens = encodedTags.split("(,)|(=)");
         //unsafe for malformatted tagStrings
         Map<String, String> result = new HashMap<>(tagTokens.length / 2);
