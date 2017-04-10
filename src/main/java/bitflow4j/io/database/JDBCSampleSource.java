@@ -36,6 +36,7 @@ public class JDBCSampleSource extends AbstractSampleSource implements StoppableT
 
     public void stop() throws IOException {
         try {
+            this.task.shuttingDown = true;
             connector.disconnect();
         } catch (SQLException e) {
             throw new IOException(e);
@@ -47,6 +48,9 @@ public class JDBCSampleSource extends AbstractSampleSource implements StoppableT
     }
 
     private class JDBCReaderTask extends StoppableLoopTask {
+
+        boolean shuttingDown = false;
+
         @Override
         protected boolean executeIteration() throws IOException {
             if (!pool.isRunning())
@@ -56,7 +60,11 @@ public class JDBCSampleSource extends AbstractSampleSource implements StoppableT
             try {
                 sampleReadInIteration = connector.nextSample();
             } catch (SQLException e) {
-                throw new IOException(e);
+                if (!shuttingDown) {
+                    throw new IOException(e);
+                } else {
+                    sampleReadInIteration = null;
+                }
             }
 
             if (sampleReadInIteration == null || !pool.isRunning()) {
@@ -65,6 +73,17 @@ public class JDBCSampleSource extends AbstractSampleSource implements StoppableT
             }
             output().writeSample(sampleReadInIteration);
             return true;
+        }
+
+        @Override
+        public void run() throws IOException {
+            try {
+                super.run();
+            } catch (IOException e) {
+                throw e;
+            } finally {
+                JDBCSampleSource.this.output().close();
+            }
         }
     }
 }
