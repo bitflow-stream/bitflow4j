@@ -44,6 +44,17 @@ public abstract class Connector<T extends Connector<T>> {
         return (T) this;
     }
 
+    public T reconnect() throws SQLException {
+        if (state == State.CONNECTED && !this.connection.isValid(0)) {
+            state = State.INITIALIZED;
+            try {
+                this.connection.close();
+            } catch (SQLException e) {
+            }
+            this.connect();
+        }
+    }
+
     protected ResultSet executeQuery(String sqlQuery) throws SQLException {
         Statement sqlStatement = connection.createStatement();
         return sqlStatement.executeQuery(sqlQuery);
