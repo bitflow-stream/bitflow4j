@@ -63,7 +63,7 @@ public class JDBCReader extends Connector<JDBCReader> {
         }
     }
 
-    private Map<String, String> parseTagString(String encodedTags) { //TODO check if it is ok to return empty map or if null must be given
+    private Map<String, String> parseTagString(String encodedTags) {
         String[] tagTokens = encodedTags.split("(,)|(=)");
         //unsafe for malformatted tagStrings
         Map<String, String> result = new HashMap<>(tagTokens.length / 2);
@@ -75,9 +75,9 @@ public class JDBCReader extends Connector<JDBCReader> {
 
     private Header parseHeader() throws SQLException {
         String[] header = new String[selectNumberOfColumns - 2];
-        for (int i = 1; i <= selectNumberOfColumns - 2; i++) {
+        for (int i = 3; i <= selectNumberOfColumns; i++) {
             String columnName = selectResultSetMetaData.getColumnName(i);
-            header[i - 1] = columnName;
+            header[i - 3] = columnName;
         }
         return new Header(header);
     }

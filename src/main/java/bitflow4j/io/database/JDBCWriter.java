@@ -20,6 +20,7 @@ public class JDBCWriter extends Connector<JDBCWriter> {
     private static final Logger logger = Logger.getLogger(JDBCWriter.class.getName());
 
     private Sample lastWrittenSample;
+    private boolean readyToInsert = false;
 
     public JDBCWriter(DB db, String url, String schema, String table, String user, String password) {
         super(db, url, schema, table, user, password);
@@ -36,13 +37,16 @@ public class JDBCWriter extends Connector<JDBCWriter> {
         String columnsToInsert = buildColumnStrings(sample);
         String query = String.format(BASE_INSERT_STATEMENT, tableQualifier, columnsToInsert, valuesToInsert);
 //        System.out.println("query String: " + query);
-        executeQuery(query);
+        executeUpdate(query);
         lastWrittenSample = sample;
         //TODO parse and handle result (e.g. any errors)
     }
 
     public JDBCWriter prepareInsert() throws SQLException {
+        //TODO only execute once
+        if (readyToInsert) return this;
         this.createTable();
+        readyToInsert = true;
         return this;
     }
 
@@ -96,7 +100,7 @@ public class JDBCWriter extends Connector<JDBCWriter> {
 //        System.out.println("sql create table query: " + query);
         //TODO use correct execute and handle result: fix later
 //        ResultSet resultSet =
-        executeQuery(query);
+        executeUpdate(query);
     }
 
     //####################################################
@@ -104,7 +108,7 @@ public class JDBCWriter extends Connector<JDBCWriter> {
     //####################################################
 
     private List<String> checkTableColumns(Sample sample) throws SQLException {
-        ResultSet resultSet = connection.getMetaData().getColumns(null, null, this.tableQualifier, null);//this.dbTableInsert TODO: check if it works without schema and provided name
+        ResultSet resultSet = connection.getMetaData().getColumns(null, this.schema, this.table, null);//this.dbTableInsert TODO: check if it works without schema and provided name
         List<String> columns = new ArrayList<>(resultSet.getFetchSize());
         List<String> sampleColumns = new ArrayList<>(Arrays.asList(sample.getHeader().header));
 //        System.out.println("printing column result");
@@ -130,7 +134,7 @@ public class JDBCWriter extends Connector<JDBCWriter> {
             String query = String.format(BASE_ALTER_STATEMENT, tableQualifier, columnToAdd);
 //            System.out.println("add columns query: " + query);
             try {
-                executeQuery(query);
+                executeUpdate(query);
             } catch (SQLException e) {
                 logger.severe(e.getMessage());//TODO replace after manual table query has been added
             }

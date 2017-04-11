@@ -34,6 +34,7 @@ public abstract class Connector<T extends Connector<T>> {
         if (state == State.CONNECTED) return (T) this;
         this.connection = DriverManager.getConnection(this.url, this.user, this.password);
 //        if (this.schema != null) this.connection.setSchema(schema);
+//        System.out.println("connected to:" + connection.getMetaData().getURL() + " user: " + this.connection.getMetaData().getUserName());
         this.state = State.CONNECTED;
         return (T) this;
     }

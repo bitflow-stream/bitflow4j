@@ -1,9 +1,9 @@
 package bitflow4j;
 
-import bitflow4j.io.database.JDBCConnector;
-import bitflow4j.io.database.JDBCConnector.DB;
-import bitflow4j.io.database.JDBCSampleSink;
-import bitflow4j.io.database.JDBCSampleSource;
+import bitflow4j.io.database.DBSampleSink;
+import bitflow4j.io.database.DBSampleSource;
+import bitflow4j.io.database.JDBCReader;
+import bitflow4j.io.database.JDBCWriter;
 import bitflow4j.main.AlgorithmPipeline;
 import bitflow4j.sample.AbstractSampleSink;
 import bitflow4j.sample.AbstractSampleSource;
@@ -32,27 +32,29 @@ public class TestDatabase extends TestWithSamples {
 
     @Test
     public void testSQLite() {
-        JDBCConnector connector = new JDBCConnector(DB.SQLite, "jdbc:sqlite:" + DB_FILE, null, null, null, null, "samples", "samples");
-        JDBCSampleSource jdbcSampleSource = new JDBCSampleSource(connector);
-        JDBCSampleSink jdbcSampleSink = new JDBCSampleSink(connector);
+//        JDBCConnector connector = new JDBCConnector(DB.SQLite, "jdbc:sqlite:" + DB_FILE, null, null, null, null, "samples", "samples");
+//        JDBCSampleSource dbSampleSource = new JDBCSampleSource(connector);
+//        JDBCSampleSink dbSampleSink = new JDBCSampleSink(connector);
+        DBSampleSource dbSampleSource = new DBSampleSource(new JDBCReader(bitflow4j.io.database.DB.SQLite, "jdbc:sqlite:" + DB_FILE, null, "samples", null, null));
+        DBSampleSink dbSampleSink = new DBSampleSink(new JDBCWriter(bitflow4j.io.database.DB.SQLite, "jdbc:sqlite:" + DB_FILE, null, "samples", null, null));
         TestSampleSource testSampleSource = new TestSampleSource();
         TestSampleSink testSampleSink = new TestSampleSink();
-        AlgorithmPipeline testWritePipeline = new AlgorithmPipeline().input(testSampleSource).output(jdbcSampleSink);
-        AlgorithmPipeline testReadPipeline = new AlgorithmPipeline().input(jdbcSampleSource).output(testSampleSink);
+        AlgorithmPipeline testWritePipeline = new AlgorithmPipeline().input(testSampleSource).output(dbSampleSink);
+        AlgorithmPipeline testReadPipeline = new AlgorithmPipeline().input(dbSampleSource).output(testSampleSink);
         testWritePipeline.runAndWait();
         System.out.println("finished write pipeline test");
         testReadPipeline.runAndWait();
         List<Sample> samplesWritten = testSampleSource.samples;
         List<Sample> samplesRead = testSampleSink.samplesRead;
-        Assert.assertTrue("Test failed because the samples written to the database and the samples read from the database where different.", samplesEqual(samplesRead, samplesWritten));
+        Assert.assertTrue("Test failed because the samples written to the database and the samples read from the database where different.", samplesEqual(samplesWritten, samplesRead));
     }
 
-    private void compareSamples(List<Sample> samplesWritten, List<Sample> samplesRead) {
-        Assert.assertEquals("A different number of samples has been written and read from db: samples read = " + samplesRead.size() + "; samples written = " + samplesWritten.size(), samplesRead.size(), samplesWritten.size());
-        for (int i = 0; i < samplesRead.size(); i++) {
-            Assert.assertEquals("Sample read and sample written are different (samplenumber: " + (i + 1) + ").", samplesRead.get(i), samplesWritten.get(i));
-        }
-    }
+//    private void compareSamples(List<Sample> samplesWritten, List<Sample> samplesRead) {
+//        Assert.assertEquals("A different number of samples has been written and read from db: samples read = " + samplesRead.size() + "; samples written = " + samplesWritten.size(), samplesRead.size(), samplesWritten.size());
+//        for (int i = 0; i < samplesRead.size(); i++) {
+//            Assert.assertEquals("Sample read and sample written are different (samplenumber: " + (i + 1) + ").", samplesRead.get(i), samplesWritten.get(i));
+//        }
+//    }
 
     @After
     public void deleteDatabaseFile() {
@@ -63,34 +65,51 @@ public class TestDatabase extends TestWithSamples {
         else System.out.println("delete failed");
     }
 
-    private boolean samplesEqual(List<Sample> samples1, List<Sample> samples2) {
-        if (samples1.size() != samples2.size()) return false;
-        for (int i = 0; i < samples1.size(); i++) {
-            if (!sampleEquals(samples1.get(i), samples2.get(i))) return false;
+    private boolean samplesEqual(List<Sample> samplesExpected, List<Sample> samplesRead) {
+        if (samplesExpected.size() != samplesRead.size()) return false;
+        for (int i = 0; i < samplesExpected.size(); i++) {
+            if (!sampleEquals(samplesExpected.get(i), samplesRead.get(i))) return false;
         }
         return true;
     }
 
-    private boolean sampleEquals(Sample sample1, Sample sample2) {
-        if (Arrays.equals(sample1.getHeader().header, sample2.getHeader().header)) {
-            if (Arrays.equals(sample1.getMetrics(), sample2.getMetrics())) {
-                if (tagsEqual(sample1.getTags(), sample2.getTags()))
+    private boolean sampleEquals(Sample sampleExpected, Sample sampleRead) {
+        int[] headerMappingExpectedToRead = findHeaderMapping(sampleExpected.getHeader().header, sampleRead.getHeader().header);
+        if (headerMappingExpectedToRead != null) {
+            if (metricsEqual(sampleExpected.getMetrics(), sampleRead.getMetrics(), headerMappingExpectedToRead)) {
+                if (tagsEqual(sampleExpected.getTags(), sampleRead.getTags()))
                     return true;
                 else System.out.println("failed because tags different");
             } else System.out.println("failed because metrics different");
         } else System.out.println("Failed because header different");
         return false;
-
     }
 
-    private int[] findHeaderMapping(String[] header1, String[] header2) {
-        if (header1.length != header2.length) return null;
-        int[] mapping = new int[header1.length];
-        for (int i = 0; i < header1.length; i++) {
-            String headerField = header1[i];
+    private boolean metricsEqual(double[] metricsExpected, double[] metricsRead, int[] mapping) {
+        for (int i = 0; i < metricsExpected.length; i++) {
+            if (metricsExpected[i] != metricsRead[mapping[i]]) return false;
+        }
+        return true;
+    }
+
+//    private boolean headerEquals(String[] header1, String[] header2) {
+//        for (String field : header1) {
+//            if (Arrays.binarySearch(header2, field) < 0) return false;
+//        }
+//        return true;
+//    }
+
+    private int[] findHeaderMapping(String[] headerExpected, String[] headerRead) {
+        if (headerExpected.length > headerRead.length) return null;
+        System.out.println("searching header mapping");
+        int[] mapping = new int[headerExpected.length];
+        for (int i = 0; i < headerExpected.length; i++) {
+            String headerField = headerExpected[i];
 //            for (int k = 0; k < header2.length; k++){
 //            }
-            int index = Arrays.binarySearch(header2, headerField);
+            int index = Arrays.binarySearch(headerRead, headerField);
+//            System.out.println("i = " + i + ", current field: " + headerField + ", index: " + index);
+
             if (index < 0) return null;
             mapping[i] = index; // cannot handle duplicate headers
         }

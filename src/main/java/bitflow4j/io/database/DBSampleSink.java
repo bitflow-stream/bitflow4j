@@ -29,11 +29,15 @@ public class DBSampleSink extends AbstractSampleSink implements StoppableTask {
         }
     }
 
+    public DBSampleSink connect() throws SQLException {
+        writer.connect().prepareInsert();
+        return this;
+    }
+
     @Override
     public void writeSample(Sample sample) throws IOException {
         // TODO check if connection is established and optionally connect
         // On exception: disconnect + still throw exception
-
         try {
             writer.connect().prepareInsert().writeSample(sample);
         } catch (SQLException e) {
