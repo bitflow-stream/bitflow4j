@@ -32,9 +32,6 @@ public class TestDatabase extends TestWithSamples {
 
     @Test
     public void testSQLite() {
-//        JDBCConnector connector = new JDBCConnector(DB.SQLite, "jdbc:sqlite:" + DB_FILE, null, null, null, null, "samples", "samples");
-//        JDBCSampleSource dbSampleSource = new JDBCSampleSource(connector);
-//        JDBCSampleSink dbSampleSink = new JDBCSampleSink(connector);
         DBSampleSource dbSampleSource = new DBSampleSource(new JDBCReader(bitflow4j.io.database.DB.SQLite, "jdbc:sqlite:" + DB_FILE, null, "samples", null, null));
         DBSampleSink dbSampleSink = new DBSampleSink(new JDBCWriter(bitflow4j.io.database.DB.SQLite, "jdbc:sqlite:" + DB_FILE, null, "samples", null, null));
         TestSampleSource testSampleSource = new TestSampleSource();
@@ -42,19 +39,11 @@ public class TestDatabase extends TestWithSamples {
         AlgorithmPipeline testWritePipeline = new AlgorithmPipeline().input(testSampleSource).output(dbSampleSink);
         AlgorithmPipeline testReadPipeline = new AlgorithmPipeline().input(dbSampleSource).output(testSampleSink);
         testWritePipeline.runAndWait();
-        System.out.println("finished write pipeline test");
         testReadPipeline.runAndWait();
         List<Sample> samplesWritten = testSampleSource.samples;
         List<Sample> samplesRead = testSampleSink.samplesRead;
         Assert.assertTrue("Test failed because the samples written to the database and the samples read from the database where different.", samplesEqual(samplesWritten, samplesRead));
     }
-
-//    private void compareSamples(List<Sample> samplesWritten, List<Sample> samplesRead) {
-//        Assert.assertEquals("A different number of samples has been written and read from db: samples read = " + samplesRead.size() + "; samples written = " + samplesWritten.size(), samplesRead.size(), samplesWritten.size());
-//        for (int i = 0; i < samplesRead.size(); i++) {
-//            Assert.assertEquals("Sample read and sample written are different (samplenumber: " + (i + 1) + ").", samplesRead.get(i), samplesWritten.get(i));
-//        }
-//    }
 
     @After
     public void deleteDatabaseFile() {
@@ -92,24 +81,12 @@ public class TestDatabase extends TestWithSamples {
         return true;
     }
 
-//    private boolean headerEquals(String[] header1, String[] header2) {
-//        for (String field : header1) {
-//            if (Arrays.binarySearch(header2, field) < 0) return false;
-//        }
-//        return true;
-//    }
-
     private int[] findHeaderMapping(String[] headerExpected, String[] headerRead) {
         if (headerExpected.length > headerRead.length) return null;
-        System.out.println("searching header mapping");
         int[] mapping = new int[headerExpected.length];
         for (int i = 0; i < headerExpected.length; i++) {
             String headerField = headerExpected[i];
-//            for (int k = 0; k < header2.length; k++){
-//            }
             int index = Arrays.binarySearch(headerRead, headerField);
-//            System.out.println("i = " + i + ", current field: " + headerField + ", index: " + index);
-
             if (index < 0) return null;
             mapping[i] = index; // cannot handle duplicate headers
         }

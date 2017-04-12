@@ -32,7 +32,9 @@ public abstract class Connector<T extends Connector<T>> {
 
     public T connect() throws SQLException {
         if (state == State.CONNECTED) return (T) this;
-        this.connection = DriverManager.getConnection(this.url, this.user, this.password);
+        if (this.user == null) this.connection = DriverManager.getConnection(this.url);
+        else if (this.password == null) this.connection = DriverManager.getConnection(this.url, this.user, "");
+        else this.connection = DriverManager.getConnection(this.url, this.user, this.password);
         this.state = State.CONNECTED;
         return (T) this;
     }
@@ -53,6 +55,7 @@ public abstract class Connector<T extends Connector<T>> {
             }
             this.connect();
         }
+        return (T) this;
     }
 
     protected ResultSet executeQuery(String sqlQuery) throws SQLException {
