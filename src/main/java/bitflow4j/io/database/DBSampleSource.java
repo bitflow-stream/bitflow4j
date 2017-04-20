@@ -15,7 +15,7 @@ import java.util.logging.Logger;
  */
 public class DBSampleSource extends AbstractSampleSource implements StoppableTask {
 
-    private static final Logger logger = Logger.getLogger(JDBCSampleSource.class.getName());
+    private static final Logger logger = Logger.getLogger(DBSampleSource.class.getName());
     private final DBSampleSource.ReaderTask task;
     private final JDBCReader reader;
 
