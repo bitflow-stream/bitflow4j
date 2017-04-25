@@ -3,6 +3,7 @@ package bitflow4j.io.database;
 import bitflow4j.sample.Header;
 import bitflow4j.sample.Sample;
 
+import java.io.IOException;
 import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -27,7 +28,7 @@ public class JDBCReader extends Connector<JDBCReader> {
         super(db, url, schema, table, user, password);
     }
 
-    public Sample nextSample() throws SQLException {
+    public Sample nextSample() throws SQLException, IOException {
         return processSelectionRow();
     }
 
@@ -42,15 +43,16 @@ public class JDBCReader extends Connector<JDBCReader> {
         return this;
     }
 
-    private Sample processSelectionRow() throws SQLException {
+    private Sample processSelectionRow() throws SQLException, IOException {
         return this.selectResultSet.next() ? parseSelectionRow() : null;
     }
 
-    private Sample parseSelectionRow() throws SQLException {
+    private Sample parseSelectionRow() throws SQLException, IOException {
         double[] values;
         Date timestamp = new Date(this.selectResultSet.getLong(TIMESTAMP_COL));
         String tagString = this.selectResultSet.getString(TAG_COL);
-        Map<String, String> tags = parseTagString(tagString);
+        Map<String, String> tags = Sample.parseTags(tagString);
+//        Map<String, String> tags = parseTagString(tagString);
         values = new double[selectNumberOfColumns - 2];
         this.makeValues(values);
 //        Sample resultSample = new Sample(header, values, timestamp, tags);

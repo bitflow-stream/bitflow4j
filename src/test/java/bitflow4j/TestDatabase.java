@@ -96,6 +96,7 @@ public class TestDatabase extends TestWithSamples {
 
     private boolean tagsEqual(Map<String, String> tags1, Map<String, String> tags2) {
         if ((tags1 == null || tags1.isEmpty()) && (tags2 == null || tags2.isEmpty())) return true;
+
         return tags1.equals(tags2);
     }
 
@@ -124,6 +125,10 @@ public class TestDatabase extends TestWithSamples {
             @Override
             protected boolean executeIteration() throws IOException {
                 if (samples.size() > cursor) {
+//                    System.out.println("Writing Sample with tags: " + samples.get(cursor).getTags());
+//                    for (Map.Entry<String, String> entry : samples.get(cursor).getTags().entrySet()){
+//                        System.out.println("key: " + entry.getKey() + " value: " + entry.getValue());
+//                    }
                     output().writeSample(samples.get(cursor));
                     cursor++;
                     return true;

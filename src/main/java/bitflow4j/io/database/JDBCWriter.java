@@ -2,6 +2,7 @@ package bitflow4j.io.database;
 
 import bitflow4j.sample.Sample;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -35,7 +36,11 @@ public class JDBCWriter extends Connector<JDBCWriter> {
         String valuesToInsert = buildValueString(sample);
         String columnsToInsert = buildColumnStrings(sample);
         String query = String.format(BASE_INSERT_STATEMENT, tableQualifier, columnsToInsert, valuesToInsert);
-        executeUpdate(query);
+        PreparedStatement preparedStatement = connection.prepareStatement(query);
+//        executeUpdate(query);
+        preparedStatement.setString(1,sample.tagString());
+//        preparedStatement.setString(1,buildTagString(sample.getTags()));
+        preparedStatement.executeUpdate();
         lastWrittenSample = sample;
     }
 
@@ -59,13 +64,13 @@ public class JDBCWriter extends Connector<JDBCWriter> {
         }
         resultBuilder.append(sample.getTimestamp().getTime());
         resultBuilder.append(",");
-        resultBuilder.append(buildTagString(sample.getTags()));
+        resultBuilder.append("?");
         return resultBuilder.toString();
     }
 
     private String buildTagString(Map<String, String> tags) {
         StringBuilder resultBuilder = new StringBuilder();
-        resultBuilder.append("\'");
+//        resultBuilder.append("\'");
         tags.entrySet().forEach(entry -> {
             resultBuilder.append(entry.getKey());
             resultBuilder.append("=");
@@ -76,7 +81,7 @@ public class JDBCWriter extends Connector<JDBCWriter> {
         int lastIndexofSeparator = resultBuilder.lastIndexOf(",");
         if (lastIndexofSeparator >= 0) resultBuilder.delete(lastIndexofSeparator, lastIndexofSeparator + 1);
         //clean
-        resultBuilder.append("\'");
+//        resultBuilder.append("\'");
         return resultBuilder.toString();
     }
 
