@@ -40,7 +40,6 @@ public class JDBCWriter extends Connector<JDBCWriter> {
     }
 
     public JDBCWriter prepareInsert() throws SQLException {
-        //TODO only execute once
         if (readyToInsert) return this;
         this.createTable();
         readyToInsert = true;
