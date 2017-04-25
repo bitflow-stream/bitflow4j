@@ -20,18 +20,12 @@ public class TcpMetricsListener extends ThreadedSampleSource {
     private static final Logger logger = Logger.getLogger(TcpMetricsListener.class.getName());
 
     private int numConnections = 0;
-    private final int maxNumConnections;
     private final int port;
     private final Marshaller marshaller;
 
     private ConnectionAcceptor connectionAcceptor;
 
-    public TcpMetricsListener(int port, Marshaller marshaller) throws IOException {
-        this(port, marshaller, -1);
-    }
-
-    public TcpMetricsListener(int port, Marshaller marshaller, int numConnections) throws IOException {
-        this.maxNumConnections = numConnections;
+    public TcpMetricsListener(int port, Marshaller marshaller) {
         this.marshaller = marshaller;
         this.port = port;
     }
@@ -49,12 +43,6 @@ public class TcpMetricsListener extends ThreadedSampleSource {
             connectionAcceptor.stop();
         }
         super.shutDown();
-    }
-
-    @Override
-    protected void readerException() {
-        // Avoid shutting down because of Exception in connections.
-        // This SampleSource runs forever (until user shuts down the program).
     }
 
     private class ConnectionAcceptor implements ParallelTask {
@@ -98,8 +86,8 @@ public class TcpMetricsListener extends ThreadedSampleSource {
                 socket = tcpSocket.accept();
                 if (socket.isConnected()) {
                     String remote = acceptConnection(pool, socket);
-                    logger.info("Accepted connection from " + remote);
-                    if (checkNumConnections()) break;
+                    if (!suppressHeaderUpdateLogs)
+                        logger.info("Accepted connection from " + remote);
                 }
             } catch (Exception exc) {
                 if (tcpSocket.isClosed())
@@ -139,17 +127,6 @@ public class TcpMetricsListener extends ThreadedSampleSource {
         };
         readSamples(pool, input, true);
         return remote;
-    }
-
-    private boolean checkNumConnections() {
-        numConnections++;
-        if (maxNumConnections > 0 && numConnections >= maxNumConnections) {
-            // TODO cannot close the socket here, because connections might still be open.
-            // Just ignoring new incoming connections.
-            logger.warning("Accepted " + numConnections + " connection(s). Ignoring further connections.");
-            return true;
-        }
-        return false;
     }
 
 }

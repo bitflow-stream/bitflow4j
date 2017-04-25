@@ -6,6 +6,7 @@ import bitflow4j.sample.Sample;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Created by anton on 27.02.17.
@@ -14,7 +15,7 @@ public abstract class SampleMerger extends AbstractAlgorithm {
 
     private static final Logger logger = Logger.getLogger(SampleMerger.class.getName());
 
-    private Map<String, Queue<Sample>> inputs = new HashMap<>();
+    private final Map<String, Queue<Sample>> inputs = new HashMap<>();
     private final int minInputs;
     private final String keyTag;
     private boolean warnedMissingTag = false;
@@ -54,10 +55,7 @@ public abstract class SampleMerger extends AbstractAlgorithm {
         }
 
         // Merge samples and forward the result
-        List<Sample> samples = new ArrayList<>();
-        for (Queue<Sample> input : inputs.values()) {
-            samples.add(input.poll());
-        }
+        List<Sample> samples = inputs.values().stream().map(Queue::poll).collect(Collectors.toList());
         Sample merged = mergeSamples(samples);
         super.writeSample(merged);
     }

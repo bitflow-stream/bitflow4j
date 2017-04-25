@@ -18,13 +18,11 @@ import com.google.common.collect.Lists;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@SuppressWarnings({"unused", "WeakerAccess"})
 public class AlgorithmPipeline {
 
     private static final Logger logger = Logger.getLogger(AlgorithmPipeline.class.getName());
@@ -59,8 +57,8 @@ public class AlgorithmPipeline {
         return this;
     }
 
-    public AlgorithmPipeline inputFiles(String format, FileMetricReader.NameConverter conv, String... files) throws IOException {
-        FileMetricReader reader = new FileMetricReader(getMarshaller(format), conv);
+    public AlgorithmPipeline inputFiles(String format, FileMetricReader.NameConverter converter, String... files) throws IOException {
+        FileMetricReader reader = new FileMetricReader(getMarshaller(format), converter);
         for (String file : files)
             reader.addFile(new File(file));
         return input(reader);
@@ -78,11 +76,11 @@ public class AlgorithmPipeline {
         return inputFiles("CSV", files);
     }
 
-    public AlgorithmPipeline inputListen(String format, int port) throws IOException {
+    public AlgorithmPipeline inputListen(String format, int port) {
         return input(new TcpMetricsListener(port, getMarshaller(format)));
     }
 
-    public AlgorithmPipeline inputDownload(String format, String... sources) throws URISyntaxException {
+    public AlgorithmPipeline inputDownload(String format, String... sources) {
         return input(new TcpMetricsDownloader(sources, getMarshaller(format)));
     }
 

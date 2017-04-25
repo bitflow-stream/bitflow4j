@@ -24,11 +24,11 @@ public class TextMarshaller extends AbstractMarshaller implements Marshaller {
         throw new UnsupportedOperationException("TextMarshaller does not support unmarshalling");
     }
 
-    public Header unmarshallHeader(InputStream input) throws IOException {
+    public UnmarshalledHeader unmarshallHeader(InputStream input) throws IOException {
         throw new UnsupportedOperationException("TextMarshaller does not support unmarshalling");
     }
 
-    public Sample unmarshallSample(InputStream input, Header header) throws IOException {
+    public Sample unmarshallSample(InputStream input, UnmarshalledHeader header) throws IOException {
         throw new UnsupportedOperationException("TextMarshaller does not support unmarshalling");
     }
 
@@ -40,7 +40,7 @@ public class TextMarshaller extends AbstractMarshaller implements Marshaller {
         sample.checkConsistency();
 
         output.write(sample.getTimestamp().toString().getBytes());
-        if (sample.getHeader().hasTags) {
+        if (sample.hasTags()) {
             output.write(OPEN_BYTES);
             output.write(sample.tagString().getBytes());
             output.write(CLOSE_BYTES);

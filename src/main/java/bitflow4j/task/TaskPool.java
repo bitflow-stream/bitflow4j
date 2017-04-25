@@ -2,6 +2,7 @@ package bitflow4j.task;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -13,6 +14,7 @@ public class TaskPool {
 
     private static final Logger logger = Logger.getLogger(TaskPool.class.getName());
 
+    private final IdentityHashMap<Task, Object> startedTasks = new IdentityHashMap<>(); // Used as set
     private final List<Runner> runners = new ArrayList<>();
     private final List<StoppableTask> stoppable = new ArrayList<>();
     private boolean running = true;
@@ -23,6 +25,11 @@ public class TaskPool {
 
     public synchronized void start(Task task, boolean keepAlive) throws IOException {
         assertRunning();
+        if (startedTasks.containsKey(task)) {
+            throw new IllegalStateException("Task already started in this TaskPool, possible recursive invocation of TaskPool.start(): " + task);
+        }
+        startedTasks.put(task, null);
+
         task.start(this);
         if (task instanceof ParallelTask) {
             Runner runner = new Runner((ParallelTask) task, keepAlive);

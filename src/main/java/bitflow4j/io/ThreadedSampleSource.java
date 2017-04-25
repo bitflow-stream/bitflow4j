@@ -30,11 +30,14 @@ public abstract class ThreadedSampleSource extends AbstractSampleSource implemen
     private final List<LoopTask> tasks = new ArrayList<>();
     private boolean shuttingDown = false;
 
+    public boolean suppressHeaderUpdateLogs = false;
+
     protected void readSamples(TaskPool pool, MetricReader reader) throws IOException {
         readSamples(pool, reader, false);
     }
 
     protected void readSamples(TaskPool pool, MetricReader reader, boolean keepAlive) throws IOException {
+        reader.suppressHeaderUpdateLogs = suppressHeaderUpdateLogs;
         LoopTask task = new LoopSampleReader(reader);
         tasks.add(task);
         pool.start(task, keepAlive);
@@ -50,9 +53,7 @@ public abstract class ThreadedSampleSource extends AbstractSampleSource implemen
                 } catch (InterruptedException ignored) {
                 }
         }
-        for (LoopTask task : tasks) {
-            task.waitForExit();
-        }
+        tasks.forEach(LoopTask::waitForExit);
         output().close();
     }
 
@@ -65,14 +66,12 @@ public abstract class ThreadedSampleSource extends AbstractSampleSource implemen
 
     protected void stopTasks() {
         shutDown();
-        for (LoopTask task : tasks) {
-            task.stop();
-        }
+        tasks.forEach(LoopTask::stop);
     }
 
-    protected void readerException() {
-        // By default, shut down when an Exception occurs
-        stopTasks();
+    protected boolean readerException() {
+        // By default, do not shut down when an Exception occurs, keep going until the user shuts us down.
+        return true;
     }
 
     private class LoopSampleReader extends LoopTask {
@@ -106,8 +105,7 @@ public abstract class ThreadedSampleSource extends AbstractSampleSource implemen
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "Exception in " + reader.toString() +
                         ", running as part of: " + ThreadedSampleSource.this, e);
-                readerException();
-                return false;
+                return readerException();
             }
         }
 

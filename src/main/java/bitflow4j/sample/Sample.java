@@ -6,8 +6,8 @@ import java.util.*;
 /**
  * Created by mwall on 30.03.16.
  * <p>
- * Represents one vector of data. The header contains labels for the values.
- * In addition to the values, the Sample also contains a timestamp and a Map of tags (key-value pairs).
+ * Represents one vector of data. The header contains labels for the values. In addition to the values, the Sample also contains a timestamp
+ * and a Map of tags (key-value pairs).
  */
 public class Sample {
 
@@ -37,8 +37,9 @@ public class Sample {
     // Create a copy of the source Sample: the meta data will be copied with a new header and new metrics.
     public Sample(Header header, double[] metrics, Sample source) {
         this(header, metrics, source.getTimestamp(), null);
-        if (source.tags != null)
+        if (source.tags != null) {
             tags.putAll(source.tags);
+        }
     }
 
     // Create a complete copy of source (reuse the metrics array)
@@ -53,25 +54,15 @@ public class Sample {
     public static Map<String, String> parseTags(String tags) throws IOException {
         Map<String, String> result = new HashMap<>();
         if (tags != null && !tags.isEmpty()) {
-            String parts[] = tags.split("[= ]");
-            if (parts.length % 2 != 0)
+            String parts[] = tags.split("[= ]", -1);
+            if (parts.length % 2 != 0) {
                 throw new IOException("Illegal tags string: " + tags);
+            }
             for (int i = 0; i < parts.length; i += 2) {
                 result.put(parts[i], parts[i + 1]);
             }
         }
         return result;
-    }
-
-    public static String escapeTagString(String tag) {
-        if (tag == null) {
-            return "NULL";
-        }
-        return tag.replaceAll("[ =\n,]", "_");
-    }
-
-    public static Sample newEmptySample() {
-        return new Sample(new Header(new String[0], false), new double[0], new Date());
     }
 
     public Map<String, String> getTags() {
@@ -111,10 +102,6 @@ public class Sample {
         return getTag(TAG_SOURCE);
     }
 
-    public void setSource(String source) {
-        setTag(TAG_SOURCE, source);
-    }
-
     public boolean hasSource() {
         return getSource() != null;
     }
@@ -123,16 +110,35 @@ public class Sample {
         return getTag(TAG_LABEL);
     }
 
-    public void setLabel(String label) {
-        setTag(TAG_LABEL, label);
-    }
-
     public boolean hasLabel() {
         return hasTag(TAG_LABEL);
     }
 
     public boolean headerChanged(Header oldHeader) {
         return header.hasChanged(oldHeader);
+    }
+
+    public void setSource(String source) {
+        setTag(TAG_SOURCE, source);
+    }
+
+    public void setLabel(String label) {
+        setTag(TAG_LABEL, label);
+    }
+
+    public void deleteLabel() {
+        deleteTag(TAG_LABEL);
+    }
+
+    public void setAllTags(Map<String, String> tagsMap) {
+        tags.clear();
+        for (Map.Entry<String, String> tag : tagsMap.entrySet()) {
+            setTag(tag.getKey(), tag.getValue());
+        }
+    }
+
+    public boolean hasTags() {
+        return !tags.isEmpty();
     }
 
     public int getIntTag(String tag) throws IOException {
@@ -145,13 +151,22 @@ public class Sample {
         return val;
     }
 
+    public static String escapeTagString(String tag) {
+        if (tag == null) {
+            return "NULL";
+        }
+        return tag.replaceAll("[ =\n,]", "_");
+    }
+
     public String tagString() {
         StringBuilder s = new StringBuilder();
         boolean started = false;
         for (Map.Entry<String, String> tag : tags.entrySet()) {
             String key = escapeTagString(tag.getKey());
             String value = escapeTagString(tag.getValue());
-            if (started) s.append(TAG_SEPARATOR);
+            if (started) {
+                s.append(TAG_SEPARATOR);
+            }
             s.append(key).append(TAG_EQUALS).append(value);
             started = true;
         }
@@ -159,15 +174,18 @@ public class Sample {
     }
 
     public void checkConsistency() throws IOException {
-        if (header == null)
+        if (header == null) {
             throw new IOException("Sample.header is null");
-        if (metrics == null)
+        }
+        if (metrics == null) {
             throw new IOException("Sample.metrics is null");
-        if (timestamp == null)
+        }
+        if (timestamp == null) {
             throw new IOException("Sample.timestamp is null");
-        if (header.header.length != metrics.length)
-            throw new IOException("Sample.header is size " + header.header.length +
-                    ", but Sample.metrics is size " + metrics.length);
+        }
+        if (header.header.length != metrics.length) {
+            throw new IOException("Sample.header is size " + header.header.length + ", but Sample.metrics is size " + metrics.length);
+        }
     }
 
     public String toString() {
@@ -179,17 +197,24 @@ public class Sample {
             started = true;
         }
         if (metrics != null) {
-            if (started) b.append(", ");
+            if (started) {
+                b.append(", ");
+            }
             b.append(metrics.length).append(" metrics");
             started = true;
         }
         if (timestamp != null) {
-            if (started) b.append(", ");
+            if (started) {
+                b.append(", ");
+            }
             b.append(timestamp);
         }
-        b.append(", ");
         b.append(tagString());
         return b.append(")").toString();
+    }
+
+    public static Sample newEmptySample() {
+        return new Sample(new Header(new String[0]), new double[0], new Date());
     }
 
     public Sample extend(String[] newFields, double newValues[]) {
@@ -201,7 +226,7 @@ public class Sample {
         int incomingFields = getHeader().header.length;
         String[] headerNames = Arrays.copyOf(getHeader().header, incomingFields + newFields.length);
         System.arraycopy(newFields, 0, headerNames, incomingFields, newFields.length);
-        Header outHeader = new Header(headerNames, getHeader());
+        Header outHeader = new Header(headerNames);
 
         // Extend Metrics
         double[] outMetrics = Arrays.copyOf(getMetrics(), headerNames.length);
@@ -211,8 +236,8 @@ public class Sample {
     }
 
     /**
-     * Return a copy of the receiver with all given metrics removed.
-     * If the list of metrics would stay the same, the received is returned unchanged.
+     * Return a copy of the receiver with all given metrics removed. If the list of metrics would stay the same, the received is returned
+     * unchanged.
      */
     public Sample removeMetrics(Collection<String> removeMetrics) {
         //TODO performance check
@@ -234,7 +259,7 @@ public class Sample {
         } else {
             newMetrics = Arrays.copyOf(newMetrics, j);
             newHeaderFields = Arrays.copyOf(newHeaderFields, j);
-            return new Sample(new Header(newHeaderFields, getHeader()), newMetrics, this);
+            return new Sample(new Header(newHeaderFields), newMetrics, this);
         }
     }
 
@@ -242,7 +267,7 @@ public class Sample {
         return removeMetrics(new HashSet<>(Arrays.asList(metrics)));
     }
 
-    public Sample removeMetricsWithPrefix(String ...prefixes) {
+    public Sample removeMetricsWithPrefix(String... prefixes) {
         Set<String> removeMetrics = new HashSet<>();
         for (String metric : getHeader().header) {
             for (String prefix : prefixes) {

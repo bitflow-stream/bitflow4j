@@ -31,7 +31,7 @@ public interface Marshaller {
      * @param input The byte stream to read the header from.
      * @return The received header.
      */
-    Header unmarshallHeader(InputStream input) throws IOException;
+    UnmarshalledHeader unmarshallHeader(InputStream input) throws IOException;
 
     /**
      * Receive and parse a Sample. This assumes, that a header has been
@@ -41,7 +41,7 @@ public interface Marshaller {
      * @param header The header that has been previously received on the same input stream.
      * @return The received sample.
      */
-    Sample unmarshallSample(InputStream input, Header header) throws IOException;
+    Sample unmarshallSample(InputStream input, UnmarshalledHeader header) throws IOException;
 
     /**
      * Write the given header to the given output stream. This should be the first method

@@ -15,24 +15,24 @@ import java.util.LinkedList;
 public abstract class AbstractSampleWindow {
 
     private final int windowSize;
-    private final long windowTimespan;
+    private final long windowTimeSpan;
 
-    private LinkedList<Date> timestamps = new LinkedList<>();
+    private final LinkedList<Date> timestamps = new LinkedList<>();
     private Date lastTimestamp = null;
     private boolean liveTime = false;
 
     public AbstractSampleWindow() {
         this.windowSize = -1;
-        this.windowTimespan = -1;
+        this.windowTimeSpan = -1;
     }
 
     public AbstractSampleWindow(int windowSize) {
         this.windowSize = windowSize;
-        this.windowTimespan = -1;
+        this.windowTimeSpan = -1;
     }
 
-    public AbstractSampleWindow(long windowTimespan) {
-        this.windowTimespan = windowTimespan;
+    public AbstractSampleWindow(long windowTimeSpan) {
+        this.windowTimeSpan = windowTimeSpan;
         this.windowSize = -1;
     }
 
@@ -65,14 +65,14 @@ public abstract class AbstractSampleWindow {
                 flushNum++;
             }
         }
-        if (windowTimespan > 0) {
+        if (windowTimeSpan > 0) {
             Date current = currentTime();
             if (current != null) {
                 while (true) {
                     Date lastTimestamp = timestamps.peekFirst();
                     long diff = current.getTime() - lastTimestamp.getTime();
                     // Also flush bogus "future" timestamps to avoid hanging on them.
-                    if (diff < 0 || diff > windowTimespan) {
+                    if (diff < 0 || diff > windowTimeSpan) {
                         timestamps.poll();
                         flushNum++;
                     } else {

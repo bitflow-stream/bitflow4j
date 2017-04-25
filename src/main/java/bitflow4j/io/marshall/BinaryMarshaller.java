@@ -33,7 +33,7 @@ public class BinaryMarshaller extends AbstractMarshaller {
         }
     }
 
-    public Header unmarshallHeader(InputStream input) throws IOException {
+    public UnmarshalledHeader unmarshallHeader(InputStream input) throws IOException {
         List<String> headerList = new ArrayList<>();
 
         String headerField = readLine(input);
@@ -49,10 +49,10 @@ public class BinaryMarshaller extends AbstractMarshaller {
         if (hasTags)
             headerList = headerList.subList(1, headerList.size());
         String[] header = headerList.toArray(new String[headerList.size()]);
-        return new Header(header, hasTags);
+        return new UnmarshalledHeader(new Header(header), hasTags);
     }
 
-    public Sample unmarshallSample(InputStream input, Header header) throws IOException {
+    public Sample unmarshallSample(InputStream input, UnmarshalledHeader header) throws IOException {
         try {
             DataInputStream data = new DataInputStream(input);
             readSampleStart(data);
@@ -63,11 +63,11 @@ public class BinaryMarshaller extends AbstractMarshaller {
                 tags = readLine(input);
             }
 
-            double[] metrics = new double[header.header.length];
+            double[] metrics = new double[header.header.numFields()];
             for (int i = 0; i < metrics.length; i++) {
                 metrics[i] = data.readDouble();
             }
-            return Sample.unmarshallSample(header, metrics, timestamp, tags);
+            return Sample.unmarshallSample(header.header, metrics, timestamp, tags);
         } catch (EOFException exc) {
             throw new InputStreamClosedException(exc);
         }
@@ -85,10 +85,8 @@ public class BinaryMarshaller extends AbstractMarshaller {
     public void marshallHeader(OutputStream output, Header header) throws IOException {
         output.write(BIN_HEADER_TIME.getBytes());
         output.write(lineSepBytes);
-        if (header.hasTags) {
-            output.write(BIN_HEADER_TAGS.getBytes());
-            output.write(lineSepBytes);
-        }
+        output.write(BIN_HEADER_TAGS.getBytes());
+        output.write(lineSepBytes);
 
         for (String field : header.header) {
             output.write(field.getBytes());
@@ -103,12 +101,13 @@ public class BinaryMarshaller extends AbstractMarshaller {
         Date timestamp = sample.getTimestamp();
         data.write(BIN_SAMPLE_START);
         data.writeLong(timestamp == null ? 0 : timestamp.getTime() * 1000000);
-        if (header.hasTags) {
-            String tags = sample.tagString();
-            if (tags == null) tags = "";
-            data.write(tags.getBytes());
-            data.write(lineSepBytes);
-        }
+
+        // Write tags
+        String tags = sample.tagString();
+        if (tags == null) tags = "";
+        data.write(tags.getBytes());
+        data.write(lineSepBytes);
+
         double[] values = sample.getMetrics();
         for (double value : values) {
             data.writeDouble(value);

@@ -15,14 +15,19 @@ public class SynchronizingSink extends AbstractSampleSink {
     // configure the sink of the sub-pipeline depending on what comes directly after the fork.
     public final SampleSink originalOutgoingSink;
 
-    public SynchronizingSink(SampleSink sink) {
+    private final Object lock;
+
+    public SynchronizingSink(Object lock, SampleSink sink) {
         this.originalOutgoingSink = sink;
+        this.lock = lock;
     }
 
     @Override
-    public synchronized void writeSample(Sample sample) throws IOException {
+    public void writeSample(Sample sample) throws IOException {
         // Make sure to synchronize.
-        originalOutgoingSink.writeSample(sample);
+        synchronized (lock) {
+            originalOutgoingSink.writeSample(sample);
+        }
     }
 
 }

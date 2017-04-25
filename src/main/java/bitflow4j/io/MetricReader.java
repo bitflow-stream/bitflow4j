@@ -2,7 +2,7 @@ package bitflow4j.io;
 
 import bitflow4j.io.marshall.InputStreamClosedException;
 import bitflow4j.io.marshall.Marshaller;
-import bitflow4j.sample.Header;
+import bitflow4j.io.marshall.UnmarshalledHeader;
 import bitflow4j.sample.Sample;
 import bitflow4j.task.TaskPool;
 
@@ -27,10 +27,12 @@ public abstract class MetricReader {
 
     private String sourceName;
     private InputStream currentInput;
-    private Header header = null;
+    private UnmarshalledHeader header = null;
 
     // TODO HACK should be removed, see usages of this
     public Runnable inputClosedHook;
+
+    public boolean suppressHeaderUpdateLogs = false;
 
     public MetricReader(TaskPool pool, Marshaller marshaller) {
         this.marshaller = marshaller;
@@ -99,7 +101,8 @@ public abstract class MetricReader {
             boolean isHeader = marshaller.peekIsHeader(input);
             if (isHeader) {
                 header = marshaller.unmarshallHeader(input);
-                logger.info("Incoming header of '" + sourceName + "' updated to " + header.header.length + " metrics");
+                if (!suppressHeaderUpdateLogs)
+                    logger.info("Incoming header of '" + sourceName + "' updated to " + header.header.numFields() + " metrics");
                 return null;
             } else {
                 if (header == null) {
@@ -130,7 +133,8 @@ public abstract class MetricReader {
         if (currentInput != null) {
             InputStream input = currentInput;
             currentInput = null;
-            logger.info("Closed input " + sourceName);
+            if (!suppressHeaderUpdateLogs)
+                logger.info("Closed input " + sourceName);
             Runnable hook = inputClosedHook;
             if (hook != null) {
                 hook.run();

@@ -38,6 +38,8 @@ public abstract class AbstractMetricPrinter extends AbstractSampleSink {
                 closeStream();
                 this.output = nextOutputStream();
                 output = this.output;
+                if (output == null)
+                    return;
                 marshaller.marshallHeader(output, header);
                 lastHeader = header;
             }
