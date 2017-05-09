@@ -38,4 +38,6 @@ public enum DB {
     public char escapeCharacter() {
         return this.escapeCharacter;
     }
+
+
 }

@@ -19,10 +19,13 @@ public abstract class Connector<T extends Connector<T>> {
     protected State state;
     protected Connection connection;
 
-    public Connector(DB db, String url, String schema, String table, String user, String password) {
+    public Connector(String url, String schema, String table, String user, String password) {
         this.table = table;
         this.schema = schema;
-        this.db = db;
+        if(url.startsWith("jdbc:mysql")) this.db = DB.MYSQL;
+        else if(url.startsWith("jdbc:postgresql")) this.db = DB.POSTGRES;
+        else if(url.startsWith("jdbc:sqlite")) this.db = DB.SQLite;
+        else throw new IllegalArgumentException("Database not supported. Only MYSQL, POSTGRESQL and SQLITE are supported.");
         this.user = user;
         this.password = password;
         this.url = url;

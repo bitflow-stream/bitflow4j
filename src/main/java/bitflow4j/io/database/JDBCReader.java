@@ -24,8 +24,8 @@ public class JDBCReader extends Connector<JDBCReader> {
     private int selectNumberOfColumns;
     private Header header;
 
-    public JDBCReader(DB db, String url, String schema, String table, String user, String password) {
-        super(db, url, schema, table, user, password);
+    public JDBCReader(String url, String schema, String table, String user, String password) {
+        super(url, schema, table, user, password);
     }
 
     public Sample nextSample() throws SQLException, IOException {

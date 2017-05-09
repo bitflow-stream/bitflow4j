@@ -18,19 +18,23 @@ public class JDBCWriter extends Connector<JDBCWriter> {
     private static final String BASE_INSERT_STATEMENT = "INSERT INTO %s (%s" + TIMESTAMP_COL + "," + TAG_COL + ") VALUES (%s);";
     private static final String BASE_CREATE_STATEMENT = "CREATE TABLE IF NOT EXISTS %s (" + TIMESTAMP_COL + " %s," + TAG_COL + " %s);";
     private static final String BASE_ALTER_STATEMENT = "ALTER TABLE %s %s;";
+    private static final String BASE_ALTER_STATEMENT2 = "ALTER TABLE %s;";
     private static final Logger logger = Logger.getLogger(JDBCWriter.class.getName());
 
     private Sample lastWrittenSample;
     private boolean readyToInsert = false;
 
-    public JDBCWriter(DB db, String url, String schema, String table, String user, String password) {
-        super(db, url, schema, table, user, password);
+    public JDBCWriter(String url, String schema, String table, String user, String password) {
+        super(url, schema, table, user, password);
     }
 
     public void writeSample(Sample sample) throws SQLException {
         if (lastWrittenSample == null || sample.headerChanged(lastWrittenSample.getHeader())) {
             List<String> newColumns = checkTableColumns(sample);
-            if (!newColumns.isEmpty()) addColumns(newColumns);
+            if (!newColumns.isEmpty()) {
+                if(db.equals(DB.SQLite)) addColumns(newColumns);
+                else addColumns2(newColumns);
+            }
         }
 
         String valuesToInsert = buildValueString(sample);
@@ -91,6 +95,7 @@ public class JDBCWriter extends Connector<JDBCWriter> {
 
     private void createTable() throws SQLException {
         String query = String.format(BASE_CREATE_STATEMENT, this.tableQualifier, db.longType(), db.stringType());
+        System.out.println("create table query" + query);
         executeUpdate(query);
     }
 
@@ -122,10 +127,41 @@ public class JDBCWriter extends Connector<JDBCWriter> {
         }
     }
 
+    private void addColumns2(List<String> columns) throws SQLException {
+        System.out.println(columns);
+        buildColumnStrings2(columns);
+        System.out.println(columns);
+        String alterColumnsString;
+        String delimiter = " " + db.doubleType() + ", ADD COLUMN ";
+        alterColumnsString = tableQualifier + " ADD COLUMN " + String.join(delimiter, columns) + " " + db.doubleType();
+//        System.out.println(String.format(BASE_ALTER_STATEMENT2, alterColumnsString));
+     try {
+            executeUpdate(String.format(BASE_ALTER_STATEMENT2, alterColumnsString));
+        } catch (SQLException e) {
+            logger.severe(e.getMessage());//TODO replace after manual table query has been added
+        }
+    }
+
+//    public static void main(String[] args) throws SQLException {
+//        JDBCWriter writer = new JDBCWriter("jdbc:mysql:bla", null, "data", null, null);
+//        List<String> columns = new ArrayList<>();
+//        columns.add("bla");
+//        columns.add("blub");
+//        columns.add("yada");
+//        writer.addColumns2(columns);
+//    }
+
     private void buildColumnStrings(List<String> columns) {
         String columnType = db.doubleType();
         for (int i = 0; i < columns.size(); i++) {
             String columnString = "ADD " + db.escapeCharacter() + columns.get(i) + db.escapeCharacter() + " " + columnType;
+            columns.set(i, columnString);
+        }
+    }
+
+    private void buildColumnStrings2(List<String> columns) {
+        for (int i = 0; i < columns.size(); i++) {
+            String columnString = db.escapeCharacter() + columns.get(i) + db.escapeCharacter();
             columns.set(i, columnString);
         }
     }

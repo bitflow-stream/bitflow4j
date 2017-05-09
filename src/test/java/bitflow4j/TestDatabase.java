@@ -32,8 +32,8 @@ public class TestDatabase extends TestWithSamples {
 
     @Test
     public void testSQLite() {
-        DBSampleSource dbSampleSource = new DBSampleSource(new JDBCReader(bitflow4j.io.database.DB.SQLite, "jdbc:sqlite:" + DB_FILE, null, "samples", null, null));
-        DBSampleSink dbSampleSink = new DBSampleSink(new JDBCWriter(bitflow4j.io.database.DB.SQLite, "jdbc:sqlite:" + DB_FILE, null, "samples", null, null));
+        DBSampleSource dbSampleSource = new DBSampleSource(new JDBCReader("jdbc:sqlite:" + DB_FILE, null, "samples", null, null));
+        DBSampleSink dbSampleSink = new DBSampleSink(new JDBCWriter("jdbc:sqlite:" + DB_FILE, null, "samples", null, null));
         TestSampleSource testSampleSource = new TestSampleSource();
         TestSampleSink testSampleSink = new TestSampleSink();
         AlgorithmPipeline testWritePipeline = new AlgorithmPipeline().input(testSampleSource).output(dbSampleSink);
