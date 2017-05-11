@@ -2,6 +2,7 @@ package bitflow4j.io.database;
 
 import bitflow4j.sample.Sample;
 
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -45,7 +46,9 @@ public class JDBCWriter extends Connector<JDBCWriter> {
         preparedStatement.setString(1,sample.tagString());
 //        preparedStatement.setString(1,buildTagString(sample.getTags()));
         preparedStatement.executeUpdate();
+        preparedStatement.close();
         lastWrittenSample = sample;
+//        this.disconnect().connect();
     }
 
     public JDBCWriter prepareInsert() throws SQLException {
@@ -111,6 +114,7 @@ public class JDBCWriter extends Connector<JDBCWriter> {
             String currColumn = resultSet.getString("COLUMN_NAME");
             columns.add(currColumn);
         }
+        resultSet.close();
         sampleColumns.removeAll(columns);
         return sampleColumns;
     }
@@ -128,9 +132,9 @@ public class JDBCWriter extends Connector<JDBCWriter> {
     }
 
     private void addColumns2(List<String> columns) throws SQLException {
-        System.out.println(columns);
+//        System.out.println(columns);
         buildColumnStrings2(columns);
-        System.out.println(columns);
+//        System.out.println(columns);
         String alterColumnsString;
         String delimiter = " " + db.doubleType() + ", ADD COLUMN ";
         alterColumnsString = tableQualifier + " ADD COLUMN " + String.join(delimiter, columns) + " " + db.doubleType();

@@ -44,7 +44,11 @@ public class JDBCReader extends Connector<JDBCReader> {
     }
 
     private Sample processSelectionRow() throws SQLException, IOException {
-        return this.selectResultSet.next() ? parseSelectionRow() : null;
+        if (this.selectResultSet.next()) {
+            return parseSelectionRow();
+        }
+        this.selectResultSet.close();
+        return null;
     }
 
     private Sample parseSelectionRow() throws SQLException, IOException {

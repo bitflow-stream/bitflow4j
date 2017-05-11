@@ -22,7 +22,10 @@ public abstract class Connector<T extends Connector<T>> {
     public Connector(String url, String schema, String table, String user, String password) {
         this.table = table;
         this.schema = schema;
-        if(url.startsWith("jdbc:mysql")) this.db = DB.MYSQL;
+        if(url.startsWith("jdbc:mysql")) {
+//            url = url + "?dontTrackOpenResources=true";
+            this.db = DB.MYSQL;
+        }
         else if(url.startsWith("jdbc:postgresql")) this.db = DB.POSTGRES;
         else if(url.startsWith("jdbc:sqlite")) this.db = DB.SQLite;
         else throw new IllegalArgumentException("Database not supported. Only MYSQL, POSTGRESQL and SQLITE are supported.");
@@ -68,7 +71,9 @@ public abstract class Connector<T extends Connector<T>> {
 
     protected int executeUpdate(String sqlQuery) throws SQLException {
         Statement sqlStatement = connection.createStatement();
-        return sqlStatement.executeUpdate(sqlQuery);
+        int result = sqlStatement.executeUpdate(sqlQuery);
+        sqlStatement.close();
+        return result;
     }
 
     protected enum State {
