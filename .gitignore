@@ -1,4 +1,9 @@
-/classes/
+/bin/
+/.classpath
+/.project
+/.settings/
 /target/
+/lib/
+/classes/
 /.idea/
 /*.iml
