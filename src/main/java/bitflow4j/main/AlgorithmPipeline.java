@@ -25,7 +25,7 @@ import java.util.logging.Logger;
 
 public class AlgorithmPipeline {
 
-    private static final Logger logger = Logger.getLogger(AlgorithmPipeline.class.getName());
+    protected static final Logger logger = Logger.getLogger(AlgorithmPipeline.class.getName());
 
     public SampleSource source;
     public final List<Algorithm> steps = new ArrayList<>();
