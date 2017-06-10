@@ -19,6 +19,7 @@ public class AbstractAlgorithm<T> extends AbstractSampleSink implements Algorith
         return output;
     }
 
+    @Override
     public String toString() {
         return "a " + getClass().getSimpleName();
     }
@@ -29,6 +30,7 @@ public class AbstractAlgorithm<T> extends AbstractSampleSink implements Algorith
         super.start(pool);
     }
 
+    @Override
     public void writeSample(Sample sample) throws IOException {
         output().writeSample(sample);
     }
@@ -37,11 +39,12 @@ public class AbstractAlgorithm<T> extends AbstractSampleSink implements Algorith
         // Nothing by default
     }
 
+    @Override
     public synchronized final void close() {
         // Make sure the close call is propagated to the output, even if an exception occurs
         try {
             doClose();
-        } catch (Exception e) {
+        } catch (IOException e) {
             logger.log(Level.SEVERE, this + ": Failed to close", e);
         }
         if (output != null) {
@@ -50,6 +53,7 @@ public class AbstractAlgorithm<T> extends AbstractSampleSink implements Algorith
         super.close();
     }
 
+    @Override
     public synchronized void waitUntilClosed() {
         super.waitUntilClosed();
         if (output != null) {
@@ -57,6 +61,7 @@ public class AbstractAlgorithm<T> extends AbstractSampleSink implements Algorith
         }
     }
 
+    @Override
     public void setOutgoingSink(SampleSink sink) {
         if (this.output != null) {
             throw new IllegalStateException("This sink for this SampleSource was already initialized");
