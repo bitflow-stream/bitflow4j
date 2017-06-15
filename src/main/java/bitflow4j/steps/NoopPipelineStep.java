@@ -1,4 +1,4 @@
-package bitflow4j.algorithms;
+package bitflow4j.steps;
 
 import bitflow4j.sample.Sample;
 

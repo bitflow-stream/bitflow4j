@@ -1,6 +1,6 @@
 package bitflow4j.main;
 
-import bitflow4j.algorithms.PipelineStep;
+import bitflow4j.steps.PipelineStep;
 import bitflow4j.io.SampleWriter;
 import bitflow4j.io.file.FileSink;
 import bitflow4j.io.file.FileSource;

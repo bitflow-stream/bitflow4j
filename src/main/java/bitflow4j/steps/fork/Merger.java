@@ -1,6 +1,6 @@
-package bitflow4j.algorithms.fork;
+package bitflow4j.steps.fork;
 
-import bitflow4j.algorithms.AbstractPipelineStep;
+import bitflow4j.steps.AbstractPipelineStep;
 import bitflow4j.sample.Sample;
 
 import java.io.IOException;

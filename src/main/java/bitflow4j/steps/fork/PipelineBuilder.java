@@ -1,4 +1,4 @@
-package bitflow4j.algorithms.fork;
+package bitflow4j.steps.fork;
 
 import bitflow4j.main.Pipeline;
 
