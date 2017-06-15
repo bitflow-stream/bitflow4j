@@ -3,12 +3,11 @@ package bitflow4j.window;
 import java.util.LinkedList;
 
 /**
- *
  * @author fschmidt, Alex (15.05.2017)
  */
 public class SlidingMetricWindow extends AbstractMetricWindow {
 
-	//TODO: Add header changed case
+    //TODO: Add header changed case
     //TODO: add timeSpan as parameter
     private final int windowSize;
     private final LinkedList<Double> window;

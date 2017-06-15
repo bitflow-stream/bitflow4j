@@ -2,6 +2,7 @@ package bitflow4j.io.marshall;
 
 import bitflow4j.sample.Header;
 import bitflow4j.sample.Sample;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -122,6 +123,7 @@ public class WavAudioMarshaller implements Marshaller {
     @Override
     public void marshallHeader(OutputStream output, Header header) throws IOException {
     }
+
     private boolean insertedHeader = false;
 
     private Short bitsPerSampleWrite;
@@ -204,8 +206,8 @@ public class WavAudioMarshaller implements Marshaller {
     private void writeDouble16(OutputStream output, double value) throws IOException {
         short v = toShort(value);
         byte[] b = new byte[]{
-            (byte) ((v) & 0xFF),
-            (byte) ((v >>> 8) & 0xFF)
+                (byte) ((v) & 0xFF),
+                (byte) ((v >>> 8) & 0xFF)
         };
         output.write(b);
     }
@@ -213,19 +215,19 @@ public class WavAudioMarshaller implements Marshaller {
     private void writeDouble24(OutputStream output, double value) throws IOException {
         int v = toInt(value);
         byte[] b = new byte[]{
-            (byte) ((v) & 0xFF),
-            (byte) ((v >>> 8) & 0xFF),
-            (byte) ((v >>> 16) & 0xFF)};
+                (byte) ((v) & 0xFF),
+                (byte) ((v >>> 8) & 0xFF),
+                (byte) ((v >>> 16) & 0xFF)};
         output.write(b);
     }
 
     private void writeDouble32(OutputStream output, double value) throws IOException {
         int v = toInt(value);
         byte[] b = new byte[]{
-            (byte) ((v) & 0xFF),
-            (byte) ((v >>> 8) & 0xFF),
-            (byte) ((v >>> 16) & 0xFF),
-            (byte) ((v >>> 24) & 0xFF),};
+                (byte) ((v) & 0xFF),
+                (byte) ((v >>> 8) & 0xFF),
+                (byte) ((v >>> 16) & 0xFF),
+                (byte) ((v >>> 24) & 0xFF),};
         output.write(b);
     }
 
@@ -249,17 +251,17 @@ public class WavAudioMarshaller implements Marshaller {
 
     private void writeInt(OutputStream output, int intToWrite) throws IOException {
         byte[] intToWriteAsBytesLittleEndian = new byte[]{
-            (byte) (intToWrite & 0xFF),
-            (byte) ((intToWrite >> 8) & 0xFF),
-            (byte) ((intToWrite >> 16) & 0xFF),
-            (byte) ((intToWrite >> 24) & 0xFF),};
+                (byte) (intToWrite & 0xFF),
+                (byte) ((intToWrite >> 8) & 0xFF),
+                (byte) ((intToWrite >> 16) & 0xFF),
+                (byte) ((intToWrite >> 24) & 0xFF),};
         output.write(intToWriteAsBytesLittleEndian, 0, 4);
     }
 
     private void writeShort(OutputStream output, short shortToWrite) throws IOException {
         byte[] shortToWriteAsBytesLittleEndian = new byte[]{
-            (byte) shortToWrite,
-            (byte) (shortToWrite >>> 8 & 0xFF),};
+                (byte) shortToWrite,
+                (byte) (shortToWrite >>> 8 & 0xFF),};
         output.write(shortToWriteAsBytesLittleEndian, 0, 2);
     }
 

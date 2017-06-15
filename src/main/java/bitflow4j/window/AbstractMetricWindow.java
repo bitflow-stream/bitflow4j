@@ -1,7 +1,6 @@
 package bitflow4j.window;
 
 /**
- *
  * @author fschmidt
  */
 public abstract class AbstractMetricWindow {

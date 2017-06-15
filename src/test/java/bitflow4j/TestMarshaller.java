@@ -1,7 +1,7 @@
 package bitflow4j;
 
-import bitflow4j.io.SampleWriter;
 import bitflow4j.io.SampleReader;
+import bitflow4j.io.SampleWriter;
 import bitflow4j.io.marshall.*;
 import bitflow4j.sample.Header;
 import bitflow4j.sample.Sample;

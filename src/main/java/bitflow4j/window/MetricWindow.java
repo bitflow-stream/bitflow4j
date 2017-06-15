@@ -7,7 +7,7 @@ import gnu.trove.list.linked.TDoubleLinkedList;
  * <p>
  * Created by anton on 4/21/16.
  */
-public class MetricWindow extends AbstractMetricWindow{
+public class MetricWindow extends AbstractMetricWindow {
 
     public static final MetricWindowFactory<MetricWindow> FACTORY = MetricWindow::new;
 
@@ -19,7 +19,7 @@ public class MetricWindow extends AbstractMetricWindow{
     public MetricWindow(String name) {
         super(name);
     }
-    
+
     public void flushSamples(int numSamples) {
         if (numSamples >= values.size())
             values.clear();

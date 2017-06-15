@@ -1,7 +1,7 @@
 package bitflow4j.io.file;
 
-import bitflow4j.io.marshall.Marshaller;
 import bitflow4j.io.AbstractSampleWriter;
+import bitflow4j.io.marshall.Marshaller;
 
 import java.io.*;
 
