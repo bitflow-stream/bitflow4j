@@ -1,6 +1,6 @@
 package bitflow4j.io.net;
 
-import bitflow4j.io.AbstractMetricPrinter;
+import bitflow4j.io.AbstractSampleWriter;
 import bitflow4j.io.marshall.Marshaller;
 import bitflow4j.sample.Sample;
 
@@ -14,9 +14,9 @@ import java.util.logging.Logger;
 /**
  * Created by anton on 6/17/16.
  */
-public class TcpMetricsOutput extends AbstractMetricPrinter {
+public class TcpSink extends AbstractSampleWriter {
 
-    private static final Logger logger = Logger.getLogger(TcpMetricsOutput.class.getName());
+    private static final Logger logger = Logger.getLogger(TcpSink.class.getName());
 
     public static final int TCP_CONNECT_TIMEOUT_MILLIS = 3000;
 
@@ -26,13 +26,13 @@ public class TcpMetricsOutput extends AbstractMetricPrinter {
 
     public Level connectionErrorLevel = Level.WARNING;
 
-    public TcpMetricsOutput(Marshaller marshaller, String targetHost, int targetPort) {
+    public TcpSink(Marshaller marshaller, String targetHost, int targetPort) {
         super(marshaller);
         this.targetHost = targetHost;
         this.targetPort = targetPort;
     }
 
-    public TcpMetricsOutput level(Level level) {
+    public TcpSink level(Level level) {
         this.connectionErrorLevel = level;
         return this;
     }

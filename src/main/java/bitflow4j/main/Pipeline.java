@@ -1,16 +1,16 @@
 package bitflow4j.main;
 
-import bitflow4j.algorithms.Algorithm;
-import bitflow4j.io.MetricPrinter;
-import bitflow4j.io.file.FileMetricPrinter;
-import bitflow4j.io.file.FileMetricReader;
+import bitflow4j.algorithms.PipelineStep;
+import bitflow4j.io.SampleWriter;
+import bitflow4j.io.file.FileSink;
+import bitflow4j.io.file.FileSource;
 import bitflow4j.io.marshall.*;
-import bitflow4j.io.net.TcpMetricsDownloader;
-import bitflow4j.io.net.TcpMetricsListener;
+import bitflow4j.io.net.TcpSource;
+import bitflow4j.io.net.TcpListenerSource;
 import bitflow4j.sample.EmptySink;
 import bitflow4j.sample.EmptySource;
-import bitflow4j.sample.SampleSink;
-import bitflow4j.sample.SampleSource;
+import bitflow4j.sample.Sink;
+import bitflow4j.sample.Source;
 import bitflow4j.task.Task;
 import bitflow4j.task.TaskPool;
 import bitflow4j.task.UserSignalTask;
@@ -23,13 +23,13 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class AlgorithmPipeline {
+public class Pipeline {
 
-    protected static final Logger logger = Logger.getLogger(AlgorithmPipeline.class.getName());
+    protected static final Logger logger = Logger.getLogger(Pipeline.class.getName());
 
-    public SampleSource source;
-    public final List<Algorithm> steps = new ArrayList<>();
-    public SampleSink sink;
+    public Source source;
+    public final List<PipelineStep> steps = new ArrayList<>();
+    public Sink sink;
 
     public static Marshaller getMarshaller(String format) {
         switch (format.toUpperCase()) {
@@ -50,41 +50,41 @@ public class AlgorithmPipeline {
     // Inputs ========================================
     // ===============================================
 
-    public AlgorithmPipeline input(SampleSource input) {
+    public Pipeline input(Source input) {
         if (this.source != null)
             throw new IllegalStateException("sink was already configured");
         this.source = input;
         return this;
     }
 
-    public AlgorithmPipeline inputFiles(String format, FileMetricReader.NameConverter converter, String... files) throws IOException {
-        FileMetricReader reader = new FileMetricReader(getMarshaller(format), converter);
+    public Pipeline inputFiles(String format, FileSource.NameConverter converter, String... files) throws IOException {
+        FileSource reader = new FileSource(getMarshaller(format), converter);
         for (String file : files)
             reader.addFile(new File(file));
         return input(reader);
     }
 
-    public AlgorithmPipeline inputFiles(String format, String... files) throws IOException {
-        return inputFiles(format, FileMetricReader.FILE_NAME, files);
+    public Pipeline inputFiles(String format, String... files) throws IOException {
+        return inputFiles(format, FileSource.FILE_NAME, files);
     }
 
-    public AlgorithmPipeline inputBinary(String... files) throws IOException {
+    public Pipeline inputBinary(String... files) throws IOException {
         return inputFiles("BIN", files);
     }
 
-    public AlgorithmPipeline inputCsv(String... files) throws IOException {
+    public Pipeline inputCsv(String... files) throws IOException {
         return inputFiles("CSV", files);
     }
 
-    public AlgorithmPipeline inputListen(String format, int port) {
-        return input(new TcpMetricsListener(port, getMarshaller(format)));
+    public Pipeline inputListen(String format, int port) {
+        return input(new TcpListenerSource(port, getMarshaller(format)));
     }
 
-    public AlgorithmPipeline inputDownload(String format, String... sources) {
-        return input(new TcpMetricsDownloader(sources, getMarshaller(format)));
+    public Pipeline inputDownload(String format, String... sources) {
+        return input(new TcpSource(sources, getMarshaller(format)));
     }
 
-    public AlgorithmPipeline emptyInput() {
+    public Pipeline emptyInput() {
         return input(new EmptySource());
     }
 
@@ -92,7 +92,7 @@ public class AlgorithmPipeline {
     // Algorithms ====================================
     // ===============================================
 
-    public AlgorithmPipeline step(Algorithm algo) {
+    public Pipeline step(PipelineStep algo) {
         steps.add(algo);
         return this;
     }
@@ -101,34 +101,34 @@ public class AlgorithmPipeline {
     // Outputs =================================
     // =========================================
 
-    public AlgorithmPipeline output(SampleSink outputStream) {
+    public Pipeline output(Sink outputStream) {
         if (this.sink != null)
             throw new IllegalStateException("sink was already configured");
         this.sink = outputStream;
         return this;
     }
 
-    public AlgorithmPipeline consoleOutput(String outputMarshaller) {
-        return output(new MetricPrinter(getMarshaller(outputMarshaller)));
+    public Pipeline consoleOutput(String outputMarshaller) {
+        return output(new SampleWriter(getMarshaller(outputMarshaller)));
     }
 
-    public AlgorithmPipeline consoleOutput() {
+    public Pipeline consoleOutput() {
         return consoleOutput("CSV");
     }
 
-    public AlgorithmPipeline fileOutput(String path, String outputMarshaller) throws IOException {
-        return output(new FileMetricPrinter(path, getMarshaller(outputMarshaller)));
+    public Pipeline fileOutput(String path, String outputMarshaller) throws IOException {
+        return output(new FileSink(path, getMarshaller(outputMarshaller)));
     }
 
-    public AlgorithmPipeline fileOutput(File file, String outputMarshaller) throws IOException {
+    public Pipeline fileOutput(File file, String outputMarshaller) throws IOException {
         return fileOutput(file.toString(), outputMarshaller);
     }
 
-    public AlgorithmPipeline csvOutput(String filename) throws IOException {
+    public Pipeline csvOutput(String filename) throws IOException {
         return fileOutput(filename, "CSV");
     }
 
-    public AlgorithmPipeline emptyOutput() {
+    public Pipeline emptyOutput() {
         return output(new EmptySink());
     }
 
@@ -175,8 +175,8 @@ public class AlgorithmPipeline {
         // Connect all pipeline steps
         List<Task> tasks = new ArrayList<>(steps.size() + 2);
         tasks.add(source);
-        SampleSource currentSource = source;
-        for (Algorithm algo : steps) {
+        Source currentSource = source;
+        for (PipelineStep algo : steps) {
             currentSource.setOutgoingSink(algo);
             currentSource = algo;
             tasks.add(algo);

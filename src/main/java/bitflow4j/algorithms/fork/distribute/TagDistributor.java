@@ -1,7 +1,7 @@
 package bitflow4j.algorithms.fork.distribute;
 
 import bitflow4j.sample.Sample;
-import bitflow4j.algorithms.fork.ForkDistributor;
+import bitflow4j.algorithms.fork.Distributor;
 
 /**
  * Created by anton on 5/2/16.
@@ -11,7 +11,7 @@ import bitflow4j.algorithms.fork.ForkDistributor;
  * multiple tags can also be defined. In that case the values will be concatenated, and a separator string
  * will be added between the individual values.
  */
-public class TagDistributor implements ForkDistributor {
+public class TagDistributor implements Distributor {
 
     private final String tagNames[];
     private final String separator;

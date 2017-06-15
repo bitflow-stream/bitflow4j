@@ -19,18 +19,18 @@ import java.util.concurrent.LinkedBlockingDeque;
  * The parameter-less constructor should usually not be used, as it will fill up the queue until the JVM runs
  * out of memory. The used queue size should be enough keep both the incoming and outgoing Threads busy.
  */
-public class DecouplingAlgorithm extends AbstractAlgorithm {
+public class DecouplingPipelineStep extends AbstractPipelineStep {
 
     private final BlockingQueue<Sample> queue;
     private final StoppableLoopTask parallelWriter = new Writer();
     private final Sample closedMarker = Sample.newEmptySample();
     private boolean finishedFlushing = false;
 
-    public DecouplingAlgorithm(int queueSize) {
+    public DecouplingPipelineStep(int queueSize) {
         this.queue = new ArrayBlockingQueue<>(queueSize);
     }
 
-    public DecouplingAlgorithm() {
+    public DecouplingPipelineStep() {
         this.queue = new LinkedBlockingDeque<>();
     }
 
@@ -84,7 +84,7 @@ public class DecouplingAlgorithm extends AbstractAlgorithm {
                 }
                 return false;
             }
-            DecouplingAlgorithm.this.output().writeSample(sample);
+            DecouplingPipelineStep.this.output().writeSample(sample);
             return true;
         }
 

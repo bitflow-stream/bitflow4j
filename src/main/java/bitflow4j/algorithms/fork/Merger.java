@@ -1,6 +1,6 @@
 package bitflow4j.algorithms.fork;
 
-import bitflow4j.algorithms.AbstractAlgorithm;
+import bitflow4j.algorithms.AbstractPipelineStep;
 import bitflow4j.sample.Sample;
 
 import java.io.IOException;
@@ -11,16 +11,16 @@ import java.util.stream.Collectors;
 /**
  * Created by anton on 27.02.17.
  */
-public abstract class SampleMerger extends AbstractAlgorithm {
+public abstract class Merger extends AbstractPipelineStep {
 
-    private static final Logger logger = Logger.getLogger(SampleMerger.class.getName());
+    private static final Logger logger = Logger.getLogger(Merger.class.getName());
 
     private final Map<String, Queue<Sample>> inputs = new HashMap<>();
     private final int minInputs;
     private final String keyTag;
     private boolean warnedMissingTag = false;
 
-    public SampleMerger(String keyTag, int minInputs) {
+    public Merger(String keyTag, int minInputs) {
         this.keyTag = keyTag;
         this.minInputs = minInputs;
     }

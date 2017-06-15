@@ -9,7 +9,7 @@ import java.io.IOException;
  * <p>
  * Created by anton on 4/14/16.
  */
-public abstract class AbstractSampleSink implements SampleSink {
+public abstract class AbstractSink implements Sink {
 
     protected boolean closed = false;
 

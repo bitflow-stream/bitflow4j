@@ -1,8 +1,5 @@
 package bitflow4j.sample;
 
-import bitflow4j.sample.AbstractSampleSink;
-import bitflow4j.sample.Sample;
-
 import java.io.IOException;
 
 /**
@@ -10,7 +7,7 @@ import java.io.IOException;
  * <p>
  * OutputStream dropping all incoming Samples.
  */
-public class EmptySink extends AbstractSampleSink {
+public class EmptySink extends AbstractSink {
 
     @Override
     public void writeSample(Sample sample) throws IOException {

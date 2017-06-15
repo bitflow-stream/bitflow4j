@@ -1,6 +1,6 @@
 package bitflow4j.io.net;
 
-import bitflow4j.io.MetricReader;
+import bitflow4j.io.SampleReader;
 import bitflow4j.io.marshall.Marshaller;
 import bitflow4j.sample.Sample;
 import bitflow4j.task.TaskPool;
@@ -15,16 +15,16 @@ import java.util.logging.Logger;
 /**
  * Created by anton on 04.11.16.
  */
-public class TcpMetricsReader extends MetricReader {
+public class TcpSampleReader extends SampleReader {
 
-    private static final Logger logger = Logger.getLogger(TcpMetricsReader.class.getName());
+    private static final Logger logger = Logger.getLogger(TcpSampleReader.class.getName());
 
     private final String host;
     private final int port;
     private final String sourceName;
     public static final long retryTimeoutMillis = 1000;
 
-    public TcpMetricsReader(String tcpSource, TaskPool pool, Marshaller marshaller) throws IOException {
+    public TcpSampleReader(String tcpSource, TaskPool pool, Marshaller marshaller) throws IOException {
         super(pool, marshaller);
         try {
             URI uri = new URI("protocol://" + tcpSource);

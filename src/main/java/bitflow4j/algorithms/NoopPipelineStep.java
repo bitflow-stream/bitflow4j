@@ -9,7 +9,7 @@ import java.io.IOException;
  * <p>
  * Algorithm doing nothing but forwarding received samples to the output stream.
  */
-public class NoopAlgorithm extends AbstractAlgorithm {
+public class NoopPipelineStep extends AbstractPipelineStep {
 
     @Override
     public void writeSample(Sample sample) throws IOException {

@@ -7,8 +7,8 @@ import bitflow4j.task.Task;
  * <p>
  * Created by mwall on 30.03.16.
  */
-public interface SampleSource extends Task {
+public interface Source extends Task {
 
-    void setOutgoingSink(SampleSink sink);
+    void setOutgoingSink(Sink sink);
 
 }

@@ -15,11 +15,11 @@ import java.util.logging.Logger;
  * Created by anton on 4/6/16.
  * <p>
  * Reads Samples from a single InputStream instance until it is closed.
- * This does not implement SampleSource, but can be used for implementations.
+ * This does not implement Source, but can be used for implementations.
  */
-public abstract class MetricReader {
+public abstract class SampleReader {
 
-    private static final Logger logger = Logger.getLogger(MetricReader.class.getName());
+    private static final Logger logger = Logger.getLogger(SampleReader.class.getName());
 
     protected final TaskPool pool;
     private final Marshaller marshaller;
@@ -34,13 +34,13 @@ public abstract class MetricReader {
 
     public boolean suppressHeaderUpdateLogs = false;
 
-    public MetricReader(TaskPool pool, Marshaller marshaller) {
+    public SampleReader(TaskPool pool, Marshaller marshaller) {
         this.marshaller = marshaller;
         this.pool = pool;
     }
 
-    public static MetricReader singleInput(TaskPool pool, Marshaller marshaller, String name, InputStream input) {
-        return new MetricReader(pool, marshaller) {
+    public static SampleReader singleInput(TaskPool pool, Marshaller marshaller, String name, InputStream input) {
+        return new SampleReader(pool, marshaller) {
             boolean returned = false;
 
             @Override

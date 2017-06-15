@@ -1,6 +1,6 @@
 package bitflow4j.algorithms.fork;
 
-import bitflow4j.main.AlgorithmPipeline;
+import bitflow4j.main.Pipeline;
 
 import java.io.IOException;
 
@@ -9,6 +9,6 @@ import java.io.IOException;
  */
 public interface PipelineBuilder {
 
-    void build(Object key, AlgorithmPipeline subPipeline, SynchronizingSink output) throws IOException;
+    void build(Object key, Pipeline subPipeline, SynchronizingSink output) throws IOException;
 
 }

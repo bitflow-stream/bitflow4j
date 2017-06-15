@@ -1,19 +1,19 @@
 package bitflow4j.algorithms;
 
-import bitflow4j.sample.SampleSink;
-import bitflow4j.sample.SampleSource;
+import bitflow4j.sample.Sink;
+import bitflow4j.sample.Source;
 
 import java.util.logging.Logger;
 
 /**
- * An Algorithm receives metrics like a SampleSink and forwards results
- * to another SampleSink.
+ * An Algorithm receives metrics like a Sink and forwards results
+ * to another Sink.
  * The way it does this is completely open: many (or even all) samples can be received
  * before outputting anything, or every sample can be modified and forwarded independently.
  */
-public interface Algorithm<T> extends SampleSource, SampleSink {
+public interface PipelineStep<T> extends Source, Sink {
 
-    Logger logger = Logger.getLogger(Algorithm.class.getName());
+    Logger logger = Logger.getLogger(PipelineStep.class.getName());
 
     default T getModel() {
         // Default implementation: we have no model.
@@ -27,7 +27,7 @@ public interface Algorithm<T> extends SampleSource, SampleSink {
     }
 
     default void stop() {
-        // Algorithms should only be stopped through the close() method of SampleSink
+        // Algorithms should only be stopped through the close() method of Sink
         throw new UnsupportedOperationException("stop() should not be called on implementations of Algorithm");
     }
 

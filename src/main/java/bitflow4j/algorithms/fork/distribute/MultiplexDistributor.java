@@ -1,12 +1,12 @@
 package bitflow4j.algorithms.fork.distribute;
 
-import bitflow4j.algorithms.fork.ForkDistributor;
+import bitflow4j.algorithms.fork.Distributor;
 import bitflow4j.sample.Sample;
 
 /**
  * Created by anton on 13.02.17.
  */
-public class MultiplexDistributor implements ForkDistributor {
+public class MultiplexDistributor implements Distributor {
 
     private final Object[] keys;
 

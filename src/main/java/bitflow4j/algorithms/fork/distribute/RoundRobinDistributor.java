@@ -1,12 +1,12 @@
 package bitflow4j.algorithms.fork.distribute;
 
 import bitflow4j.sample.Sample;
-import bitflow4j.algorithms.fork.ForkDistributor;
+import bitflow4j.algorithms.fork.Distributor;
 
 /**
  * Created by anton on 13.02.17.
  */
-public class RoundRobinDistributor implements ForkDistributor {
+public class RoundRobinDistributor implements Distributor {
 
     private final int numSubPipelines;
     private int counter = 0;

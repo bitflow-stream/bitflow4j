@@ -1,7 +1,7 @@
 package bitflow4j.io.file;
 
-import bitflow4j.io.MetricReader;
-import bitflow4j.io.ThreadedSampleSource;
+import bitflow4j.io.SampleReader;
+import bitflow4j.io.ThreadedSource;
 import bitflow4j.io.marshall.Marshaller;
 import bitflow4j.task.TaskPool;
 
@@ -23,9 +23,9 @@ import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
 /**
  * Created by anton on 4/7/16.
  */
-public class FileMetricReader extends ThreadedSampleSource {
+public class FileSource extends ThreadedSource {
 
-    private static final Logger logger = Logger.getLogger(FileMetricReader.class.getName());
+    private static final Logger logger = Logger.getLogger(FileSource.class.getName());
 
     public interface NameConverter {
         String convert(File file);
@@ -53,18 +53,18 @@ public class FileMetricReader extends ThreadedSampleSource {
     private TaskPool taskPool;
     private boolean keepAlive = false;
 
-    public FileMetricReader(Marshaller marshaller, NameConverter converter) {
+    public FileSource(Marshaller marshaller, NameConverter converter) {
         this.marshaller = marshaller;
         if (converter == null)
             converter = FILE_NAME;
         this.converter = converter;
     }
 
-    public FileMetricReader(Marshaller marshaller) {
+    public FileSource(Marshaller marshaller) {
         this(marshaller, FILE_NAME);
     }
 
-    public FileMetricReader keepAlive() {
+    public FileSource keepAlive() {
         this.keepAlive = true;
         return this;
     }
@@ -95,20 +95,20 @@ public class FileMetricReader extends ThreadedSampleSource {
         super.run();
     }
 
-    private class FileSampleReader extends MetricReader {
+    private class FileSampleReader extends SampleReader {
 
         private final Iterator<File> files;
         private final Iterator<String> sourceNames;
 
         public FileSampleReader(TaskPool pool, Marshaller marshaller) {
             super(pool, marshaller);
-            files = FileMetricReader.this.files.iterator();
-            sourceNames = FileMetricReader.this.sourceNames.iterator();
+            files = FileSource.this.files.iterator();
+            sourceNames = FileSource.this.sourceNames.iterator();
         }
 
         @Override
         public String toString() {
-            return "Read " + FileMetricReader.this.files.size() + " files";
+            return "Read " + FileSource.this.files.size() + " files";
         }
 
         @Override

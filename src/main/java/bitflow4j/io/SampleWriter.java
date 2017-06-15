@@ -5,27 +5,27 @@ import bitflow4j.io.marshall.Marshaller;
 import java.io.*;
 
 /**
- * Simple MetricPrinter writing to a single fixed OutputStream.
+ * Simple SampleWriter writing to a single fixed OutputStream.
  * <p>
  * Created by anton on 4/7/16.
  */
-public class MetricPrinter extends AbstractMetricPrinter {
+public class SampleWriter extends AbstractSampleWriter {
 
     private final OutputStream output;
 
-    public MetricPrinter(Marshaller marshaller) {
+    public SampleWriter(Marshaller marshaller) {
         this(System.out, marshaller);
     }
 
-    public MetricPrinter(String filename, Marshaller marshaller) throws FileNotFoundException {
+    public SampleWriter(String filename, Marshaller marshaller) throws FileNotFoundException {
         this(new FileOutputStream(filename, false), marshaller);
     }
 
-    public MetricPrinter(File file, Marshaller marshaller) throws FileNotFoundException {
+    public SampleWriter(File file, Marshaller marshaller) throws FileNotFoundException {
         this(new FileOutputStream(file, false), marshaller);
     }
 
-    public MetricPrinter(OutputStream output, Marshaller marshaller) {
+    public SampleWriter(OutputStream output, Marshaller marshaller) {
         super(marshaller);
         this.output = output;
     }

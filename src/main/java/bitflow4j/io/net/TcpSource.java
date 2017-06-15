@@ -1,6 +1,6 @@
 package bitflow4j.io.net;
 
-import bitflow4j.io.ThreadedSampleSource;
+import bitflow4j.io.ThreadedSource;
 import bitflow4j.io.marshall.Marshaller;
 import bitflow4j.task.TaskPool;
 
@@ -10,12 +10,12 @@ import java.util.Arrays;
 /**
  * Created by anton on 04.11.16.
  */
-public class TcpMetricsDownloader extends ThreadedSampleSource {
+public class TcpSource extends ThreadedSource {
 
     private final String[] tcpSources;
     private final Marshaller marshaller;
 
-    public TcpMetricsDownloader(String[] tcpSources, Marshaller marshaller) {
+    public TcpSource(String[] tcpSources, Marshaller marshaller) {
         this.tcpSources = tcpSources;
         this.marshaller = marshaller;
     }
@@ -23,7 +23,7 @@ public class TcpMetricsDownloader extends ThreadedSampleSource {
     @Override
     public void start(TaskPool pool) throws IOException {
         for (String source : tcpSources) {
-            TcpMetricsReader reader = new TcpMetricsReader(source, pool, marshaller);
+            TcpSampleReader reader = new TcpSampleReader(source, pool, marshaller);
             readSamples(pool, reader, true);
         }
     }

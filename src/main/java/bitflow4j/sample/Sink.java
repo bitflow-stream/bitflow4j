@@ -9,7 +9,7 @@ import java.io.IOException;
  *
  * @author fschmidt
  */
-public interface SampleSink extends Task {
+public interface Sink extends Task {
 
     void writeSample(Sample sample) throws IOException;
 

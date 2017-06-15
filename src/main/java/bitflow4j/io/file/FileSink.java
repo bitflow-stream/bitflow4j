@@ -1,23 +1,23 @@
 package bitflow4j.io.file;
 
 import bitflow4j.io.marshall.Marshaller;
-import bitflow4j.io.AbstractMetricPrinter;
+import bitflow4j.io.AbstractSampleWriter;
 
 import java.io.*;
 
 /**
  * Created by anton on 4/16/16.
  * <p>
- * This SampleSink starts a new file for every incoming header.
- * This is better suited for writing files than MetricPrinter, which will print every
+ * This Sink starts a new file for every incoming header.
+ * This is better suited for writing files than SampleWriter, which will print every
  * incoming header into the same file.
  */
-public class FileMetricPrinter extends AbstractMetricPrinter {
+public class FileSink extends AbstractSampleWriter {
 
     private final FileGroup files;
     private int index = 0;
 
-    public FileMetricPrinter(String baseFileName, Marshaller marshaller) throws IOException {
+    public FileSink(String baseFileName, Marshaller marshaller) throws IOException {
         super(marshaller);
         files = new FileGroup(baseFileName);
         files.deleteFiles();

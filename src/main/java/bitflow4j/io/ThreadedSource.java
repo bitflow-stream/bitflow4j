@@ -1,8 +1,8 @@
 package bitflow4j.io;
 
-import bitflow4j.sample.AbstractSampleSource;
+import bitflow4j.sample.AbstractSource;
 import bitflow4j.sample.Sample;
-import bitflow4j.sample.SampleSink;
+import bitflow4j.sample.Sink;
 import bitflow4j.task.LoopTask;
 import bitflow4j.task.ParallelTask;
 import bitflow4j.task.TaskPool;
@@ -14,17 +14,17 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Helper class for implementing SampleSource in case multiple threads
+ * Helper class for implementing Source in case multiple threads
  * are needed, for example when reading from TCP connections.
  * <p>
- * This does not implement StoppableSampleSource, because it always stops on its own
+ * This does not implement StoppableSource, because it always stops on its own
  * and should not explicitly be stopped from the outside.
  * <p>
  * Created by anton on 23.12.16.
  */
-public abstract class ThreadedSampleSource extends AbstractSampleSource implements ParallelTask {
+public abstract class ThreadedSource extends AbstractSource implements ParallelTask {
 
-    private static final Logger logger = Logger.getLogger(ThreadedSampleSource.class.getName());
+    private static final Logger logger = Logger.getLogger(ThreadedSource.class.getName());
 
     private final Object outputLock = new Object();
     private final List<LoopTask> tasks = new ArrayList<>();
@@ -32,11 +32,11 @@ public abstract class ThreadedSampleSource extends AbstractSampleSource implemen
 
     public boolean suppressHeaderUpdateLogs = false;
 
-    protected void readSamples(TaskPool pool, MetricReader reader) throws IOException {
+    protected void readSamples(TaskPool pool, SampleReader reader) throws IOException {
         readSamples(pool, reader, false);
     }
 
-    protected void readSamples(TaskPool pool, MetricReader reader, boolean keepAlive) throws IOException {
+    protected void readSamples(TaskPool pool, SampleReader reader, boolean keepAlive) throws IOException {
         reader.suppressHeaderUpdateLogs = suppressHeaderUpdateLogs;
         LoopTask task = new LoopSampleReader(reader);
         tasks.add(task);
@@ -76,13 +76,13 @@ public abstract class ThreadedSampleSource extends AbstractSampleSource implemen
 
     private class LoopSampleReader extends LoopTask {
 
-        private final MetricReader reader;
-        private final SampleSink sink;
+        private final SampleReader reader;
+        private final Sink sink;
 
-        public LoopSampleReader(MetricReader reader) {
+        public LoopSampleReader(SampleReader reader) {
             this.reader = reader;
-            this.sink = ThreadedSampleSource.this.output();
-            reader.inputClosedHook = ThreadedSampleSource.this::handleClosedInput;
+            this.sink = ThreadedSource.this.output();
+            reader.inputClosedHook = ThreadedSource.this::handleClosedInput;
         }
 
         @Override
@@ -104,7 +104,7 @@ public abstract class ThreadedSampleSource extends AbstractSampleSource implemen
                 return true;
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "Exception in " + reader.toString() +
-                        ", running as part of: " + ThreadedSampleSource.this, e);
+                        ", running as part of: " + ThreadedSource.this, e);
                 return readerException();
             }
         }
@@ -114,7 +114,7 @@ public abstract class ThreadedSampleSource extends AbstractSampleSource implemen
     // ================================================================================================
     // TODO the code below is a hack to enable synchronized reading of files.
     // Must be handled differently in the future.
-    // This hack also includes the inputClosedHook field of MetricReader.
+    // This hack also includes the inputClosedHook field of SampleReader.
     // ================================================================================================
 
     public static final String INPUT_FILE_SAMPLE_ID_TAG = "input-file-sample-id";

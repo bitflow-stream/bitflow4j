@@ -1,23 +1,23 @@
 package bitflow4j.algorithms.fork;
 
-import bitflow4j.sample.AbstractSampleSink;
+import bitflow4j.sample.AbstractSink;
 import bitflow4j.sample.Sample;
-import bitflow4j.sample.SampleSink;
+import bitflow4j.sample.Sink;
 
 import java.io.IOException;
 
 /**
  * Created by anton on 13.02.17.
  */
-public class SynchronizingSink extends AbstractSampleSink {
+public class SynchronizingSink extends AbstractSink {
 
     // This is intentionally public, so that implementations of PipelineBuilder can
     // configure the sink of the sub-pipeline depending on what comes directly after the fork.
-    public final SampleSink originalOutgoingSink;
+    public final Sink originalOutgoingSink;
 
     private final Object lock;
 
-    public SynchronizingSink(Object lock, SampleSink sink) {
+    public SynchronizingSink(Object lock, Sink sink) {
         this.originalOutgoingSink = sink;
         this.lock = lock;
     }
