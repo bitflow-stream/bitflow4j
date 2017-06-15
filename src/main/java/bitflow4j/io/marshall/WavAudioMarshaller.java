@@ -38,16 +38,9 @@ public class WavAudioMarshaller implements Marshaller {
     public static final String WAV_TAG_BITS_PER_SAMPLE = "wavTagBitsPerSample";
     public static final String WAV_TAG_SUBCHUNK2SIZE = "wavTagSubchunk2Size";
 
-    private int chunkSize;
-    private int fmt;
-    private int chunkSizeInBytes;
-    private Short formatCode;
     private Short numberOfChannels;
     private int samplesPerSecond;
-    private int bytesPerSecond;
-    private Short bytesPerSampleMaybe;
     private Short bitsPerSample;
-    private int subchunk2Size;
     private Date timestamp;
     private Map<String, String> tags;
 
@@ -58,23 +51,23 @@ public class WavAudioMarshaller implements Marshaller {
         if (riffTag != 0x52494646) { // "RIFF"
             throw new IOException("Wav file is missing RIFF indicator.");
         }
-        chunkSize = readInt(input);
+        int chunkSize = readInt(input);
         //CHECK WAV TAG
         int waveTag = readInt(input);
         if (waveTag != 0x57415645) // "WAVE"
         {
             throw new IOException("Wav file is missing WAVE indicator.");
         }
-        fmt = readInt(input);
-        chunkSizeInBytes = readInt(input);
-        formatCode = readShort(input);
+        int fmt = readInt(input);
+        int chunkSizeInBytes = readInt(input);
+        Short formatCode = readShort(input);
 
         numberOfChannels = readShort(input);
         samplesPerSecond = readInt(input);
-        bytesPerSecond = readInt(input);
-        bytesPerSampleMaybe = readShort(input);
+        int bytesPerSecond = readInt(input);
+        Short bytesPerSampleMaybe = readShort(input);
         bitsPerSample = readShort(input);
-        subchunk2Size = readInt(input);
+        int subchunk2Size = readInt(input);
 
         tags = new HashMap<>();
         tags.put(WAV_TAG_CHUNK_SIZE, Integer.toString(chunkSize));
