@@ -11,17 +11,17 @@ import java.util.logging.Logger;
  * The way it does this is completely open: many (or even all) samples can be received
  * before outputting anything, or every sample can be modified and forwarded independently.
  */
-public interface PipelineStep<T> extends Source, Sink {
+public interface PipelineStep extends Source, Sink {
 
     Logger logger = Logger.getLogger(PipelineStep.class.getName());
 
-    default T getModel() {
+    default Object getModel() {
         // Default implementation: we have no model.
         logger.warning("getModel() called for " + getClass() + ". Model is returned as 'null'.");
         return null;
     }
 
-    default void setModel(T model) {
+    default void setModel(Object model) {
         // Default implementation: nothing to do. Should usually not occur.
         logger.warning("setModel() called for " + getClass() + ", but is ignored. Model: " + model);
     }

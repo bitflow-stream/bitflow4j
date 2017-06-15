@@ -1,7 +1,7 @@
 package bitflow4j.io.file;
 
 import bitflow4j.io.SampleReader;
-import bitflow4j.io.ThreadedSource;
+import bitflow4j.io.ThreadedReaderSource;
 import bitflow4j.io.marshall.Marshaller;
 import bitflow4j.task.TaskPool;
 
@@ -23,7 +23,7 @@ import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
 /**
  * Created by anton on 4/7/16.
  */
-public class FileSource extends ThreadedSource {
+public class FileSource extends ThreadedReaderSource {
 
     private static final Logger logger = Logger.getLogger(FileSource.class.getName());
 

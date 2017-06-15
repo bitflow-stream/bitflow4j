@@ -61,10 +61,10 @@ public class TcpSampleReader extends SampleReader {
     }
 
     @Override
-    public Sample readSample() throws IOException {
+    public Sample nextSample() throws IOException {
         while (true) {
             try {
-                return super.readSample();
+                return super.nextSample();
             } catch (OpenFailedException e) {
                 logger.fine("Failed to establish TCP connection to " + sourceName + ": " + e.cause);
                 if (!pool.sleep(retryTimeoutMillis))

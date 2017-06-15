@@ -4,6 +4,7 @@ import bitflow4j.io.marshall.InputStreamClosedException;
 import bitflow4j.io.marshall.Marshaller;
 import bitflow4j.io.marshall.UnmarshalledHeader;
 import bitflow4j.sample.Sample;
+import bitflow4j.sample.ThreadedSource;
 import bitflow4j.task.TaskPool;
 
 import java.io.BufferedInputStream;
@@ -17,7 +18,7 @@ import java.util.logging.Logger;
  * Reads Samples from a single InputStream instance until it is closed.
  * This does not implement Source, but can be used for implementations.
  */
-public abstract class SampleReader {
+public abstract class SampleReader implements ThreadedSource.SampleGenerator {
 
     private static final Logger logger = Logger.getLogger(SampleReader.class.getName());
 
@@ -70,7 +71,7 @@ public abstract class SampleReader {
     protected abstract NamedInputStream nextInput() throws IOException;
 
     // Returning null here means all inputs were finished without error
-    public Sample readSample() throws IOException {
+    public Sample nextSample() throws IOException {
         Sample sample = null;
         while (!closed && (sample = doReadSample()) == null) ;
         return sample;

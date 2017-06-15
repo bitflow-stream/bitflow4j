@@ -1,6 +1,6 @@
 package bitflow4j.io.net;
 
-import bitflow4j.io.ThreadedSource;
+import bitflow4j.io.ThreadedReaderSource;
 import bitflow4j.io.marshall.Marshaller;
 import bitflow4j.task.TaskPool;
 
@@ -10,7 +10,7 @@ import java.util.Arrays;
 /**
  * Created by anton on 04.11.16.
  */
-public class TcpSource extends ThreadedSource {
+public class TcpSource extends ThreadedReaderSource {
 
     private final String[] tcpSources;
     private final Marshaller marshaller;

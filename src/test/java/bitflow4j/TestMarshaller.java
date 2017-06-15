@@ -71,7 +71,7 @@ public class TestMarshaller extends TestWithSamples {
 
         List<Sample> receivedSamples = new ArrayList<>();
         while (true) {
-            Sample sample = reader.readSample();
+            Sample sample = reader.nextSample();
             if (sample == null)
                 break;
             receivedSamples.add(sample);

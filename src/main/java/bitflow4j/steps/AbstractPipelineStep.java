@@ -8,7 +8,7 @@ import bitflow4j.task.TaskPool;
 import java.io.IOException;
 import java.util.logging.Level;
 
-public class AbstractPipelineStep<T> extends AbstractSink implements PipelineStep<T> {
+public class AbstractPipelineStep extends AbstractSink implements PipelineStep {
 
     protected Sink output;
 

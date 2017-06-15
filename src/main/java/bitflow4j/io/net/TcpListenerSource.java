@@ -1,7 +1,7 @@
 package bitflow4j.io.net;
 
 import bitflow4j.io.SampleReader;
-import bitflow4j.io.ThreadedSource;
+import bitflow4j.io.ThreadedReaderSource;
 import bitflow4j.io.marshall.Marshaller;
 import bitflow4j.task.ParallelTask;
 import bitflow4j.task.TaskPool;
@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 /**
  * Created by anton on 4/6/16.
  */
-public class TcpListenerSource extends ThreadedSource {
+public class TcpListenerSource extends ThreadedReaderSource {
 
     private static final Logger logger = Logger.getLogger(TcpListenerSource.class.getName());
 
