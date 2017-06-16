@@ -64,7 +64,8 @@ public class AbstractAlgorithm<T> extends AbstractSampleSink implements Algorith
     @Override
     public void setOutgoingSink(SampleSink sink) {
         if (this.output != null) {
-            throw new IllegalStateException("This sink for this SampleSource was already initialized");
+            System.out.println("outclass: "+output.getClass().getCanonicalName()+ " , algorithm: "+ this.getClass().getCanonicalName());
+            throw new IllegalStateException("This sink for this SampleSource was already initialized "+ sink.getClass().getCanonicalName());
         }
         this.output = sink;
     }

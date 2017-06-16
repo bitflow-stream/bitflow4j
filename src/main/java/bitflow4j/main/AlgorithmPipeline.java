@@ -177,6 +177,7 @@ public class AlgorithmPipeline {
         tasks.add(source);
         SampleSource currentSource = source;
         for (Algorithm algo : steps) {
+            System.out.println("Algo "+algo.getClass().getCanonicalName());
             currentSource.setOutgoingSink(algo);
             currentSource = algo;
             tasks.add(algo);
