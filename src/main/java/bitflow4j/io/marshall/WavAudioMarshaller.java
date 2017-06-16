@@ -2,6 +2,7 @@ package bitflow4j.io.marshall;
 
 import bitflow4j.sample.Header;
 import bitflow4j.sample.Sample;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -38,16 +39,9 @@ public class WavAudioMarshaller implements Marshaller {
     public static final String WAV_TAG_BITS_PER_SAMPLE = "wavTagBitsPerSample";
     public static final String WAV_TAG_SUBCHUNK2SIZE = "wavTagSubchunk2Size";
 
-    private int chunkSize;
-    private int fmt;
-    private int chunkSizeInBytes;
-    private Short formatCode;
     private Short numberOfChannels;
     private int samplesPerSecond;
-    private int bytesPerSecond;
-    private Short bytesPerSampleMaybe;
     private Short bitsPerSample;
-    private int subchunk2Size;
     private Date timestamp;
     private Map<String, String> tags;
 
@@ -58,23 +52,23 @@ public class WavAudioMarshaller implements Marshaller {
         if (riffTag != 0x52494646) { // "RIFF"
             throw new IOException("Wav file is missing RIFF indicator.");
         }
-        chunkSize = readInt(input);
+        int chunkSize = readInt(input);
         //CHECK WAV TAG
         int waveTag = readInt(input);
         if (waveTag != 0x57415645) // "WAVE"
         {
             throw new IOException("Wav file is missing WAVE indicator.");
         }
-        fmt = readInt(input);
-        chunkSizeInBytes = readInt(input);
-        formatCode = readShort(input);
+        int fmt = readInt(input);
+        int chunkSizeInBytes = readInt(input);
+        Short formatCode = readShort(input);
 
         numberOfChannels = readShort(input);
         samplesPerSecond = readInt(input);
-        bytesPerSecond = readInt(input);
-        bytesPerSampleMaybe = readShort(input);
+        int bytesPerSecond = readInt(input);
+        Short bytesPerSampleMaybe = readShort(input);
         bitsPerSample = readShort(input);
-        subchunk2Size = readInt(input);
+        int subchunk2Size = readInt(input);
 
         tags = new HashMap<>();
         tags.put(WAV_TAG_CHUNK_SIZE, Integer.toString(chunkSize));
@@ -129,6 +123,7 @@ public class WavAudioMarshaller implements Marshaller {
     @Override
     public void marshallHeader(OutputStream output, Header header) throws IOException {
     }
+
     private boolean insertedHeader = false;
 
     private Short bitsPerSampleWrite;
@@ -211,8 +206,8 @@ public class WavAudioMarshaller implements Marshaller {
     private void writeDouble16(OutputStream output, double value) throws IOException {
         short v = toShort(value);
         byte[] b = new byte[]{
-            (byte) ((v) & 0xFF),
-            (byte) ((v >>> 8) & 0xFF)
+                (byte) ((v) & 0xFF),
+                (byte) ((v >>> 8) & 0xFF)
         };
         output.write(b);
     }
@@ -220,19 +215,19 @@ public class WavAudioMarshaller implements Marshaller {
     private void writeDouble24(OutputStream output, double value) throws IOException {
         int v = toInt(value);
         byte[] b = new byte[]{
-            (byte) ((v) & 0xFF),
-            (byte) ((v >>> 8) & 0xFF),
-            (byte) ((v >>> 16) & 0xFF)};
+                (byte) ((v) & 0xFF),
+                (byte) ((v >>> 8) & 0xFF),
+                (byte) ((v >>> 16) & 0xFF)};
         output.write(b);
     }
 
     private void writeDouble32(OutputStream output, double value) throws IOException {
         int v = toInt(value);
         byte[] b = new byte[]{
-            (byte) ((v) & 0xFF),
-            (byte) ((v >>> 8) & 0xFF),
-            (byte) ((v >>> 16) & 0xFF),
-            (byte) ((v >>> 24) & 0xFF),};
+                (byte) ((v) & 0xFF),
+                (byte) ((v >>> 8) & 0xFF),
+                (byte) ((v >>> 16) & 0xFF),
+                (byte) ((v >>> 24) & 0xFF),};
         output.write(b);
     }
 
@@ -256,17 +251,17 @@ public class WavAudioMarshaller implements Marshaller {
 
     private void writeInt(OutputStream output, int intToWrite) throws IOException {
         byte[] intToWriteAsBytesLittleEndian = new byte[]{
-            (byte) (intToWrite & 0xFF),
-            (byte) ((intToWrite >> 8) & 0xFF),
-            (byte) ((intToWrite >> 16) & 0xFF),
-            (byte) ((intToWrite >> 24) & 0xFF),};
+                (byte) (intToWrite & 0xFF),
+                (byte) ((intToWrite >> 8) & 0xFF),
+                (byte) ((intToWrite >> 16) & 0xFF),
+                (byte) ((intToWrite >> 24) & 0xFF),};
         output.write(intToWriteAsBytesLittleEndian, 0, 4);
     }
 
     private void writeShort(OutputStream output, short shortToWrite) throws IOException {
         byte[] shortToWriteAsBytesLittleEndian = new byte[]{
-            (byte) shortToWrite,
-            (byte) (shortToWrite >>> 8 & 0xFF),};
+                (byte) shortToWrite,
+                (byte) (shortToWrite >>> 8 & 0xFF),};
         output.write(shortToWriteAsBytesLittleEndian, 0, 2);
     }
 

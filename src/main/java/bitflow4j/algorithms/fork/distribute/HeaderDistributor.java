@@ -1,13 +1,13 @@
 package bitflow4j.algorithms.fork.distribute;
 
-import bitflow4j.algorithms.fork.ForkDistributor;
 import bitflow4j.sample.Sample;
+import bitflow4j.steps.fork.Distributor;
 
 /**
  *
  * @author fschmidt
  */
-public class HeaderDistributor implements ForkDistributor {
+public class HeaderDistributor implements Distributor {
   
     @Override
     public Object[] distribute(Sample sample) {

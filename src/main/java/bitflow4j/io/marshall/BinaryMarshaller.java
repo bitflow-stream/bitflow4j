@@ -97,7 +97,6 @@ public class BinaryMarshaller extends AbstractMarshaller {
 
     public void marshallSample(OutputStream output, Sample sample) throws IOException {
         DataOutputStream data = new DataOutputStream(output);
-        Header header = sample.getHeader();
         Date timestamp = sample.getTimestamp();
         data.write(BIN_SAMPLE_START);
         data.writeLong(timestamp == null ? 0 : timestamp.getTime() * 1000000);

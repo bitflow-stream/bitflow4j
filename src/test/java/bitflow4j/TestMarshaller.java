@@ -1,7 +1,7 @@
 package bitflow4j;
 
-import bitflow4j.io.MetricPrinter;
-import bitflow4j.io.MetricReader;
+import bitflow4j.io.SampleReader;
+import bitflow4j.io.SampleWriter;
 import bitflow4j.io.marshall.*;
 import bitflow4j.sample.Header;
 import bitflow4j.sample.Sample;
@@ -58,7 +58,7 @@ public class TestMarshaller extends TestWithSamples {
         List<Pair<Header, List<Sample>>> headers = createSamples();
 
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
-        MetricPrinter printer = new MetricPrinter(buf, marshaller);
+        SampleWriter printer = new SampleWriter(buf, marshaller);
 
         for (Pair<Header, List<Sample>> header : headers) {
             for (Sample sample : header.getValue()) {
@@ -67,11 +67,11 @@ public class TestMarshaller extends TestWithSamples {
         }
 
         ByteArrayInputStream inBuffer = new ByteArrayInputStream(buf.toByteArray());
-        MetricReader reader = MetricReader.singleInput(null, marshaller, "test", inBuffer);
+        SampleReader reader = SampleReader.singleInput(null, marshaller, "test", inBuffer);
 
         List<Sample> receivedSamples = new ArrayList<>();
         while (true) {
-            Sample sample = reader.readSample();
+            Sample sample = reader.nextSample();
             if (sample == null)
                 break;
             receivedSamples.add(sample);
