@@ -1,4 +1,4 @@
-package bitflow4j.algorithms.fork.distribute;
+package bitflow4j.steps.fork.distribute;
 
 import bitflow4j.sample.Sample;
 import bitflow4j.steps.fork.Distributor;

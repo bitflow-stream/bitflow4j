@@ -26,7 +26,7 @@ public class ListSource extends ThreadedSource implements ThreadedSource.SampleG
     @Override
     public void start(TaskPool pool) throws IOException {
         this.pool = pool;
-        readSamples(pool, this);
+        readSamples(this.pool, this);
     }
 
     @Override

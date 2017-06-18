@@ -91,6 +91,7 @@ public abstract class ThreadedSource extends AbstractSource implements ParallelT
             return generator.toString();
         }
 
+        @Override
         public boolean executeIteration() throws IOException {
             try {
                 if (!pool.isRunning())
@@ -103,7 +104,7 @@ public abstract class ThreadedSource extends AbstractSource implements ParallelT
                     sink.writeSample(sample);
                 }
                 return true;
-            } catch (Exception e) {
+            } catch (IOException e) {
                 logger.log(Level.SEVERE, "Exception in " + toString() +
                         ", running as part of: " + ThreadedSource.this, e);
                 return readerException();

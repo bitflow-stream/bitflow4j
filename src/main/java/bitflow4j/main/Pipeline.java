@@ -49,18 +49,19 @@ public class Pipeline {
     // ===============================================
     // Inputs ========================================
     // ===============================================
-
     public Pipeline input(Source input) {
-        if (this.source != null)
+        if (this.source != null) {
             throw new IllegalStateException("sink was already configured");
+        }
         this.source = input;
         return this;
     }
 
     public Pipeline inputFiles(String format, FileSource.NameConverter converter, String... files) throws IOException {
         FileSource reader = new FileSource(getMarshaller(format), converter);
-        for (String file : files)
+        for (String file : files) {
             reader.addFile(new File(file));
+        }
         return input(reader);
     }
 
@@ -91,7 +92,6 @@ public class Pipeline {
     // ===============================================
     // Algorithms ====================================
     // ===============================================
-
     public Pipeline step(PipelineStep algo) {
         steps.add(algo);
         return this;
@@ -100,32 +100,36 @@ public class Pipeline {
     // =========================================
     // Outputs =================================
     // =========================================
-
     public Pipeline output(Sink outputStream) {
-        if (this.sink != null)
+        if (this.sink != null) {
             throw new IllegalStateException("sink was already configured");
+        }
         this.sink = outputStream;
         return this;
     }
 
-    public Pipeline consoleOutput(String outputMarshaller) {
+    public Pipeline outputConsole(String outputMarshaller) {
         return output(new SampleWriter(getMarshaller(outputMarshaller)));
     }
 
-    public Pipeline consoleOutput() {
-        return consoleOutput("CSV");
+    public Pipeline outputConsole() {
+        return Pipeline.this.outputConsole("CSV");
     }
 
-    public Pipeline fileOutput(String path, String outputMarshaller) throws IOException {
+    public Pipeline outputFile(String path, String outputMarshaller) throws IOException {
         return output(new FileSink(path, getMarshaller(outputMarshaller)));
     }
 
-    public Pipeline fileOutput(File file, String outputMarshaller) throws IOException {
-        return fileOutput(file.toString(), outputMarshaller);
+    public Pipeline outputFileExtend(String path, String outputMarshaller) throws IOException {
+        return output(new FileSink(path, getMarshaller(outputMarshaller), true));
     }
 
-    public Pipeline csvOutput(String filename) throws IOException {
-        return fileOutput(filename, "CSV");
+    public Pipeline outputFile(File file, String outputMarshaller) throws IOException {
+        return Pipeline.this.outputFile(file.toString(), outputMarshaller);
+    }
+
+    public Pipeline outputCsv(String filename) throws IOException {
+        return Pipeline.this.outputFile(filename, "CSV");
     }
 
     public Pipeline emptyOutput() {
@@ -135,16 +139,16 @@ public class Pipeline {
     // =========================================
     // Running =================================
     // =========================================
-
     public void runAndWait(boolean handleSignals) {
         TaskPool pool = new TaskPool();
-        if (handleSignals)
+        if (handleSignals) {
             try {
                 pool.start(new UserSignalTask());
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Failed to listen for User Signals", e);
                 return;
             }
+        }
         runAndWait(pool);
     }
 
@@ -177,7 +181,6 @@ public class Pipeline {
         tasks.add(source);
         Source currentSource = source;
         for (PipelineStep algo : steps) {
-            System.out.println("Algo "+algo.getClass().getCanonicalName());
             currentSource.setOutgoingSink(algo);
             currentSource = algo;
             tasks.add(algo);

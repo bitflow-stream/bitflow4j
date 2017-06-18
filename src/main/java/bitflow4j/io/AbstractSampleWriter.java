@@ -23,9 +23,15 @@ public abstract class AbstractSampleWriter extends AbstractSink {
     private final Marshaller marshaller;
     protected OutputStream output = null;
     private Header lastHeader;
+    private final boolean extendFile;
 
     public AbstractSampleWriter(Marshaller marshaller) {
+        this(marshaller, false);
+    }
+    
+    public AbstractSampleWriter(Marshaller marshaller, boolean extendFile) {
         this.marshaller = marshaller;
+        this.extendFile = extendFile;
     }
 
     protected abstract OutputStream nextOutputStream() throws IOException;
@@ -34,10 +40,15 @@ public abstract class AbstractSampleWriter extends AbstractSink {
         Header header = sample.getHeader();
         OutputStream output = this.output; // Avoid race condition
         try {
-            if (output == null || sample.headerChanged(lastHeader)) {
+            if ((output == null || sample.headerChanged(lastHeader)) && !extendFile) {
                 closeStream();
                 this.output = nextOutputStream();
                 output = this.output;
+                if (output == null)
+                    return;
+                marshaller.marshallHeader(output, header);
+                lastHeader = header;
+            } else if((output == null || sample.headerChanged(lastHeader)) && extendFile){
                 if (output == null)
                     return;
                 marshaller.marshallHeader(output, header);

@@ -22,6 +22,12 @@ public class FileSink extends AbstractSampleWriter {
         files = new FileGroup(baseFileName);
         files.deleteFiles();
     }
+    
+    public FileSink(String baseFileName, Marshaller marshaller, boolean extendFile) throws IOException {
+        super(marshaller, extendFile);
+        files = new FileGroup(baseFileName);
+        files.deleteFiles();
+    }
 
     @Override
     protected OutputStream nextOutputStream() throws IOException {

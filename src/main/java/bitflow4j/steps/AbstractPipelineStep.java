@@ -64,8 +64,7 @@ public class AbstractPipelineStep extends AbstractSink implements PipelineStep {
     @Override
     public void setOutgoingSink(Sink sink) {
         if (this.output != null) {
-            System.out.println("outclass: "+output.getClass().getCanonicalName()+ " , algorithm: "+ this.getClass().getCanonicalName());
-            throw new IllegalStateException("This sink for this SampleSource was already initialized "+ sink.getClass().getCanonicalName());
+            throw new IllegalStateException("This sink for this SampleSource was already initialized: "+ sink.getClass().getCanonicalName());
         }
         this.output = sink;
     }
