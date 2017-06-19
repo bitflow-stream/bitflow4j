@@ -43,11 +43,13 @@ public class CsvMarshaller extends AbstractMarshaller {
                     .appendPattern(shortDateFormat)
                     .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true).toFormatter();
 
+    @Override
     public boolean peekIsHeader(InputStream input) throws IOException {
         byte peeked[] = peek(input, CSV_HEADER_TIME.length());
         return Arrays.equals(peeked, CSV_HEADER_TIME.getBytes());
     }
 
+    @Override
     public UnmarshalledHeader unmarshallHeader(InputStream input) throws IOException {
         String[] fields = readLine(input).split(separator, -1);
 
@@ -62,6 +64,7 @@ public class CsvMarshaller extends AbstractMarshaller {
         return new UnmarshalledHeader(new Header(header), hasTags);
     }
 
+    @Override
     public Sample unmarshallSample(InputStream input, UnmarshalledHeader header) throws IOException {
         String sampleStr = readLine(input);
         String[] metricStrings = sampleStr.split(separator, -1);
@@ -121,6 +124,7 @@ public class CsvMarshaller extends AbstractMarshaller {
         }
     }
 
+    @Override
     public void marshallHeader(OutputStream output, Header header) throws IOException {
         output.write(CSV_HEADER_TIME.getBytes());
         output.write(separatorBytes);
@@ -132,8 +136,8 @@ public class CsvMarshaller extends AbstractMarshaller {
         output.write(lineSepBytes);
     }
 
+    @Override
     public void marshallSample(OutputStream output, Sample sample) throws IOException {
-        Header header = sample.getHeader();
         String dateStr = output_date_formatter.format(sample.getTimestamp());
         output.write(dateStr.getBytes());
 
