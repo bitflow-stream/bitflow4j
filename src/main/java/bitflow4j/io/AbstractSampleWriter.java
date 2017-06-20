@@ -36,6 +36,7 @@ public abstract class AbstractSampleWriter extends AbstractSink {
 
     protected abstract OutputStream nextOutputStream() throws IOException;
 
+    @Override
     public synchronized void writeSample(Sample sample) throws IOException {
         Header header = sample.getHeader();
         OutputStream output = this.output; // Avoid race condition
@@ -73,6 +74,7 @@ public abstract class AbstractSampleWriter extends AbstractSink {
         }
     }
 
+    @Override
     public void close() {
         closeStream();
         super.close();
