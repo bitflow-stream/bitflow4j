@@ -55,6 +55,7 @@ public abstract class ThreadedSource extends AbstractSource implements ParallelT
         output().close();
     }
 
+    // shutDown() should be closed in an overridden run() method, after starting all LoopSampleReaders.
     protected void shutDown() {
         synchronized (this) {
             shuttingDown = true;
