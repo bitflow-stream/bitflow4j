@@ -6,6 +6,7 @@
 
     <groupId>bitflow4j</groupId>
     <artifactId>bitflow4j</artifactId>
+    <packaging>pom</packaging>
     <version>0.1</version>
     <build>
         <plugins>

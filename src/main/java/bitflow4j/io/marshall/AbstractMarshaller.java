@@ -15,6 +15,19 @@ public abstract class AbstractMarshaller implements Marshaller {
     static final byte[] lineSepBytes = lineSepString.getBytes();
     private static final int lineSep = lineSepString.charAt(0);
 
+    protected boolean discardTime;
+    protected boolean discardTags;
+
+    public AbstractMarshaller(){
+        this.discardTime = false;
+        this.discardTags = false;
+    }
+
+    public AbstractMarshaller(boolean discardTime, boolean discardTags){
+        this.discardTime = discardTime;
+        this.discardTags = discardTags;
+    }
+
     static String readLine(InputStream input) throws IOException {
         int chr;
         StringBuilder buffer = new StringBuilder(512);

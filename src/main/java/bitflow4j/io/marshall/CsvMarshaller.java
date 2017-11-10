@@ -33,6 +33,14 @@ public class CsvMarshaller extends AbstractMarshaller {
     public static final int minDateLength = shortDateFormat.length();
     public static final int maxDateLength = minDateLength + 10;
 
+    public CsvMarshaller(){
+        super(false, false);
+    }
+
+    public CsvMarshaller(boolean discardTime, boolean discardTags){
+        super(discardTime, discardTags);
+    }
+
     public static SimpleDateFormat newDateFormatter() {
         return new SimpleDateFormat(outputDateFormat);
     }
@@ -126,11 +134,15 @@ public class CsvMarshaller extends AbstractMarshaller {
 
     @Override
     public void marshallHeader(OutputStream output, Header header) throws IOException {
-        output.write(CSV_HEADER_TIME.getBytes());
-        output.write(separatorBytes);
-        output.write(CSV_HEADER_TAGS.getBytes());
+        if(!discardTime) {
+            output.write(CSV_HEADER_TIME.getBytes());
+            output.write(separatorBytes);
+        }
+        if(!discardTags) {
+            output.write(CSV_HEADER_TAGS.getBytes());
+        }
 
-        if (header.header.length > 0)
+        if (header.header.length > 0 && !(discardTime && discardTags))
             output.write(separatorBytes);
         printStrings(output, header.header);
         output.write(lineSepBytes);
@@ -138,16 +150,22 @@ public class CsvMarshaller extends AbstractMarshaller {
 
     @Override
     public void marshallSample(OutputStream output, Sample sample) throws IOException {
-        String dateStr = output_date_formatter.format(sample.getTimestamp());
-        output.write(dateStr.getBytes());
+        if(!discardTime) {
+            String dateStr = output_date_formatter.format(sample.getTimestamp());
+            output.write(dateStr.getBytes());
+        }
 
         // Write tags
-        output.write(separatorBytes);
-        output.write(sample.tagString().getBytes());
+        if(!discardTags) {
+            output.write(separatorBytes);
+            output.write(sample.tagString().getBytes());
+        }
 
+        boolean initialSeparate = !(discardTime && discardTags);
         double[] values = sample.getMetrics();
         for (double value : values) {
-            printString(output, String.valueOf(value), true);
+            printString(output, String.valueOf(value), initialSeparate);
+            initialSeparate = true;
         }
         output.write(lineSepBytes);
     }
