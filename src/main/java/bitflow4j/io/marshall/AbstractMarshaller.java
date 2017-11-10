@@ -41,8 +41,9 @@ public abstract class AbstractMarshaller implements Marshaller {
     }
 
     static byte[] peek(InputStream input, int numBytes) throws IOException {
-        if (!input.markSupported())
+        if (!input.markSupported()) {
             throw new IllegalArgumentException("Cannot peek from a " + input.getClass().getName() + ", since it does not support mark/reset");
+        }
 
         input.mark(numBytes);
         byte[] readBytes = new byte[numBytes];
@@ -55,7 +56,8 @@ public abstract class AbstractMarshaller implements Marshaller {
                     if (n == 0) {
                         throw new InputStreamClosedException();
                     } else {
-                        throw new IOException("While trying to peek " + numBytes + " bytes, got EOF after " + n);
+                        throw new InputStreamClosedException(new IOException("While trying to peek " + numBytes + " bytes, got EOF after "
+                                + n));
                     }
                 }
                 n += count;
