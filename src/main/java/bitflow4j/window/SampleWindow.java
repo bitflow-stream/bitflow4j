@@ -80,4 +80,8 @@ public class SampleWindow extends AbstractSampleWindow {
         return new SampleMetadata(samples.get(sampleNum));
     }
 
+    @Override
+    public int numSamples(){
+        return samples.size();
+    }
 }

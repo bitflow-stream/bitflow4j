@@ -235,6 +235,10 @@ public class Sample {
         return new Sample(outHeader, outMetrics, this);
     }
 
+    public void setMetricValue(int index, double value){
+        this.metrics[index] = value;
+    }
+
     /**
      * Return a copy of the receiver with all given metrics removed. If the list of metrics would stay the same, the received is returned
      * unchanged.
