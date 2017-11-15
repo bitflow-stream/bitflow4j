@@ -5,8 +5,8 @@ import bitflow4j.io.SampleWriter;
 import bitflow4j.io.marshall.*;
 import bitflow4j.sample.Header;
 import bitflow4j.sample.Sample;
-import javafx.util.Pair;
 import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
 import org.junit.Test;
 

@@ -3,7 +3,8 @@ package bitflow4j;
 import bitflow4j.main.Config;
 import bitflow4j.sample.Header;
 import bitflow4j.sample.Sample;
-import javafx.util.Pair;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 
 import java.util.*;
@@ -48,23 +49,23 @@ public class TestWithSamples {
 
         List<Pair<Header, List<Sample>>> result = new ArrayList<>();
         for (Header h : headers) {
-            result.add(new Pair<>(h, createSamplesFor(h, 0, 0)));
-            result.add(new Pair<>(h, createSamplesFor(h, 1, 0)));
-            result.add(new Pair<>(h, createSamplesFor(h, 2, 0)));
-            result.add(new Pair<>(h, createSamplesFor(h, 3, 0)));
-            result.add(new Pair<>(h, createSamplesFor(h, 4, 0)));
+            result.add(new MutablePair<>(h, createSamplesFor(h, 0, 0)));
+            result.add(new MutablePair<>(h, createSamplesFor(h, 1, 0)));
+            result.add(new MutablePair<>(h, createSamplesFor(h, 2, 0)));
+            result.add(new MutablePair<>(h, createSamplesFor(h, 3, 0)));
+            result.add(new MutablePair<>(h, createSamplesFor(h, 4, 0)));
 
-            result.add(new Pair<>(h, createSamplesFor(h, 0, 1)));
-            result.add(new Pair<>(h, createSamplesFor(h, 1, 1)));
-            result.add(new Pair<>(h, createSamplesFor(h, 2, 1)));
-            result.add(new Pair<>(h, createSamplesFor(h, 3, 1)));
-            result.add(new Pair<>(h, createSamplesFor(h, 4, 1)));
+            result.add(new MutablePair<>(h, createSamplesFor(h, 0, 1)));
+            result.add(new MutablePair<>(h, createSamplesFor(h, 1, 1)));
+            result.add(new MutablePair<>(h, createSamplesFor(h, 2, 1)));
+            result.add(new MutablePair<>(h, createSamplesFor(h, 3, 1)));
+            result.add(new MutablePair<>(h, createSamplesFor(h, 4, 1)));
 
-            result.add(new Pair<>(h, createSamplesFor(h, 0, 5)));
-            result.add(new Pair<>(h, createSamplesFor(h, 1, 5)));
-            result.add(new Pair<>(h, createSamplesFor(h, 2, 5)));
-            result.add(new Pair<>(h, createSamplesFor(h, 3, 5)));
-            result.add(new Pair<>(h, createSamplesFor(h, 4, 5)));
+            result.add(new MutablePair<>(h, createSamplesFor(h, 0, 5)));
+            result.add(new MutablePair<>(h, createSamplesFor(h, 1, 5)));
+            result.add(new MutablePair<>(h, createSamplesFor(h, 2, 5)));
+            result.add(new MutablePair<>(h, createSamplesFor(h, 3, 5)));
+            result.add(new MutablePair<>(h, createSamplesFor(h, 4, 5)));
         }
         return result;
     }
