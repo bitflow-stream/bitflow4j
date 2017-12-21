@@ -56,7 +56,7 @@ public class TextMarshaller extends AbstractMarshaller implements Marshaller {
             String outStr = header[i] + equalsStr + String.valueOf(values[i]);
             output.write(outStr.getBytes());
         }
-        output.write(lineSepBytes);
+        output.write(lineSepBytes_1);
     }
 
 }

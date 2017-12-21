@@ -20,14 +20,6 @@ public class BinaryMarshaller extends AbstractMarshaller {
     private final String BIN_HEADER_TAGS = "tags";
     private final byte[] BIN_SAMPLE_START = "X".getBytes(); // Must not collide with BIN_HEADER_TIME, and should be shorter
 
-    public BinaryMarshaller(){
-        super(false, false);
-    }
-
-    public BinaryMarshaller(boolean discardTime, boolean discardTags){
-        super(discardTime, discardTags);
-    }
-
     public boolean peekIsHeader(InputStream input) throws IOException {
         byte peeked[] = peek(input, BIN_HEADER_TIME.length());
         byte shorterCopy[] = Arrays.copyOf(peeked, BIN_SAMPLE_START.length);
@@ -91,37 +83,31 @@ public class BinaryMarshaller extends AbstractMarshaller {
     }
 
     public void marshallHeader(OutputStream output, Header header) throws IOException {
-        if(!discardTime) {
-            output.write(BIN_HEADER_TIME.getBytes());
-            output.write(lineSepBytes);
-        }
-        if(!discardTags) {
-            output.write(BIN_HEADER_TAGS.getBytes());
-            output.write(lineSepBytes);
-        }
+        output.write(BIN_HEADER_TIME.getBytes());
+        output.write(lineSepBytes_1);
+
+        output.write(BIN_HEADER_TAGS.getBytes());
+        output.write(lineSepBytes_1);
 
         for (String field : header.header) {
             output.write(field.getBytes());
-            output.write(lineSepBytes);
+            output.write(lineSepBytes_1);
         }
-        output.write(lineSepBytes);
+        output.write(lineSepBytes_1);
     }
 
     public void marshallSample(OutputStream output, Sample sample) throws IOException {
         DataOutputStream data = new DataOutputStream(output);
-        if(!discardTime) {
-            Date timestamp = sample.getTimestamp();
-            data.write(BIN_SAMPLE_START);
-            data.writeLong(timestamp == null ? 0 : timestamp.getTime() * 1000000);
-        }
+
+        Date timestamp = sample.getTimestamp();
+        data.write(BIN_SAMPLE_START);
+        data.writeLong(timestamp == null ? 0 : timestamp.getTime() * 1000000);
 
         // Write tags
-        if(!discardTags) {
-            String tags = sample.tagString();
-            if (tags == null) tags = "";
-            data.write(tags.getBytes());
-            data.write(lineSepBytes);
-        }
+        String tags = sample.tagString();
+        if (tags == null) tags = "";
+        data.write(tags.getBytes());
+        data.write(lineSepBytes_1);
 
         double[] values = sample.getMetrics();
         for (double value : values) {

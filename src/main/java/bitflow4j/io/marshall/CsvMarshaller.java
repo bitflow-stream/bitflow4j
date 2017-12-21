@@ -33,12 +33,17 @@ public class CsvMarshaller extends AbstractMarshaller {
     public static final int minDateLength = shortDateFormat.length();
     public static final int maxDateLength = minDateLength + 10;
 
+    protected boolean discardTime;
+    protected boolean discardTags;
+
     public CsvMarshaller(){
-        super(false, false);
+        this.discardTime = false;
+        this.discardTags = false;
     }
 
     public CsvMarshaller(boolean discardTime, boolean discardTags){
-        super(discardTime, discardTags);
+        this.discardTime = discardTime;
+        this.discardTags = discardTags;
     }
 
     public static SimpleDateFormat newDateFormatter() {
@@ -145,7 +150,7 @@ public class CsvMarshaller extends AbstractMarshaller {
         if (header.header.length > 0 && !(discardTime && discardTags))
             output.write(separatorBytes);
         printStrings(output, header.header);
-        output.write(lineSepBytes);
+        output.write(lineSepBytes_1);
     }
 
     @Override
@@ -167,7 +172,7 @@ public class CsvMarshaller extends AbstractMarshaller {
             printString(output, String.valueOf(value), initialSeparate);
             initialSeparate = true;
         }
-        output.write(lineSepBytes);
+        output.write(lineSepBytes_1);
     }
 
 }

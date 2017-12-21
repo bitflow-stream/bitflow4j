@@ -11,31 +11,25 @@ import java.io.InputStream;
 public abstract class AbstractMarshaller implements Marshaller {
 
     // This is not necessarily System.getProperty("line.separator")
-    private static final String lineSepString = "\n";
-    static final byte[] lineSepBytes = lineSepString.getBytes();
-    private static final int lineSep = lineSepString.charAt(0);
+    private static final String lineSepString_1 = "\n";
+    private static final String lineSepString_2 = "\r";
 
-    protected boolean discardTime;
-    protected boolean discardTags;
+    private static final int lineSep_1 = lineSepString_1.charAt(0);
+    private static final int lineSep_2 = lineSepString_2.charAt(0);
 
-    public AbstractMarshaller(){
-        this.discardTime = false;
-        this.discardTags = false;
-    }
+    static final byte[] lineSepBytes_1 = lineSepString_1.getBytes();
+    static final byte[] lineSepBytes_2 = lineSepString_2.getBytes();
 
-    public AbstractMarshaller(boolean discardTime, boolean discardTags){
-        this.discardTime = discardTime;
-        this.discardTags = discardTags;
-    }
 
     static String readLine(InputStream input) throws IOException {
-        int chr;
+        int chr = input.read();
         StringBuilder buffer = new StringBuilder(512);
-        while ((chr = input.read()) != lineSep) {
+        while (chr != lineSep_1 && chr != lineSep_2) {
             if (chr < 0) {
                 throw new InputStreamClosedException();
             }
             buffer.append((char) chr);
+            chr = input.read();
         }
         return buffer.toString();
     }
