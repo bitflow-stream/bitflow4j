@@ -6,6 +6,9 @@ import bitflow4j.sample.Sample;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.ParseException;
 import java.util.*;
 
 /**
@@ -110,23 +113,38 @@ public class CsvMarshallerExt extends AbstractMarshaller {
         }
 
         metricSize -= mappingTagMetricIndex.size();
-        if(metricSize < 0)
-            System.out.print("OHOH\n");
 
         metricValues = new double[metricSize];
         for (int i = 0, j = 0; i < metricStrings.length - hasTags; i++) {
             if(!mappingTagMetricIndex.values().contains(i)) {
                 try {
-                    metricValues[j++] = Double.valueOf(metricStrings[i]);
+                    metricValues[j] = Double.valueOf(metricStrings[i]);
                 } catch (NumberFormatException exc) {
-                    throw new IOException(exc);
+                    metricValues[j] = tryAlternativeNumberParser(metricStrings[i]);
                 }
+                j++;
             }
         }
 
         Sample s = Sample.unmarshallSample(header.header, metricValues, new Date(), tags);
         s = this.addMetricTags(s, metricStrings);
         return s;
+    }
+
+    private double tryAlternativeNumberParser(String metricString) throws IOException{
+        Double value;
+        DecimalFormat df = new DecimalFormat();
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+        symbols.setDecimalSeparator(',');
+        symbols.setGroupingSeparator('.');
+        df.setDecimalFormatSymbols(symbols);
+        try {
+            Number n = df.parse(metricString);
+            value = n.doubleValue();
+        }catch (ParseException ex){
+            throw new IOException(ex);
+        }
+        return value;
     }
 
     private Sample addMetricTags(Sample s, String[] metricStrings) {
