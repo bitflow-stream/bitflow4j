@@ -145,6 +145,7 @@ public class FileMetricReader extends ThreadedSampleSource {
     }
 
     public void addFiles(String directory, FileVisitor visitor) throws IOException {
+        List<File> newFiles = new ArrayList<>();
         Files.walkFileTree(new File(directory).toPath(),
                 new HashSet<>(Collections.singletonList(FOLLOW_LINKS)),
                 Integer.MAX_VALUE,
@@ -159,10 +160,15 @@ public class FileMetricReader extends ThreadedSampleSource {
                     public FileVisitResult visitFile(Path path, BasicFileAttributes attr) throws IOException {
                         boolean result = visitor.visitFile(path, attr);
                         if (result)
-                            addFile(path.toFile().getPath());
+                            newFiles.add(path.toFile());
                         return FileVisitResult.SKIP_SUBTREE;
                     }
                 });
+        File[] newFilesArray = newFiles.toArray(new File[newFiles.size()]);
+        Arrays.sort(newFilesArray);
+        for (File f : newFilesArray) {
+            addFile(f.getPath());
+        }
     }
 
     public void addFileGroup(String path) throws IOException {
