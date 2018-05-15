@@ -141,14 +141,14 @@ public class Pipeline {
     // =========================================
     public void runAndWait(boolean handleSignals) {
         TaskPool pool = new TaskPool();
-        if (handleSignals) {
-            try {
-                pool.start(new UserSignalTask());
-            } catch (IOException e) {
-                logger.log(Level.SEVERE, "Failed to listen for User Signals", e);
-                return;
-            }
-        }
+//        if (handleSignals) {
+//            try {
+//                pool.start(new UserSignalTask());
+//            } catch (IOException e) {
+//                logger.log(Level.SEVERE, "Failed to listen for User Signals", e);
+//                return;
+//            }
+//        }
         runAndWait(pool);
     }
 

@@ -1,20 +1,11 @@
 package bitflow4j.task;
 
-import sun.misc.Signal;
-import sun.misc.SignalHandler;
-
-import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.lang.management.ThreadInfo;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Logger;
 
 /**
  * Created by anton on 14.02.17.
  */
-public class UserSignalTask implements ParallelTask, SignalHandler, StoppableTask {
-
+public class UserSignalTask { //implements ParallelTask, SignalHandler, StoppableTask {
+/*
     private static final Logger logger = Logger.getLogger(UserSignalTask.class.getName());
 
     public static final String ALL_SIGNALS[] = new String[]{
@@ -116,5 +107,6 @@ public class UserSignalTask implements ParallelTask, SignalHandler, StoppableTas
             System.err.println("\n\n" + thread.toString());
         }
     }
+*/
 
 }
