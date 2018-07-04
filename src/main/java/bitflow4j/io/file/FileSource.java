@@ -44,6 +44,7 @@ public class FileSource extends ThreadedReaderSource {
     public static final NameConverter FILE_PATH = File::getPath;
     public static final NameConverter FILE_NAME = File::getName;
     public static final NameConverter FILE_DIRECTORY_NAME = (File file) -> file.getParentFile().getName();
+    public static final NameConverter FILE_DIRECTORY_PATH = (File file) -> file.getParentFile().getPath();
 
     private final List<File> files = new ArrayList<>();
     private final List<String> sourceNames = new ArrayList<>();
@@ -126,8 +127,36 @@ public class FileSource extends ThreadedReaderSource {
         return files.size();
     }
 
+    public void sortFileByFileName(){
+        Comparator<? super File> c = new Comparator<File>() {
+            @Override
+            public int compare(File f1, File f2) {
+                if (f1 == f2) {
+                    return 0;
+                }
+                if (f1 == null) {
+                    return -1;
+                }
+                if (f2 == null) {
+                    return 1;
+                }
+                int result = String.CASE_INSENSITIVE_ORDER.compare(f1.getName(), f2.getName());
+                return result;
+            }
+        };
+        this.sortFileList(c);
+    }
+
+    public void sortFileList(Comparator<? super File> c){
+        Collections.sort(this.files, c);
+    }
+
     public List<File> getFiles() {
         return Collections.unmodifiableList(files);
+    }
+
+    public List<String> getSourceNames() {
+        return Collections.unmodifiableList(sourceNames);
     }
 
     public void addFiles(String root, Pattern pattern) throws IOException {
@@ -202,4 +231,7 @@ public class FileSource extends ThreadedReaderSource {
         sourceNames.add(source);
     }
 
+    public Marshaller getMarshaller() {
+        return marshaller;
+    }
 }

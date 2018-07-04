@@ -73,7 +73,7 @@ public abstract class SampleReader implements ThreadedSource.SampleGenerator {
     // Returning null here means all inputs were finished without error
     public Sample nextSample() throws IOException {
         Sample sample = null;
-        while (!closed && (sample = doReadSample()) == null) ;
+        while (!closed && (sample = doReadSample()) == null);
         return sample;
     }
 

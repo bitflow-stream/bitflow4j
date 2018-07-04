@@ -13,6 +13,8 @@ import bitflow4j.sample.Sample;
  */
 public class TagDistributor implements Distributor {
 
+    private static final String DEFAULT_IDENTIFIER = "default";
+
     private final String tagNames[];
     private final String separator;
 
@@ -29,6 +31,11 @@ public class TagDistributor implements Distributor {
     public Object[] distribute(Sample sample) {
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < tagNames.length; i++) {
+            if(sample.getTag(tagNames[i]) == null) {
+                builder.setLength(0);
+                builder.append(DEFAULT_IDENTIFIER);
+                break;
+            }
             if (i > 0)
                 builder.append(separator);
             builder.append(sample.getTag(tagNames[i]));
