@@ -75,7 +75,7 @@ public class FileGroup {
     }
 
     public String getFile(int index) {
-        return getFile(index <= 0 ? null : String.valueOf(index));
+        return getFile(index < 0 ? String.valueOf(0) : String.valueOf(index));
     }
 
     public interface FileVisitor {

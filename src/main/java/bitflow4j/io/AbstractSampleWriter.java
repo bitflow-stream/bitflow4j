@@ -24,7 +24,7 @@ public abstract class AbstractSampleWriter extends AbstractSink {
     protected OutputStream output = null;
     private Header lastHeader;
     private final boolean extendFile;
-
+    
     public AbstractSampleWriter(Marshaller marshaller) {
         this(marshaller, false);
     }

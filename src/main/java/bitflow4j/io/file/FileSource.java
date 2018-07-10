@@ -127,22 +127,19 @@ public class FileSource extends ThreadedReaderSource {
         return files.size();
     }
 
-    public void sortFileByFileName(){
-        Comparator<? super File> c = new Comparator<File>() {
-            @Override
-            public int compare(File f1, File f2) {
-                if (f1 == f2) {
-                    return 0;
-                }
-                if (f1 == null) {
-                    return -1;
-                }
-                if (f2 == null) {
-                    return 1;
-                }
-                int result = String.CASE_INSENSITIVE_ORDER.compare(f1.getName(), f2.getName());
-                return result;
+    public void sortFilesByFileName(){
+        Comparator<? super File> c = (Comparator<File>) (f1, f2) -> {
+            if (f1 == f2) {
+                return 0;
             }
+            if (f1 == null) {
+                return -1;
+            }
+            if (f2 == null) {
+                return 1;
+            }
+            int result = String.CASE_INSENSITIVE_ORDER.compare(f1.getName(), f2.getName());
+            return result;
         };
         this.sortFileList(c);
     }

@@ -218,6 +218,7 @@ public abstract class ThreadedSource extends AbstractSource implements ParallelT
         private void flushBufferedSamples() throws IOException {
             Sample s;
             for(SampleGenerator sg : generators) {
+                queues.get(sg).poll(); //Skip first sample since it was previously already sent
                 while ((s = queues.get(sg).poll()) != null) {
                     this.sink.writeSample(s);
                 }
