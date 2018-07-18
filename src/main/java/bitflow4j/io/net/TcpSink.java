@@ -7,7 +7,9 @@ import bitflow4j.sample.Sample;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
 import java.net.Socket;
+import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,10 +28,24 @@ public class TcpSink extends AbstractSampleWriter {
 
     public Level connectionErrorLevel = Level.WARNING;
 
+    public TcpSink(Marshaller marshaller, String endpoint) throws MalformedURLException {
+        this(marshaller, getHostPart(endpoint), getPort(endpoint));
+    }
+
     public TcpSink(Marshaller marshaller, String targetHost, int targetPort) {
         super(marshaller);
         this.targetHost = targetHost;
         this.targetPort = targetPort;
+    }
+
+    private static String getHostPart(String tcpEndpoint) throws MalformedURLException {
+        URL url = new URL("http://" + tcpEndpoint); // Exception when the tcp endpoint format is wrong.
+        return url.getHost();
+    }
+
+    private static int getPort(String tcpEndpoint) throws MalformedURLException {
+        URL url = new URL("http://" + tcpEndpoint); // Exception when the tcp endpoint format is wrong.
+        return url.getPort();
     }
 
     public TcpSink level(Level level) {
