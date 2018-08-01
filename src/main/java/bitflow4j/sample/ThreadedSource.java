@@ -78,8 +78,9 @@ public abstract class ThreadedSource extends AbstractSource implements ParallelT
         return true;
     }
 
-    protected void handleGeneratedSample(Sample sample) {
+    protected Sample handleGeneratedSample(Sample sample) {
         // Do nothing. Hook for subclasses.
+        return sample;
     }
 
     private class LoopSampleReader extends LoopTask {
@@ -105,7 +106,7 @@ public abstract class ThreadedSource extends AbstractSource implements ParallelT
                 Sample sample = generator.nextSample();
                 if (sample == null || !pool.isRunning())
                     return false;
-                handleGeneratedSample(sample);
+                sample = handleGeneratedSample(sample);
                 synchronized (outputLock) {
                     sink.writeSample(sample);
                 }

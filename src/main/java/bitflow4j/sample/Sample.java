@@ -284,4 +284,12 @@ public class Sample {
         return removeMetrics(removeMetrics);
     }
 
+    public double getValueOf(String headerField){
+        for(int i = 0; i < this.getHeader().header.length; i++){
+            if(headerField.equals(this.getHeader().header[i]))
+                return this.getMetrics()[i];
+        }
+        return Double.NaN;
+    }
+
 }

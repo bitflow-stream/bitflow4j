@@ -44,13 +44,14 @@ public abstract class ThreadedReaderSource extends ThreadedSource {
         fileFinishedHook = hook;
     }
 
-    protected void handleGeneratedSample(Sample sample) {
+    protected Sample handleGeneratedSample(Sample sample) {
         if (fileFinishedHook != null) {
             synchronized (outputLock) {
                 sample.setTag(INPUT_FILE_SAMPLE_ID_TAG, String.valueOf(readSamples));
                 readSamples++;
             }
         }
+        return sample;
     }
 
     private void handleClosedInput() {

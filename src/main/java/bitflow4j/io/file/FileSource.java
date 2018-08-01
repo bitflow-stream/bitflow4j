@@ -96,7 +96,7 @@ public class FileSource extends ThreadedReaderSource {
         super.run();
     }
 
-    private class FileSampleReader extends SampleReader {
+    protected class FileSampleReader extends SampleReader {
 
         private final Iterator<File> files;
         private final Iterator<String> sourceNames;
