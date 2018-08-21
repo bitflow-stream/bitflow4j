@@ -55,6 +55,7 @@ public class CsvMarshallerExt extends AbstractMarshaller {
     @Override
     public UnmarshalledHeader unmarshallHeader(InputStream input) throws IOException {
         String[] fields = readLine(input).split(separator, -1);
+        cleanLineSeparation(input);
 
         if (fields.length < 1 || !fields[0].equals(firstColName)) {
             throw new IllegalArgumentException("First field in CSV header must be " + firstColName);
@@ -89,6 +90,7 @@ public class CsvMarshallerExt extends AbstractMarshaller {
     @Override
     public Sample unmarshallSample(InputStream input, UnmarshalledHeader header) throws IOException {
         String sampleStr = readLine(input);
+        cleanLineSeparation(input);
         String[] metricStrings = sampleStr.split(separator, -1);
         if (metricStrings.length < 1)
             throw new IOException("Illegal CSV Sample: " + sampleStr);

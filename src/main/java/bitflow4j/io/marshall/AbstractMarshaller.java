@@ -62,4 +62,15 @@ public abstract class AbstractMarshaller implements Marshaller {
         }
     }
 
+    static void cleanLineSeparation(InputStream input) throws IOException {
+        //Handling \r\n... line breaks
+        input.mark(1);
+        int chr = input.read();
+        while(chr == lineSep_1 || chr == lineSep_2) {
+            input.mark(1);
+            chr = input.read();
+        }
+        input.reset();
+    }
+
 }
