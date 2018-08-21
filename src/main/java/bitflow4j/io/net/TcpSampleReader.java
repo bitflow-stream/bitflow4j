@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -34,7 +35,7 @@ public class TcpSampleReader extends SampleReader {
             throw new IOException(e);
         }
         sourceName = host + ":" + port;
-        logger.info("Polling samples from " + sourceName);
+        logger.log(Level.INFO, "Polling samples from {0}", sourceName);
     }
 
     @Override
