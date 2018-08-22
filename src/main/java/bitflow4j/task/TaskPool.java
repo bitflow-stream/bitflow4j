@@ -123,6 +123,7 @@ public class TaskPool {
             } catch (Exception e) {
                 String msg = "Exception in Task " + task;
                 logger.log(Level.WARNING, msg, e);
+                e.printStackTrace();
                 if (!keepAlive)
                     TaskPool.this.stop(msg);
             }

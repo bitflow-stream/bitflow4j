@@ -67,7 +67,7 @@ public class TcpSampleReader extends SampleReader {
             try {
                 return super.nextSample();
             } catch (OpenFailedException e) {
-                logger.fine("Failed to establish TCP connection to " + sourceName + ": " + e.cause);
+                logger.log(Level.FINE, "Failed to establish TCP connection to {0}: {1}", new Object[]{sourceName, e.cause});
                 if (!pool.sleep(retryTimeoutMillis))
                     return null;
             }
