@@ -1,4 +1,4 @@
-package bitflow4j.script.antlr;
+package bitflow4j.main.script;
 
 import java.util.*;
 

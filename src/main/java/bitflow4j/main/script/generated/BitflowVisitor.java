@@ -1,5 +1,5 @@
 // Generated from Bitflow.g4 by ANTLR 4.7.1
-package bitflow4j.script.antlr.generated;
+package bitflow4j.main.script.generated;
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 
 /**
