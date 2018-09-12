@@ -55,5 +55,14 @@
             <version>3.4</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4-runtime</artifactId>
+            <version>4.7.1</version>
+        </dependency>
+
+
+
     </dependencies>
 </project>
