@@ -24,11 +24,15 @@ public abstract class AbstractSampleWriter extends AbstractSink {
     protected OutputStream output = null;
     private Header lastHeader;
     private final boolean extendFile;
-    
+
+    public Marshaller getMarshaller() {
+        return marshaller;
+    }
+
     public AbstractSampleWriter(Marshaller marshaller) {
         this(marshaller, false);
     }
-    
+
     public AbstractSampleWriter(Marshaller marshaller, boolean extendFile) {
         this.marshaller = marshaller;
         this.extendFile = extendFile;

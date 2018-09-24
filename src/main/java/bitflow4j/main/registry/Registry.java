@@ -18,6 +18,7 @@ import java.util.*;
 public class Registry {
     private Paranamer paranamer = new BytecodeReadingParanamer();
     private Map<String, AnalysisRegistration> analysisRegistrationMap = new HashMap<>();
+    private Map<Object, ForkRegistration> forkRegistrationMap = new HashMap<>();
 
     /**
      * scans specified packages automatically for SubTypes of AbstractPipelineStep and registers them according to the
@@ -153,7 +154,7 @@ public class Registry {
     }
 
     public ForkRegistration getFork(String forkName) {
-        return null;
+        return forkRegistrationMap.getOrDefault(forkName.toLowerCase(),null);
     }
 
     public Collection<AnalysisRegistration> getCapabilities() {

@@ -4,12 +4,16 @@ package bitflow4j.main.script;
 import bitflow4j.main.Pipeline;
 import bitflow4j.main.registry.AnalysisRegistration;
 import bitflow4j.main.registry.ForkRegistration;
-import bitflow4j.main.registry.StepConstructionException;
 import bitflow4j.main.registry.Registry;
+import bitflow4j.main.registry.StepConstructionException;
+import bitflow4j.main.script.endpoints.EndpointFactory;
 import bitflow4j.main.script.generated.BitflowLexer;
 import bitflow4j.main.script.generated.BitflowListener;
 import bitflow4j.main.script.generated.BitflowParser;
+import bitflow4j.sample.Sink;
+import bitflow4j.sample.Source;
 import bitflow4j.steps.PipelineStep;
+import bitflow4j.steps.fork.Fork;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -18,6 +22,7 @@ import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import java.io.IOException;
 import java.util.*;
 
 class BitflowScriptCompiler {
@@ -71,6 +76,7 @@ class BitflowScriptCompiler {
     private class BitflowScriptListener implements BitflowListener {
         private GenericStateMap state = new GenericStateMap();
         private List<String> errors = new ArrayList<>();
+        private EndpointFactory endpointFactory = new EndpointFactory();
 
         private void pushError(ParserRuleContext ctx, String msg) {
             int start = ctx.getStart().getStartIndex();
@@ -93,16 +99,18 @@ class BitflowScriptCompiler {
             Map<String, String> forkParams = state.pop("parameters");
             Map<String, Pipeline> subpipes = state.pop("fork_subpipeline_map");
 
-            // TODO
-            ForkRegistration fork = registry.getFork(forkName);
-
-            if (fork == null) {
+            ForkRegistration forkReg = registry.getFork(forkName);
+            if (forkReg == null) {
                 pushError(ctx, "Pipeline fork is unknown.");
                 return;
             }
-            pushError(ctx, "not implemented yet");
 
-            // TODO create fork and add to pipeline
+            try {
+                Fork fork = forkReg.getForkConstructor().constructForkStep(subpipes, forkParams);
+                currentPipeline().step(fork);
+            } catch (StepConstructionException e) {
+                pushError(ctx, e.getStepName() + ": " + e.getMessage());
+            }
         }
 
         @Override
@@ -126,13 +134,16 @@ class BitflowScriptCompiler {
         @Override
         public void exitMultiinput(BitflowParser.MultiinputContext ctx) {
             state.pop("is_multi_input"); // reset
-            List<String> inputs = new ArrayList<>();
-            while (state.len("input_descriptions") > 0) {
-                inputs.add(state.pop("input_descriptions"));
+            String[] inputs = new String[state.len("input_descriptions")];
+            for (int i = 0; i < inputs.length; i++) {
+                inputs[i] = state.pop("input_descriptions");
             }
-            //TODO: create multiinput from list of inputs and set source of pipeline
-            pushError(ctx, "not implemented yet");
-
+            try {
+                Source source = endpointFactory.createSource(inputs);
+                currentPipeline().input(source);
+            } catch (IOException e) {
+                pushError(ctx, "Could not create multisource input:" + e.getMessage());
+            }
         }
 
         @Override
@@ -142,18 +153,24 @@ class BitflowScriptCompiler {
             if (isMultiInput) {
                 state.push("input_descriptions", name);
             } else {
-
-                // TODO create source from name and set source of pipeline
-                pushError(ctx, "not implemented yet");
+                try {
+                    Source source = endpointFactory.createSource(name);
+                    currentPipeline().input(source);
+                } catch (IOException e) {
+                    pushError(ctx, "Could not create source:" + e.getMessage());
+                }
             }
         }
 
         @Override
         public void exitOutput(BitflowParser.OutputContext ctx) {
             String name = state.pop("name");
-            pushError(ctx, "not implemented yet");
-
-            // TODO create Output from name
+            try {
+                Sink sink = endpointFactory.createSink(name);
+                currentPipeline().output(sink);
+            } catch (IOException e) {
+                pushError(ctx, "Could not create sink: " + e.getMessage());
+            }
         }
 
         @Override
@@ -228,12 +245,13 @@ class BitflowScriptCompiler {
             state.push("fork_subpipeline_map", new HashMap<String, Pipeline>());
         }
 
-        // ############################################
-        // ############################################
-        // ################ UNUSED ####################
-        // ############################################
-        // ############################################
+        @Override
+        public void enterPipeline(BitflowParser.PipelineContext ctx) {
+            state.push("pipeline", new Pipeline());
+        }
 
+        // ################ UNUSED ####################
+        // left for convenience, can be removed by extending from BitflowBaseListener
         @Override
         public void enterTransform(BitflowParser.TransformContext ctx) {
 
@@ -282,11 +300,6 @@ class BitflowScriptCompiler {
         @Override
         public void exitTransformParameters(BitflowParser.TransformParametersContext ctx) {
 
-        }
-
-        @Override
-        public void enterPipeline(BitflowParser.PipelineContext ctx) {
-            state.push("pipeline", new Pipeline());
         }
 
         @Override
