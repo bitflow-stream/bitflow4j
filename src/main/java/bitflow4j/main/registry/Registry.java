@@ -28,9 +28,11 @@ public class Registry {
      * @param scanPackagePrefixes varargs of package prefixes, null for anything
      */
     public void scanForPipelineSteps(String... scanPackagePrefixes) {
-        if (scanPackagePrefixes.length == 0) {
+        if (scanPackagePrefixes == null || scanPackagePrefixes.length == 0) {
             _scanForPipelineSteps(null);
+            return;
         }
+
         for (String packagePrefix : scanPackagePrefixes) {
             _scanForPipelineSteps(packagePrefix);
         }
@@ -154,8 +156,8 @@ public class Registry {
         return null;
     }
 
-    public void printCapabilities() {
-        analysisRegistrationMap.values().forEach(analysisRegistration -> System.out.println(analysisRegistration.printCapability()));
+    public Collection<AnalysisRegistration> getCapabilities() {
+        return analysisRegistrationMap.values();
     }
 
     private class GenericConstructorStepConstructor implements StepConstructor {

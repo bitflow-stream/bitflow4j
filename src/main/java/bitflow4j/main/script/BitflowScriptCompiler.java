@@ -286,7 +286,7 @@ class BitflowScriptCompiler {
 
         @Override
         public void enterPipeline(BitflowParser.PipelineContext ctx) {
-
+            state.push("pipeline", new Pipeline());
         }
 
         @Override

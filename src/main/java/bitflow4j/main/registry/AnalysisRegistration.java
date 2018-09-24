@@ -1,7 +1,5 @@
 package bitflow4j.main.registry;
 
-import bitflow4j.steps.PipelineStep;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -24,7 +22,7 @@ public class AnalysisRegistration {
     private String name;
     private List<String> optionalParameters;
     private List<String> requiredParameters;
-    private StepConstructor stepConstructor;
+    private transient StepConstructor stepConstructor;
 
     public static Builder builder(String name, StepConstructor stepConstructor) {
         return new Builder(name, stepConstructor);
@@ -76,7 +74,8 @@ public class AnalysisRegistration {
         return errors;
     }
 
-    public String printCapability() {
+    @Override
+    public String toString() {
         String batchSupport = "supports stream and batch";
         if (!supportsBatchProcessing) {
             batchSupport = "supports stream only";
