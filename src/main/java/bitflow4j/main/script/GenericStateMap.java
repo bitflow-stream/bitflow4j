@@ -2,6 +2,10 @@ package bitflow4j.main.script;
 
 import java.util.*;
 
+/**
+ * GenericStateMap stores Stacks of any Object by Key.
+ * Not Thread-Safe!
+ */
 public class GenericStateMap {
     private static final Stack<Object> emptyStack = new Stack<>();
     private Map<String, Stack<Object>> stackMap = new HashMap<>();

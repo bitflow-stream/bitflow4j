@@ -1,9 +1,16 @@
 package bitflow4j.main.script.endpoints;
 
+/**
+ * Endpoint contains the parsed information of an endpoint token
+ */
 public class Endpoint {
+    private String endpointToken;
     private Format format;//MarshallingFormat
     private Type type;//EndpointType
     private String target;
+    public Endpoint(String endpointToken) {
+        this.endpointToken = endpointToken;
+    }
 
     public Format getFormat() {
         return format;
@@ -20,7 +27,7 @@ public class Endpoint {
     public void setType(Type type) {
         this.type = type;
         if (type == Type.STD && !"-".equals(target)) {
-            throw new EndpointParseException("Type 'std' requires target '-', target was "+getTarget());
+            throw new EndpointParseException(this.toString(), "Type 'std' requires target '-', target was " + getTarget());
         }
     }
 
@@ -34,7 +41,7 @@ public class Endpoint {
 
     @Override
     public String toString() {
-        return format.toString() + "+" + type.toString() + "://" + target;
+        return endpointToken;
     }
 
 

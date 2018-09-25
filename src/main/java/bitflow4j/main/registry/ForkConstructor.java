@@ -7,7 +7,7 @@ import bitflow4j.steps.fork.Fork;
 import java.util.Map;
 
 /**
- * StepConstructor defines a method to apply a step on a pipeline using the provided parameters.
+ *  ForkConstructor defines a method to create a Fork from provided parameters and subpipelines.
  */
 @FunctionalInterface
 public interface ForkConstructor {

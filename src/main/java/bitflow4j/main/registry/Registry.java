@@ -39,6 +39,40 @@ public class Registry {
         }
     }
 
+    /**
+     * registerAnalysis takes a registration and stores it for retrieval by the pipeline builder.
+     *
+     * @param analysisRegistration
+     */
+    public void registerAnalysis(AnalysisRegistration analysisRegistration) {
+        analysisRegistrationMap.put(analysisRegistration.getName().toLowerCase(), analysisRegistration);
+    }
+
+
+    /**
+     * returns a registered Analysis by name or null if none found.
+     *
+     * @param analysisName the name of the analysis
+     * @return the registered analysis or null
+     */
+    public AnalysisRegistration getAnalysisRegistration(String analysisName) {
+        return analysisRegistrationMap.getOrDefault(analysisName.toLowerCase(), null);
+    }
+
+    /**
+     * returns a registered Fork by name or null if none found.
+     *
+     * @param forkName the name of the fork
+     * @return the registered Fork or null
+     */
+    public ForkRegistration getFork(String forkName) {
+        return forkRegistrationMap.getOrDefault(forkName.toLowerCase(), null);
+    }
+
+    public Collection<AnalysisRegistration> getCapabilities() {
+        return analysisRegistrationMap.values();
+    }
+
     private void _scanForPipelineSteps(String scanPackagePrefix) {
         Reflections reflections = new Reflections(scanPackagePrefix);
         Set<Class<? extends AbstractPipelineStep>> classes = reflections.getSubTypesOf(AbstractPipelineStep.class);
@@ -49,16 +83,6 @@ public class Registry {
             setRequiredAndOptionalParams(constructors, builder);
             registerAnalysis(builder.build());
         }
-
-    }
-
-    /**
-     * registerAnalysis takes a registration and stores it for retrieval by the pipeline builder.
-     *
-     * @param analysisRegistration
-     */
-    public void registerAnalysis(AnalysisRegistration analysisRegistration) {
-        analysisRegistrationMap.put(analysisRegistration.getName().toLowerCase(), analysisRegistration);
     }
 
     private void setRequiredAndOptionalParams(Constructor[] constructors, AnalysisRegistration.Builder builder) {
@@ -141,24 +165,6 @@ public class Registry {
             return Optional.of("_empty_");
         }
         return parameters.keySet().stream().sorted().reduce((s, s2) -> s.toLowerCase() + s2.toLowerCase());
-    }
-
-    /**
-     * returns an existing
-     *
-     * @param analysisName
-     * @return
-     */
-    public AnalysisRegistration getAnalysisRegistration(String analysisName) {
-        return analysisRegistrationMap.getOrDefault(analysisName.toLowerCase(), null);
-    }
-
-    public ForkRegistration getFork(String forkName) {
-        return forkRegistrationMap.getOrDefault(forkName.toLowerCase(),null);
-    }
-
-    public Collection<AnalysisRegistration> getCapabilities() {
-        return analysisRegistrationMap.values();
     }
 
     private class GenericConstructorStepConstructor implements StepConstructor {

@@ -14,7 +14,32 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * BitflowScriptCli parses a BitflowScript and executes the resulting Pipeline.
+ *
+ * <pre>
+ * Usage: BitflowScriptCli [options] A raw bitflow script to be processed.
+ *       Alternatively use the File option.
+ *   Options:
+ *     --help
+ *
+ *     -f, --file
+ *       A file containing the script to parse.
+ *     -p, --scan-packages
+ *       Comma-separated package names that will be scanned automatically.
+ *       Wildcards allowed.
+ *       Default: *
+ *     --capabilities
+ *       Prints the capabilities of this jar in a human readable format.
+ *       Default: false
+ *     --json-capabilities
+ *       Prints the capabilities of this jar in json format.
+ *       Default: false
+ *
+ * </pre>
+ */
 public class BitflowScriptCli {
+
     public static void main(String[] args) throws IOException {
         CmdArgs cmdArgs = new CmdArgs();
         JCommander jc = JCommander.newBuilder()

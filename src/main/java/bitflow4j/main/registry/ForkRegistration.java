@@ -1,5 +1,8 @@
 package bitflow4j.main.registry;
 
+/**
+ * ForkRegistration Metainformation about a fork and a method to generate it from parameters.
+ */
 public class ForkRegistration {
 
     private String name;

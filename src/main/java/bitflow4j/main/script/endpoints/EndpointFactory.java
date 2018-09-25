@@ -20,8 +20,57 @@ import java.util.stream.Collectors;
 
 import static bitflow4j.main.script.endpoints.Endpoint.Type.*;
 
+/**
+ * EndpointFactory provides methods to create Source and Sink from a endpoint token (script-like written form of an endpoint)
+ */
 public class EndpointFactory {
 
+    private static boolean isValidPort(String input) {
+        try {
+            extractPort(input);
+        } catch (MalformedURLException e) {
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean isValidHostAndPort(String input) {
+        try {
+            return !"".equals(extractHostPart(input)) && extractPort(input) > 0;
+        } catch (MalformedURLException e) {
+            return false;
+        }
+    }
+
+    private static String extractHostPart(String tcpEndpoint) throws MalformedURLException {
+        URL url = new URL("http://" + tcpEndpoint); // Exception when the tcp endpoint format is wrong.
+        return url.getHost();
+    }
+
+    private static int extractPort(String tcpEndpoint) throws MalformedURLException {
+        URL url = new URL("http://" + tcpEndpoint); // Exception when the tcp endpoint format is wrong.
+        return url.getPort();
+    }
+
+    private static boolean isValidFilename(String file) {
+        File f = new File(file);
+        try {
+            f.getCanonicalPath();
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Creates a Source from one or multiple endpoint tokens.
+     * Multiinput is only supported by TCP and File type.
+     * The expected format is format+transport://target (e.g. csv+tcp://0.0.0.0:8080
+     * Other formats are accepted and a best guess is used to determine format and transport.
+     *
+     * @param endpointTokens the tokens specifiying the input endpoint
+     * @return the Source created from the tokens
+     */
     public Source createSource(String... endpointTokens) throws IOException {
         List<Endpoint> endpoints = Arrays.stream(endpointTokens).map(this::parseEndpointToken).collect(Collectors.toList());
         Endpoint.Format format = endpoints.get(0).getFormat();
@@ -52,6 +101,14 @@ public class EndpointFactory {
         }
     }
 
+    /**
+     * Creates a sink from a specify endpoint token.
+     * The expected format is format+transport://target (e.g. csv+tcp://0.0.0.0:8080
+     * Other formats are accepted and a best guess is used to determine format and transport.
+     *
+     * @param endpointToken the tokens specifying the output endpoint
+     * @return the Sink created form the token
+     */
     public Sink createSink(String endpointToken) throws IOException {
         Endpoint endpoint = parseEndpointToken(endpointToken);
         Marshaller marshaller = getMarshaller(endpoint);
@@ -99,7 +156,7 @@ public class EndpointFactory {
         if (endpointToken.contains("://")) {
             return parseURLEndpoint(endpointToken);
         } else {
-            Endpoint endpoint = new Endpoint();
+            Endpoint endpoint = new Endpoint(endpointToken);
             endpoint.setTarget(endpointToken);
             endpoint.setType(guessEndpointType(endpointToken, endpointToken));
             endpoint.setFormat(guessFormat(endpoint));
@@ -119,10 +176,10 @@ public class EndpointFactory {
      * @param input the full endpointToken, expected to be in the URLFormat
      **/
     private Endpoint parseURLEndpoint(String input) {
-        Endpoint result = new Endpoint();
+        Endpoint result = new Endpoint(input);
         String[] urlParts = input.split("://");
         if (urlParts.length != 2 || "".equals(urlParts[0]) || "".equals(urlParts[1])) {
-            throw new EndpointParseException(input, "wrong format, expected; format+transport://target");
+            throw new EndpointParseException(input, "URL expected to be in form of: format+transport://target");
         }
         result.setTarget(urlParts[1]);
 
@@ -135,11 +192,13 @@ public class EndpointFactory {
                 formatProcessed = true;
                 Endpoint.Format f = Endpoint.Format.find(part);
                 result.setFormat(f);
-            } else {
+            } else if (Endpoint.Type.find(part) != null) {
                 if (result.getType() != null) {
                     throw new EndpointParseException(input, "multiple types defined for endpoint");
                 }
                 result.setType(Endpoint.Type.find(part));
+            } else {
+                throw new EndpointParseException(input, "Unknown format or type: " + part);
             }
         }
         if (result.getType() == null) {
@@ -197,43 +256,6 @@ public class EndpointFactory {
             return FILE;
         } else {
             throw new EndpointParseException(endpointToken, "failed to guess target type");
-        }
-    }
-
-    private boolean isValidPort(String input) {
-        try {
-            extractPort(input);
-        } catch (MalformedURLException e) {
-            return false;
-        }
-        return true;
-    }
-
-    private boolean isValidHostAndPort(String input) {
-        try {
-            return !"".equals(extractHostPart(input)) && extractPort(input) > 0;
-        } catch (MalformedURLException e) {
-            return false;
-        }
-    }
-
-    private String extractHostPart(String tcpEndpoint) throws MalformedURLException {
-        URL url = new URL("http://" + tcpEndpoint); // Exception when the tcp endpoint format is wrong.
-        return url.getHost();
-    }
-
-    private int extractPort(String tcpEndpoint) throws MalformedURLException {
-        URL url = new URL("http://" + tcpEndpoint); // Exception when the tcp endpoint format is wrong.
-        return url.getPort();
-    }
-
-    private boolean isValidFilename(String file) {
-        File f = new File(file);
-        try {
-            f.getCanonicalPath();
-            return true;
-        } catch (IOException e) {
-            return false;
         }
     }
 }

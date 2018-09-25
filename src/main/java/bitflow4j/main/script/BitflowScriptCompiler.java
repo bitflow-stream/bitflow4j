@@ -25,6 +25,10 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import java.io.IOException;
 import java.util.*;
 
+/**
+ * BitflowScriptCompiler wraps anything Antlr related and implements the Antlr AST listener that can parse
+ * and convert a Bitflow Script into a Pipeline.
+ */
 class BitflowScriptCompiler {
 
     private final Registry registry;
@@ -39,7 +43,7 @@ class BitflowScriptCompiler {
      * @param script the raw bitflow script as a string
      * @return the CompileResult, containing the pipeline or an array of error messages
      */
-    CompileResult ParseScript(String script) {
+    public CompileResult ParseScript(String script) {
         CharStream charStream = CharStreams.fromString(script);
         BitflowLexer lexer = new BitflowLexer(charStream);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -73,6 +77,9 @@ class BitflowScriptCompiler {
         }
     }
 
+    /**
+     * BitflowScriptListener listens on a AST tree of a bitflow script and generates the Pipeline.
+     */
     private class BitflowScriptListener implements BitflowListener {
         private GenericStateMap state = new GenericStateMap();
         private List<String> errors = new ArrayList<>();

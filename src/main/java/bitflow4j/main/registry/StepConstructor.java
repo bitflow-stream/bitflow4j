@@ -5,7 +5,7 @@ import bitflow4j.steps.PipelineStep;
 import java.util.Map;
 
 /**
- * StepConstructor defines a method to apply a step on a pipeline using the provided parameters.
+ * StepConstructor defines a method to create a PipelineStep from provided parameters.
  */
 @FunctionalInterface
 public interface StepConstructor {
