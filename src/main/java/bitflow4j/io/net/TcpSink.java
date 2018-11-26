@@ -1,8 +1,8 @@
 package bitflow4j.io.net;
 
-import bitflow4j.io.AbstractSampleWriter;
+import bitflow4j.Sample;
+import bitflow4j.io.AbstractSampleOutput;
 import bitflow4j.io.marshall.Marshaller;
-import bitflow4j.sample.Sample;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 /**
  * Created by anton on 6/17/16.
  */
-public class TcpSink extends AbstractSampleWriter {
+public class TcpSink extends AbstractSampleOutput {
 
     private static final Logger logger = Logger.getLogger(TcpSink.class.getName());
 
@@ -29,7 +29,7 @@ public class TcpSink extends AbstractSampleWriter {
     public Level connectionErrorLevel = Level.WARNING;
 
     public TcpSink(Marshaller marshaller, String endpoint) throws MalformedURLException {
-        this(marshaller, getHostPart(endpoint), getPort(endpoint));
+        this(marshaller, getHost(endpoint), getPort(endpoint));
     }
 
     public TcpSink(Marshaller marshaller, String targetHost, int targetPort) {
@@ -38,12 +38,12 @@ public class TcpSink extends AbstractSampleWriter {
         this.targetPort = targetPort;
     }
 
-    private static String getHostPart(String tcpEndpoint) throws MalformedURLException {
+    public static String getHost(String tcpEndpoint) throws MalformedURLException {
         URL url = new URL("http://" + tcpEndpoint); // Exception when the tcp endpoint format is wrong.
         return url.getHost();
     }
 
-    private static int getPort(String tcpEndpoint) throws MalformedURLException {
+    public static int getPort(String tcpEndpoint) throws MalformedURLException {
         URL url = new URL("http://" + tcpEndpoint); // Exception when the tcp endpoint format is wrong.
         return url.getPort();
     }
@@ -62,7 +62,7 @@ public class TcpSink extends AbstractSampleWriter {
         }
     }
 
-    protected OutputStream nextOutputStream() throws IOException {
+    protected OutputStream nextOutputStream() {
         try {
             closeSocket();
             socket = new Socket();

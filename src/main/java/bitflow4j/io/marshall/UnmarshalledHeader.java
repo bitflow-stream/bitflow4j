@@ -1,6 +1,6 @@
 package bitflow4j.io.marshall;
 
-import bitflow4j.sample.Header;
+import bitflow4j.Header;
 
 /**
  * Created by anton on 20.03.17.

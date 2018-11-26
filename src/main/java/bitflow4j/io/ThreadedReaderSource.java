@@ -1,7 +1,6 @@
 package bitflow4j.io;
 
-import bitflow4j.sample.Sample;
-import bitflow4j.sample.ThreadedSource;
+import bitflow4j.Sample;
 import bitflow4j.task.TaskPool;
 
 import java.io.IOException;

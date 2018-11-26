@@ -8,6 +8,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * A TaskPool manages the lifecycle of an application, which consists of a number of Tasks. Task instances can be added
+ * to a TaskPool, which causes them to be initialized via their own start method. Instances of ParallelTask are then
+ * executed in their own thread. Instances of StoppableTask are notified via their stop method once the entire TaskPool
+ * shuts down. Shutdown can be invoked by any task at any time, for example when an error occurs or when some finite input
+ * data is entirely processed.
+ *
  * Created by anton on 27.12.16.
  */
 public class TaskPool {
@@ -19,20 +25,29 @@ public class TaskPool {
     private final List<StoppableTask> stoppable = new ArrayList<>();
     private boolean running = true;
 
+    /**
+     * Starts and initializes the given task. Instances of ParallelTask are executed in their own thread.
+     */
     public synchronized void start(Task task) throws IOException {
         start(task, false);
     }
 
-    public synchronized void start(Task task, boolean keepAlive) throws IOException {
+    /**
+     * If uncriticalTask is true, and the task is an instance of ParallelTask, then the TaskPool is NOT shut down,
+     * when the task finishes or throws an exception. In that case the finished task is logged, but the TaskPool and all
+     * other tasks continue running. If uncriticalTask is false, the finished PrallelTask will automatically call this
+     * TaskPools stop method.
+     */
+    public synchronized void start(Task task, boolean uncriticalTask) throws IOException {
         assertRunning();
         if (startedTasks.containsKey(task)) {
-            throw new IllegalStateException("Task already started in this TaskPool, possible recursive invocation of TaskPool.start(): " + task);
+            throw new TaskException("Task already started in this TaskPool, possible recursive invocation of TaskPool.start(): " + task);
         }
         startedTasks.put(task, null);
 
         task.start(this);
         if (task instanceof ParallelTask) {
-            Runner runner = new Runner((ParallelTask) task, keepAlive);
+            Runner runner = new Runner((ParallelTask) task, uncriticalTask);
             runners.add(runner);
             runner.start();
         }
@@ -59,9 +74,9 @@ public class TaskPool {
         return running;
     }
 
-    public void assertRunning() {
+    public void assertRunning() throws TaskException {
         if (!running) {
-            throw new IllegalStateException("This TaskPool has already been stopped");
+            throw new TaskException("This TaskPool has already been stopped");
         }
     }
 
@@ -92,15 +107,21 @@ public class TaskPool {
 
     public void waitForTasks() {
         logger.fine("Waiting for Task threads to finish...");
-        for (Runner runner : runners) {
-            while (true) {
-                try {
-                    runner.join();
-                    break;
-                } catch (InterruptedException ignored) {
+        boolean haveRunningThread;
+        do {
+            haveRunningThread = false;
+            for (Runner runner : runners) {
+                if (runner.isAlive()) haveRunningThread = true;
+                logger.fine("Waiting for task to finish: " + runner);
+                while (true) {
+                    try {
+                        runner.join();
+                        break;
+                    } catch (InterruptedException ignored) {
+                    }
                 }
             }
-        }
+        } while(haveRunningThread);
         logger.info("All tasks have finished");
     }
 
@@ -120,7 +141,7 @@ public class TaskPool {
                 task.run();
                 if (!keepAlive)
                     TaskPool.this.stop("Task finished: " + task);
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 String msg = "Exception in Task " + task;
                 logger.log(Level.WARNING, msg, e);
                 e.printStackTrace();

@@ -1,8 +1,6 @@
 package bitflow4j;
 
-import bitflow4j.main.Config;
-import bitflow4j.sample.Header;
-import bitflow4j.sample.Sample;
+import bitflow4j.misc.Config;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;

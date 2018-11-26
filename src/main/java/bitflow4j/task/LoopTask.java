@@ -7,7 +7,7 @@ import java.io.IOException;
  */
 public abstract class LoopTask implements ParallelTask {
 
-    protected boolean stop = false;
+    private boolean stop = false;
     private boolean exited = false;
     protected TaskPool pool;
 
@@ -29,6 +29,14 @@ public abstract class LoopTask implements ParallelTask {
 
     public void stop() {
         stop = true;
+    }
+
+    public boolean isStopped() {
+        return stop;
+    }
+
+    public boolean isExited() {
+        return exited;
     }
 
     public synchronized void waitForExit() {

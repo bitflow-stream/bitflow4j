@@ -15,7 +15,6 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
@@ -24,8 +23,6 @@ import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
  * Created by anton on 4/7/16.
  */
 public class FileSource extends ThreadedReaderSource {
-
-    private static final Logger logger = Logger.getLogger(FileSource.class.getName());
 
     public interface NameConverter {
         String convert(File file);
@@ -54,15 +51,17 @@ public class FileSource extends ThreadedReaderSource {
     private TaskPool taskPool;
     private boolean keepAlive = false;
 
-    public FileSource(Marshaller marshaller, NameConverter converter) {
+    public FileSource(Marshaller marshaller, NameConverter converter, String... files) throws IOException {
         this.marshaller = marshaller;
         if (converter == null)
             converter = FILE_NAME;
         this.converter = converter;
+        for (String file : files)
+            addFile(new File(file));
     }
 
-    public FileSource(Marshaller marshaller) {
-        this(marshaller, FILE_NAME);
+    public FileSource(Marshaller marshaller, String... files) throws IOException {
+        this(marshaller, FILE_NAME, files);
     }
 
     public FileSource keepAlive() {
@@ -80,18 +79,18 @@ public class FileSource extends ThreadedReaderSource {
     protected boolean readerException() {
         // When reading files, shut down on the first read error.
         if (!keepAlive) {
-            stopTasks();
+            close();
         }
         return false;
     }
 
     @Override
     public void run() throws IOException {
-        // All readers have been added, so we can immediately start waiting for them to finish
+        // All readers have been added before starting this task, so we can immediately start waiting for them to finish
         if (keepAlive) {
             taskPool.waitForShutdown();
         } else {
-            shutDown();
+            initFinished();
         }
         super.run();
     }
@@ -109,7 +108,12 @@ public class FileSource extends ThreadedReaderSource {
 
         @Override
         public String toString() {
-            return "Read " + FileSource.this.files.size() + " files";
+            int num = FileSource.this.files.size();
+            if (num == 1) {
+                return FileSource.this.files.get(0).toString();
+            } else {
+                return "Read " + num + " file(s)";
+            }
         }
 
         @Override
@@ -127,7 +131,7 @@ public class FileSource extends ThreadedReaderSource {
         return files.size();
     }
 
-    public void sortFilesByFileName(){
+    public void sortFilesByFileName() {
         Comparator<? super File> c = (Comparator<File>) (f1, f2) -> {
             if (f1 == f2) {
                 return 0;
@@ -144,7 +148,7 @@ public class FileSource extends ThreadedReaderSource {
         this.sortFileList(c);
     }
 
-    public void sortFileList(Comparator<? super File> c){
+    public void sortFileList(Comparator<? super File> c) {
         Collections.sort(this.files, c);
     }
 

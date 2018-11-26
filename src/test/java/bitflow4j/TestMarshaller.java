@@ -1,10 +1,8 @@
 package bitflow4j;
 
 import bitflow4j.io.SampleReader;
-import bitflow4j.io.SampleWriter;
+import bitflow4j.io.SampleOutput;
 import bitflow4j.io.marshall.*;
-import bitflow4j.sample.Header;
-import bitflow4j.sample.Sample;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
@@ -58,7 +56,7 @@ public class TestMarshaller extends TestWithSamples {
         List<Pair<Header, List<Sample>>> headers = createSamples();
 
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
-        SampleWriter printer = new SampleWriter(buf, marshaller);
+        SampleOutput printer = new SampleOutput(buf, marshaller);
 
         for (Pair<Header, List<Sample>> header : headers) {
             for (Sample sample : header.getValue()) {

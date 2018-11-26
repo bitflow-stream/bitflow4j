@@ -38,11 +38,11 @@ public class TcpListenerSource extends ThreadedReaderSource {
     }
 
     @Override
-    public void shutDown() {
+    public void initFinished() {
         if (connectionAcceptor != null) {
             connectionAcceptor.stop();
         }
-        super.shutDown();
+        super.initFinished();
     }
 
     private class ConnectionAcceptor implements ParallelTask {

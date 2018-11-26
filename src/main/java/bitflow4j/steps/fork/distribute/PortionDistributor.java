@@ -1,7 +1,7 @@
 package bitflow4j.steps.fork.distribute;
 
+import bitflow4j.Sample;
 import bitflow4j.steps.fork.Distributor;
-import bitflow4j.sample.Sample;
 
 import java.util.Random;
 

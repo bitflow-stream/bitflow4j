@@ -1,6 +1,6 @@
 package bitflow4j.steps.fork;
 
-import bitflow4j.main.Pipeline;
+import bitflow4j.Pipeline;
 
 import java.io.IOException;
 

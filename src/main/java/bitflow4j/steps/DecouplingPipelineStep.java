@@ -1,6 +1,7 @@
 package bitflow4j.steps;
 
-import bitflow4j.sample.Sample;
+import bitflow4j.AbstractPipelineStep;
+import bitflow4j.Sample;
 import bitflow4j.task.StoppableLoopTask;
 import bitflow4j.task.TaskPool;
 
@@ -12,9 +13,9 @@ import java.util.concurrent.LinkedBlockingDeque;
 /**
  * Created by anton on 17.02.17.
  * <p>
- * This algorithm can be used to create parallelism in a pipeline.
+ * This pipeline step can be used to create parallelism in a pipeline.
  * Incoming samples are stored in a blocking queue, whose size can be configured.
- * When closing this algorithm, the contents of the queue are flushed before propagating the close() call to the
+ * When closing this pipeline step, the contents of the queue are flushed before propagating the close() call to the
  * outgoing sink.
  * The parameter-less constructor should usually not be used, as it will fill up the queue until the JVM runs
  * out of memory. The used queue size should be enough keep both the incoming and outgoing Threads busy.

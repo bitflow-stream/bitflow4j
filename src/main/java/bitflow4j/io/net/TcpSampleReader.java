@@ -1,8 +1,8 @@
 package bitflow4j.io.net;
 
+import bitflow4j.Sample;
 import bitflow4j.io.SampleReader;
 import bitflow4j.io.marshall.Marshaller;
-import bitflow4j.sample.Sample;
 import bitflow4j.task.TaskPool;
 
 import java.io.IOException;

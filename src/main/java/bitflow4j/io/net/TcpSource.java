@@ -32,7 +32,7 @@ public class TcpSource extends ThreadedReaderSource {
     public void run() throws IOException {
         // All readers have been added, so we can immediately start waiting for them to finish
         // Since the connections are continuously re-established, this should not actually happen.
-        shutDown();
+        initFinished();
         super.run();
     }
 

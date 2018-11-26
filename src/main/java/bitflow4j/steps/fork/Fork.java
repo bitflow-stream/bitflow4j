@@ -1,11 +1,6 @@
 package bitflow4j.steps.fork;
 
-import bitflow4j.steps.AbstractPipelineStep;
-import bitflow4j.main.Pipeline;
-import bitflow4j.sample.EmptySource;
-import bitflow4j.sample.Sample;
-import bitflow4j.sample.Sink;
-import bitflow4j.sample.StoppableSource;
+import bitflow4j.*;
 import bitflow4j.task.TaskPool;
 
 import java.io.IOException;
@@ -27,7 +22,7 @@ public class Fork extends AbstractPipelineStep {
     private final Object sinkLock = new Object();
     private final TaskPool pool = new TaskPool();
 
-    private final Map<Object, Pipeline> subPipelines = new HashMap<>();
+    private final Map<Object, SubPipeline> subPipelines = new HashMap<>();
 
     public Fork(Distributor distributor, PipelineBuilder builder) {
         this.distributor = distributor;
@@ -36,33 +31,33 @@ public class Fork extends AbstractPipelineStep {
 
     @Override
     public void writeSample(Sample sample) throws IOException {
-        Object keys[] = distributor.distribute(sample);
+        Object[] keys = distributor.distribute(sample);
         for (Object key : keys) {
-            Pipeline pipe = getPipeline(key);
-            Sink sink = pipe.steps.isEmpty() ? pipe.sink : pipe.steps.get(0);
+            SubPipeline pipe = getPipeline(key);
 
             // Cloning the sample is necessary because the sub-pipelines might
             // change the metrics independent of each other
-            // TODO optimize all Algorithms to reuse the metrics array instead of copying
+            // TODO optimize all PipelineSteps to reuse the metrics array instead of copying
             // Make sure the samples are copied where necessary, like here.
-            double outMetrics[] = Arrays.copyOf(sample.getMetrics(), sample.getMetrics().length);
+            double[] outMetrics = Arrays.copyOf(sample.getMetrics(), sample.getMetrics().length);
             Sample outSample = new Sample(sample.getHeader(), outMetrics, sample);
-            sink.writeSample(outSample);
+            pipe.first.writeSample(outSample);
         }
     }
 
     @Override
     public void doClose() throws IOException {
-        for (Pipeline pipe : subPipelines.values()) {
-            // The source is explicitly set to EmptySource below (which implements StoppableSource)
-            ((StoppableSource) pipe.source).stop();
-            pipe.sink.waitUntilClosed();
+        for (SubPipeline subPipeline : subPipelines.values()) {
+            subPipeline.first.close();
+        }
+        for (SubPipeline subPipeline : subPipelines.values()) {
+            subPipeline.last.waitUntilClosed();
         }
         pool.stop("Fork closed");
         pool.waitForTasks();
     }
 
-    private Pipeline getPipeline(Object key) throws IOException {
+    private SubPipeline getPipeline(Object key) throws IOException {
         if (subPipelines.containsKey(key)) {
             return subPipelines.get(key);
         }
@@ -73,14 +68,24 @@ public class Fork extends AbstractPipelineStep {
             logger.log(Level.WARNING,
                     "The source field of the sub-pipeline for {1} will be ignored, it is set to {2}", new Object[]{key, pipeline.source});
         }
-        pipeline.source = new EmptySource();
-        if (pipeline.sink == null) {
-            pipeline.sink = merger;
-        }
-
+        pipeline.source = new StoppableSourceWrapper(new EmptySource());
+        pipeline.step(merger);
         pipeline.run(pool);
-        subPipelines.put(key, pipeline);
-        return pipeline;
+        SubPipeline subPipeline = new SubPipeline(pipeline);
+        subPipelines.put(key, subPipeline);
+        return subPipeline;
+    }
+
+    private static class SubPipeline {
+        final Pipeline pipeline;
+        final PipelineStep first;
+        final PipelineStep last;
+
+        private SubPipeline(Pipeline pipeline) {
+            this.pipeline = pipeline;
+            this.first = pipeline.steps.get(0);
+            this.last = pipeline.steps.get(pipeline.steps.size() - 1);
+        }
     }
 
 }

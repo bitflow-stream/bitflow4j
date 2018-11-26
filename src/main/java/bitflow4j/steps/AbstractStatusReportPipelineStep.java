@@ -1,6 +1,7 @@
 package bitflow4j.steps;
 
-import bitflow4j.sample.Sample;
+import bitflow4j.AbstractPipelineStep;
+import bitflow4j.Sample;
 
 import java.io.IOException;
 import java.util.List;

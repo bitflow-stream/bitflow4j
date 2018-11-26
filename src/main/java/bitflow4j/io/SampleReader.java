@@ -1,10 +1,9 @@
 package bitflow4j.io;
 
+import bitflow4j.Sample;
 import bitflow4j.io.marshall.InputStreamClosedException;
 import bitflow4j.io.marshall.Marshaller;
 import bitflow4j.io.marshall.UnmarshalledHeader;
-import bitflow4j.sample.Sample;
-import bitflow4j.sample.ThreadedSource;
 import bitflow4j.task.TaskPool;
 
 import java.io.BufferedInputStream;

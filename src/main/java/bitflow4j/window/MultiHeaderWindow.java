@@ -1,7 +1,7 @@
 package bitflow4j.window;
 
-import bitflow4j.sample.Header;
-import bitflow4j.sample.Sample;
+import bitflow4j.Header;
+import bitflow4j.Sample;
 
 import java.util.*;
 

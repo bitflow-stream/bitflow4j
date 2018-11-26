@@ -1,7 +1,7 @@
 package bitflow4j.io.marshall;
 
-import bitflow4j.sample.Header;
-import bitflow4j.sample.Sample;
+import bitflow4j.Header;
+import bitflow4j.Sample;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,6 +13,26 @@ import java.io.OutputStream;
  * Converts between instances of {@link Sample} and streams of bytes.
  */
 public interface Marshaller {
+
+    String CSV = "csv";
+    String BIN = "bin";
+    String BIN_OLD = "binold";
+    String TXT = "txt";
+
+    static Marshaller get(String format) {
+        switch (format.toUpperCase()) {
+            case CSV:
+                return new CsvMarshaller();
+            case BIN:
+                return new BinaryMarshaller();
+            case BIN_OLD:
+                return new OldBinaryMarshaller();
+            case TXT:
+                return new TextMarshaller();
+            default:
+                throw new IllegalArgumentException("Unknown marshaller format: " + format);
+        }
+    }
 
     /**
      * Peek into the given BufferedInputStream and indicate whether the stream contains
