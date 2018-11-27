@@ -26,5 +26,4 @@ public abstract class AbstractSource implements Source {
     public void close() {
         output().close();
     }
-
 }

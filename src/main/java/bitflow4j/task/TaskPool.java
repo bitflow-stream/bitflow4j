@@ -13,7 +13,7 @@ import java.util.logging.Logger;
  * executed in their own thread. Instances of StoppableTask are notified via their stop method once the entire TaskPool
  * shuts down. Shutdown can be invoked by any task at any time, for example when an error occurs or when some finite input
  * data is entirely processed.
- *
+ * <p>
  * Created by anton on 27.12.16.
  */
 public class TaskPool {
@@ -33,12 +33,12 @@ public class TaskPool {
     }
 
     /**
-     * If uncriticalTask is true, and the task is an instance of ParallelTask, then the TaskPool is NOT shut down,
+     * If backgroundTask is true, and the task is an instance of ParallelTask, then the TaskPool is NOT shut down,
      * when the task finishes or throws an exception. In that case the finished task is logged, but the TaskPool and all
-     * other tasks continue running. If uncriticalTask is false, the finished PrallelTask will automatically call this
+     * other tasks continue running. If backgroundTask is false, the finished ParallelTask will automatically call this
      * TaskPools stop method.
      */
-    public synchronized void start(Task task, boolean uncriticalTask) throws IOException {
+    public synchronized void start(Task task, boolean backgroundTask) throws IOException {
         assertRunning();
         if (startedTasks.containsKey(task)) {
             throw new TaskException("Task already started in this TaskPool, possible recursive invocation of TaskPool.start(): " + task);
@@ -47,7 +47,7 @@ public class TaskPool {
 
         task.start(this);
         if (task instanceof ParallelTask) {
-            Runner runner = new Runner((ParallelTask) task, uncriticalTask);
+            Runner runner = new Runner((ParallelTask) task, backgroundTask);
             runners.add(runner);
             runner.start();
         }
@@ -121,31 +121,30 @@ public class TaskPool {
                     }
                 }
             }
-        } while(haveRunningThread);
+        } while (haveRunningThread);
         logger.info("All tasks have finished");
     }
 
     private class Runner extends Thread {
 
         private final ParallelTask task;
-        private final boolean keepAlive;
+        private final boolean backgroundTask;
 
-        Runner(ParallelTask task, boolean keepAlive) {
+        Runner(ParallelTask task, boolean backgroundTask) {
             this.task = task;
-            this.keepAlive = keepAlive;
+            this.backgroundTask = backgroundTask;
             setName(task.toString());
         }
 
         public void run() {
             try {
                 task.run();
-                if (!keepAlive)
+                if (!backgroundTask)
                     TaskPool.this.stop("Task finished: " + task);
             } catch (Throwable e) {
                 String msg = "Exception in Task " + task;
                 logger.log(Level.WARNING, msg, e);
-                e.printStackTrace();
-                if (!keepAlive)
+                if (!backgroundTask)
                     TaskPool.this.stop(msg);
             }
         }

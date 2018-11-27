@@ -39,6 +39,11 @@ public class FileGroup {
         }
     }
 
+    @Override
+    public String toString() {
+        return getFilePattern().toString();
+    }
+
     public Pattern getFilePattern(String suffix) {
         return Pattern.compile("^" + fileStart + "(-" + suffix + ")?" + fileEnd + "$");
     }

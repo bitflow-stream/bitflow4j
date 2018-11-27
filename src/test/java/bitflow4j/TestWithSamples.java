@@ -1,9 +1,9 @@
 package bitflow4j;
 
 import bitflow4j.misc.Config;
-import org.apache.commons.lang3.tuple.MutablePair;
-import org.apache.commons.lang3.tuple.Pair;
+import bitflow4j.misc.Pair;
 import org.junit.Before;
+import org.junit.Test;
 
 import java.util.*;
 
@@ -32,8 +32,13 @@ public class TestWithSamples {
         random = new Random(123123);
     }
 
+    @Test
+    public void mockTest() {
+        // TODO write actual tests
+    }
+
     List<Pair<Header, List<Sample>>> createSamples() {
-        String fields[][] = new String[][]{
+        String[][] fields = new String[][]{
                 new String[]{ /* Empty header */},
                 new String[]{"field1"},
                 new String[]{"field1", "field2", "field3"},
@@ -41,38 +46,37 @@ public class TestWithSamples {
         };
 
         List<Header> headers = new ArrayList<>();
-        for (String header[] : fields) {
+        for (String[] header : fields) {
             headers.add(new Header(header));
         }
 
         List<Pair<Header, List<Sample>>> result = new ArrayList<>();
         for (Header h : headers) {
-            result.add(new MutablePair<>(h, createSamplesFor(h, 0, 0)));
-            result.add(new MutablePair<>(h, createSamplesFor(h, 1, 0)));
-            result.add(new MutablePair<>(h, createSamplesFor(h, 2, 0)));
-            result.add(new MutablePair<>(h, createSamplesFor(h, 3, 0)));
-            result.add(new MutablePair<>(h, createSamplesFor(h, 4, 0)));
+            result.add(new Pair<>(h, createSamplesFor(h, 0, 0)));
+            result.add(new Pair<>(h, createSamplesFor(h, 1, 0)));
+            result.add(new Pair<>(h, createSamplesFor(h, 2, 0)));
+            result.add(new Pair<>(h, createSamplesFor(h, 3, 0)));
+            result.add(new Pair<>(h, createSamplesFor(h, 4, 0)));
 
-            result.add(new MutablePair<>(h, createSamplesFor(h, 0, 1)));
-            result.add(new MutablePair<>(h, createSamplesFor(h, 1, 1)));
-            result.add(new MutablePair<>(h, createSamplesFor(h, 2, 1)));
-            result.add(new MutablePair<>(h, createSamplesFor(h, 3, 1)));
-            result.add(new MutablePair<>(h, createSamplesFor(h, 4, 1)));
+            result.add(new Pair<>(h, createSamplesFor(h, 0, 1)));
+            result.add(new Pair<>(h, createSamplesFor(h, 1, 1)));
+            result.add(new Pair<>(h, createSamplesFor(h, 2, 1)));
+            result.add(new Pair<>(h, createSamplesFor(h, 3, 1)));
+            result.add(new Pair<>(h, createSamplesFor(h, 4, 1)));
 
-            result.add(new MutablePair<>(h, createSamplesFor(h, 0, 5)));
-            result.add(new MutablePair<>(h, createSamplesFor(h, 1, 5)));
-            result.add(new MutablePair<>(h, createSamplesFor(h, 2, 5)));
-            result.add(new MutablePair<>(h, createSamplesFor(h, 3, 5)));
-            result.add(new MutablePair<>(h, createSamplesFor(h, 4, 5)));
+            result.add(new Pair<>(h, createSamplesFor(h, 0, 5)));
+            result.add(new Pair<>(h, createSamplesFor(h, 1, 5)));
+            result.add(new Pair<>(h, createSamplesFor(h, 2, 5)));
+            result.add(new Pair<>(h, createSamplesFor(h, 3, 5)));
+            result.add(new Pair<>(h, createSamplesFor(h, 4, 5)));
         }
         return result;
     }
 
     List<Sample> createSamplesFor(Header header, int numTags, int numFields) {
-        // System.out.println("====== " + num + " SAMPLES FOR " + header.hasTags + ": " + Arrays.toString(header.header));
         List<Sample> result = new ArrayList<>();
         for (int i = 0; i < numFields; i++) {
-            double metrics[] = new double[header.header.length];
+            double[] metrics = new double[header.header.length];
             for (int j = 0; j < metrics.length; j++) {
                 metrics[j] = random.nextDouble();
             }
@@ -94,7 +98,7 @@ public class TestWithSamples {
                 }
             }
             result.add(sample);
-            // System.out.println(date + ": " + Arrays.toString(metrics) + " -> " + sample.tagString());
+//            System.out.println(date + ": " + Arrays.toString(metrics) + " -> " + sample.tagString());
         }
         return result;
     }
@@ -102,7 +106,7 @@ public class TestWithSamples {
     List<Sample> flatten(List<Pair<Header, List<Sample>>> samples) {
         List<Sample> result = new ArrayList<>();
         for (Pair<Header, List<Sample>> header : samples) {
-            result.addAll(header.getValue());
+            result.addAll(header.getValue2());
         }
         return result;
     }

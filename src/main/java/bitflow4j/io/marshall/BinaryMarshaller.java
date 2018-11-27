@@ -21,8 +21,8 @@ public class BinaryMarshaller extends AbstractMarshaller {
     private final byte[] BIN_SAMPLE_START = "X".getBytes(); // Must not collide with BIN_HEADER_TIME, and should be shorter
 
     public boolean peekIsHeader(InputStream input) throws IOException {
-        byte peeked[] = peek(input, BIN_HEADER_TIME.length());
-        byte shorterCopy[] = Arrays.copyOf(peeked, BIN_SAMPLE_START.length);
+        byte[] peeked = peek(input, BIN_HEADER_TIME.length());
+        byte[] shorterCopy = Arrays.copyOf(peeked, BIN_SAMPLE_START.length);
         if (Arrays.equals(shorterCopy, BIN_SAMPLE_START)) {
             return false;
         } else if (Arrays.equals(peeked, BIN_HEADER_TIME.getBytes())) {

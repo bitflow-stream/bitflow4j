@@ -1,8 +1,11 @@
 package bitflow4j;
 
+import bitflow4j.misc.Config;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
+
+import java.util.logging.Logger;
 
 
 /**
@@ -10,7 +13,14 @@ import org.junit.runner.notification.Failure;
  */
 public class RunTests {
 
+    static final Logger logger = Logger.getLogger(RunTests.class.getName());
+
+    static {
+        Config.initializeLogger();
+    }
+
     public static void main(String[] args) {
+        logger.info("RUNNING TESTS");
         Result result = JUnitCore.runClasses(BitflowTestSuite.class);
 
         for (Failure failure : result.getFailures()) {

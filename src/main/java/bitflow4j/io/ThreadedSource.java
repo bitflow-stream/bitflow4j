@@ -8,16 +8,14 @@ import bitflow4j.task.ParallelTask;
 import bitflow4j.task.TaskPool;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * Helper class for implementing Source in case multiple threads
- * are needed, for example when reading from TCP connections.
- * <p>
- * This does not implement StoppableSource, because it always stops on its own
- * and should not explicitly be stopped from the outside.
+ * are needed, for example when reading from TCP connections or files.
  * <p>
  * Created by anton on 23.12.16.
  */
@@ -25,28 +23,35 @@ public abstract class ThreadedSource extends AbstractSource implements ParallelT
 
     private static final Logger logger = Logger.getLogger(ThreadedSource.class.getName());
 
+    protected TaskPool pool;
     protected final Object outputLock = new Object();
     private final List<LoopTask> tasks = new ArrayList<>();
     private boolean initializingReaders = true;
+
+    @Override
+    public void start(TaskPool pool) throws IOException {
+        this.pool = pool;
+    }
 
     public interface SampleGenerator {
         Sample nextSample() throws IOException;
     }
 
-    public void readSamples(TaskPool pool, SampleGenerator generator) throws IOException {
-        readSamples(pool, generator, false);
+    public void readSamples(SampleGenerator generator) throws IOException {
+        readSamples(generator, false);
     }
 
-    public void readSamples(TaskPool pool, SampleGenerator generator, boolean keepAlive) throws IOException {
-        LoopTask task = new LoopSampleReader(generator);
-        tasks.add(task);
-        pool.start(task, keepAlive);
+    public void readSamples(SampleGenerator generator, boolean backgroundTask) throws IOException {
+        readerTask(new LoopSampleReaderTask(generator), backgroundTask);
     }
 
-    public void readSamples(TaskPool pool, List<SampleGenerator> generators, boolean keepAlive) throws IOException {
-        LoopTask task = new LoopTimeSynchronizedMultiSampleReader(generators);
+    public void readerTask(LoopTask task) throws IOException {
+        readerTask(task, false);
+    }
+
+    public void readerTask(LoopTask task, boolean backgroundTask) throws IOException {
         tasks.add(task);
-        pool.start(task, keepAlive);
+        pool.start(task, backgroundTask);
     }
 
     @Override
@@ -64,7 +69,7 @@ public abstract class ThreadedSource extends AbstractSource implements ParallelT
         output().close();
     }
 
-    // initFinished() should be called in an overridden run() method, after starting all LoopSampleReaders.
+    // initFinished() should be called in an overridden run() or start() method, after all sub-tasks have been started.
     protected void initFinished() {
         synchronized (this) {
             initializingReaders = false;
@@ -75,31 +80,27 @@ public abstract class ThreadedSource extends AbstractSource implements ParallelT
     public void close() {
         initFinished();
         tasks.forEach(LoopTask::stop);
+        // The output is closed in run(), after all tasks finish.
     }
 
-    protected boolean readerException() {
+    protected boolean fatalReaderExceptions() {
         // By default, do not shut down when an Exception occurs, keep going until the user shuts us down.
-        return true;
+        return false;
     }
 
-    protected Sample handleGeneratedSample(Sample sample) {
-        // Do nothing. Hook for subclasses.
-        return sample;
-    }
-
-    private class LoopSampleReader extends LoopTask {
+    private class LoopSampleReaderTask extends LoopTask {
 
         private final SampleGenerator generator;
         private final PipelineStep sink;
 
-        public LoopSampleReader(SampleGenerator generator) {
+        public LoopSampleReaderTask(SampleGenerator generator) {
             this.generator = generator;
             this.sink = ThreadedSource.this.output();
         }
 
         @Override
         public String toString() {
-            return generator.toString();
+            return String.format("%s reading from %s", getClass().getName(), generator);
         }
 
         @Override
@@ -110,124 +111,19 @@ public abstract class ThreadedSource extends AbstractSource implements ParallelT
                 Sample sample = generator.nextSample();
                 if (sample == null || !pool.isRunning())
                     return false;
-                sample = handleGeneratedSample(sample);
                 synchronized (outputLock) {
                     sink.writeSample(sample);
                 }
                 return true;
             } catch (IOException e) {
-                logger.log(Level.SEVERE, "Exception in " + toString() +
-                        ", running as part of: " + ThreadedSource.this, e);
-                return readerException();
-            }
-        }
-    }
-
-    private class LoopTimeSynchronizedMultiSampleReader extends LoopTask {
-
-        private final List<SampleGenerator> generators;
-        private List<SampleGenerator> currentGenerators;
-        private Map<SampleGenerator, Queue<Sample>> queues = new HashMap<>();
-        private final bitflow4j.PipelineStep sink;
-        private boolean firstIteration = true;
-
-        private final int synchronizationTolerance = 1000; //milliseconds
-
-        public LoopTimeSynchronizedMultiSampleReader(List<SampleGenerator> generators) {
-            this.generators = generators;
-            this.currentGenerators = generators;
-            for (SampleGenerator sg : generators)
-                queues.put(sg, new LinkedList<>());
-            this.sink = ThreadedSource.this.output();
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder str = new StringBuilder();
-            for (SampleGenerator sg : generators)
-                str.append(sg.toString());
-            return str.toString();
-        }
-
-        @Override
-        public boolean executeIteration() throws IOException {
-            if (!pool.isRunning())
+                boolean isFatal = fatalReaderExceptions();
+                String fatalStr = isFatal ? "Fatal " : "Non-fatal ";
+                logger.log(Level.SEVERE, fatalStr + " exception in " + toString(), e);
+                if (isFatal)
+                    close();
                 return false;
-            ListIterator<SampleGenerator> iter = currentGenerators.listIterator();
-            while (iter.hasNext()) {
-                SampleGenerator sg = iter.next();
-                Sample sample;
-                try {
-                    sample = sg.nextSample();
-                    if (!pool.isRunning())
-                        return false;
-                    if (sample == null) {
-                        iter.remove();
-                        continue;
-                    }
-                } catch (IOException e) {
-                    iter.remove();
-                    continue;
-                }
-                try {
-                    handleGeneratedSample(sample);
-                    this.queues.get(sg).add(sample);
-                    synchronized (outputLock) {
-                        sink.writeSample(sample);
-                    }
-                } catch (IOException e) {
-                    logger.log(Level.SEVERE, "Exception in " + toString() +
-                            ", running as part of: " + ThreadedSource.this, e);
-                    return readerException();
-                }
-            }
-            if (currentGenerators.isEmpty()) {
-                System.out.println("Flushing rest samples");
-                this.flushBufferedSamples();
-            } else {
-                if (!firstIteration)
-                    this.updateCurrentGenerators();
-                else
-                    firstIteration = false;
-            }
-            return !currentGenerators.isEmpty();
-        }
-
-        private void updateCurrentGenerators() {
-            Sample youngestSample = null;
-            for (SampleGenerator sg : generators) {
-                Sample s = queues.get(sg).peek();
-                if (s != null) {
-                    if (youngestSample == null)
-                        youngestSample = s;
-                    if (s.getTimestamp().getTime() < youngestSample.getTimestamp().getTime())
-                        youngestSample = s;
-                }
-            }
-
-            List<SampleGenerator> relevantGenerators = new ArrayList<>();
-            long refTime = youngestSample.getTimestamp().getTime();
-            for (SampleGenerator sg : generators) {
-                Sample s = queues.get(sg).peek();
-                if (s != null)
-                    if (s.getTimestamp().getTime() <= (refTime + synchronizationTolerance))
-                        relevantGenerators.add(sg);
-            }
-
-            for (SampleGenerator sg : currentGenerators)
-                queues.get(sg).poll();
-
-            currentGenerators = relevantGenerators;
-        }
-
-        private void flushBufferedSamples() throws IOException {
-            Sample s;
-            for (SampleGenerator sg : generators) {
-                queues.get(sg).poll(); //Skip first sample since it was previously already sent
-                while ((s = queues.get(sg).poll()) != null) {
-                    this.sink.writeSample(s);
-                }
             }
         }
     }
+
 }

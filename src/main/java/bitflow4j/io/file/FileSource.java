@@ -1,7 +1,7 @@
 package bitflow4j.io.file;
 
-import bitflow4j.io.SampleReader;
-import bitflow4j.io.ThreadedReaderSource;
+import bitflow4j.io.SampleInputStream;
+import bitflow4j.io.ThreadedSource;
 import bitflow4j.io.marshall.Marshaller;
 import bitflow4j.task.TaskPool;
 
@@ -22,11 +22,7 @@ import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
 /**
  * Created by anton on 4/7/16.
  */
-public class FileSource extends ThreadedReaderSource {
-
-    public interface NameConverter {
-        String convert(File file);
-    }
+public class FileSource extends ThreadedSource {
 
     public interface FileFilter {
         boolean shouldInclude(Path path);
@@ -38,126 +34,62 @@ public class FileSource extends ThreadedReaderSource {
         boolean visitFile(Path path, BasicFileAttributes basicFileAttributes);
     }
 
-    public static final NameConverter FILE_PATH = File::getPath;
-    public static final NameConverter FILE_NAME = File::getName;
-    public static final NameConverter FILE_DIRECTORY_NAME = (File file) -> file.getParentFile().getName();
-    public static final NameConverter FILE_DIRECTORY_PATH = (File file) -> file.getParentFile().getPath();
-
     private final List<File> files = new ArrayList<>();
-    private final List<String> sourceNames = new ArrayList<>();
     private final Marshaller marshaller;
-    private final NameConverter converter;
+    private boolean robust = false;
 
-    private TaskPool taskPool;
-    private boolean keepAlive = false;
-
-    public FileSource(Marshaller marshaller, NameConverter converter, String... files) throws IOException {
+    public FileSource(Marshaller marshaller, String... files) throws IOException {
         this.marshaller = marshaller;
-        if (converter == null)
-            converter = FILE_NAME;
-        this.converter = converter;
         for (String file : files)
             addFile(new File(file));
     }
 
-    public FileSource(Marshaller marshaller, String... files) throws IOException {
-        this(marshaller, FILE_NAME, files);
+    public Marshaller getMarshaller() {
+        return marshaller;
     }
 
-    public FileSource keepAlive() {
-        this.keepAlive = true;
+    public FileSource beRobust() {
+        this.robust = true;
         return this;
-    }
-
-    @Override
-    public void start(TaskPool pool) throws IOException {
-        this.taskPool = pool;
-        FileSampleReader reader = new FileSampleReader(pool, marshaller);
-        readSamples(pool, reader, true);
-    }
-
-    protected boolean readerException() {
-        // When reading files, shut down on the first read error.
-        if (!keepAlive) {
-            close();
-        }
-        return false;
-    }
-
-    @Override
-    public void run() throws IOException {
-        // All readers have been added before starting this task, so we can immediately start waiting for them to finish
-        if (keepAlive) {
-            taskPool.waitForShutdown();
-        } else {
-            initFinished();
-        }
-        super.run();
-    }
-
-    protected class FileSampleReader extends SampleReader {
-
-        private final Iterator<File> files;
-        private final Iterator<String> sourceNames;
-
-        public FileSampleReader(TaskPool pool, Marshaller marshaller) {
-            super(pool, marshaller);
-            files = FileSource.this.files.iterator();
-            sourceNames = FileSource.this.sourceNames.iterator();
-        }
-
-        @Override
-        public String toString() {
-            int num = FileSource.this.files.size();
-            if (num == 1) {
-                return FileSource.this.files.get(0).toString();
-            } else {
-                return "Read " + num + " file(s)";
-            }
-        }
-
-        @Override
-        protected NamedInputStream nextInput() throws IOException {
-            if (!files.hasNext())
-                return null;
-            File inputFile = files.next();
-            InputStream inputStream = new FileInputStream(inputFile);
-            String sourceName = sourceNames.next();
-            return new NamedInputStream(inputStream, sourceName);
-        }
-    }
-
-    public int size() {
-        return files.size();
-    }
-
-    public void sortFilesByFileName() {
-        Comparator<? super File> c = (Comparator<File>) (f1, f2) -> {
-            if (f1 == f2) {
-                return 0;
-            }
-            if (f1 == null) {
-                return -1;
-            }
-            if (f2 == null) {
-                return 1;
-            }
-            int result = String.CASE_INSENSITIVE_ORDER.compare(f1.getName(), f2.getName());
-            return result;
-        };
-        this.sortFileList(c);
-    }
-
-    public void sortFileList(Comparator<? super File> c) {
-        Collections.sort(this.files, c);
     }
 
     public List<File> getFiles() {
         return Collections.unmodifiableList(files);
     }
 
-    public List<String> getSourceNames() {
-        return Collections.unmodifiableList(sourceNames);
+    @Override
+    public String toString() {
+        int numFiles = files.size();
+        if (numFiles == 1) {
+            return "File: " + files.get(0).toString();
+        } else {
+            return String.format("Read %s files", numFiles);
+        }
+    }
+
+    public void addFile(String path) throws IOException {
+        File file = new File(path);
+        if (!file.exists())
+            throw new IOException("File not found: " + path);
+        files.add(file);
+    }
+
+    public void addFile(File file) throws IOException {
+        addFile(file.toString());
+    }
+
+    public void addFileGroup(String path) throws IOException {
+        FileGroup group = new FileGroup(path);
+        Collection<String> fileNames = group.listFiles();
+        if (fileNames.isEmpty())
+            throw new IOException("File not found: " + path);
+        for (String filename : fileNames) {
+            addFile(filename);
+        }
+    }
+
+    public void addFileGroup(File file) throws IOException {
+        addFileGroup(file.toString());
     }
 
     public void addFiles(String root, Pattern pattern) throws IOException {
@@ -194,45 +126,68 @@ public class FileSource extends ThreadedReaderSource {
                         return FileVisitResult.SKIP_SUBTREE;
                     }
                 });
-        File[] newFilesArray = newFiles.toArray(new File[newFiles.size()]);
+        File[] newFilesArray = newFiles.toArray(new File[0]);
         Arrays.sort(newFilesArray);
         for (File f : newFilesArray) {
             addFile(f.getPath());
         }
     }
 
-    public void addFileGroup(String path) throws IOException {
-        FileGroup group = new FileGroup(path);
-        Collection<String> fileNames = group.listFiles();
-        if (fileNames.isEmpty())
-            throw new IOException("File not found: " + path);
-        for (String filename : fileNames) {
-            addFile(path, filename);
+    public void sortFiles() {
+        Comparator<? super File> c = (Comparator<File>) (f1, f2) -> {
+            if (f1 == f2) {
+                return 0;
+            }
+            if (f1 == null) {
+                return -1;
+            }
+            if (f2 == null) {
+                return 1;
+            }
+            return String.CASE_INSENSITIVE_ORDER.compare(f1.getName(), f2.getName());
+        };
+        this.sortFiles(c);
+    }
+
+    public void sortFiles(Comparator<? super File> c) {
+        files.sort(c);
+    }
+
+    @Override
+    public void start(TaskPool pool) throws IOException {
+        super.start(pool);
+        FileSampleReader reader = new FileSampleReader(pool, marshaller);
+        readSamples(reader);
+        initFinished();
+    }
+
+    protected boolean fatalReaderExceptions() {
+        // When reading files, shut down on the first read error, except if robust was configured.
+        return !robust;
+    }
+
+    public class FileSampleReader extends SampleInputStream {
+
+        private final Iterator<File> files;
+
+        public FileSampleReader(TaskPool pool, Marshaller marshaller) {
+            super(marshaller);
+            this.files = FileSource.this.files.iterator();
+        }
+
+        @Override
+        public String toString() {
+            return "FileSampleReader for " + FileSource.this;
+        }
+
+        @Override
+        protected NamedInputStream nextInput() throws IOException {
+            if (!files.hasNext())
+                return null;
+            File inputFile = files.next();
+            InputStream inputStream = new FileInputStream(inputFile);
+            return new NamedInputStream(inputStream, inputFile.toString());
         }
     }
 
-    public void addFileGroup(File file) throws IOException {
-        addFileGroup(file.toString());
-    }
-
-    public void addFile(String path) throws IOException {
-        addFile(path, path);
-    }
-
-    public void addFile(File file) throws IOException {
-        addFile(file.toString());
-    }
-
-    private void addFile(String inputNameBase, String path) throws IOException {
-        File file = new File(path);
-        if (!file.exists())
-            throw new IOException("File not found: " + path);
-        String source = converter == null ? null : converter.convert(new File(inputNameBase));
-        files.add(file);
-        sourceNames.add(source);
-    }
-
-    public Marshaller getMarshaller() {
-        return marshaller;
-    }
 }

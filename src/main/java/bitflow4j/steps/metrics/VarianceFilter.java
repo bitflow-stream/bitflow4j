@@ -1,11 +1,9 @@
 package bitflow4j.steps.metrics;
 
 import bitflow4j.Header;
-import bitflow4j.steps.batch.WindowBatchPipelineStep;
-import bitflow4j.window.AbstractSampleWindow;
-import bitflow4j.window.MetricStatisticsWindow;
-import bitflow4j.window.MultiHeaderWindow;
-import bitflow4j.window.SampleMetadata;
+import bitflow4j.Sample;
+import bitflow4j.misc.OnlineStatistics;
+import bitflow4j.steps.BatchPipelineStep;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -18,36 +16,40 @@ import java.util.logging.Logger;
  * <p>
  * Created by anton on 4/7/16.
  */
-public class VarianceFilter extends WindowBatchPipelineStep {
+public class VarianceFilter extends BatchPipelineStep {
 
     private static final Logger logger = Logger.getLogger(VarianceFilter.class.getName());
 
     private final double minNormalizedDeviation;
-
-    private final MultiHeaderWindow<MetricStatisticsWindow> window =
-            new MultiHeaderWindow<>(MetricStatisticsWindow.FACTORY);
 
     public VarianceFilter(double minNormalizedDeviation) {
         this.minNormalizedDeviation = minNormalizedDeviation;
     }
 
     @Override
-    protected AbstractSampleWindow getWindow() {
-        return window;
-    }
-
-    @Override
-    protected void flushResults() throws IOException {
+    protected void flush(List<Sample> window) throws IOException {
         double avgDeviation = 0;
 
-        // Filter out low-deviation bitflow4j
-        List<MetricStatisticsWindow> validStats = new ArrayList<>();
+        Header inHeader = window.get(0).getHeader();
+        int numFields = inHeader.numFields();
+        List<OnlineStatistics> fieldStats = new ArrayList<>(numFields);
+        for (int i = 0; i < numFields; i++) {
+            fieldStats.set(i, OnlineStatistics.buildFrom(window, i));
+        }
 
-        for (MetricStatisticsWindow stats : window.allMetricWindows()) {
-            double stdDeviation = stats.normalizedStdDeviation();
-            if (stdDeviation > minNormalizedDeviation) {
+        List<OnlineStatistics> validStats = new ArrayList<>(numFields);
+        List<Integer> validMetricIndices = new ArrayList<>(numFields);
+        List<String> validHeaderFields = new ArrayList<>(numFields);
+        for (int i = 0; i < fieldStats.size(); i++) {
+            OnlineStatistics stats = fieldStats.get(i);
+            double stdDeviation = stats.standardDeviation();
+            double mean = stats.mean();
+            double normalizedStddev = Math.abs(mean == 0 ? stdDeviation : stdDeviation / mean);
+            if (normalizedStddev > minNormalizedDeviation) {
                 validStats.add(stats);
-                avgDeviation += stdDeviation;
+                avgDeviation += normalizedStddev;
+                validMetricIndices.add(i);
+                validHeaderFields.add(inHeader.header[i]);
             }
         }
         if (validStats.isEmpty()) {
@@ -57,24 +59,19 @@ public class VarianceFilter extends WindowBatchPipelineStep {
         avgDeviation /= validStats.size();
 
         // Construct combined header
-        String headerFields[] = new String[validStats.size()];
-        for (int i = 0; i < headerFields.length; i++) {
-            headerFields[i] = validStats.get(i).name;
-        }
-        Header header = new Header(headerFields);
+        Header outHeader = new Header(validHeaderFields.toArray(new String[0]));
 
-        // Construct samples from remaining bitflow4j
-        for (int sampleNr = 0; sampleNr < window.numSamples(); sampleNr++) {
-            double metrics[] = new double[headerFields.length];
-            for (int metricNr = 0; metricNr < headerFields.length; metricNr++) {
-                metrics[metricNr] = validStats.get(metricNr).getValue(sampleNr);
+        // Construct samples from remaining metrics
+        for (Sample sample : window) {
+            double[] metrics = new double[outHeader.header.length];
+            for (int i = 0; i < metrics.length; i++) {
+                metrics[i] = sample.getValue(validMetricIndices.get(i));
             }
-            SampleMetadata meta = window.getSampleMetadata(sampleNr);
-            output.writeSample(meta.newSample(header, metrics));
+            output.writeSample(new Sample(outHeader, metrics, sample));
         }
 
-        logger.info(validStats.size() + " of " + window.numMetrics() +
-                " bitflow4j passed stdDeviation filter (" + (window.numMetrics() - validStats.size()) +
+        logger.info(validStats.size() + " of " + numFields +
+                " metrics passed stdDeviation filter (" + (numFields - validStats.size()) +
                 " filtered out). Avg normalized variance: " + avgDeviation);
     }
 

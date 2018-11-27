@@ -4,15 +4,11 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Created by mwall on 30.03.16.
- * <p>
  * Represents one vector of data. The header contains labels for the values. In addition to the values, the Sample also contains a timestamp
  * and a Map of tags (key-value pairs).
  */
 public class Sample {
 
-    public static final String TAG_SOURCE = "src";
-    public static final String TAG_LABEL = "cls";
     public static final String TAG_EQUALS = "=";
     public static final String TAG_SEPARATOR = " ";
 
@@ -54,7 +50,7 @@ public class Sample {
     public static Map<String, String> parseTags(String tags) throws IOException {
         Map<String, String> result = new HashMap<>();
         if (tags != null && !tags.isEmpty()) {
-            String parts[] = tags.split("[= ]", -1);
+            String[] parts = tags.split("[= ]", -1);
             if (parts.length % 2 != 0) {
                 throw new IOException("Illegal tags string: " + tags);
             }
@@ -75,6 +71,10 @@ public class Sample {
 
     public double[] getMetrics() {
         return metrics;
+    }
+
+    public double getValue(int metricIndex) {
+        return metrics[metricIndex];
     }
 
     public Date getTimestamp() {
@@ -98,36 +98,8 @@ public class Sample {
         return tag != null && !tag.isEmpty();
     }
 
-    public String getSource() {
-        return getTag(TAG_SOURCE);
-    }
-
-    public boolean hasSource() {
-        return getSource() != null;
-    }
-
-    public String getLabel() {
-        return getTag(TAG_LABEL);
-    }
-
-    public boolean hasLabel() {
-        return hasTag(TAG_LABEL);
-    }
-
     public boolean headerChanged(Header oldHeader) {
         return header.hasChanged(oldHeader);
-    }
-
-    public void setSource(String source) {
-        setTag(TAG_SOURCE, source);
-    }
-
-    public void setLabel(String label) {
-        setTag(TAG_LABEL, label);
-    }
-
-    public void deleteLabel() {
-        deleteTag(TAG_LABEL);
     }
 
     public void setAllTags(Map<String, String> tagsMap) {
@@ -173,7 +145,7 @@ public class Sample {
         return s.toString();
     }
 
-    public void checkConsistency() throws IOException {
+    void checkConsistency() throws IOException {
         if (header == null) {
             throw new IOException("Sample.header is null");
         }
@@ -217,7 +189,7 @@ public class Sample {
         return new Sample(new Header(new String[0]), new double[0], new Date());
     }
 
-    public Sample extend(String[] newFields, double newValues[]) {
+    public Sample extend(String[] newFields, double[] newValues) {
         if (newFields.length != newValues.length) {
             throw new IllegalArgumentException("Need equal number of new fields and values");
         }
@@ -235,20 +207,16 @@ public class Sample {
         return new Sample(outHeader, outMetrics, this);
     }
 
-    public void setMetricValue(int index, double value){
-        this.metrics[index] = value;
-    }
-
     /**
      * Return a copy of the receiver with all given metrics removed. If the list of metrics would stay the same, the received is returned
      * unchanged.
      */
     public Sample removeMetrics(Collection<String> removeMetrics) {
         //TODO performance check
-        String headerFields[] = getHeader().header;
-        double metrics[] = getMetrics();
-        double newMetrics[] = new double[headerFields.length];
-        String newHeaderFields[] = new String[headerFields.length];
+        String[] headerFields = getHeader().header;
+        double[] metrics = getMetrics();
+        double[] newMetrics = new double[headerFields.length];
+        String[] newHeaderFields = new String[headerFields.length];
         int j = 0;
         for (int i = 0; i < headerFields.length; i++) {
             String headerField = headerFields[i];
@@ -284,9 +252,13 @@ public class Sample {
         return removeMetrics(removeMetrics);
     }
 
-    public double getValueOf(String headerField){
-        for(int i = 0; i < this.getHeader().header.length; i++){
-            if(headerField.equals(this.getHeader().header[i]))
+    public void setMetricValue(int index, double value) {
+        this.metrics[index] = value;
+    }
+
+    public double getValueOf(String headerField) {
+        for (int i = 0; i < this.getHeader().header.length; i++) {
+            if (headerField.equals(this.getHeader().header[i]))
                 return this.getMetrics()[i];
         }
         return Double.NaN;

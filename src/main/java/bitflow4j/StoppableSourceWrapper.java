@@ -41,4 +41,9 @@ public class StoppableSourceWrapper implements Source, StoppableTask {
         this.source.close();
     }
 
+    @Override
+    public String toString() {
+        return source.toString();
+    }
+
 }

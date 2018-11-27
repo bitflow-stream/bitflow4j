@@ -1,15 +1,18 @@
 package bitflow4j;
 
-import bitflow4j.io.SampleOutput;
+import bitflow4j.io.console.SampleWriter;
 import bitflow4j.io.file.FileSink;
 import bitflow4j.io.file.FileSource;
 import bitflow4j.io.marshall.Marshaller;
+import bitflow4j.task.ParallelTask;
+import bitflow4j.task.StoppableTask;
 import bitflow4j.task.Task;
 import bitflow4j.task.TaskPool;
 import com.google.common.collect.Lists;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -20,6 +23,33 @@ public class Pipeline {
 
     public Source source;
     public final List<PipelineStep> steps = new ArrayList<>();
+
+    // =================================================
+    // Printing ========================================
+    // =================================================
+
+    public void logFormattedSteps() {
+        for (String line : formatSteps()) {
+            logger.info(line);
+        }
+    }
+
+    public List<String> formatSteps() {
+        List<String> res = new LinkedList<>();
+        formatSteps(res);
+        return res;
+    }
+
+    public void formatSteps(List<String> lines) {
+        if (source == null) {
+            lines.add("< no source >");
+        } else {
+            lines.add(source.toString());
+        }
+        for (PipelineStep step : steps) {
+            lines.add("-> " + step);
+        }
+    }
 
     // ===============================================
     // Inputs ========================================
@@ -35,12 +65,12 @@ public class Pipeline {
 
     // TODO remove
     public Pipeline inputBinary(String... files) throws IOException {
-        return input(new FileSource(Marshaller.get(Marshaller.BIN), FileSource.FILE_NAME, files));
+        return input(new FileSource(Marshaller.get(Marshaller.BIN), files));
     }
 
     // TODO remove
     public Pipeline inputCsv(String... files) throws IOException {
-        return input(new FileSource(Marshaller.get(Marshaller.CSV), FileSource.FILE_NAME, files));
+        return input(new FileSource(Marshaller.get(Marshaller.CSV), files));
     }
 
     // TODO remove
@@ -59,7 +89,7 @@ public class Pipeline {
 
     // TODO remove
     public Pipeline outputConsole() {
-        return Pipeline.this.step(new SampleOutput(Marshaller.get(Marshaller.CSV)));
+        return Pipeline.this.step(new SampleWriter(Marshaller.get(Marshaller.CSV)));
     }
 
     // TODO remove
@@ -106,6 +136,7 @@ public class Pipeline {
         List<Task> tasks = new ArrayList<>(steps.size() + 2);
         Source source = firstSource;
         for (PipelineStep step : steps) {
+            step = new ConsistencyCheckWrapper(step);
             source.setOutgoingSink(step);
             source = step;
             tasks.add(step);
@@ -123,8 +154,16 @@ public class Pipeline {
         }
 
         // Make the source stoppable. This will trigger a clean shutdown process once the TaskPool is stopped.
-        pool.start(new StoppableSourceWrapper(firstSource));
+        pool.start(wrapSource(firstSource));
         return lastStep;
+    }
+
+    public static StoppableTask wrapSource(Source source) {
+        if (source instanceof ParallelTask) {
+            return new StoppableParallelSourceWrapper(source);
+        } else {
+            return new StoppableSourceWrapper(source);
+        }
     }
 
 }

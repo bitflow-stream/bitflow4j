@@ -37,8 +37,6 @@ public class TextMarshaller extends AbstractMarshaller implements Marshaller {
     }
 
     public void marshallSample(OutputStream output, Sample sample) throws IOException {
-        sample.checkConsistency();
-
         output.write(sample.getTimestamp().toString().getBytes());
         if (sample.hasTags()) {
             output.write(OPEN_BYTES);
@@ -53,7 +51,7 @@ public class TextMarshaller extends AbstractMarshaller implements Marshaller {
             if (i > 0) {
                 output.write(METRICS_SEPARATOR_BYTES);
             }
-            String outStr = header[i] + equalsStr + String.valueOf(values[i]);
+            String outStr = header[i] + equalsStr + values[i];
             output.write(outStr.getBytes());
         }
         output.write(lineSepBytes_1);

@@ -4,14 +4,11 @@ import bitflow4j.misc.FeatureStatistics;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 
 /**
  * Created by anton on 6/9/16.
  */
 public class OnlineFeatureStandardizer extends OnlineAbstractFeatureScaler {
-
-    private static final Logger logger = Logger.getLogger(OnlineFeatureStandardizer.class.getName());
 
     private final Map<String, Double> averages;
     private final Map<String, Double> stddevs;

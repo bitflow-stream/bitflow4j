@@ -8,3 +8,5 @@
 /.idea/
 /*.iml
 /nbproject/
+test-pipeline-*
+test_data

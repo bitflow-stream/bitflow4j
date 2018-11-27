@@ -42,7 +42,7 @@ public abstract class AbstractPipelineStep extends AbstractSource implements Pip
             output.close();
         }
         closed = true;
-        this.notifyAll();
+        notifyAll();
     }
 
     @Override
@@ -53,9 +53,6 @@ public abstract class AbstractPipelineStep extends AbstractSource implements Pip
             } catch (InterruptedException e) {
                 // ignore
             }
-        }
-        if (output != null) {
-            output.waitUntilClosed();
         }
     }
 

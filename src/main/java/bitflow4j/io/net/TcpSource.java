@@ -1,6 +1,6 @@
 package bitflow4j.io.net;
 
-import bitflow4j.io.ThreadedReaderSource;
+import bitflow4j.io.ThreadedSource;
 import bitflow4j.io.marshall.Marshaller;
 import bitflow4j.task.TaskPool;
 
@@ -10,7 +10,7 @@ import java.util.Arrays;
 /**
  * Created by anton on 04.11.16.
  */
-public class TcpSource extends ThreadedReaderSource {
+public class TcpSource extends ThreadedSource {
 
     private final String[] tcpSources;
     private final Marshaller marshaller;
@@ -22,18 +22,15 @@ public class TcpSource extends ThreadedReaderSource {
 
     @Override
     public void start(TaskPool pool) throws IOException {
+        super.start(pool);
         for (String source : tcpSources) {
-            TcpSampleReader reader = new TcpSampleReader(source, pool, marshaller);
-            readSamples(pool, reader, true);
+            TcpSampleInputStream reader = new TcpSampleInputStream(source, marshaller, pool);
+            readSamples(reader, true);
         }
-    }
 
-    @Override
-    public void run() throws IOException {
         // All readers have been added, so we can immediately start waiting for them to finish
         // Since the connections are continuously re-established, this should not actually happen.
         initFinished();
-        super.run();
     }
 
     @Override

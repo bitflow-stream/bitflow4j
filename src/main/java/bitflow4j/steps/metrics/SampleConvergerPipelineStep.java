@@ -3,6 +3,7 @@ package bitflow4j.steps.metrics;
 import bitflow4j.AbstractPipelineStep;
 import bitflow4j.Header;
 import bitflow4j.Sample;
+import bitflow4j.misc.SampleConverger;
 
 import java.io.IOException;
 
@@ -26,10 +27,8 @@ public class SampleConvergerPipelineStep extends AbstractPipelineStep {
 
     @Override
     public synchronized void writeSample(Sample sample) throws IOException {
-
-        double metrics[] = converger.getValues(sample);
+        double[] metrics = converger.getValues(sample);
         Header header = converger.getExpectedHeader();
-
         output.writeSample(new Sample(header, metrics, sample));
     }
 }

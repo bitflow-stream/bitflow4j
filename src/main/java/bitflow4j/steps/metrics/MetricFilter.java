@@ -30,7 +30,6 @@ public class MetricFilter extends AbstractPipelineStep {
 
     @Override
     public void writeSample(Sample sample) throws IOException {
-        sample.checkConsistency();
         if (sample.headerChanged(lastHeader)) {
             outputHeader = buildHeader(sample.getHeader());
         }

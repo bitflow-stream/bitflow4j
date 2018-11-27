@@ -40,7 +40,7 @@ public abstract class AbstractStatusReportPipelineStep extends AbstractPipelineS
         if(samples != null) {
             for (Sample s : samples) {
                 if(s != null) {
-                    s.setLabel(STATUS_SAMPLE_LABEL);
+                    s.setTag("cls", STATUS_SAMPLE_LABEL);
                     super.writeSample(s);
                 }
             }

@@ -1,7 +1,7 @@
 package bitflow4j.io.net;
 
 import bitflow4j.Sample;
-import bitflow4j.io.AbstractSampleOutput;
+import bitflow4j.io.MarshallingSampleWriter;
 import bitflow4j.io.marshall.Marshaller;
 
 import java.io.IOException;
@@ -10,13 +10,12 @@ import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URL;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * Created by anton on 6/17/16.
  */
-public class TcpSink extends AbstractSampleOutput {
+public class TcpSink extends MarshallingSampleWriter {
 
     private static final Logger logger = Logger.getLogger(TcpSink.class.getName());
 
@@ -25,8 +24,6 @@ public class TcpSink extends AbstractSampleOutput {
     private final String targetHost;
     private final int targetPort;
     private Socket socket = null;
-
-    public Level connectionErrorLevel = Level.WARNING;
 
     public TcpSink(Marshaller marshaller, String endpoint) throws MalformedURLException {
         this(marshaller, getHost(endpoint), getPort(endpoint));
@@ -48,16 +45,11 @@ public class TcpSink extends AbstractSampleOutput {
         return url.getPort();
     }
 
-    public TcpSink level(Level level) {
-        this.connectionErrorLevel = level;
-        return this;
-    }
-
     public synchronized void writeSample(Sample sample) throws IOException {
         try {
             super.writeSample(sample);
         } catch (IOException exc) {
-            logger.log(connectionErrorLevel, "Failed to send sample to " + targetHost + ":" + targetPort + ": " + exc);
+            TcpErrorLogger.log(String.format("Failed to send sample to %s:%s", targetHost, targetPort), exc);
             closeSocket();
         }
     }
@@ -69,7 +61,7 @@ public class TcpSink extends AbstractSampleOutput {
             socket.connect(new InetSocketAddress(targetHost, targetPort), TCP_CONNECT_TIMEOUT_MILLIS);
             return socket.getOutputStream();
         } catch (IOException exc) {
-            logger.log(connectionErrorLevel, "Failed to connect to " + targetHost + ":" + targetPort + ": ", exc);
+            TcpErrorLogger.log(String.format("Failed to connect to %s:%s", targetHost, targetPort), exc);
             closeSocket();
             return null;
         }

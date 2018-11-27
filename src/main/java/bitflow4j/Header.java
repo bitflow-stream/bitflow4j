@@ -42,4 +42,20 @@ public class Header {
         return new Header(new String[0]);
     }
 
+    public static class ChangeChecker {
+
+        public Header lastHeader = null;
+
+        public boolean changed(Header newHeader) {
+            Header lastHeader = this.lastHeader;
+            this.lastHeader = newHeader;
+            if (lastHeader == null && newHeader == null)
+                return false;
+            if (lastHeader == null)
+                return true;
+            return lastHeader.hasChanged(newHeader);
+        }
+
+    }
+
 }

@@ -1,10 +1,10 @@
 package bitflow4j;
 
-import bitflow4j.io.SampleReader;
-import bitflow4j.io.SampleOutput;
+import bitflow4j.io.SampleInputStream;
+import bitflow4j.io.console.SampleWriter;
 import bitflow4j.io.marshall.*;
+import bitflow4j.misc.Pair;
 import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -12,6 +12,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -25,8 +26,8 @@ public class TestMarshaller extends TestWithSamples {
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
 
         for (Pair<Header, List<Sample>> header : headers) {
-            marshaller.marshallHeader(buf, header.getKey());
-            for (Sample sample : header.getValue()) {
+            marshaller.marshallHeader(buf, header.getValue1());
+            for (Sample sample : header.getValue2()) {
                 marshaller.marshallSample(buf, sample);
             }
         }
@@ -56,27 +57,35 @@ public class TestMarshaller extends TestWithSamples {
         List<Pair<Header, List<Sample>>> headers = createSamples();
 
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
-        SampleOutput printer = new SampleOutput(buf, marshaller);
+        SampleWriter printer = new SampleWriter(buf, marshaller, "buffer");
+        printer.setOutgoingSink(new DroppingStep());
 
+        int x = 0;
         for (Pair<Header, List<Sample>> header : headers) {
-            for (Sample sample : header.getValue()) {
+            for (Sample sample : header.getValue2()) {
                 printer.writeSample(sample);
             }
         }
 
         ByteArrayInputStream inBuffer = new ByteArrayInputStream(buf.toByteArray());
-        SampleReader reader = SampleReader.singleInput(null, marshaller, "test", inBuffer);
+        SampleInputStream reader = new SampleInputStream.Single(inBuffer, "test", null, marshaller);
+
+
+        Iterator<Sample> expectedSamples = flatten(headers).iterator();
 
         List<Sample> receivedSamples = new ArrayList<>();
-        while (true) {
+        for (int i = 0; ; i++) {
             Sample sample = reader.nextSample();
             if (sample == null)
                 break;
-            receivedSamples.add(sample);
-        }
+            Assert.assertTrue("Received more samples than expected", expectedSamples.hasNext());
+            Sample expected = expectedSamples.next();
 
-        List<Sample> expected = flatten(headers);
-        Assert.assertTrue(EqualsBuilder.reflectionEquals(expected, receivedSamples));
+            if (!EqualsBuilder.reflectionEquals(expected, sample)) {
+                Assert.assertEquals("Unexpected sample nr " + i, expected, sample);
+            }
+        }
+        Assert.assertFalse("Received less samples than expected", expectedSamples.hasNext());
     }
 
     @Test

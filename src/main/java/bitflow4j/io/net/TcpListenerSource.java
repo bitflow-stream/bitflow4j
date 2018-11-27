@@ -1,7 +1,7 @@
 package bitflow4j.io.net;
 
-import bitflow4j.io.SampleReader;
-import bitflow4j.io.ThreadedReaderSource;
+import bitflow4j.io.SampleInputStream;
+import bitflow4j.io.ThreadedSource;
 import bitflow4j.io.marshall.Marshaller;
 import bitflow4j.task.ParallelTask;
 import bitflow4j.task.TaskPool;
@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 /**
  * Created by anton on 4/6/16.
  */
-public class TcpListenerSource extends ThreadedReaderSource {
+public class TcpListenerSource extends ThreadedSource {
 
     private static final Logger logger = Logger.getLogger(TcpListenerSource.class.getName());
 
@@ -86,8 +86,7 @@ public class TcpListenerSource extends ThreadedReaderSource {
                 socket = tcpSocket.accept();
                 if (socket.isConnected()) {
                     String remote = acceptConnection(pool, socket);
-                    if (!suppressHeaderUpdateLogs)
-                        logger.info("Accepted connection from " + remote);
+                    logger.fine("Accepted connection from " + remote);
                 }
             } catch (Exception exc) {
                 if (tcpSocket.isClosed())
@@ -106,9 +105,9 @@ public class TcpListenerSource extends ThreadedReaderSource {
 
     private String acceptConnection(TaskPool pool, Socket socket) throws IOException {
         String remote = socket.getRemoteSocketAddress().toString(); // TODO try reverse DNS? More descriptive name?
-        SampleReader.NamedInputStream namedStream =
-                new SampleReader.NamedInputStream(socket.getInputStream(), remote);
-        SampleReader input = new SampleReader(pool, marshaller) {
+        SampleInputStream.NamedInputStream namedStream =
+                new SampleInputStream.NamedInputStream(socket.getInputStream(), remote);
+        SampleInputStream input = new SampleInputStream(marshaller) {
 
             boolean started = false;
 
@@ -125,7 +124,7 @@ public class TcpListenerSource extends ThreadedReaderSource {
                 return namedStream;
             }
         };
-        readSamples(pool, input, true);
+        readSamples(input, true);
         return remote;
     }
 

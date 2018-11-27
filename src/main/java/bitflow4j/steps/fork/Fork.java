@@ -68,7 +68,7 @@ public class Fork extends AbstractPipelineStep {
             logger.log(Level.WARNING,
                     "The source field of the sub-pipeline for {1} will be ignored, it is set to {2}", new Object[]{key, pipeline.source});
         }
-        pipeline.source = new StoppableSourceWrapper(new EmptySource());
+        pipeline.source = new EmptySource();
         pipeline.step(merger);
         pipeline.run(pool);
         SubPipeline subPipeline = new SubPipeline(pipeline);
