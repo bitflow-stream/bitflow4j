@@ -3,8 +3,11 @@ package bitflow4j.script.generated;
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.misc.*;
 import org.antlr.v4.runtime.tree.*;
 import java.util.List;
+import java.util.Iterator;
+import java.util.ArrayList;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class BitflowParser extends Parser {
@@ -103,11 +106,6 @@ public class BitflowParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitScript(this);
 		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitScript(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final ScriptContext script() throws RecognitionException {
@@ -158,11 +156,6 @@ public class BitflowParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitOutputFork(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitOutputFork(this);
-			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -264,11 +257,6 @@ public class BitflowParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitFork(this);
 		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitFork(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final ForkContext fork() throws RecognitionException {
@@ -361,11 +349,6 @@ public class BitflowParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitWindow(this);
 		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitWindow(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final WindowContext window() throws RecognitionException {
@@ -434,11 +417,6 @@ public class BitflowParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitMultiinput(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitMultiinput(this);
-			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -515,11 +493,6 @@ public class BitflowParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitInput(this);
 		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitInput(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final InputContext input() throws RecognitionException {
@@ -586,11 +559,6 @@ public class BitflowParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitOutput(this);
 		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitOutput(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final OutputContext output() throws RecognitionException {
@@ -656,11 +624,6 @@ public class BitflowParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitTransform(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitTransform(this);
-			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -744,11 +707,6 @@ public class BitflowParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitSubPipeline(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitSubPipeline(this);
-			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -892,11 +850,6 @@ public class BitflowParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitWindowSubPipeline(this);
 		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitWindowSubPipeline(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final WindowSubPipelineContext windowSubPipeline() throws RecognitionException {
@@ -1023,11 +976,6 @@ public class BitflowParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitPipeline(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitPipeline(this);
-			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -1158,11 +1106,6 @@ public class BitflowParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitParameter(this);
 		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitParameter(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final ParameterContext parameter() throws RecognitionException {
@@ -1217,11 +1160,6 @@ public class BitflowParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitTransformParameters(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitTransformParameters(this);
-			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -1291,11 +1229,6 @@ public class BitflowParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitName(this);
 		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitName(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final NameContext name() throws RecognitionException {
@@ -1343,11 +1276,6 @@ public class BitflowParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitPipelineName(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitPipelineName(this);
-			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -1399,11 +1327,6 @@ public class BitflowParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitSchedulingHints(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitSchedulingHints(this);
-			else return visitor.visitChildren(this);
 		}
 	}
 
