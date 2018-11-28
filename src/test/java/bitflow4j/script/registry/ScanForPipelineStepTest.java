@@ -1,9 +1,8 @@
-package bitflow4j.main.registry;
+package bitflow4j.script.registry;
 
 import bitflow4j.PipelineStep;
-import bitflow4j.script.registry.AnalysisRegistration;
-import bitflow4j.script.registry.Registry;
-import bitflow4j.script.registry.StepConstructionException;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -11,20 +10,39 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 
-
 public class ScanForPipelineStepTest {
+
+    private Registry registry;
+    private AnalysisRegistration requiredParamsRegistration;
+    private AnalysisRegistration mixedParamsRegistration;
+
+    public static final String SCRIPT_PACKAGE = "bitflow4j.script.registry";
+
+    @Before
+    public void prepare() {
+        registry = new Registry();
+        registry.scanForPipelineSteps(SCRIPT_PACKAGE);
+        requiredParamsRegistration = registry.getAnalysisRegistration("RequiredParamStep");
+        assertNotNull(requiredParamsRegistration);
+        mixedParamsRegistration = registry.getAnalysisRegistration("MixedParamStep");
+        assertNotNull(mixedParamsRegistration);
+    }
+
+    @After
+    public void tearDown() {
+        registry = null;
+        requiredParamsRegistration = null;
+        mixedParamsRegistration = null;
+    }
 
     // ##### Tests using class RequiredParamStep for testing required and optional params #######
     @Test
     public void givenStepConstructor_whenInvokeWithOptionalAndRequiredArgs_thenSetBothProperties() throws StepConstructionException {
-        Registry registry = new Registry();
-        registry.scanForPipelineSteps("bitflow4j.main.registry");
-        AnalysisRegistration analysisRegistration = registry.getAnalysisRegistration("RequiredParamStep");
         Map<String, String> params = new HashMap<>();
         params.put("requiredArg", "requiredArgValue");
         params.put("optionalArg", "optionalArgValue");
 
-        PipelineStep res = analysisRegistration.getStepConstructor().constructPipelineStep(params);
+        PipelineStep res = requiredParamsRegistration.getStepConstructor().constructPipelineStep(params);
 
         assertTrue(res instanceof RequiredParamStep);
         RequiredParamStep createdStep = (RequiredParamStep) res;
@@ -34,13 +52,10 @@ public class ScanForPipelineStepTest {
 
     @Test
     public void givenStepConstructor_whenInvokeWithRequiredArgsOnly_thenSetRequiredArgOnly() throws StepConstructionException {
-        Registry registry = new Registry();
-        registry.scanForPipelineSteps("bitflow4j.main.registry");
-        AnalysisRegistration analysisRegistration = registry.getAnalysisRegistration("RequiredParamStep");
         Map<String, String> params = new HashMap<>();
         params.put("requiredArg", "requiredArgValue");
 
-        PipelineStep res = analysisRegistration.getStepConstructor().constructPipelineStep(params);
+        PipelineStep res = requiredParamsRegistration.getStepConstructor().constructPipelineStep(params);
 
         assertTrue(res instanceof RequiredParamStep);
         RequiredParamStep createdStep = (RequiredParamStep) res;
@@ -50,14 +65,11 @@ public class ScanForPipelineStepTest {
 
     @Test(expected = StepConstructionException.class)
     public void givenStepConstructor_whenInvokeWithoutRequiredArgs_thenThrowException() throws StepConstructionException {
-        Registry registry = new Registry();
-        registry.scanForPipelineSteps("bitflow4j.main.registry");
-        AnalysisRegistration analysisRegistration = registry.getAnalysisRegistration("RequiredParamStep");
         Map<String, String> params = new HashMap<>();
         params.put("optionalArg", "optionalArgValue");
 
         try {
-            PipelineStep res = analysisRegistration.getStepConstructor().constructPipelineStep(params);
+            PipelineStep res = requiredParamsRegistration.getStepConstructor().constructPipelineStep(params);
         } catch (StepConstructionException e) {
             assertEquals("RequiredParamStep", e.getStepName());
             assertTrue(e.getMessage().contains("No matching Constructor found for parameters "));
@@ -73,16 +85,10 @@ public class ScanForPipelineStepTest {
     }
 
     private MixedParamStep executeMixedStepConstruction(Map<String, String> params) throws StepConstructionException {
-        Registry registry = new Registry();
-        registry.scanForPipelineSteps("bitflow4j.main.registry");
-        AnalysisRegistration analysisRegistration = registry.getAnalysisRegistration("MixedParamStep");
-
-        PipelineStep res = analysisRegistration.getStepConstructor().constructPipelineStep(params);
-
+        PipelineStep res = mixedParamsRegistration.getStepConstructor().constructPipelineStep(params);
         assertTrue(res instanceof MixedParamStep);
         return (MixedParamStep) res;
     }
-
 
     @Test
     public void testMixedStep_withStringArg() throws StepConstructionException {

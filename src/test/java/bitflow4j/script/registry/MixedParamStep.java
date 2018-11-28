@@ -1,4 +1,4 @@
-package bitflow4j.main.registry;
+package bitflow4j.script.registry;
 
 import bitflow4j.AbstractPipelineStep;
 

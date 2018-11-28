@@ -1,7 +1,7 @@
-package bitflow4j.main.script;
+package bitflow4j.script;
 
-import bitflow4j.script.Main;
 import bitflow4j.script.registry.AnalysisRegistration;
+import bitflow4j.script.registry.ScanForPipelineStepTest;
 import com.google.gson.Gson;
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.Before;
@@ -16,16 +16,16 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class MainTest {
+
     private ByteArrayOutputStream baos;
     private PrintStream originalOut;
     private PrintStream originalErr;
-    private String testSamples = "time,val\n" +
+    private File dataFile;
+    private static final String testSamples = "time,val\n" +
             "2006-01-02 15:04:05.999999980,11111\n" +
             "2006-01-02 15:04:05.999999981,22222\n" +
             "2006-01-02 15:04:05.999999982,33333\n" +
             "2006-01-02 15:04:05.999999983,44444\n";
-
-    private File dataFile;
 
     @Before
     public void setup() {
@@ -80,10 +80,10 @@ public class MainTest {
         assertTrue(console.contains("MixedParamStep"));
         assertTrue(console.contains("RequiredParamStep"));
         // throws Exception if not valid json
-        new Gson().fromJson(console, AnalyisList.class);
+        new Gson().fromJson(console, AnalysisList.class);
     }
 
-    @Test(timeout = 2000000)
+    @Test(timeout = 5000)
     public void testFileInputAndOutput() throws IOException {
         Path tempDir = Files.createTempDirectory("bitflow-test-directory");
         tempDir.toFile().deleteOnExit();
@@ -97,7 +97,7 @@ public class MainTest {
         assertFalse(console.contains("Exception"));
     }
 
-    @Test(timeout = 2000000)
+    @Test(timeout = 5000)
     public void testFileInputAndConsoleOutput() throws IOException {
         String scriptFileName = writeScriptFile(dataFile.getAbsolutePath() + "->MixedParamStep->MixedParamStep->-");
         String console = callMainWithArgs("--file", scriptFileName);
@@ -112,10 +112,9 @@ public class MainTest {
         assertTrue(console.contains("44444"));
     }
 
-
     private String callMainWithArgs(String... args) {
         try {
-            String[] extraArgs = new String[]{"--scan-packages", "bitflow4j.main.registry"};
+            String[] extraArgs = new String[]{"--scan-packages", ScanForPipelineStepTest.SCRIPT_PACKAGE};
 
             startCaptureOutput();
             Main.main(ArrayUtils.addAll(extraArgs, args));
@@ -125,6 +124,7 @@ public class MainTest {
         }
     }
 
-    private static class AnalyisList extends ArrayList<AnalysisRegistration> {
+    private static class AnalysisList extends ArrayList<AnalysisRegistration> {
     }
+
 }

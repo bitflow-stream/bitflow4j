@@ -85,10 +85,9 @@ public class TestDatabase extends TestWithSamples {
         return mapping;
     }
 
-
     private boolean tagsEqual(Map<String, String> tags1, Map<String, String> tags2) {
         if ((tags1 == null || tags1.isEmpty()) && (tags2 == null || tags2.isEmpty())) return true;
-
+        assert tags1 != null;
         return tags1.equals(tags2);
     }
 

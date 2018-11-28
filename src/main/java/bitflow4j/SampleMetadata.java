@@ -1,8 +1,5 @@
 package bitflow4j;
 
-import bitflow4j.Header;
-import bitflow4j.Sample;
-
 import java.util.Date;
 import java.util.Map;
 
@@ -27,7 +24,7 @@ public class SampleMetadata {
         this(sample.getTimestamp(), sample.getTags());
     }
 
-    public Sample newSample(Header header, double values[]) {
+    public Sample newSample(Header header, double[] values) {
         return new Sample(header, values, timestamp, tags);
     }
 

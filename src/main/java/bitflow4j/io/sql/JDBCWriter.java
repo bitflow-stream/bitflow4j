@@ -14,18 +14,38 @@ import java.util.logging.Logger;
 /**
  * Created by malcolmx on 21.03.17.
  */
-public class JDBCWriter extends Connector<JDBCWriter> {
+public class JDBCWriter extends Connector {
+
+    private static final Logger logger = Logger.getLogger(JDBCWriter.class.getName());
+
     private static final String BASE_INSERT_STATEMENT = "INSERT INTO %s (%s" + TIMESTAMP_COL + "," + TAG_COL + ") VALUES (%s);";
     private static final String BASE_CREATE_STATEMENT = "CREATE TABLE IF NOT EXISTS %s (" + TIMESTAMP_COL + " %s," + TAG_COL + " %s);";
     private static final String BASE_ALTER_STATEMENT = "ALTER TABLE %s %s;";
     private static final String BASE_ALTER_STATEMENT2 = "ALTER TABLE %s;";
-    private static final Logger logger = Logger.getLogger(JDBCWriter.class.getName());
 
     private Sample lastWrittenSample;
     private boolean readyToInsert = false;
 
     public JDBCWriter(String url, String schema, String table, String user, String password) {
         super(url, schema, table, user, password);
+    }
+
+    @Override
+    public JDBCWriter connect() throws SQLException {
+        super.connect();
+        return this;
+    }
+
+    @Override
+    public JDBCWriter disconnect() throws SQLException {
+        super.disconnect();
+        return this;
+    }
+
+    @Override
+    public JDBCWriter reconnect() throws SQLException {
+        super.reconnect();
+        return this;
     }
 
     public void writeSample(Sample sample) throws SQLException {
@@ -41,13 +61,10 @@ public class JDBCWriter extends Connector<JDBCWriter> {
         String columnsToInsert = buildColumnStrings(sample);
         String query = String.format(BASE_INSERT_STATEMENT, tableQualifier, columnsToInsert, valuesToInsert);
         PreparedStatement preparedStatement = connection.prepareStatement(query);
-//        executeUpdate(query);
         preparedStatement.setString(1, sample.tagString());
-//        preparedStatement.setString(1,buildTagString(sample.getTags()));
         preparedStatement.executeUpdate();
         preparedStatement.close();
         lastWrittenSample = sample;
-//        this.disconnect().connect();
     }
 
     public JDBCWriter prepareInsert() throws SQLException {
@@ -76,18 +93,15 @@ public class JDBCWriter extends Connector<JDBCWriter> {
 
     private String buildTagString(Map<String, String> tags) {
         StringBuilder resultBuilder = new StringBuilder();
-//        resultBuilder.append("\'");
-        tags.entrySet().forEach(entry -> {
-            resultBuilder.append(entry.getKey());
+        tags.forEach((key, value) -> {
+            resultBuilder.append(key);
             resultBuilder.append("=");
-            resultBuilder.append(entry.getValue());
+            resultBuilder.append(value);
             resultBuilder.append(",");
         });
-        //TODO not "clean"
-        int lastIndexofSeparator = resultBuilder.lastIndexOf(",");
-        if (lastIndexofSeparator >= 0) resultBuilder.delete(lastIndexofSeparator, lastIndexofSeparator + 1);
-        //clean
-//        resultBuilder.append("\'");
+        // TODO not "clean"
+        int lastIndexOfSeparator = resultBuilder.lastIndexOf(",");
+        if (lastIndexOfSeparator >= 0) resultBuilder.delete(lastIndexOfSeparator, lastIndexOfSeparator + 1);
         return resultBuilder.toString();
     }
 
@@ -106,7 +120,8 @@ public class JDBCWriter extends Connector<JDBCWriter> {
     //####################################################
 
     private List<String> checkTableColumns(Sample sample) throws SQLException {
-        ResultSet resultSet = connection.getMetaData().getColumns(null, this.schema, this.table, null);//this.dbTableInsert TODO: replace with manual query
+        ResultSet resultSet = connection.getMetaData().getColumns(null, this.schema, this.table, null);
+        // this.dbTableInsert TODO: replace with manual query
         List<String> columns = new ArrayList<>(resultSet.getFetchSize());
         List<String> sampleColumns = new ArrayList<>(Arrays.asList(sample.getHeader().header));
         while (resultSet.next()) {
@@ -125,34 +140,22 @@ public class JDBCWriter extends Connector<JDBCWriter> {
             try {
                 executeUpdate(query);
             } catch (SQLException e) {
-                logger.severe(e.getMessage());//TODO replace after manual table query has been added
+                logger.severe(e.getMessage()); // TODO replace after manual table query has been added
             }
         }
     }
 
     private void addColumns2(List<String> columns) throws SQLException {
-//        System.out.println(columns);
         buildColumnStrings2(columns);
-//        System.out.println(columns);
         String alterColumnsString;
         String delimiter = " " + db.doubleType() + ", ADD COLUMN ";
         alterColumnsString = tableQualifier + " ADD COLUMN " + String.join(delimiter, columns) + " " + db.doubleType();
-//        System.out.println(String.format(BASE_ALTER_STATEMENT2, alterColumnsString));
         try {
             executeUpdate(String.format(BASE_ALTER_STATEMENT2, alterColumnsString));
         } catch (SQLException e) {
-            logger.severe(e.getMessage());//TODO replace after manual table query has been added
+            logger.severe(e.getMessage()); // TODO replace after manual table query has been added
         }
     }
-
-//    public static void main(String[] args) throws SQLException {
-//        JDBCWriter writer = new JDBCWriter("jdbc:mysql:bla", null, "data", null, null);
-//        List<String> columns = new ArrayList<>();
-//        columns.add("bla");
-//        columns.add("blub");
-//        columns.add("yada");
-//        writer.addColumns2(columns);
-//    }
 
     private void buildColumnStrings(List<String> columns) {
         String columnType = db.doubleType();

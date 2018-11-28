@@ -1,4 +1,4 @@
-package bitflow4j.main.script.endpoints;
+package bitflow4j.script.endpoints;
 
 import bitflow4j.PipelineStep;
 import bitflow4j.Source;
@@ -10,9 +10,6 @@ import bitflow4j.io.marshall.WavAudioMarshaller;
 import bitflow4j.io.net.TcpListenerSource;
 import bitflow4j.io.net.TcpSink;
 import bitflow4j.io.net.TcpSource;
-import bitflow4j.script.endpoints.Endpoint;
-import bitflow4j.script.endpoints.EndpointFactory;
-import bitflow4j.script.endpoints.EndpointParseException;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

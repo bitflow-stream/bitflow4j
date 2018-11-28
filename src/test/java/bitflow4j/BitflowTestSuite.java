@@ -1,9 +1,9 @@
 package bitflow4j;
 
-import bitflow4j.main.registry.AnalysisRegistrationTest;
-import bitflow4j.main.registry.ScanForPipelineStepTest;
-import bitflow4j.main.script.MainTest;
-import bitflow4j.main.script.endpoints.EndpointFactoryTest;
+import bitflow4j.script.MainTest;
+import bitflow4j.script.endpoints.EndpointFactoryTest;
+import bitflow4j.script.registry.AnalysisRegistrationTest;
+import bitflow4j.script.registry.ScanForPipelineStepTest;
 import org.junit.runners.Suite;
 
 @org.junit.runner.RunWith(Suite.class)

@@ -1,6 +1,5 @@
-package bitflow4j.main.registry;
+package bitflow4j.script.registry;
 
-import bitflow4j.script.registry.AnalysisRegistration;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -9,7 +8,6 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-
 
 public class AnalysisRegistrationTest {
 
@@ -23,7 +21,6 @@ public class AnalysisRegistrationTest {
     public void givenParamsWithMissingRequiredParam_whenValidateParameters_thenReturnErrorMessage() {
         Map<String, String> missingRequiredParam = new HashMap<>();
 
-
         List<String> errs = sampleAnalysisRegistration.validateParameters(missingRequiredParam);
 
         assertEquals(1, errs.size());
@@ -36,7 +33,6 @@ public class AnalysisRegistrationTest {
         missingRequiredParam.put("require_me", "sample_value");
         missingRequiredParam.put("extraneous_param", "not_allowed");
 
-
         List<String> errs = sampleAnalysisRegistration.validateParameters(missingRequiredParam);
 
         assertEquals(1, errs.size());
@@ -48,7 +44,6 @@ public class AnalysisRegistrationTest {
         Map<String, String> missingRequiredParam = new HashMap<>();
         missingRequiredParam.put("require_me", "sample_value");
         missingRequiredParam.put("optional_me", "sample_value");
-
 
         List<String> errs = sampleAnalysisRegistration.validateParameters(missingRequiredParam);
 

@@ -5,7 +5,7 @@ import java.sql.*;
 /**
  * Created by malcolmx on 21.03.17.
  */
-public abstract class Connector<T extends Connector<T>> {
+public abstract class Connector {
 
     protected static final String TIMESTAMP_COL = "timestamp";
     protected static final String TAG_COL = "tags";
@@ -37,32 +37,29 @@ public abstract class Connector<T extends Connector<T>> {
         this.state = State.INITIALIZED;
     }
 
-    public T connect() throws SQLException {
-        if (state == State.CONNECTED) return (T) this;
+    public Connector connect() throws SQLException {
+        if (state == State.CONNECTED) return this;
         if (this.user == null) this.connection = DriverManager.getConnection(this.url);
         else if (this.password == null) this.connection = DriverManager.getConnection(this.url, this.user, "");
         else this.connection = DriverManager.getConnection(this.url, this.user, this.password);
         this.state = State.CONNECTED;
-        return (T) this;
+        return this;
     }
 
-    public T disconnect() throws SQLException {
-        if (this.state != State.CONNECTED) return (T) this;
+    public Connector disconnect() throws SQLException {
+        if (this.state != State.CONNECTED) return this;
         if (!this.connection.isClosed()) this.connection.close();
         this.state = State.INITIALIZED;
-        return (T) this;
+        return this;
     }
 
-    public T reconnect() throws SQLException {
+    public Connector reconnect() throws SQLException {
         if (state == State.CONNECTED && !this.connection.isValid(0)) {
             state = State.INITIALIZED;
-            try {
-                this.connection.close();
-            } catch (SQLException e) {
-            }
+            this.connection.close();
             this.connect();
         }
-        return (T) this;
+        return this;
     }
 
     protected ResultSet executeQuery(String sqlQuery) throws SQLException {
