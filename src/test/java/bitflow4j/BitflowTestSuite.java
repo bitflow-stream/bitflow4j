@@ -12,7 +12,8 @@ import org.junit.runners.Suite;
         AnalysisRegistrationTest.class,
         ScanForPipelineStepTest.class,
         MainTest.class,
-        EndpointFactoryTest.class
+        EndpointFactoryTest.class,
+        TestDatabase.class
 })
 public class BitflowTestSuite {
 }
