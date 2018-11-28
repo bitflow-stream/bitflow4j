@@ -3,7 +3,6 @@ package bitflow4j;
 import bitflow4j.misc.Config;
 import bitflow4j.misc.Pair;
 import org.junit.Before;
-import org.junit.Test;
 
 import java.util.*;
 
@@ -30,11 +29,6 @@ public class TestWithSamples {
     @Before
     public void setup() {
         random = new Random(123123);
-    }
-
-    @Test
-    public void mockTest() {
-        // TODO write actual tests
     }
 
     List<Pair<Header, List<Sample>>> createSamples() {
