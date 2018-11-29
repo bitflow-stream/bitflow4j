@@ -2,6 +2,8 @@ package bitflow4j.script;
 
 import bitflow4j.Pipeline;
 import bitflow4j.misc.Config;
+import bitflow4j.misc.TreeFormatter;
+import bitflow4j.script.endpoints.EndpointFactory;
 import bitflow4j.script.registry.Registry;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -14,14 +16,14 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
  * Main parses a BitflowScript and executes the resulting Pipeline.
  *
  * <pre>
- * Usage: Main [options] A raw bitflow script to be processed.
- *       Alternatively use the File option.
+ * Usage: bitflow4j.script.Main [options] [Bitflow Script]
  *   Options:
  *     --help
  *
@@ -37,10 +39,14 @@ import java.util.stream.Collectors;
  *     --json-capabilities
  *       Prints the capabilities of this jar in json format.
  *       Default: false
- *
+ *     --pipeline
+ *       Prints the pipeline steps resulting from parsing the input script and exits.
+ *       Default: false
  * </pre>
  */
 public class Main {
+
+    private static final Logger logger = Logger.getLogger(Main.class.getName());
 
     static {
         Config.initializeLogger();
@@ -50,13 +56,12 @@ public class Main {
         CmdArgs cmdArgs = new CmdArgs();
         JCommander jc = JCommander.newBuilder()
                 .allowAbbreviatedOptions(true)
-                .programName("bitflow4j")
+                .programName(Main.class.getCanonicalName())
                 .addObject(cmdArgs).build();
-
         try {
             jc.parse(args);
         } catch (ParameterException e) {
-            System.out.println(e.getMessage());
+            logger.severe(e.getMessage());
             e.usage();
             return;
         }
@@ -64,31 +69,39 @@ public class Main {
             jc.usage();
             return;
         }
+        if (!cmdArgs.isScriptValid()) {
+            logger.severe("Please provide a script either as file using the -f parameter or as positional arguments");
+            jc.usage();
+        }
 
         String rawScript = cmdArgs.getRawScript();
-
         Registry registry = new Registry();
+        EndpointFactory endpoints = new EndpointFactory();
         registry.scanForPipelineSteps(cmdArgs.cleanPackagesToScan());
 
         if (cmdArgs.printJsonCapabilities) {
             System.out.println(new Gson().toJson(registry.getCapabilities()));
             return;
         } else if (cmdArgs.printCapabilities) {
-            registry.getCapabilities().forEach(a -> System.out.println(a.toString()));
+            registry.getCapabilities().forEach(a -> logger.info(a.toString()));
             return;
         }
 
-        BitflowScriptCompiler compiler = new BitflowScriptCompiler(registry);
-        BitflowScriptCompiler.CompileResult res = compiler.ParseScript(rawScript);
+        BitflowScriptCompiler compiler = new BitflowScriptCompiler(registry, endpoints);
+        BitflowScriptCompiler.CompileResult res = compiler.parseScript(rawScript);
 
         if (res.hasErrors()) {
-            System.err.println("Errors occurred during execution:");
-            res.getErrors().stream().map(s -> "\t" + s).forEach(System.err::println);
+            logger.severe("Failed to parse Bitflow script:");
+            res.getErrors().stream().map(s -> "\t" + s).forEach(logger::severe);
             return;
         }
 
         Pipeline pipe = res.getPipeline();
-        pipe.logFormattedSteps();
+        for (String line : TreeFormatter.standard.formatLines(pipe)) {
+            logger.info(line);
+        }
+        if (cmdArgs.printPipeline)
+            return;
         pipe.runAndWait();
     }
 
@@ -109,8 +122,14 @@ public class Main {
         private boolean printCapabilities = false;
         @Parameter(names = "--json-capabilities", description = "Prints the capabilities of this jar in json format.")
         private boolean printJsonCapabilities = false;
-        @Parameter(description = "A raw bitflow script to be processed. Alternatively use the File option.")
+        @Parameter(names = "--pipeline", description = "Prints the pipeline steps resulting from parsing the input script and exits.")
+        private boolean printPipeline = false;
+        @Parameter(description = "[Bitflow Script]")
         private List<String> scriptParts = new ArrayList<>();
+
+        public boolean isScriptValid() {
+            return fileName != null || (scriptParts != null && !scriptParts.isEmpty());
+        }
 
         public String getRawScript() throws IOException {
             if (fileName != null) {

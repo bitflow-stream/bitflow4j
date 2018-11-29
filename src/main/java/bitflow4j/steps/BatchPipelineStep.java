@@ -16,7 +16,7 @@ import java.util.logging.Logger;
  */
 public abstract class BatchPipelineStep extends AbstractPipelineStep {
 
-    private static final Logger logger = Logger.getLogger(BatchPipelineStep.class.getName());
+    protected static final Logger logger = Logger.getLogger(BatchPipelineStep.class.getName());
 
     // TODO implement automatic flushing:
     // window size, timeout (wall clock, sample timestamps), tag change
@@ -26,7 +26,17 @@ public abstract class BatchPipelineStep extends AbstractPipelineStep {
     private String previousSeparationTagValue = null;
 
     public BatchPipelineStep() {
-        batchSeparationTag = null;
+        this(null);
+    }
+
+    public BatchPipelineStep(String batchSeparationTag) {
+        this.batchSeparationTag = batchSeparationTag;
+    }
+
+    public BatchPipelineStep(String batchSeparationTag, long timeoutMs) {
+        // TODO merge timeout functionality
+        this.batchSeparationTag = batchSeparationTag;
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
     private List<Sample> window = new ArrayList<>();
@@ -51,11 +61,9 @@ public abstract class BatchPipelineStep extends AbstractPipelineStep {
                 String tagValue = sample.getTag(batchSeparationTag);
                 boolean tagChanged = previousSeparationTagValue != null && !tagValue.equals(previousSeparationTagValue);
                 previousSeparationTagValue = tagValue;
-                if (tagChanged)
-                    return true;
+                return tagChanged;
             }
         }
-
         return false;
     }
 

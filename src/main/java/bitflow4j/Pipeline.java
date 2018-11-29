@@ -4,6 +4,7 @@ import bitflow4j.io.console.SampleWriter;
 import bitflow4j.io.file.FileSink;
 import bitflow4j.io.file.FileSource;
 import bitflow4j.io.marshall.Marshaller;
+import bitflow4j.misc.TreeFormatter;
 import bitflow4j.task.ParallelTask;
 import bitflow4j.task.StoppableTask;
 import bitflow4j.task.Task;
@@ -12,12 +13,13 @@ import com.google.common.collect.Lists;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class Pipeline {
+public class Pipeline implements TreeFormatter.FormattedNode {
 
     protected static final Logger logger = Logger.getLogger(Pipeline.class.getName());
 
@@ -28,27 +30,16 @@ public class Pipeline {
     // Printing ========================================
     // =================================================
 
-    public void logFormattedSteps() {
-        for (String line : formatSteps()) {
-            logger.info(line);
-        }
+    public String toString() {
+        return "Pipeline";
     }
 
-    public List<String> formatSteps() {
-        List<String> res = new LinkedList<>();
-        formatSteps(res);
-        return res;
-    }
-
-    public void formatSteps(List<String> lines) {
-        if (source == null) {
-            lines.add("< no source >");
-        } else {
-            lines.add(source.toString());
-        }
-        for (PipelineStep step : steps) {
-            lines.add("-> " + step);
-        }
+    @Override
+    public Collection<Object> formattedChildren() {
+        List<Object> children = new ArrayList<>();
+        children.add(source);
+        children.addAll(steps);
+        return children;
     }
 
     // ===============================================

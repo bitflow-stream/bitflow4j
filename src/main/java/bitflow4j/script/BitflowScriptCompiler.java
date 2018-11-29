@@ -1,4 +1,3 @@
-// Generated from Bitflow.g4 by ANTLR 4.7.1
 package bitflow4j.script;
 
 import bitflow4j.Pipeline;
@@ -13,16 +12,16 @@ import bitflow4j.script.registry.ForkRegistration;
 import bitflow4j.script.registry.Registry;
 import bitflow4j.script.registry.StepConstructionException;
 import bitflow4j.steps.fork.Fork;
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * BitflowScriptCompiler wraps anything Antlr related and implements the Antlr AST listener that can parse
@@ -30,37 +29,75 @@ import java.util.*;
  */
 class BitflowScriptCompiler {
 
-    private final Registry registry;
+    private static final Logger logger = Logger.getLogger(BitflowScriptCompiler.class.getName());
 
-    BitflowScriptCompiler(Registry registry) {
+    private static final int MAX_ERROR_TEXT = 10;
+
+    private final Registry registry;
+    private final EndpointFactory endpointFactory;
+
+    public BitflowScriptCompiler(Registry registry, EndpointFactory endpointFactory) {
         this.registry = registry;
+        this.endpointFactory = endpointFactory;
     }
 
     /**
-     * ParseScript takes a raw script and compiles it. The result contains the Pipeline or an array of error messages.
+     * parseScript takes a raw script and compiles it. The result contains the Pipeline or an array of error messages.
      *
      * @param script the raw bitflow script as a string
      * @return the CompileResult, containing the pipeline or an array of error messages
      */
-    public CompileResult ParseScript(String script) {
+    public CompileResult parseScript(String script) {
         CharStream charStream = CharStreams.fromString(script);
         BitflowLexer lexer = new BitflowLexer(charStream);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         BitflowParser parser = new BitflowParser(tokens);
 
-        BitflowScriptListener scriptListener = new BitflowScriptListener();
-        ParseTreeWalker.DEFAULT.walk(scriptListener, parser.script());
-        return new CompileResult(scriptListener.currentPipeline(), scriptListener.errors);
+        // Fail parsing silently: errors will be reported through the CompileResult. Not sure why it is so hard to silently obtain a verbose error message.
+        parser.removeErrorListeners();
+        parser.addErrorListener(new BaseErrorListener() {
+            @Override
+            public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
+                // Wrap the message in a new RecognitionException, because the provided RecognitionException does not contain any Exception message
+                RecognitionException rec = new RecognitionException(msg, recognizer, null, (ParserRuleContext) e.getCtx()) {
+                    @Override
+                    public Token getOffendingToken() {
+                        return e.getOffendingToken();
+                    }
+                };
+                throw new ParseCancellationException(rec);
+            }
+        });
 
+        BitflowScriptListener scriptListener = new BitflowScriptListener();
+        BitflowParser.ScriptContext parsedScript;
+        try {
+            parsedScript = parser.script();
+        } catch (ParseCancellationException e) {
+            if (e.getCause() instanceof RecognitionException) {
+                return new CompileResult((RecognitionException) e.getCause());
+            }
+            logger.log(Level.SEVERE, "Unknown exception during Bitflow script compilation", e);
+            return new CompileResult(null, Collections.singletonList("Unknown error: " + e.getCause().toString()));
+        } catch (RecognitionException e) {
+            return new CompileResult(e);
+        }
+        ParseTreeWalker.DEFAULT.walk(scriptListener, parsedScript);
+        return new CompileResult(scriptListener.currentPipeline(), scriptListener.errors);
     }
 
-    public class CompileResult {
+    public static class CompileResult {
         private List<String> errors;
         private Pipeline pipeline;
 
         private CompileResult(Pipeline pipeline, List<String> errors) {
             this.errors = errors;
             this.pipeline = pipeline;
+        }
+
+        private CompileResult(RecognitionException e) {
+            this(null, Collections.singletonList(
+                    formatError(e.getOffendingToken(), e.getCtx(), e.getMessage())));
         }
 
         public Pipeline getPipeline() {
@@ -76,23 +113,28 @@ class BitflowScriptCompiler {
         }
     }
 
+    static String formatError(Token position, RuleContext ctx, String msg) {
+        String text = ctx.getText();
+        if (text == null || text.isEmpty()) {
+            text = position.getText();
+        }
+        if (text.length() > MAX_ERROR_TEXT + "...".length()) {
+            text = text.substring(0, MAX_ERROR_TEXT) + "...";
+        }
+
+        return String.format("Line %s (%s) '%s': %s",
+                position.getLine(), position.getCharPositionInLine(), text, msg);
+    }
+
     /**
      * BitflowScriptListener listens on a AST tree of a bitflow script and generates the Pipeline.
      */
     private class BitflowScriptListener implements BitflowListener {
         private GenericStateMap state = new GenericStateMap();
         private List<String> errors = new ArrayList<>();
-        private EndpointFactory endpointFactory = new EndpointFactory();
 
         private void pushError(ParserRuleContext ctx, String msg) {
-            int start = ctx.getStart().getStartIndex();
-            int stop = ctx.getStop().getStopIndex();
-            String text = ctx.getText();
-            if (text.length() > 13) {
-                text = text.substring(0, 10) + "...";
-            }
-            text = String.format("%1$-" + 13 + "s", text);
-            errors.add(String.format("[%s-%s]\t'%s':\t%s", start, stop, text, msg));
+            errors.add(formatError(ctx.getStart(), ctx, msg));
         }
 
         private Pipeline currentPipeline() {
