@@ -20,6 +20,13 @@ public class BinaryMarshaller extends AbstractMarshaller {
     private final String BIN_HEADER_TAGS = "tags";
     private final byte[] BIN_SAMPLE_START = "X".getBytes(); // Must not collide with BIN_HEADER_TIME, and should be shorter
 
+    public static final String FORMAT = "BIN";
+
+    @Override
+    public String toString() {
+        return FORMAT;
+    }
+
     public boolean peekIsHeader(InputStream input) throws IOException {
         byte[] peeked = peek(input, BIN_HEADER_TIME.length());
         byte[] shorterCopy = Arrays.copyOf(peeked, BIN_SAMPLE_START.length);

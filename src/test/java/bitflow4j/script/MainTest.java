@@ -89,7 +89,7 @@ public class MainTest {
         tempDir.toFile().deleteOnExit();
         String outFile = tempDir.toAbsolutePath() + "/output-file";
 
-        String scriptFileName = writeScriptFile(dataFile.getAbsolutePath() + "->MixedParamStep->MixedParamStep->" + outFile);
+        String scriptFileName = writeScriptFile(dataFile.getAbsolutePath() + " ->MixedParamStep()->MixedParamStep()->" + outFile);
 
         String console = callMainWithArgs("--file ", scriptFileName);
 
@@ -99,7 +99,7 @@ public class MainTest {
 
     @Test(timeout = 5000)
     public void testFileInputAndConsoleOutput() throws IOException {
-        String scriptFileName = writeScriptFile(dataFile.getAbsolutePath() + "->MixedParamStep->MixedParamStep->-");
+        String scriptFileName = writeScriptFile(dataFile.getAbsolutePath() + " ->MixedParamStep()->MixedParamStep()-> -");
         String console = callMainWithArgs("--file", scriptFileName);
 
         assertFalse(console.contains("Error"));

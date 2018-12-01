@@ -35,6 +35,11 @@ public class TcpSink extends MarshallingSampleWriter {
         this.targetPort = targetPort;
     }
 
+    @Override
+    public String toString() {
+        return String.format("Send samples to %s:%s (format %s)", targetHost, targetPort, getMarshaller());
+    }
+
     public static String getHost(String tcpEndpoint) throws MalformedURLException {
         URL url = new URL("http://" + tcpEndpoint); // Exception when the tcp endpoint format is wrong.
         return url.getHost();

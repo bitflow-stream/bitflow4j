@@ -26,8 +26,8 @@ public class TestMarshaller extends TestWithSamples {
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
 
         for (Pair<Header, List<Sample>> header : headers) {
-            marshaller.marshallHeader(buf, header.getValue1());
-            for (Sample sample : header.getValue2()) {
+            marshaller.marshallHeader(buf, header.getLeft());
+            for (Sample sample : header.getRight()) {
                 marshaller.marshallSample(buf, sample);
             }
         }
@@ -62,7 +62,7 @@ public class TestMarshaller extends TestWithSamples {
 
         int x = 0;
         for (Pair<Header, List<Sample>> header : headers) {
-            for (Sample sample : header.getValue2()) {
+            for (Sample sample : header.getRight()) {
                 printer.writeSample(sample);
             }
         }

@@ -1,133 +1,65 @@
 package bitflow4j.script.registry;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 
 /**
  * AnalsisRegistration defines an analysis step, a function to apply it on a pipeline and the options to that function.
- * The Builder allows for a fluent API.
- * Example:
- * <code>
- * AnalysisRegistrationBuilder.build("count", (params, pipeline) -> pipeline.step(new SampleCounter(params))
- * .withOptionalParameter("startCount")
- * .supportBatch();
- *
- * </code>
  */
-public class AnalysisRegistration {
-    private boolean supportsBatchProcessing;
-    private boolean supportsStreamProcessing;
-    private String name;
-    private List<String> optionalParameters;
-    private List<String> requiredParameters;
-    private transient StepConstructor stepConstructor;
+public class AnalysisRegistration extends Registration {
 
-    public static Builder builder(String name, StepConstructor stepConstructor) {
-        return new Builder(name, stepConstructor);
+    private boolean _supportsBatchProcessing;
+    private boolean _supportsStreamProcessing;
+    private final StepConstructor stepConstructor;
+
+    public AnalysisRegistration(String name, StepConstructor constructor) {
+        super(name);
+        this.stepConstructor = constructor;
     }
 
-    public String getName() {
-        return name;
+    public AnalysisRegistration supportBatch() {
+        _supportsBatchProcessing = true;
+        return this;
+    }
+
+    public AnalysisRegistration supportStream() {
+        _supportsStreamProcessing = true;
+        return this;
     }
 
     public StepConstructor getStepConstructor() {
         return stepConstructor;
     }
 
-    public boolean isSupportsBatchProcessing() {
-        return supportsBatchProcessing;
+    public boolean supportsBatch() {
+        return _supportsBatchProcessing;
     }
 
-    public boolean isSupportsStreamProcessing() {
-        return supportsStreamProcessing;
+    public boolean supportsStream() {
+        return _supportsStreamProcessing;
     }
 
-    public List<String> getOptionalParameters() {
-        return optionalParameters;
+    public boolean supportsBatchOnly() {
+        return _supportsBatchProcessing && !_supportsStreamProcessing;
     }
 
-    public List<String> getRequiredParameters() {
-        return requiredParameters;
+    public boolean supportsStreamOnly() {
+        return _supportsStreamProcessing && !_supportsBatchProcessing;
     }
 
-    /**
-     * validateParameters takes a map of parameters and validates them against the specified optional and required parameters.
-     * It returns a list of errors for unexpected or missing required parameters.
-     *
-     * @param params the input parameters to be validated
-     * @return a list of errors in the specified input parameters (required but missing or unexpected)
-     */
-    public List<String> validateParameters(Map<String, String> params) {
-        List<String> errors = new ArrayList<>();
-        params.keySet().forEach(s -> {
-            if (!optionalParameters.contains(s) && !requiredParameters.contains(s)) {
-                errors.add("Unexpected parameter '" + s + "'");
-            }
-        });
-        requiredParameters.forEach(s -> {
-            if (!params.keySet().contains(s)) {
-                errors.add("Missing required parameter '" + s + "'");
-            }
-        });
-        return errors;
+    public boolean supportsBothModes() {
+        return _supportsStreamProcessing && _supportsBatchProcessing;
     }
 
     @Override
     public String toString() {
         String batchSupport = "supports stream and batch";
-        if (!supportsBatchProcessing) {
+        if (!_supportsBatchProcessing) {
             batchSupport = "supports stream only";
-        } else if (!supportsStreamProcessing) {
+        } else if (!_supportsStreamProcessing) {
             batchSupport = "supports batch only";
         }
-
-        return name + ":\trequired parameters: " + Arrays.toString(requiredParameters.toArray()) + ";\toptional parameter: " + Arrays.toString(optionalParameters.toArray()) + ";\t" + batchSupport;
+        return getName() + ": required parameters: " + Arrays.toString(getRequiredParameters().toArray()) +
+                "; optional parameter: " + Arrays.toString(getOptionalParameters().toArray()) + "; " + batchSupport;
     }
 
-    public static class Builder {
-        private boolean supportsBatchProcessing = false;
-        private boolean supportsStreamProcessing = true;
-        private String name;
-        private List<String> optionalParameters;
-        private List<String> requiredParameters;
-        private StepConstructor stepConstructor;
-
-        public Builder(String name, StepConstructor stepConstructor) {
-            this.name = name;
-            this.stepConstructor = stepConstructor;
-        }
-
-        public Builder supportBatch() {
-            this.supportsBatchProcessing = true;
-            return this;
-        }
-
-        public Builder enforceBatch() {
-            this.supportsStreamProcessing = false;
-            return this;
-        }
-
-        public Builder withRequiredParameters(String... requiredParameters) {
-            this.requiredParameters = Arrays.asList(requiredParameters);
-            return this;
-        }
-
-        public Builder withOptionalParameters(String... optionalParameters) {
-            this.optionalParameters = Arrays.asList(optionalParameters);
-            return this;
-        }
-
-        public AnalysisRegistration build() {
-            AnalysisRegistration a = new AnalysisRegistration();
-            a.requiredParameters = this.requiredParameters;
-            a.optionalParameters = this.optionalParameters;
-            a.supportsStreamProcessing = this.supportsStreamProcessing;
-            a.supportsBatchProcessing = this.supportsBatchProcessing;
-            a.stepConstructor = this.stepConstructor;
-            a.name = this.name;
-            return a;
-        }
-    }
 }

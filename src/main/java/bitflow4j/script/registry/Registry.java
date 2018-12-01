@@ -1,24 +1,29 @@
 package bitflow4j.script.registry;
 
 import bitflow4j.AbstractPipelineStep;
-import bitflow4j.PipelineStep;
+import bitflow4j.steps.fork.ScriptableDistributor;
 import com.thoughtworks.paranamer.BytecodeReadingParanamer;
 import com.thoughtworks.paranamer.Paranamer;
 import org.reflections.Reflections;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Parameter;
+import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.logging.Logger;
 
 /**
  * The Registry provides methods to register Inputs, Outputs, Processors and Forks which can be used to build
  * a Bitflow Pipeline.
  */
 public class Registry {
+
+    private static final Logger logger = Logger.getLogger(Registry.class.getName());
+
     private Paranamer paranamer = new BytecodeReadingParanamer();
     private Map<String, AnalysisRegistration> analysisRegistrationMap = new HashMap<>();
     private Map<Object, ForkRegistration> forkRegistrationMap = new HashMap<>();
+
+    // Store classes that did not have a fitting constructor
+    private Set<Class<?>> unconstructableClasses = new HashSet<>();
 
     /**
      * scans specified packages automatically for SubTypes of AbstractPipelineStep and registers them according to the
@@ -46,7 +51,6 @@ public class Registry {
         analysisRegistrationMap.put(analysisRegistration.getName().toLowerCase(), analysisRegistration);
     }
 
-
     /**
      * returns a registered Analysis by name or null if none found.
      *
@@ -55,6 +59,13 @@ public class Registry {
      */
     public AnalysisRegistration getAnalysisRegistration(String analysisName) {
         return analysisRegistrationMap.getOrDefault(analysisName.toLowerCase(), null);
+    }
+
+    /**
+     * registerAnalysis takes a registration and stores it for retrieval by the pipeline builder.
+     */
+    public void registerFork(ForkRegistration forkRegistration) {
+        forkRegistrationMap.put(forkRegistration.getName().toLowerCase(), forkRegistration);
     }
 
     /**
@@ -71,127 +82,50 @@ public class Registry {
         return analysisRegistrationMap.values();
     }
 
+    public Set<Class<?>> getUnconstructableClasses() {
+        return unconstructableClasses;
+    }
+
     private void _scanForPipelineSteps(String scanPackagePrefix) {
+        logger.info("Scanning for pipeline steps in package " + scanPackagePrefix);
         Reflections reflections = new Reflections(scanPackagePrefix);
-        Set<Class<? extends AbstractPipelineStep>> classes = reflections.getSubTypesOf(AbstractPipelineStep.class);
-        for (Class<? extends AbstractPipelineStep> impl : classes) {
-            String stepName = impl.getSimpleName();
-            Constructor[] constructors = impl.getConstructors();
-            AnalysisRegistration.Builder builder = AnalysisRegistration.builder(stepName, new GenericConstructorStepConstructor(stepName, constructors));
-            setRequiredAndOptionalParams(constructors, builder);
-            registerAnalysis(builder.build());
+
+        // Scan for regular steps
+        Set<Class<? extends AbstractPipelineStep>> stepClasses = reflections.getSubTypesOf(AbstractPipelineStep.class);
+        for (Class<? extends AbstractPipelineStep> impl : stepClasses) {
+            registerClass(impl, false);
+        }
+
+        // Scan for fork steps
+        Set<Class<? extends ScriptableDistributor>> forkClasses = reflections.getSubTypesOf(ScriptableDistributor.class);
+        for (Class<? extends ScriptableDistributor> impl : forkClasses) {
+            registerClass(impl, true);
         }
     }
 
-    private void setRequiredAndOptionalParams(Constructor[] constructors, AnalysisRegistration.Builder builder) {
-        String[] constr0ParamNames = paranamer.lookupParameterNames(constructors[0], false);
-        Set<String> optionalParams = new HashSet<>();
-        Set<String> requiredParams = new HashSet<>(Arrays.asList(constr0ParamNames));
-
-        Arrays.stream(constructors).forEach(constructor -> {
-            List<String> paramNames = Arrays.asList(paranamer.lookupParameterNames(constructor, false));
-
-            // build optional parameters
-            for (String paramName : paramNames) {
-                if (!requiredParams.contains(paramName)) {
-                    optionalParams.add(paramName);
-                }
-            }
-
-            // clean requiredParams by moving extraneous parameters from requiredParams to optionalParams
-            for (Iterator<String> i = requiredParams.iterator(); i.hasNext(); ) {
-                String element = i.next();
-                if (!paramNames.contains(element)) {
-                    optionalParams.add(element);
-                    i.remove();
-                }
-            }
-        });
-
-        builder.withOptionalParameters(optionalParams.toArray(new String[0]));
-        builder.withRequiredParameters(requiredParams.toArray(new String[0]));
-        registerAnalysis(builder.build());
-    }
-
-    private AbstractPipelineStep invokeConstructor(Constructor<?> constructor, Map<String, String> dirtyParameters) throws IllegalAccessException, InvocationTargetException, InstantiationException {
-        Map<String, String> parameters = new HashMap<>();
-        dirtyParameters.forEach((key, val) -> parameters.put(key.toLowerCase(), val));
-        if (parameters.size() == 0) {
-            return (AbstractPipelineStep) constructor.newInstance(new Object[0]);
-        }
-        String[] parameterNames = paranamer.lookupParameterNames(constructor, false);
-        Parameter[] constructorParams = constructor.getParameters();
-        Object[] invokeParameters = new Object[parameters.size()];
-        for (int i = 0; i < constructorParams.length; i++) {
-            Parameter param = constructorParams[i];
-            String value = parameters.get(parameterNames[i].toLowerCase());
-            switch (param.getType().getSimpleName()) {
-                case "String":
-                    invokeParameters[i] = value;
-                    break;
-                case "Double":
-                case "double":
-                    invokeParameters[i] = Double.parseDouble(value);
-                    break;
-                case "Integer":
-                case "int":
-                    invokeParameters[i] = Integer.parseInt(value);
-                    break;
-                case "Boolean":
-                case "boolean":
-                    invokeParameters[i] = Boolean.parseBoolean(value);
-                    break;
-                case "Float":
-                case "float":
-                    throw new IllegalArgumentException("Parameter Type Float not allowed for automatic construction. Please use Double or implement and register a custom StepConstructor.");
-                default:
-                    throw new IllegalArgumentException("Parameter Type not allowed for automatic construction. Please implement and register a custom StepConstructor to accept parameters of type " + param.getType().getSimpleName());
-            }
-        }
-        return (AbstractPipelineStep) constructor.newInstance(invokeParameters);
-    }
-
-    private Optional<String> buildSortedConcatenation(String[] parameters) {
-        if (parameters.length == 0) {
-            return Optional.of("_empty_");
-        }
-        return Arrays.stream(parameters).sorted().reduce((s, s2) -> s.toLowerCase() + s2.toLowerCase());
-    }
-
-    private Optional<String> buildSortedKeyConcatenation(Map<String, String> parameters) {
-        if (parameters.size() == 0) {
-            return Optional.of("_empty_");
-        }
-        return parameters.keySet().stream().sorted().reduce((s, s2) -> s.toLowerCase() + s2.toLowerCase());
-    }
-
-    private class GenericConstructorStepConstructor implements StepConstructor {
-        private String name;
-        private Constructor[] constructors;
-
-        private GenericConstructorStepConstructor(String name, Constructor[] constructors) {
-            this.name = name;
-            this.constructors = constructors;
-        }
-
-        @Override
-        public PipelineStep constructPipelineStep(Map<String, String> parameters) throws StepConstructionException {
-            Optional<String> inputParamConc = buildSortedKeyConcatenation(parameters);
-            for (Constructor<?> constructor : this.constructors) {
-                if (constructor.getParameters().length != parameters.size()) {
-                    continue;
-                }
-                String[] parameterNames = paranamer.lookupParameterNames(constructor, false);
-                Optional<String> constructorParamConc = buildSortedConcatenation(parameterNames);
-                if (inputParamConc.get().equals(constructorParamConc.get())) {
-                    try {
-                        return invokeConstructor(constructor, parameters);
-                    } catch (IllegalAccessException | InvocationTargetException | InstantiationException e) {
-                        throw new StepConstructionException(name, "Exception occurred when creating step with parameters " + parameters + "; Exception: " + e.getMessage());
+    public boolean registerClass(Class impl, boolean isFork) {
+        if ((impl.getModifiers() & Modifier.ABSTRACT) == 0) {
+            GenericStepConstructor stepConstructor = new GenericStepConstructor(impl, paranamer);
+            if (stepConstructor.hasConstructors()) {
+                if (getAnalysisRegistration(stepConstructor.getName()) != null) {
+                    // TODO allow accessing conflicting classes via their fully qualified name
+                    logger.warning("Pipeline step with name " + stepConstructor.getName() + " already registered, not registering class: " + impl.getName());
+                } else {
+                    if (isFork) {
+                        registerFork(stepConstructor.createForkRegistration());
+                    } else {
+                        registerAnalysis(stepConstructor.createAnalysisRegistration());
                     }
+                    return true;
                 }
+            } else {
+                logger.fine("Class missing simple constructor, not registered: " + impl.getName());
             }
-            throw new StepConstructionException(name, "No matching Constructor found for parameters " + parameters.toString());
+        } else {
+            logger.fine("Class is abstract, not registered: " + impl.getName());
         }
+        unconstructableClasses.add(impl);
+        return false;
     }
+
 }

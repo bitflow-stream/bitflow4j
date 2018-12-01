@@ -100,7 +100,7 @@ public class TestWithSamples {
     List<Sample> flatten(List<Pair<Header, List<Sample>>> samples) {
         List<Sample> result = new ArrayList<>();
         for (Pair<Header, List<Sample>> header : samples) {
-            result.addAll(header.getValue2());
+            result.addAll(header.getRight());
         }
         return result;
     }

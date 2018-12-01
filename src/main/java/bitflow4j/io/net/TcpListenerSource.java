@@ -30,6 +30,11 @@ public class TcpListenerSource extends ThreadedSource {
         this.port = port;
     }
 
+    @Override
+    public String toString() {
+        return String.format("Listen for incoming samples on :%s (format %s)", port, marshaller);
+    }
+
     public void start(TaskPool pool) throws IOException {
         logger.info("Listening on port " + port);
         ServerSocket tcpSocket = new ServerSocket(port);

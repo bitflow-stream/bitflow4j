@@ -16,6 +16,13 @@ public class OldBinaryMarshaller extends BinaryMarshaller {
 
     static final String OLD_BIN_HEADER_TIME = "time";
 
+    public static final String FORMAT = "BIN-OLD";
+
+    @Override
+    public String toString() {
+        return FORMAT;
+    }
+
     public boolean peekIsHeader(InputStream input) throws IOException {
         // This format cannot correctly distinguish between a header and a sample
         // if the binary timestamp happens to collide with the bytes for the string "time".

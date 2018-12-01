@@ -1,8 +1,10 @@
 package bitflow4j.script.registry;
 
 import bitflow4j.Pipeline;
-import bitflow4j.steps.fork.Fork;
+import bitflow4j.misc.Pair;
+import bitflow4j.steps.fork.ScriptableDistributor;
 
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -11,6 +13,6 @@ import java.util.Map;
 @FunctionalInterface
 public interface ForkConstructor {
 
-    Fork constructForkStep(Map<String, Pipeline> subPipelines, Map<String, String> parameters) throws StepConstructionException;
+    ScriptableDistributor constructForkStep(Collection<Pair<String, Pipeline>> subPipelines, Map<String, String> parameters) throws StepConstructionException;
 
 }

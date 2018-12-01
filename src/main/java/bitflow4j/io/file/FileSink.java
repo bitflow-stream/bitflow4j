@@ -34,7 +34,7 @@ public class FileSink extends MarshallingSampleWriter {
 
     @Override
     public String toString() {
-        return String.format("FileSink to %s (append: %s, deleteFiles: %s)", files, append, deleteFiles);
+        return String.format("Writing file %s (append: %s, deleteFiles: %s, format: %s)", files, append, deleteFiles, getMarshaller());
     }
 
     @Override

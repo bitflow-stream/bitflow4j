@@ -42,7 +42,7 @@ public class SampleWriter extends MarshallingSampleWriter {
 
     @Override
     public String toString() {
-        return name;
+        return String.format("Writing to %s (format %s)", name, getMarshaller());
     }
 
     @Override

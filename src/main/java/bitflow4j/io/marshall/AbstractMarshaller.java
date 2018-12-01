@@ -20,7 +20,6 @@ public abstract class AbstractMarshaller implements Marshaller {
     static final byte[] lineSepBytes_1 = lineSepString_1.getBytes();
     static final byte[] lineSepBytes_2 = lineSepString_2.getBytes();
 
-
     static String readLine(InputStream input) throws IOException {
         int chr = input.read();
         StringBuilder buffer = new StringBuilder(512);

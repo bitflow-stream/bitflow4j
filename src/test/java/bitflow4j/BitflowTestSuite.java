@@ -1,6 +1,8 @@
 package bitflow4j;
 
+import bitflow4j.misc.TreeFormatterTest;
 import bitflow4j.script.MainTest;
+import bitflow4j.script.ScriptCompilationTest;
 import bitflow4j.script.endpoints.EndpointFactoryTest;
 import bitflow4j.script.registry.AnalysisRegistrationTest;
 import bitflow4j.script.registry.ScanForPipelineStepTest;
@@ -10,11 +12,13 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
         TestMarshaller.class,
         TestDatabase.class,
+        TreeFormatterTest.class,
 
         // Bitflow Script
         AnalysisRegistrationTest.class,
         ScanForPipelineStepTest.class,
         MainTest.class,
+        ScriptCompilationTest.class,
         EndpointFactoryTest.class,
 
         // Bitflow Query Language

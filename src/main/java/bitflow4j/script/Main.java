@@ -4,10 +4,12 @@ import bitflow4j.Pipeline;
 import bitflow4j.misc.Config;
 import bitflow4j.misc.TreeFormatter;
 import bitflow4j.script.endpoints.EndpointFactory;
+import bitflow4j.script.registry.AnalysisRegistration;
 import bitflow4j.script.registry.Registry;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
+import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 
 import java.io.BufferedReader;
@@ -15,9 +17,12 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Main parses a BitflowScript and executes the resulting Pipeline.
@@ -69,24 +74,25 @@ public class Main {
             jc.usage();
             return;
         }
-        if (!cmdArgs.isScriptValid()) {
-            logger.severe("Please provide a script either as file using the -f parameter or as positional arguments");
-            jc.usage();
-        }
+        cmdArgs.configureLogging();
 
-        String rawScript = cmdArgs.getRawScript();
         Registry registry = new Registry();
-        EndpointFactory endpoints = new EndpointFactory();
         registry.scanForPipelineSteps(cmdArgs.cleanPackagesToScan());
 
         if (cmdArgs.printJsonCapabilities) {
             System.out.println(new Gson().toJson(registry.getCapabilities()));
             return;
         } else if (cmdArgs.printCapabilities) {
-            registry.getCapabilities().forEach(a -> logger.info(a.toString()));
+            logCapabilities(registry);
             return;
         }
 
+        if (!cmdArgs.isScriptValid()) {
+            logger.severe("Please provide a script either as file using the -f parameter or as positional arguments");
+            jc.usage();
+        }
+        String rawScript = cmdArgs.getRawScript();
+        EndpointFactory endpoints = new EndpointFactory();
         BitflowScriptCompiler compiler = new BitflowScriptCompiler(registry, endpoints);
         BitflowScriptCompiler.CompileResult res = compiler.parseScript(rawScript);
 
@@ -111,19 +117,48 @@ public class Main {
         return reader.lines().collect(Collectors.joining(System.lineSeparator()));
     }
 
+    private static void logCapabilities(Registry registry) {
+        List<AnalysisRegistration> cap = Lists.newArrayList(registry.getCapabilities());
+        cap.sort((a1, a2) -> a1.getName().compareToIgnoreCase(a2.getName()));
+        logIfNotEmpty("Stream-Mode Processing Steps:", cap.stream().filter(AnalysisRegistration::supportsStreamOnly));
+        logIfNotEmpty("Batch-Mode Processing Steps:", cap.stream().filter(AnalysisRegistration::supportsBatchOnly));
+        logIfNotEmpty("Mixed-Mode Processing Steps:", cap.stream().filter(AnalysisRegistration::supportsBothModes));
+    }
+
+    private static void logIfNotEmpty(String title, Stream<AnalysisRegistration> reg) {
+        Iterator<AnalysisRegistration> iter = reg.iterator();
+        if (!iter.hasNext())
+            return;
+        logger.info("");
+        logger.info(title);
+        iter.forEachRemaining(Main::logCapability);
+    }
+
+    private static void logCapability(AnalysisRegistration analysisRegistration) {
+        logger.info(" - " + analysisRegistration.getName());
+        if (!analysisRegistration.getRequiredParameters().isEmpty())
+            logger.info("     Required parameters: " + analysisRegistration.getRequiredParameters());
+        if (!analysisRegistration.getOptionalParameters().isEmpty())
+            logger.info("     Optional parameters: " + analysisRegistration.getOptionalParameters());
+    }
+
     private static class CmdArgs {
-        @Parameter(names = "--help", help = true, order = 0)
+        @Parameter(names = {"-h", "--help"}, help = true, order = 0)
         private boolean printHelp = false;
         @Parameter(names = {"-f", "--file"}, description = "A file containing the script to parse.", order = 1)
         private String fileName = null;
-        @Parameter(names = {"-p", "--scan-packages"}, description = "Comma-separated package names that will be scanned automatically. Wildcards allowed.", order = 2)
-        private String packagesToScan = "*";
-        @Parameter(names = "--capabilities", description = "Prints the capabilities of this jar in a human readable format.")
+        @Parameter(names = {"-P", "--scan"}, description = "Package names that will be scanned automatically. Wildcards allowed.", order = 2)
+        private List<String> packagesToScan = Lists.newArrayList("bitflow4j");
+        @Parameter(names = {"-c", "--capabilities"}, description = "Prints the capabilities of this jar in a human readable format.")
         private boolean printCapabilities = false;
-        @Parameter(names = "--json-capabilities", description = "Prints the capabilities of this jar in json format.")
+        @Parameter(names = {"-j", "--json-capabilities"}, description = "Prints the capabilities of this jar in json format.")
         private boolean printJsonCapabilities = false;
-        @Parameter(names = "--pipeline", description = "Prints the pipeline steps resulting from parsing the input script and exits.")
+        @Parameter(names = {"-p", "--pipeline"}, description = "Prints the pipeline steps resulting from parsing the input script and exits.")
         private boolean printPipeline = false;
+        @Parameter(names = {"-v", "--verbose"}, description = "Set the log level to FINER.")
+        private boolean verboseLogging = false;
+        @Parameter(names = {"-s", "--silent"}, description = "Set the log level to WARNING.")
+        private boolean silentLogging = false;
         @Parameter(description = "[Bitflow Script]")
         private List<String> scriptParts = new ArrayList<>();
 
@@ -140,11 +175,21 @@ public class Main {
         }
 
         public String[] cleanPackagesToScan() {
-            if (packagesToScan.equals("*")) {
-                return null;
-            }
-            return packagesToScan.split(",");
+            return packagesToScan.toArray(new String[0]);
+
+//            if (packagesToScan.equals("*")) {
+//                return null;
+//            }
+//            return packagesToScan.split(",");
         }
+
+        public void configureLogging() {
+            if (verboseLogging)
+                Config.setDefaultLogLevel(Level.FINER);
+            else if (silentLogging)
+                Config.setDefaultLogLevel(Level.WARNING);
+        }
+
     }
 
 }

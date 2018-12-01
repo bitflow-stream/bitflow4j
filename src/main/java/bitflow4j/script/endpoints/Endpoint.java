@@ -1,49 +1,60 @@
 package bitflow4j.script.endpoints;
 
+import bitflow4j.io.marshall.*;
+
 /**
  * Endpoint contains the parsed information of an endpoint token
  */
 public class Endpoint {
 
-    private String endpointToken;
-    private Format format;
-    private Type type;
-    private String target;
+    private final String endpointToken;
+    private final Format format;
+    private final Type type;
+    private final String target;
 
-    public Endpoint(String endpointToken) {
+    public Endpoint(String endpointToken, String target, Format format, Type type) {
         this.endpointToken = endpointToken;
+        this.target = target;
+        this.type = type;
+        this.format = format;
     }
 
     public Format getFormat() {
         return format;
     }
 
-    public void setFormat(Format format) {
-        this.format = format;
-    }
-
     public Type getType() {
         return type;
-    }
-
-    public void setType(Type type) {
-        if (type == Type.STD && !"-".equals(target)) {
-            throw new EndpointParseException(this.toString(), "Type 'std' requires target '-', target was " + getTarget());
-        }
-        this.type = type;
     }
 
     public String getTarget() {
         return target;
     }
 
-    public void setTarget(String target) {
-        this.target = target;
-    }
-
     @Override
     public String toString() {
         return endpointToken;
+    }
+
+    public Marshaller getMarshaller() {
+        Marshaller marshaller;
+        switch (getFormat()) {
+            case BINARY:
+                marshaller = new BinaryMarshaller();
+                break;
+            case CSV:
+                marshaller = new CsvMarshaller();
+                break;
+            case WAV:
+                marshaller = new WavAudioMarshaller();
+                break;
+            case TEXT:
+                marshaller = new TextMarshaller();
+                break;
+            default:
+                throw new EndpointParseException(toString(), "Could not find a Marshaller for specified format " + getFormat());
+        }
+        return marshaller;
     }
 
     public enum Type {

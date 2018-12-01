@@ -41,7 +41,7 @@ public class FileGroup {
 
     @Override
     public String toString() {
-        return getFilePattern().toString();
+        return fileStart + fileEnd;
     }
 
     public Pattern getFilePattern(String suffix) {

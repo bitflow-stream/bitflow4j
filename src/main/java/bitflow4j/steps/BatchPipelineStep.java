@@ -2,10 +2,14 @@ package bitflow4j.steps;
 
 import bitflow4j.AbstractPipelineStep;
 import bitflow4j.Sample;
+import bitflow4j.task.LoopTask;
+import bitflow4j.task.TaskPool;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -18,25 +22,24 @@ public abstract class BatchPipelineStep extends AbstractPipelineStep {
 
     protected static final Logger logger = Logger.getLogger(BatchPipelineStep.class.getName());
 
-    // TODO implement automatic flushing:
-    // window size, timeout (wall clock, sample timestamps), tag change
-
     private final String batchSeparationTag;
     private boolean warnedMissingSeparationTag = false;
     private String previousSeparationTagValue = null;
+
+    private final long timeoutMs;
+    private long startTime;
 
     public BatchPipelineStep() {
         this(null);
     }
 
     public BatchPipelineStep(String batchSeparationTag) {
-        this.batchSeparationTag = batchSeparationTag;
+        this(batchSeparationTag, 0);
     }
 
     public BatchPipelineStep(String batchSeparationTag, long timeoutMs) {
-        // TODO merge timeout functionality
         this.batchSeparationTag = batchSeparationTag;
-        throw new UnsupportedOperationException("Not yet implemented");
+        this.timeoutMs = timeoutMs;
     }
 
     private List<Sample> window = new ArrayList<>();
@@ -44,8 +47,40 @@ public abstract class BatchPipelineStep extends AbstractPipelineStep {
     protected abstract void flush(List<Sample> window) throws IOException;
 
     @Override
-    public final void writeSample(Sample sample) throws IOException {
+    public void start(TaskPool pool) throws IOException {
+        super.start(pool);
+
+        // TODO refactor for allowing additional flushing modes:
+        // window size, timeout (wall clock, sample timestamps), tag change. Micro batching ("jumping" window) vs moving window.
+
+        if (timeoutMs > 0) {
+            startTime = new Date().getTime();
+            pool.start(new LoopTask() {
+                @Override
+                public String toString() {
+                    return "Auto-Flush Task for " + BatchPipelineStep.this.toString();
+                }
+
+                @Override
+                protected boolean executeIteration() throws IOException {
+                    long currentTime = new Date().getTime();
+                    if (currentTime - startTime > timeoutMs) {
+                        try {
+                            flushResults();
+                        } catch (IOException ex) {
+                            logger.log(Level.SEVERE, "Failed to automatically flush batch", ex);
+                        }
+                    }
+                    return pool.sleep(timeoutMs / 2);
+                }
+            });
+        }
+    }
+
+    @Override
+    public final synchronized void writeSample(Sample sample) throws IOException {
         window.add(sample);
+        startTime = new Date().getTime();
         if (shouldFlush(sample))
             flushResults();
     }
@@ -68,12 +103,14 @@ public abstract class BatchPipelineStep extends AbstractPipelineStep {
     }
 
     @Override
-    protected void doClose() throws IOException {
+    protected synchronized void doClose() throws IOException {
         flushResults();
         super.doClose();
     }
 
-    private void flushResults() throws IOException {
+    private synchronized void flushResults() throws IOException {
+        if (window.isEmpty())
+            return;
         printFlushMessage();
         flush(window);
         window.clear();

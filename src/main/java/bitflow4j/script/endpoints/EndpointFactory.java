@@ -6,7 +6,7 @@ import bitflow4j.io.console.SampleReader;
 import bitflow4j.io.console.SampleWriter;
 import bitflow4j.io.file.FileSink;
 import bitflow4j.io.file.FileSource;
-import bitflow4j.io.marshall.*;
+import bitflow4j.io.marshall.Marshaller;
 import bitflow4j.io.net.TcpListenerSource;
 import bitflow4j.io.net.TcpSink;
 import bitflow4j.io.net.TcpSource;
@@ -23,43 +23,6 @@ import java.util.stream.Collectors;
  * EndpointFactory provides methods to create Source and Sink from a endpoint token (script-like written form of an endpoint)
  */
 public class EndpointFactory {
-
-    private static boolean isValidPort(String input) {
-        try {
-            extractPort(input);
-        } catch (MalformedURLException e) {
-            return false;
-        }
-        return true;
-    }
-
-    private static boolean isValidHostAndPort(String input) {
-        try {
-            return !"".equals(extractHostPart(input)) && extractPort(input) > 0;
-        } catch (MalformedURLException e) {
-            return false;
-        }
-    }
-
-    private static String extractHostPart(String tcpEndpoint) throws MalformedURLException {
-        URL url = new URL("http://" + tcpEndpoint); // Exception when the tcp endpoint format is wrong.
-        return url.getHost();
-    }
-
-    private static int extractPort(String tcpEndpoint) throws MalformedURLException {
-        URL url = new URL("http://" + tcpEndpoint); // Exception when the tcp endpoint format is wrong.
-        return url.getPort();
-    }
-
-    private static boolean isValidFilename(String file) {
-        File f = new File(file);
-        try {
-            f.getCanonicalPath();
-            return true;
-        } catch (IOException e) {
-            return false;
-        }
-    }
 
     /**
      * Creates a Source from one or multiple endpoint tokens.
@@ -79,7 +42,7 @@ public class EndpointFactory {
                 throw new EndpointParseException(Arrays.toString(endpointTokens), "Multiinput with varying formats or types.");
             }
         }
-        Marshaller marshaller = getMarshaller(endpoints.get(0));
+        Marshaller marshaller = endpoints.get(0).getMarshaller();
         switch (type) {
             case TCP:
                 String[] targets = endpoints.stream().map(Endpoint::getTarget).toArray(String[]::new);
@@ -112,7 +75,7 @@ public class EndpointFactory {
      */
     public PipelineStep createSink(String endpointToken) throws IOException {
         Endpoint endpoint = parseEndpointToken(endpointToken);
-        Marshaller marshaller = getMarshaller(endpoint);
+        Marshaller marshaller = endpoint.getMarshaller();
         switch (endpoint.getType()) {
             case TCP:
                 return new TcpSink(marshaller, endpoint.getTarget());
@@ -125,27 +88,6 @@ public class EndpointFactory {
         }
     }
 
-    private Marshaller getMarshaller(Endpoint e) {
-        Marshaller marshaller;
-        switch (e.getFormat()) {
-            case BINARY:
-                marshaller = new BinaryMarshaller();
-                break;
-            case CSV:
-                marshaller = new CsvMarshaller();
-                break;
-            case WAV:
-                marshaller = new WavAudioMarshaller();
-                break;
-            case TEXT:
-                marshaller = new TextMarshaller();
-                break;
-            default:
-                throw new EndpointParseException(e.toString(), "Could not find a Marshaller for specified format " + e.getFormat());
-        }
-        return marshaller;
-    }
-
     /**
      * ParseEndpointDescription parses the given string to an EndpointDescription object.
      * The string can be one of two forms: the URL-style description will be parsed by
@@ -154,14 +96,16 @@ public class EndpointFactory {
      * @param endpointToken the full endpoint token
      */
     public Endpoint parseEndpointToken(String endpointToken) {
+        if (endpointToken == null || endpointToken.isEmpty()) {
+            throw new EndpointParseException(endpointToken, "Endpoint cannot be empty");
+        }
         if (endpointToken.contains("://")) {
             return parseURLEndpoint(endpointToken);
         } else {
-            Endpoint endpoint = new Endpoint(endpointToken);
-            endpoint.setTarget(endpointToken);
-            endpoint.setType(guessEndpointType(endpointToken, endpointToken));
-            endpoint.setFormat(guessFormat(endpoint));
-            return endpoint;
+            Endpoint.Type type = guessEndpointType(endpointToken);
+            assert type != null;
+            Endpoint.Format format = guessFormat(type, endpointToken);
+            return new Endpoint(endpointToken, endpointToken, format, type);
         }
     }
 
@@ -177,57 +121,57 @@ public class EndpointFactory {
      * @param input the full endpointToken, expected to be in the URLFormat
      **/
     private Endpoint parseURLEndpoint(String input) {
-        Endpoint result = new Endpoint(input);
         String[] urlParts = input.split("://");
-        if (urlParts.length != 2 || "".equals(urlParts[0]) || "".equals(urlParts[1])) {
+        if (urlParts.length != 2 || urlParts[0].isEmpty() || urlParts[1].isEmpty()) {
             throw new EndpointParseException(input, "URL expected to be in form of: format+transport://target");
         }
-        result.setTarget(urlParts[1]);
+        String target = urlParts[1];
+        Endpoint.Format format = null;
+        Endpoint.Type type = null;
 
-        boolean formatProcessed = false;
         for (String part : urlParts[0].split("\\+")) {
             if (Endpoint.Format.find(part) != null) {
-                if (formatProcessed) {
+                if (format != null) {
                     throw new EndpointParseException(input, "multiple formats defined for endpoint");
                 }
-                formatProcessed = true;
-                Endpoint.Format f = Endpoint.Format.find(part);
-                result.setFormat(f);
+                format = Endpoint.Format.find(part);
             } else if (Endpoint.Type.find(part) != null) {
-                if (result.getType() != null) {
+                if (type != null) {
                     throw new EndpointParseException(input, "multiple types defined for endpoint");
                 }
-                result.setType(Endpoint.Type.find(part));
+                type = Endpoint.Type.find(part);
             } else {
                 throw new EndpointParseException(input, "Unknown format or type: " + part);
             }
         }
-        if (result.getType() == null) {
-            Endpoint.Type guess = guessEndpointType(result.getTarget(), input);
-            result.setType(guess);
+        if (type == Endpoint.Type.STD && !"-".equals(target)) {
+            throw new EndpointParseException(this.toString(), "Type 'std' requires target '-', target was " + target);
         }
-        if (result.getFormat() == null) {
-            result.setFormat(guessFormat(result));
+        if (type == null) {
+            type = guessEndpointType(target);
+            assert type != null;
         }
-
-        return result;
+        if (format == null) {
+            format = guessFormat(type, target);
+        }
+        return new Endpoint(input, target, format, type);
     }
 
-    private Endpoint.Format guessFormat(Endpoint endpoint) {
-        switch (endpoint.getType()) {
+    private Endpoint.Format guessFormat(Endpoint.Type type, String target) {
+        switch (type) {
             case TCP:
             case LISTEN:
                 return Endpoint.Format.BINARY;
             case FILE:
-                if (endpoint.getTarget() != null && endpoint.getTarget().endsWith(".bin")) {
+                if (target.endsWith(".bin")) {
                     return Endpoint.Format.BINARY;
-                } else if (endpoint.getTarget() != null && endpoint.getTarget().endsWith(".wav")) {
+                } else if (target.endsWith(".wav")) {
                     return Endpoint.Format.WAV;
                 } else {
                     return Endpoint.Format.CSV;
                 }
             case STD:
-                return Endpoint.Format.TEXT;
+                return Endpoint.Format.CSV;
         }
         return Endpoint.Format.UNDEFINED;
     }
@@ -240,23 +184,54 @@ public class EndpointFactory {
      * - The hyphen '-' is interpreted as standard input/output.
      * - All other targets are treated as file names.
      *
-     * @param target        the target to be used to guess the type
-     * @param endpointToken the full endpointToken for improved Error message
+     * @param target the target to be used to guess the type
      **/
-    private Endpoint.Type guessEndpointType(String target, String endpointToken) {
-        if (target == null || target.isEmpty()) {
-            throw new EndpointParseException(endpointToken, "please provide a target");
-        }
+    private Endpoint.Type guessEndpointType(String target) {
         if ("-".equals(target)) {
             return Endpoint.Type.STD;
-        } else if (target.startsWith(":") && isValidPort(target)) {
+        } else if (target.startsWith(":") && isValidPort(target.substring(1))) {
             return Endpoint.Type.LISTEN;
         } else if (target.contains(":") && isValidHostAndPort(target)) {
             return Endpoint.Type.TCP;
-        } else if (isValidFilename(endpointToken)) {
+        } else if (isValidFilename(target)) {
             return Endpoint.Type.FILE;
-        } else {
-            throw new EndpointParseException(endpointToken, "failed to guess target type");
+        }
+        throw new EndpointParseException(target, "failed to guess target type");
+    }
+
+    private static boolean isValidPort(String portString) {
+        try {
+            return extractPort("host:" + portString) > 0;
+        } catch (MalformedURLException e) {
+            return false;
         }
     }
+
+    private static boolean isValidHostAndPort(String input) {
+        try {
+            return !"".equals(extractHostPart(input)) && extractPort(input) > 0;
+        } catch (MalformedURLException e) {
+            return false;
+        }
+    }
+
+    private static String extractHostPart(String tcpEndpoint) throws MalformedURLException {
+        URL url = new URL("http://" + tcpEndpoint); // Exception when the tcp endpoint format is wrong.
+        return url.getHost();
+    }
+
+    private static int extractPort(String tcpEndpoint) throws MalformedURLException {
+        URL url = new URL("http://" + tcpEndpoint); // Exception when the tcp endpoint format is wrong.
+        return url.getPort();
+    }
+
+    private static boolean isValidFilename(String file) {
+        File f = new File(file);
+        try {
+            return !f.getCanonicalPath().isEmpty();
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
 }

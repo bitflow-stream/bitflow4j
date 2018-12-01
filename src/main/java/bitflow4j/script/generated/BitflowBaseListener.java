@@ -28,49 +28,25 @@ public class BitflowBaseListener implements BitflowListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterOutputFork(BitflowParser.OutputForkContext ctx) { }
+	@Override public void enterPipeline(BitflowParser.PipelineContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitOutputFork(BitflowParser.OutputForkContext ctx) { }
+	@Override public void exitPipeline(BitflowParser.PipelineContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterFork(BitflowParser.ForkContext ctx) { }
+	@Override public void enterMultiInputPipeline(BitflowParser.MultiInputPipelineContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitFork(BitflowParser.ForkContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterWindow(BitflowParser.WindowContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitWindow(BitflowParser.WindowContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterMultiinput(BitflowParser.MultiinputContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitMultiinput(BitflowParser.MultiinputContext ctx) { }
+	@Override public void exitMultiInputPipeline(BitflowParser.MultiInputPipelineContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -100,49 +76,49 @@ public class BitflowBaseListener implements BitflowListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterTransform(BitflowParser.TransformContext ctx) { }
+	@Override public void enterName(BitflowParser.NameContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitTransform(BitflowParser.TransformContext ctx) { }
+	@Override public void exitName(BitflowParser.NameContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterSubPipeline(BitflowParser.SubPipelineContext ctx) { }
+	@Override public void enterNamedSubPipelineKey(BitflowParser.NamedSubPipelineKeyContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitSubPipeline(BitflowParser.SubPipelineContext ctx) { }
+	@Override public void exitNamedSubPipelineKey(BitflowParser.NamedSubPipelineKeyContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterWindowSubPipeline(BitflowParser.WindowSubPipelineContext ctx) { }
+	@Override public void enterEndpoint(BitflowParser.EndpointContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitWindowSubPipeline(BitflowParser.WindowSubPipelineContext ctx) { }
+	@Override public void exitEndpoint(BitflowParser.EndpointContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterPipeline(BitflowParser.PipelineContext ctx) { }
+	@Override public void enterVal(BitflowParser.ValContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitPipeline(BitflowParser.PipelineContext ctx) { }
+	@Override public void exitVal(BitflowParser.ValContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -172,25 +148,109 @@ public class BitflowBaseListener implements BitflowListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterName(BitflowParser.NameContext ctx) { }
+	@Override public void enterIntermediateTransform(BitflowParser.IntermediateTransformContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitName(BitflowParser.NameContext ctx) { }
+	@Override public void exitIntermediateTransform(BitflowParser.IntermediateTransformContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterPipelineName(BitflowParser.PipelineNameContext ctx) { }
+	@Override public void enterTransform(BitflowParser.TransformContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitPipelineName(BitflowParser.PipelineNameContext ctx) { }
+	@Override public void exitTransform(BitflowParser.TransformContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterFork(BitflowParser.ForkContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitFork(BitflowParser.ForkContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterNamedSubPipeline(BitflowParser.NamedSubPipelineContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitNamedSubPipeline(BitflowParser.NamedSubPipelineContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterSubPipeline(BitflowParser.SubPipelineContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitSubPipeline(BitflowParser.SubPipelineContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterMultiplexFork(BitflowParser.MultiplexForkContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitMultiplexFork(BitflowParser.MultiplexForkContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterMultiplexSubPipeline(BitflowParser.MultiplexSubPipelineContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitMultiplexSubPipeline(BitflowParser.MultiplexSubPipelineContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterWindow(BitflowParser.WindowContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitWindow(BitflowParser.WindowContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterWindowPipeline(BitflowParser.WindowPipelineContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitWindowPipeline(BitflowParser.WindowPipelineContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

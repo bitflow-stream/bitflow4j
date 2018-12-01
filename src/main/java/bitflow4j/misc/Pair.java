@@ -1,28 +1,28 @@
 package bitflow4j.misc;
 
-public class Pair<A, B>{
+public class Pair<A, B> {
 
-	private A value1;
-	private B value2;
-	
-	public Pair(A value1, B value2) {
-		this.value1 = value1;
-		this.value2 = value2;
-	}
+    private A left;
+    private B right;
 
-	public A getValue1() {
-		return value1;
-	}
+    public Pair(A left, B right) {
+        this.left = left;
+        this.right = right;
+    }
 
-	public void setValue1(A value1) {
-		this.value1 = value1;
-	}
+    public A getLeft() {
+        return left;
+    }
 
-	public B getValue2() {
-		return value2;
-	}
+    public void setLeft(A left) {
+        this.left = left;
+    }
 
-	public void setValue2(B value2) {
-		this.value2 = value2;
-	}
+    public B getRight() {
+        return right;
+    }
+
+    public void setRight(B right) {
+        this.right = right;
+    }
 }

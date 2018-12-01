@@ -26,7 +26,7 @@ public class SampleReader extends ThreadedSource {
 
     @Override
     public String toString() {
-        return name;
+        return String.format("Reading from %s (format %s)", name, marshaller);
     }
 
     @Override

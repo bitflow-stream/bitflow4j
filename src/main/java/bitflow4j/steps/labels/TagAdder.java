@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- *
  * @author fschmidt
  */
 public class TagAdder extends AbstractPipelineStep {
@@ -20,11 +19,8 @@ public class TagAdder extends AbstractPipelineStep {
 
     @Override
     public void writeSample(Sample sample) throws IOException {
-        tags.entrySet()
-                .forEach((tag) -> {
-                    sample.setTag(tag.getKey(), tag.getValue());
-                });
-        output.writeSample(sample);
+        tags.forEach(sample::setTag);
+        super.writeSample(sample);
     }
 
 }

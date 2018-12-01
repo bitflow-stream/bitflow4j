@@ -37,6 +37,11 @@ public abstract class Connector {
         this.state = State.INITIALIZED;
     }
 
+    @Override
+    public String toString() {
+        return String.format("%s", url);
+    }
+
     public Connector connect() throws SQLException {
         if (state == State.CONNECTED) return this;
         if (this.user == null) this.connection = DriverManager.getConnection(this.url);

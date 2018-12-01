@@ -20,6 +20,13 @@ public class TextMarshaller extends AbstractMarshaller implements Marshaller {
     private static final byte[] OPEN_BYTES = " (".getBytes();
     private static final byte[] CLOSE_BYTES = ")".getBytes();
 
+    public static final String FORMAT = "TEXT";
+
+    @Override
+    public String toString() {
+        return FORMAT;
+    }
+
     public boolean peekIsHeader(InputStream input) throws IOException {
         throw new UnsupportedOperationException("TextMarshaller does not support unmarshalling");
     }

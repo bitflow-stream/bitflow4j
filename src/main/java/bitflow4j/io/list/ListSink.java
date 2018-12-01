@@ -24,7 +24,7 @@ public class ListSink extends AbstractPipelineStep {
 
     @Override
     public String toString() {
-        return "Sink storing samples in list";
+        return "Store samples to list";
     }
 
     @Override

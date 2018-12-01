@@ -28,6 +28,8 @@ public class CsvMarshaller extends AbstractMarshaller {
     private static final String separator = ",";
     private static final byte[] separatorBytes = separator.getBytes();
 
+    public static final String FORMAT = "CSV";
+
     public static final String shortDateFormat = "yyyy-MM-dd HH:mm:ss";
     public static final String outputDateFormat = shortDateFormat + ".SSS";
     public static final int minDateLength = shortDateFormat.length();
@@ -36,14 +38,19 @@ public class CsvMarshaller extends AbstractMarshaller {
     protected boolean discardTime;
     protected boolean discardTags;
 
-    public CsvMarshaller(){
+    public CsvMarshaller() {
         this.discardTime = false;
         this.discardTags = false;
     }
 
-    public CsvMarshaller(boolean discardTime, boolean discardTags){
+    public CsvMarshaller(boolean discardTime, boolean discardTags) {
         this.discardTime = discardTime;
         this.discardTags = discardTags;
+    }
+
+    @Override
+    public String toString() {
+        return FORMAT;
     }
 
     public static SimpleDateFormat newDateFormatter() {
@@ -141,11 +148,11 @@ public class CsvMarshaller extends AbstractMarshaller {
 
     @Override
     public void marshallHeader(OutputStream output, Header header) throws IOException {
-        if(!discardTime) {
+        if (!discardTime) {
             output.write(CSV_HEADER_TIME.getBytes());
             output.write(separatorBytes);
         }
-        if(!discardTags) {
+        if (!discardTags) {
             output.write(CSV_HEADER_TAGS.getBytes());
         }
 
@@ -157,13 +164,13 @@ public class CsvMarshaller extends AbstractMarshaller {
 
     @Override
     public void marshallSample(OutputStream output, Sample sample) throws IOException {
-        if(!discardTime) {
+        if (!discardTime) {
             String dateStr = output_date_formatter.format(sample.getTimestamp());
             output.write(dateStr.getBytes());
         }
 
         // Write tags
-        if(!discardTags) {
+        if (!discardTags) {
             output.write(separatorBytes);
             output.write(sample.tagString().getBytes());
         }

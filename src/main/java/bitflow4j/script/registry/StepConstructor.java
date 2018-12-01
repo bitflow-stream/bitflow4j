@@ -9,5 +9,7 @@ import java.util.Map;
  */
 @FunctionalInterface
 public interface StepConstructor {
+
     PipelineStep constructPipelineStep(Map<String, String> parameters) throws StepConstructionException;
+
 }

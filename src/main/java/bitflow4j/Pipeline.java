@@ -1,9 +1,9 @@
 package bitflow4j;
 
-import bitflow4j.io.console.SampleWriter;
 import bitflow4j.io.file.FileSink;
 import bitflow4j.io.file.FileSource;
-import bitflow4j.io.marshall.Marshaller;
+import bitflow4j.io.marshall.BinaryMarshaller;
+import bitflow4j.io.marshall.CsvMarshaller;
 import bitflow4j.misc.TreeFormatter;
 import bitflow4j.task.ParallelTask;
 import bitflow4j.task.StoppableTask;
@@ -14,7 +14,6 @@ import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,7 +36,8 @@ public class Pipeline implements TreeFormatter.FormattedNode {
     @Override
     public Collection<Object> formattedChildren() {
         List<Object> children = new ArrayList<>();
-        children.add(source);
+        if (source != null)
+            children.add(source);
         children.addAll(steps);
         return children;
     }
@@ -56,17 +56,12 @@ public class Pipeline implements TreeFormatter.FormattedNode {
 
     // TODO remove
     public Pipeline inputBinary(String... files) throws IOException {
-        return input(new FileSource(Marshaller.get(Marshaller.BIN), files));
+        return input(new FileSource(new BinaryMarshaller(), files));
     }
 
     // TODO remove
     public Pipeline inputCsv(String... files) throws IOException {
-        return input(new FileSource(Marshaller.get(Marshaller.CSV), files));
-    }
-
-    // TODO remove
-    public Pipeline emptyInput() {
-        return input(new EmptySource());
+        return input(new FileSource(new CsvMarshaller(), files));
     }
 
     // ===============================================
@@ -79,23 +74,8 @@ public class Pipeline implements TreeFormatter.FormattedNode {
     }
 
     // TODO remove
-    public Pipeline outputConsole() {
-        return Pipeline.this.step(new SampleWriter(Marshaller.get(Marshaller.CSV)));
-    }
-
-    // TODO remove
-    public Pipeline outputFile(String path, String outputMarshaller) throws IOException {
-        return step(new FileSink(path, Marshaller.get(outputMarshaller)));
-    }
-
-    // TODO remove
     public Pipeline outputCsv(String filename) throws IOException {
-        return outputFile(filename, Marshaller.CSV);
-    }
-
-    // TODO remove
-    public Pipeline emptyOutput() {
-        return step(new NoopStep());
+        return step(new FileSink(filename, new CsvMarshaller()));
     }
 
     // =========================================

@@ -1,45 +1,47 @@
 package bitflow4j.steps.fork.distribute;
 
+import bitflow4j.Pipeline;
 import bitflow4j.Sample;
-import bitflow4j.steps.fork.Distributor;
+import bitflow4j.misc.Pair;
+import bitflow4j.steps.fork.ScriptableDistributor;
 
-/**
- * Created by anton on 5/2/16.
- * <p>
- * The TagDistributor distributes incoming Samples based on tag values stored in the samples.
- * The default functionality is to use the value of one given tag as the sub-pipeline key, but
- * multiple tags can also be defined. In that case the values will be concatenated, and a separator string
- * will be added between the individual values.
- */
-public class TagDistributor implements Distributor {
+import java.util.*;
 
-    private static final String DEFAULT_IDENTIFIER = "default";
+public class TagDistributor extends ScriptableDistributor.Default {
 
-    private final String tagNames[];
-    private final String separator;
+    private String tag;
+    private Map<String, Collection<Pair<String, Pipeline>>> subPipelineCache = new HashMap<>();
 
-    public TagDistributor(String tagName) {
-        this("", tagName);
-    }
-
-    public TagDistributor(String separator, String... tagNames) {
-        this.tagNames = tagNames;
-        this.separator = separator;
+    public TagDistributor(String tag) {
+        this.tag = tag;
     }
 
     @Override
-    public Object[] distribute(Sample sample) {
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < tagNames.length; i++) {
-            if(sample.getTag(tagNames[i]) == null) {
-                builder.setLength(0);
-                builder.append(DEFAULT_IDENTIFIER);
-                break;
-            }
-            if (i > 0)
-                builder.append(separator);
-            builder.append(sample.getTag(tagNames[i]));
-        }
-        return new Object[]{builder.toString()};
+    public String toString() {
+        return String.format("Distribute tag '%s' to %s sub pipelines", tag, subPipelines.size());
     }
+
+    @Override
+    public Collection<Pair<String, Pipeline>> distribute(Sample sample) {
+        String value = sample.getTags().get(tag);
+        if (subPipelineCache.containsKey(value)) {
+            return subPipelineCache.get(value);
+        } else {
+            List<Pair<String, Pipeline>> result = new ArrayList<>();
+            for (Pair<String, Pipeline> available : subPipelines) {
+
+                // TODO implement wildcard and regex matching
+
+                if (available.getLeft().equals(value)) {
+                    result.add(available);
+                }
+            }
+            if (result.isEmpty()) {
+                logger.warning(String.format("No sub-pipeline for value %s (available keys: %s)", value, availableKeys));
+            }
+            subPipelineCache.put(value, result);
+            return result;
+        }
+    }
+
 }

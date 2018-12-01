@@ -25,6 +25,11 @@ public class DBSampleSource extends AbstractSource implements StoppableTask {
     }
 
     @Override
+    public String toString() {
+        return String.format("SQL input (%s)", reader);
+    }
+
+    @Override
     public void start(TaskPool pool) throws IOException {
         try {
             reader.connect().prepareRead();

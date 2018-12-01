@@ -42,22 +42,23 @@ public class TreeFormatter {
         format(tree, "", "", lines);
     }
 
+    @SuppressWarnings("unchecked")
     private void format(Object tree, String headerPrefix, String childPrefix, List<String> lines) {
         String newLine = tree == null ? "(null)" : tree.toString();
         lines.add(headerPrefix + newLine);
 
-        Collection<Object> children = null;
+        Collection children = null;
         if (tree instanceof FormattedNode) {
             children = ((FormattedNode) tree).formattedChildren();
         } else if (tree instanceof Collection) {
-            children = (Collection<Object>) tree;
+            children = (Collection) tree;
         }
 
         if (children != null) {
             if (children.isEmpty()) {
                 children.add("empty");
             }
-            Iterator<Object> iter = children.iterator();
+            Iterator iter = children.iterator();
             while (iter.hasNext()) {
                 Object child = iter.next();
                 String nextHeader, nextChild;

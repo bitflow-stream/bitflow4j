@@ -146,12 +146,13 @@ public class EndpointFactoryTest {
         String sampleHostPort = "some.host.com:8080";
         executeTest("tcp+csv://" + sampleHostPort, Endpoint.Type.TCP, Endpoint.Format.CSV, sampleHostPort);
         // standard format for std is text
-        executeTest("std://-", Endpoint.Type.STD, Endpoint.Format.TEXT, "-");
+        executeTest("std://-", Endpoint.Type.STD, Endpoint.Format.CSV, "-");
         // standard format for tcp is bin
         executeTest("tcp://" + sampleHostPort, Endpoint.Type.TCP, Endpoint.Format.BINARY, sampleHostPort);
         // standard format for file with .bin ending is binary
         executeTest("file://filename.bin", Endpoint.Type.FILE, Endpoint.Format.BINARY, "filename.bin");
-        // standard format for other files is csv
+        executeTest("file://filename.csv", Endpoint.Type.FILE, Endpoint.Format.CSV, "filename.csv");
+        // standard format for other files is binary
         executeTest("file://filename", Endpoint.Type.FILE, Endpoint.Format.CSV, "filename");
 
         // GUESSES
@@ -161,10 +162,12 @@ public class EndpointFactoryTest {
         executeTest(":8000", Endpoint.Type.LISTEN, Endpoint.Format.BINARY, ":8000");
         // guess file
         executeTest("/opt/somefile", Endpoint.Type.FILE, Endpoint.Format.CSV, "/opt/somefile");
+        // guess CSV file
+        executeTest("/opt/somefile.bin", Endpoint.Type.FILE, Endpoint.Format.BINARY, "/opt/somefile.bin");  
         // guess wav file
         executeTest("/opt/somefile.wav", Endpoint.Type.FILE, Endpoint.Format.WAV, "/opt/somefile.wav");
         // guess console
-        executeTest("-", Endpoint.Type.STD, Endpoint.Format.TEXT, "-");
+        executeTest("-", Endpoint.Type.STD, Endpoint.Format.CSV, "-");
     }
 
     @Test
@@ -174,7 +177,8 @@ public class EndpointFactoryTest {
         executeExceptionTest("file+unknown_format://asd", "Unknown format or type");
         executeExceptionTest("file+unknown_format://", "URL expected to be in form of: format+transport://target");
         executeExceptionTest("://asdasd", "URL expected to be in form of: format+transport://target");
-        executeExceptionTest("", "please provide a target");
+        executeExceptionTest("", "Endpoint cannot be empty");
+        executeExceptionTest(null, "Endpoint cannot be empty");
     }
 
     private void executeTest(String endpointToken, Endpoint.Type expectedType, Endpoint.Format expectedFormat, String expectedTarget) {

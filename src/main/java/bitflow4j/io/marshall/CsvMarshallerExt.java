@@ -18,6 +18,8 @@ public class CsvMarshallerExt extends AbstractMarshaller {
 
     private static final String CSV_HEADER_TAGS = "tags";
 
+    public static final String FORMAT = "CSV-EXT";
+
     private String firstColName;
     private String separator;
     private byte[] separatorBytes;
@@ -25,16 +27,20 @@ public class CsvMarshallerExt extends AbstractMarshaller {
 
     private Map<String, Integer> mappingTagMetricIndex = new HashMap<>();
 
-
-    public CsvMarshallerExt(String firstColName, String separator){
+    public CsvMarshallerExt(String firstColName, String separator) {
         this.firstColName = firstColName;
         this.separator = separator;
         this.separatorBytes = separator.getBytes();
     }
 
-    public CsvMarshallerExt(String firstColName, String separator, Set<String> tagMetrics){
+    public CsvMarshallerExt(String firstColName, String separator, Set<String> tagMetrics) {
         this(firstColName, separator);
         this.tagMetrics = tagMetrics;
+    }
+
+    @Override
+    public String toString() {
+        return FORMAT;
     }
 
     @Override
@@ -42,8 +48,8 @@ public class CsvMarshallerExt extends AbstractMarshaller {
         //Handle files with byte order mark
         //TODO can only handle UTF-8. Other boms have different byte size. Adjust!
         byte peekedWithBom[] = peek(input, firstColName.length() + 3);
-        if(Arrays.equals(Arrays.copyOfRange(peekedWithBom, 3, peekedWithBom.length), firstColName.getBytes())){
-            for(int i = 0; i < 3; i++)
+        if (Arrays.equals(Arrays.copyOfRange(peekedWithBom, 3, peekedWithBom.length), firstColName.getBytes())) {
+            for (int i = 0; i < 3; i++)
                 input.read();
             return true;
         }
@@ -60,10 +66,10 @@ public class CsvMarshallerExt extends AbstractMarshaller {
         if (fields.length < 1 || !fields[0].equals(firstColName)) {
             throw new IllegalArgumentException("First field in CSV header must be " + firstColName);
         }
-        boolean hasTags = fields.length > 0 && fields[fields.length-1].equals(CSV_HEADER_TAGS);
+        boolean hasTags = fields.length > 0 && fields[fields.length - 1].equals(CSV_HEADER_TAGS);
 
         int specialFields = hasTags ? 1 : 0;
-        if(tagMetrics != null) {
+        if (tagMetrics != null) {
             this.mapTagMetricsToIndices(fields);
         }
         //Create header. Take only selected fields.
@@ -71,17 +77,17 @@ public class CsvMarshallerExt extends AbstractMarshaller {
         return new UnmarshalledHeader(new Header(header), hasTags);
     }
 
-    private void mapTagMetricsToIndices(String[] metricNames){
-        for(int i = 0; i < metricNames.length; i++){
-            if(tagMetrics.contains(metricNames[i]))
+    private void mapTagMetricsToIndices(String[] metricNames) {
+        for (int i = 0; i < metricNames.length; i++) {
+            if (tagMetrics.contains(metricNames[i]))
                 mappingTagMetricIndex.put(metricNames[i], i);
         }
     }
 
     private String[] createHeader(String[] metricNames, int specialFields) {
         String header[] = new String[metricNames.length - mappingTagMetricIndex.size() - specialFields];
-        for(int i = 0, j = 0; i < metricNames.length - specialFields; i++){
-            if(!mappingTagMetricIndex.containsValue(i))
+        for (int i = 0, j = 0; i < metricNames.length - specialFields; i++) {
+            if (!mappingTagMetricIndex.containsValue(i))
                 header[j++] = metricNames[i];
         }
         return header;
@@ -109,7 +115,7 @@ public class CsvMarshallerExt extends AbstractMarshaller {
         // Parse regular values. Exclude values which should be set as tags
         int metricSize = metricStrings.length;
         int hasTags = 0;
-        if (header.hasTags){
+        if (header.hasTags) {
             metricSize--;
             hasTags = 1;
         }
@@ -118,7 +124,7 @@ public class CsvMarshallerExt extends AbstractMarshaller {
 
         metricValues = new double[metricSize];
         for (int i = 0, j = 0; i < metricStrings.length - hasTags; i++) {
-            if(!mappingTagMetricIndex.values().contains(i)) {
+            if (!mappingTagMetricIndex.values().contains(i)) {
                 try {
                     metricValues[j] = Double.valueOf(metricStrings[i]);
                 } catch (NumberFormatException exc) {
@@ -133,7 +139,7 @@ public class CsvMarshallerExt extends AbstractMarshaller {
         return s;
     }
 
-    private double tryAlternativeNumberParser(String metricString) throws IOException{
+    private double tryAlternativeNumberParser(String metricString) throws IOException {
         Double value;
         DecimalFormat df = new DecimalFormat();
         DecimalFormatSymbols symbols = new DecimalFormatSymbols();
@@ -143,14 +149,14 @@ public class CsvMarshallerExt extends AbstractMarshaller {
         try {
             Number n = df.parse(metricString);
             value = n.doubleValue();
-        }catch (ParseException ex){
+        } catch (ParseException ex) {
             throw new IOException(ex);
         }
         return value;
     }
 
     private Sample addMetricTags(Sample s, String[] metricStrings) {
-        for(Map.Entry<String, Integer> entry : mappingTagMetricIndex.entrySet())
+        for (Map.Entry<String, Integer> entry : mappingTagMetricIndex.entrySet())
             s.setTag(entry.getKey(), metricStrings[entry.getValue()]);
         return s;
     }
@@ -179,12 +185,12 @@ public class CsvMarshallerExt extends AbstractMarshaller {
 
     private String[] rebuildHeaderFromTags(String[] header) {
         String[] completeHeader = new String[header.length + mappingTagMetricIndex.size()];
-        for(int i = 0, j = 0; i < completeHeader.length; i++){
-            if(!mappingTagMetricIndex.values().contains(i)){
+        for (int i = 0, j = 0; i < completeHeader.length; i++) {
+            if (!mappingTagMetricIndex.values().contains(i)) {
                 completeHeader[i] = header[j++];
             }
         }
-        for(Map.Entry<String, Integer> entry : mappingTagMetricIndex.entrySet()){
+        for (Map.Entry<String, Integer> entry : mappingTagMetricIndex.entrySet()) {
             completeHeader[entry.getValue()] = entry.getKey();
         }
         return completeHeader;
@@ -210,19 +216,19 @@ public class CsvMarshallerExt extends AbstractMarshaller {
     }
 
     private void removeMetricTags(Sample sample) {
-        for(String tagMetric : tagMetrics)
+        for (String tagMetric : tagMetrics)
             sample.getTags().remove(tagMetric);
     }
 
     private String[] rebuildValuesFromTags(double[] values, Map<String, String> tags) {
         String[] completeValues = new String[values.length + mappingTagMetricIndex.size()];
-        for(int i = 0, j = 0; i < completeValues.length; i++){
-            if(!mappingTagMetricIndex.values().contains(i)){
+        for (int i = 0, j = 0; i < completeValues.length; i++) {
+            if (!mappingTagMetricIndex.values().contains(i)) {
                 completeValues[i] = String.valueOf(values[j++]);
             }
         }
-        for(Map.Entry<String, String> tag : tags.entrySet()){
-            if(mappingTagMetricIndex.containsKey(tag.getKey())){
+        for (Map.Entry<String, String> tag : tags.entrySet()) {
+            if (mappingTagMetricIndex.containsKey(tag.getKey())) {
                 completeValues[mappingTagMetricIndex.get(tag.getKey())] = tag.getValue();
             }
         }

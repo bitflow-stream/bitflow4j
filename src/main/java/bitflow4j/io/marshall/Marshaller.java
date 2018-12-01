@@ -14,20 +14,15 @@ import java.io.OutputStream;
  */
 public interface Marshaller {
 
-    String CSV = "csv";
-    String BIN = "bin";
-    String BIN_OLD = "binold";
-    String TXT = "txt";
-
     static Marshaller get(String format) {
         switch (format.toUpperCase()) {
-            case CSV:
+            case CsvMarshaller.FORMAT:
                 return new CsvMarshaller();
-            case BIN:
+            case BinaryMarshaller.FORMAT:
                 return new BinaryMarshaller();
-            case BIN_OLD:
+            case OldBinaryMarshaller.FORMAT:
                 return new OldBinaryMarshaller();
-            case TXT:
+            case TextMarshaller.FORMAT:
                 return new TextMarshaller();
             default:
                 throw new IllegalArgumentException("Unknown marshaller format: " + format);

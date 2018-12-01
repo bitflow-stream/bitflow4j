@@ -19,8 +19,14 @@ import java.util.Map;
  */
 public class WavAudioMarshaller implements Marshaller {
 
-    public WavAudioMarshaller() {
+    public static final String FORMAT = "WAV";
 
+    public WavAudioMarshaller() {
+    }
+
+    @Override
+    public String toString() {
+        return FORMAT;
     }
 
     @Override

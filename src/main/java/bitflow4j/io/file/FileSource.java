@@ -61,9 +61,9 @@ public class FileSource extends ThreadedSource {
     public String toString() {
         int numFiles = files.size();
         if (numFiles == 1) {
-            return "File: " + files.get(0).toString();
+            return String.format("Reading file: %s (format %s)", files.get(0).toString(), getMarshaller());
         } else {
-            return String.format("Read %s files", numFiles);
+            return String.format("Reading %s files (format %s)", numFiles, getMarshaller());
         }
     }
 

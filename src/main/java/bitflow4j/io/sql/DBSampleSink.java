@@ -21,6 +21,11 @@ public class DBSampleSink extends AbstractPipelineStep implements StoppableTask 
     }
 
     @Override
+    public String toString() {
+        return String.format("SQL output (%s)", writer);
+    }
+
+    @Override
     public void stop() throws IOException {
         try {
             writer.disconnect();

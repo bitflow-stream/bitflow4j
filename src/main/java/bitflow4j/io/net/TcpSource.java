@@ -35,7 +35,7 @@ public class TcpSource extends ThreadedSource {
 
     @Override
     public String toString() {
-        return "TCP downloader: " + Arrays.toString(tcpSources);
+        return String.format("Download samples from %s (format %s)", Arrays.toString(tcpSources), marshaller);
     }
 
 }

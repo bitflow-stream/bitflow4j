@@ -84,7 +84,7 @@ public class Aggregator extends AbstractPipelineStep {
         inputHeaders.clear();
         int numFields = samples.stream().map((s) -> s.getHeader().header.length).reduce(0, Integer::sum);
 
-        String fields[] = new String[numFields];
+        String[] fields = new String[numFields];
         int i = 0;
         for (Sample sample : samples) {
             String input = sample.getTag(inputTag);
@@ -99,7 +99,7 @@ public class Aggregator extends AbstractPipelineStep {
     }
 
     private Sample constructSample(List<Sample> samples, Header header) {
-        double values[] = new double[header.header.length];
+        double[] values = new double[header.header.length];
         Map<String, String> tags = new HashMap<>();
         Date timestamp = null;
         int i = 0;

@@ -11,11 +11,8 @@ import static org.junit.Assert.assertNotNull;
 
 public class AnalysisRegistrationTest {
 
-    private final AnalysisRegistration sampleAnalysisRegistration = AnalysisRegistration
-            .builder("test", (parameters) -> null)
-            .withRequiredParameters("require_me")
-            .withOptionalParameters("optional_me")
-            .build();
+    private final AnalysisRegistration sampleAnalysisRegistration = (AnalysisRegistration)
+            new AnalysisRegistration("test", (parameters) -> null).required("require_me").optional("optional_me");
 
     @Test
     public void givenParamsWithMissingRequiredParam_whenValidateParameters_thenReturnErrorMessage() {

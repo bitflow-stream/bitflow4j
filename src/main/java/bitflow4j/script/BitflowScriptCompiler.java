@@ -3,18 +3,20 @@ package bitflow4j.script;
 import bitflow4j.Pipeline;
 import bitflow4j.PipelineStep;
 import bitflow4j.Source;
+import bitflow4j.misc.Pair;
 import bitflow4j.script.endpoints.EndpointFactory;
+import bitflow4j.script.generated.BitflowBaseListener;
 import bitflow4j.script.generated.BitflowLexer;
-import bitflow4j.script.generated.BitflowListener;
 import bitflow4j.script.generated.BitflowParser;
 import bitflow4j.script.registry.AnalysisRegistration;
 import bitflow4j.script.registry.ForkRegistration;
 import bitflow4j.script.registry.Registry;
 import bitflow4j.script.registry.StepConstructionException;
+import bitflow4j.steps.fork.Distributor;
 import bitflow4j.steps.fork.Fork;
+import bitflow4j.steps.fork.distribute.MultiplexDistributor;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
-import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -31,7 +33,7 @@ class BitflowScriptCompiler {
 
     private static final Logger logger = Logger.getLogger(BitflowScriptCompiler.class.getName());
 
-    private static final int MAX_ERROR_TEXT = 10;
+    private static final int MAX_ERROR_TEXT = 30;
 
     private final Registry registry;
     private final EndpointFactory endpointFactory;
@@ -59,10 +61,16 @@ class BitflowScriptCompiler {
             @Override
             public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
                 // Wrap the message in a new RecognitionException, because the provided RecognitionException does not contain any Exception message
-                RecognitionException rec = new RecognitionException(msg, recognizer, null, (ParserRuleContext) e.getCtx()) {
+                ParserRuleContext ctx = e == null ? null : (ParserRuleContext) e.getCtx();
+                RecognitionException rec = new RecognitionException(msg, recognizer, null, ctx) {
                     @Override
                     public Token getOffendingToken() {
-                        return e.getOffendingToken();
+                        Token result = null;
+                        if (e != null)
+                            result = e.getOffendingToken();
+                        if (result == null && offendingSymbol instanceof Token)
+                            result = (Token) offendingSymbol;
+                        return result;
                     }
                 };
                 throw new ParseCancellationException(rec);
@@ -73,6 +81,8 @@ class BitflowScriptCompiler {
         BitflowParser.ScriptContext parsedScript;
         try {
             parsedScript = parser.script();
+            ParseTreeWalker.DEFAULT.walk(scriptListener, parsedScript);
+            return new CompileResult(scriptListener.currentPipeline(), scriptListener.errors);
         } catch (ParseCancellationException e) {
             if (e.getCause() instanceof RecognitionException) {
                 return new CompileResult((RecognitionException) e.getCause());
@@ -81,9 +91,10 @@ class BitflowScriptCompiler {
             return new CompileResult(null, Collections.singletonList("Unknown error: " + e.getCause().toString()));
         } catch (RecognitionException e) {
             return new CompileResult(e);
+        } catch (Throwable e) {
+            logger.log(Level.SEVERE, "Exception during Bitflow script compilation", e);
+            return new CompileResult(null, Collections.singletonList(String.format("Unknown %s during Bitflow script compilation: %s", e.getClass().getName(), e.getMessage())));
         }
-        ParseTreeWalker.DEFAULT.walk(scriptListener, parsedScript);
-        return new CompileResult(scriptListener.currentPipeline(), scriptListener.errors);
     }
 
     public static class CompileResult {
@@ -114,14 +125,15 @@ class BitflowScriptCompiler {
     }
 
     static String formatError(Token position, RuleContext ctx, String msg) {
-        String text = ctx.getText();
+        String text = "";
+        if (ctx != null)
+            text = ctx.getText();
         if (text == null || text.isEmpty()) {
             text = position.getText();
         }
         if (text.length() > MAX_ERROR_TEXT + "...".length()) {
             text = text.substring(0, MAX_ERROR_TEXT) + "...";
         }
-
         return String.format("Line %s (%s) '%s': %s",
                 position.getLine(), position.getCharPositionInLine(), text, msg);
     }
@@ -129,7 +141,8 @@ class BitflowScriptCompiler {
     /**
      * BitflowScriptListener listens on a AST tree of a bitflow script and generates the Pipeline.
      */
-    private class BitflowScriptListener implements BitflowListener {
+    private class BitflowScriptListener extends BitflowBaseListener {
+
         private GenericStateMap state = new GenericStateMap();
         private List<String> errors = new ArrayList<>();
 
@@ -141,80 +154,43 @@ class BitflowScriptCompiler {
             return state.peek("pipeline");
         }
 
-        @Override
-        public void exitFork(BitflowParser.ForkContext ctx) {
-            String forkName = state.pop("name");
-            Map<String, String> forkParams = state.pop("parameters");
-            Map<String, Pipeline> subpipes = state.pop("fork_subpipeline_map");
-
-            ForkRegistration forkReg = registry.getFork(forkName);
-            if (forkReg == null) {
-                pushError(ctx, "Pipeline fork is unknown.");
-                return;
-            }
-
-            try {
-                Fork fork = forkReg.getForkConstructor().constructForkStep(subpipes, forkParams);
-                currentPipeline().step(fork);
-            } catch (StepConstructionException e) {
-                pushError(ctx, e.getStepName() + ": " + e.getMessage());
-            }
+        private String unwrapSTRING(TerminalNode token) {
+            String text = token.getText();
+            return text.substring(1, text.length() - 1);
         }
 
-        @Override
-        public void enterWindow(BitflowParser.WindowContext ctx) {
-            if (state.peek("is_batched") == Boolean.TRUE) {
-                pushError(ctx, "window{ ... }: Window inside Window is not allowed.");
-            }
-            state.push("is_batched", Boolean.TRUE);
+        private String unwrap(BitflowParser.NameContext ctx) {
+            return ctx.STRING() == null ? ctx.getText() : unwrapSTRING(ctx.STRING());
         }
 
-        @Override
-        public void exitWindow(BitflowParser.WindowContext ctx) {
-            state.pop("is_batched");
+        private String unwrap(BitflowParser.EndpointContext ctx) {
+            return ctx.STRING() == null ? ctx.getText() : unwrapSTRING(ctx.STRING());
         }
 
-        @Override
-        public void enterMultiinput(BitflowParser.MultiinputContext ctx) {
-            state.push("is_multi_input", true);
+        private String unwrap(BitflowParser.ValContext ctx) {
+            return ctx.STRING() == null ? ctx.getText() : unwrapSTRING(ctx.STRING());
         }
 
-        @Override
-        public void exitMultiinput(BitflowParser.MultiinputContext ctx) {
-            state.pop("is_multi_input"); // reset
-            String[] inputs = new String[state.len("input_descriptions")];
-            for (int i = 0; i < inputs.length; i++) {
-                inputs[i] = state.pop("input_descriptions");
-            }
-            try {
-                Source source = endpointFactory.createSource(inputs);
-                currentPipeline().input(source);
-            } catch (IOException e) {
-                pushError(ctx, "Could not create multisource input:" + e.getMessage());
-            }
+        private String unwrap(BitflowParser.NamedSubPipelineKeyContext ctx) {
+            return ctx.STRING() == null ? ctx.getText() : unwrapSTRING(ctx.STRING());
         }
 
         @Override
         public void exitInput(BitflowParser.InputContext ctx) {
-            String name = state.pop("name");
-            Boolean isMultiInput = state.peekOrDefault("is_multi_input", Boolean.FALSE);
-            if (isMultiInput) {
-                state.push("input_descriptions", name);
-            } else {
-                try {
-                    Source source = endpointFactory.createSource(name);
-                    currentPipeline().input(source);
-                } catch (IOException e) {
-                    pushError(ctx, "Could not create source:" + e.getMessage());
-                }
+            String input = unwrap(ctx.endpoint());
+            try {
+                Source source = endpointFactory.createSource(input);
+                currentPipeline().input(source);
+            } catch (IOException e) {
+                pushError(ctx, "Could not create source: " + e.getMessage());
             }
         }
 
         @Override
         public void exitOutput(BitflowParser.OutputContext ctx) {
-            String name = state.pop("name");
+            String output = unwrap(ctx.endpoint());
             try {
-                PipelineStep sink = endpointFactory.createSink(name);
+                PipelineStep sink = endpointFactory.createSink(output);
                 currentPipeline().step(sink);
             } catch (IOException e) {
                 pushError(ctx, "Could not create sink: " + e.getMessage());
@@ -223,23 +199,22 @@ class BitflowScriptCompiler {
 
         @Override
         public void exitTransform(BitflowParser.TransformContext ctx) {
-            String name = state.pop("name");
-            Map<String, String> params = state.popOrDefault("parameters", Collections.emptyMap());
+            String name = unwrap(ctx.name());
+            Map<String, String> params = state.pop("parameters");
             Boolean isBatched = state.peekOrDefault("is_batched", Boolean.FALSE);
 
             AnalysisRegistration regAnalysis = registry.getAnalysisRegistration(name);
             if (regAnalysis == null) {
                 pushError(ctx, "Unknown Processor.");
                 return;
-            } else if (isBatched && !regAnalysis.isSupportsBatchProcessing()) {
+            } else if (isBatched && !regAnalysis.supportsBatch()) {
                 pushError(ctx, "Processor used in window, but does not support batch processing.");
                 return;
-            } else if (!isBatched && !regAnalysis.isSupportsStreamProcessing()) {
+            } else if (!isBatched && !regAnalysis.supportsStream()) {
                 pushError(ctx, "Processor used outside window, but does not support stream processing.");
                 return;
             }
-            List<String> paramErrors = regAnalysis.validateParameters(params);
-            paramErrors.forEach(e -> pushError(ctx, e));
+            regAnalysis.validateParameters(params).forEach(e -> pushError(ctx, e));
 
             try {
                 PipelineStep step = regAnalysis.getStepConstructor().constructPipelineStep(params);
@@ -250,47 +225,20 @@ class BitflowScriptCompiler {
         }
 
         @Override
-        public void enterSubPipeline(BitflowParser.SubPipelineContext ctx) {
-            state.push("pipeline", new Pipeline());
-        }
-
-        @Override
-        public void exitSubPipeline(BitflowParser.SubPipelineContext ctx) {
-            Map<String, Pipeline> forkSubPipes = state.peek("fork_subpipeline_map");
-            String subPipeKey = state.pop("pipeline_name");
-            if (subPipeKey == null) {
-                subPipeKey = "" + (forkSubPipes.size() + 1);
-            }
-            Pipeline subPipe = state.pop("pipeline");
-            forkSubPipes.put(subPipeKey, subPipe);
-        }
-
-        @Override
-        public void exitParameter(BitflowParser.ParameterContext ctx) {
-            Map<String, String> params = state.peek("parameters");
-            String key = ctx.getChild(0).getText();
-            String value = ctx.getChild(2).getText();
-            params.put(key, value);
-        }
-
-        @Override
         public void enterTransformParameters(BitflowParser.TransformParametersContext ctx) {
             state.push("parameters", new HashMap<String, String>());
         }
 
         @Override
-        public void exitName(BitflowParser.NameContext ctx) {
-            state.push("name", ctx.getText());
-        }
-
-        @Override
-        public void exitPipelineName(BitflowParser.PipelineNameContext ctx) {
-            state.push("pipeline_name", ctx.getText());
-        }
-
-        @Override
-        public void enterFork(BitflowParser.ForkContext ctx) {
-            state.push("fork_subpipeline_map", new HashMap<String, Pipeline>());
+        public void exitParameter(BitflowParser.ParameterContext ctx) {
+            Map<String, String> params = state.peek("parameters");
+            String key = unwrap(ctx.name());
+            String value = unwrap(ctx.val());
+            if (params.containsKey(key)) {
+                pushError(ctx, String.format("Duplicate parameter %s (values '%s' and '%s')", key, params.get(key), value));
+            } else {
+                params.put(key, value);
+            }
         }
 
         @Override
@@ -298,105 +246,95 @@ class BitflowScriptCompiler {
             state.push("pipeline", new Pipeline());
         }
 
-        // ################ UNUSED ####################
-        // left for convenience, can be removed by extending from BitflowBaseListener
         @Override
-        public void enterTransform(BitflowParser.TransformContext ctx) {
-
-        }
-
-
-        @Override
-        public void enterOutputFork(BitflowParser.OutputForkContext ctx) {
-
+        public void enterSubPipeline(BitflowParser.SubPipelineContext ctx) {
+            state.push("pipeline", new Pipeline());
         }
 
         @Override
-        public void exitOutputFork(BitflowParser.OutputForkContext ctx) {
-
-        }
-
-
-        @Override
-        public void enterScript(BitflowParser.ScriptContext ctx) {
+        public void enterMultiplexFork(BitflowParser.MultiplexForkContext ctx) {
+            state.push("multiplexPipelines", new ArrayList<Pipeline>());
         }
 
         @Override
-        public void exitScript(BitflowParser.ScriptContext ctx) {
-
+        public void exitMultiplexFork(BitflowParser.MultiplexForkContext ctx) {
+            List<Pipeline> subPipelines = state.pop("multiplexPipelines");
+            MultiplexDistributor multiplex = new MultiplexDistributor(subPipelines);
+            Fork fork = new Fork(multiplex);
+            currentPipeline().step(fork);
         }
 
         @Override
-        public void enterWindowSubPipeline(BitflowParser.WindowSubPipelineContext ctx) {
-
+        public void exitMultiplexSubPipeline(BitflowParser.MultiplexSubPipelineContext ctx) {
+            Pipeline pipeline = state.pop("pipeline");
+            List<Pipeline> subPipelines = state.peek("multiplexPipelines");
+            subPipelines.add(pipeline);
         }
 
         @Override
-        public void exitWindowSubPipeline(BitflowParser.WindowSubPipelineContext ctx) {
+        public void enterFork(BitflowParser.ForkContext ctx) {
+            state.push("forkedSubPipelines", new ArrayList<Pair<String, Pipeline>>());
         }
 
         @Override
-        public void enterInput(BitflowParser.InputContext ctx) {
-
+        public void exitNamedSubPipeline(BitflowParser.NamedSubPipelineContext ctx) {
+            Collection<Pair<String, Pipeline>> forkSubPipes = state.peek("forkedSubPipelines");
+            String subPipeKey = unwrap(ctx.namedSubPipelineKey());
+            Pipeline subPipe = state.pop("pipeline");
+            forkSubPipes.add(new Pair<>(subPipeKey, subPipe));
         }
 
         @Override
-        public void enterOutput(BitflowParser.OutputContext ctx) {
+        public void exitFork(BitflowParser.ForkContext ctx) {
+            String forkName = unwrap(ctx.name());
+            Map<String, String> forkParams = state.pop("parameters");
+            Collection<Pair<String, Pipeline>> subPipes = state.pop("forkedSubPipelines");
 
+            ForkRegistration forkReg = registry.getFork(forkName);
+            if (forkReg == null) {
+                pushError(ctx, "Unknown fork: " + forkName);
+                return;
+            }
+
+            try {
+                Distributor distributor = forkReg.getForkConstructor().constructForkStep(subPipes, forkParams);
+                currentPipeline().step(new Fork(distributor));
+            } catch (StepConstructionException e) {
+                pushError(ctx, e.getStepName() + ": " + e.getMessage());
+            }
+        }
+
+        // =====================
+
+        // =====================
+
+        // =====================
+
+        @Override
+        public void enterMultiInputPipeline(BitflowParser.MultiInputPipelineContext ctx) {
+            // TODO implement parallel multi input
+            pushError(ctx, "Parallel multi Input pipelines are not yet supported");
         }
 
         @Override
-        public void exitTransformParameters(BitflowParser.TransformParametersContext ctx) {
+        public void enterWindow(BitflowParser.WindowContext ctx) {
+            state.push("is_batched", Boolean.TRUE);
+        }
 
+        public void enterWindowPipeline(BitflowParser.WindowContext ctx) {
+            state.push("pipeline", new Pipeline());
         }
 
         @Override
-        public void exitPipeline(BitflowParser.PipelineContext ctx) {
+        public void exitWindow(BitflowParser.WindowContext ctx) {
 
+            // TODO correctly apply batch parameters. The popped pipeline contains all sequential batch steps
+
+            pushError(ctx, "Window is not yet supported");
+
+            Pipeline batchPipeline = state.pop("pipeline");
+            state.pop("is_batched");
         }
 
-        @Override
-        public void enterParameter(BitflowParser.ParameterContext ctx) {
-
-        }
-
-        @Override
-        public void enterName(BitflowParser.NameContext ctx) {
-
-        }
-
-        @Override
-        public void enterPipelineName(BitflowParser.PipelineNameContext ctx) {
-
-        }
-
-        @Override
-        public void enterSchedulingHints(BitflowParser.SchedulingHintsContext ctx) {
-
-        }
-
-        @Override
-        public void exitSchedulingHints(BitflowParser.SchedulingHintsContext ctx) {
-
-        }
-
-        @Override
-        public void visitTerminal(TerminalNode node) {
-
-        }
-
-        @Override
-        public void visitErrorNode(ErrorNode node) {
-
-        }
-
-        @Override
-        public void enterEveryRule(ParserRuleContext ctx) {
-
-        }
-
-        @Override
-        public void exitEveryRule(ParserRuleContext ctx) {
-        }
     }
 }
