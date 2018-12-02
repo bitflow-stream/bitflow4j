@@ -36,6 +36,7 @@ public class TcpListenerSource extends ThreadedSource {
     }
 
     public void start(TaskPool pool) throws IOException {
+        super.start(pool);
         logger.info("Listening on port " + port);
         ServerSocket tcpSocket = new ServerSocket(port);
         connectionAcceptor = new ConnectionAcceptor(tcpSocket);
@@ -96,12 +97,12 @@ public class TcpListenerSource extends ThreadedSource {
             } catch (Exception exc) {
                 if (tcpSocket.isClosed())
                     break;
-                logger.severe("Error accepting connection: " + exc.getMessage());
+                logger.log(Level.SEVERE, "Error accepting connection", exc);
                 if (socket != null) {
                     try {
                         socket.close();
                     } catch (IOException e) {
-                        logger.warning("Error closing socket: " + e.getMessage());
+                        logger.log(Level.WARNING, "Error closing socket: ", e);
                     }
                 }
             }

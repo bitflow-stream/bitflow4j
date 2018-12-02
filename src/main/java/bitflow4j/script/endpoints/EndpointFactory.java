@@ -14,7 +14,6 @@ import bitflow4j.io.net.TcpSource;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,7 +50,7 @@ public class EndpointFactory {
                 if (endpoints.size() > 1) {
                     throw new EndpointParseException(Arrays.toString(endpointTokens), "Multiinput of type LISTEN is not allowed");
                 }
-                return new TcpListenerSource(extractPort(endpoints.get(0).getTarget()), marshaller);
+                return new TcpListenerSource(TcpSink.getPort(endpoints.get(0).getTarget()), marshaller);
             case FILE:
                 FileSource fs = new FileSource(marshaller);
                 for (Endpoint endpoint : endpoints) {
@@ -201,7 +200,7 @@ public class EndpointFactory {
 
     private static boolean isValidPort(String portString) {
         try {
-            return extractPort("host:" + portString) > 0;
+            return TcpSink.getPort("host:" + portString) > 0;
         } catch (MalformedURLException e) {
             return false;
         }
@@ -209,20 +208,10 @@ public class EndpointFactory {
 
     private static boolean isValidHostAndPort(String input) {
         try {
-            return !"".equals(extractHostPart(input)) && extractPort(input) > 0;
+            return !"".equals(TcpSink.getHost(input)) && TcpSink.getPort(input) > 0;
         } catch (MalformedURLException e) {
             return false;
         }
-    }
-
-    private static String extractHostPart(String tcpEndpoint) throws MalformedURLException {
-        URL url = new URL("http://" + tcpEndpoint); // Exception when the tcp endpoint format is wrong.
-        return url.getHost();
-    }
-
-    private static int extractPort(String tcpEndpoint) throws MalformedURLException {
-        URL url = new URL("http://" + tcpEndpoint); // Exception when the tcp endpoint format is wrong.
-        return url.getPort();
     }
 
     private static boolean isValidFilename(String file) {

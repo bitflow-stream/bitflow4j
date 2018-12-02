@@ -79,7 +79,7 @@ public abstract class SampleInputStream implements ThreadedSource.SampleGenerato
             boolean isHeader = marshaller.peekIsHeader(input);
             if (isHeader) {
                 header = marshaller.unmarshallHeader(input);
-                logger.log(headerUpdateLogLevel, "Incoming header of '{0}' updated to {1} metrics", new Object[]{sourceName, header.header.numFields()});
+                logger.log(headerUpdateLogLevel, String.format("Incoming header of '%s' updated to %s metrics", sourceName, header.header.numFields()));
                 return null;
             } else {
                 if (header == null) {
@@ -108,7 +108,7 @@ public abstract class SampleInputStream implements ThreadedSource.SampleGenerato
         if (currentInput != null) {
             InputStream input = currentInput;
             currentInput = null;
-            logger.log(headerUpdateLogLevel, "Closed input {0}", new Object[]{sourceName});
+            logger.log(headerUpdateLogLevel, String.format("Closed input %s", sourceName));
             input.close();
         }
     }

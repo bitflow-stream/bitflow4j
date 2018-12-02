@@ -10,6 +10,7 @@ import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URL;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -77,7 +78,7 @@ public class TcpSink extends MarshallingSampleWriter {
             if (socket != null)
                 socket.close();
         } catch (IOException e) {
-            logger.warning("Failed to close socket: " + e);
+            logger.log(Level.WARNING, "Failed to close socket: ", e);
         } finally {
             socket = null;
             output = null;

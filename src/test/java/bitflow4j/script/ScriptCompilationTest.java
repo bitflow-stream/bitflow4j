@@ -59,8 +59,21 @@ public class ScriptCompilationTest extends TestCase {
         script(false, "-", "└─Reading from stdin (format CSV)");
     }
 
+    public void testNet() {
+        script(false, " :7777 -> csv://- ",
+                "├─Listen for incoming samples on :7777 (format BIN)",
+                "└─Writing to stdout (format CSV)");
+    }
+
+    public void testUnwrapStrings() {
+        script(false, " ':7777' -> `MixedParamStep`( `doubleArg` = '1.00', \"booleanArg\" = `true` ) -> \"csv://-\" ",
+                "├─Listen for incoming samples on :7777 (format BIN)",
+                "├─a MixedParamStep",
+                "└─Writing to stdout (format CSV)");
+    }
+
     public void testSomeSteps() {
-        script(false, dataFileName + "->MixedParamStep()->inter_file->MixedParamStep()->out.bin",
+        script(false, dataFileName + " -> MixedParamStep()->inter_file ->MixedParamStep()->out.bin",
                 "├─Reading file: " + dataFileName + " (format CSV)",
                 "├─a MixedParamStep",
                 "├─Writing file inter_file (append: false, deleteFiles: false, format: CSV)",

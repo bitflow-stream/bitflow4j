@@ -18,7 +18,7 @@ public class BitflowParser extends Parser {
 		new PredictionContextCache();
 	public static final int
 		T__0=1, T__1=2, T__2=3, T__3=4, T__4=5, T__5=6, T__6=7, T__7=8, T__8=9, 
-		EOP=10, PIPE=11, STRING=12, NUMBER=13, NAME=14, COMMENT=15, NEWLINE=16, 
+		EOP=10, NEXT=11, STRING=12, NUMBER=13, NAME=14, COMMENT=15, NEWLINE=16, 
 		WHITESPACE=17, TAB=18;
 	public static final int
 		RULE_script = 0, RULE_pipeline = 1, RULE_multiInputPipeline = 2, RULE_input = 3, 
@@ -39,7 +39,7 @@ public class BitflowParser extends Parser {
 		"';'", "'->'", null, null, null, null, null, null, "'\t'"
 	};
 	private static final String[] _SYMBOLIC_NAMES = {
-		null, null, null, null, null, null, null, null, null, null, "EOP", "PIPE", 
+		null, null, null, null, null, null, null, null, null, null, "EOP", "NEXT", 
 		"STRING", "NUMBER", "NAME", "COMMENT", "NEWLINE", "WHITESPACE", "TAB"
 	};
 	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
@@ -182,9 +182,9 @@ public class BitflowParser extends Parser {
 		public MultiInputPipelineContext multiInputPipeline() {
 			return getRuleContext(MultiInputPipelineContext.class,0);
 		}
-		public List<TerminalNode> PIPE() { return getTokens(BitflowParser.PIPE); }
-		public TerminalNode PIPE(int i) {
-			return getToken(BitflowParser.PIPE, i);
+		public List<TerminalNode> NEXT() { return getTokens(BitflowParser.NEXT); }
+		public TerminalNode NEXT(int i) {
+			return getToken(BitflowParser.NEXT, i);
 		}
 		public List<IntermediateTransformContext> intermediateTransform() {
 			return getRuleContexts(IntermediateTransformContext.class);
@@ -240,11 +240,11 @@ public class BitflowParser extends Parser {
 			setState(63);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while (_la==PIPE) {
+			while (_la==NEXT) {
 				{
 				{
 				setState(59);
-				match(PIPE);
+				match(NEXT);
 				setState(60);
 				intermediateTransform();
 				}
@@ -1068,7 +1068,7 @@ public class BitflowParser extends Parser {
 		public NamedSubPipelineKeyContext namedSubPipelineKey() {
 			return getRuleContext(NamedSubPipelineKeyContext.class,0);
 		}
-		public TerminalNode PIPE() { return getToken(BitflowParser.PIPE, 0); }
+		public TerminalNode NEXT() { return getToken(BitflowParser.NEXT, 0); }
 		public SubPipelineContext subPipeline() {
 			return getRuleContext(SubPipelineContext.class,0);
 		}
@@ -1100,7 +1100,7 @@ public class BitflowParser extends Parser {
 			setState(144);
 			namedSubPipelineKey();
 			setState(145);
-			match(PIPE);
+			match(NEXT);
 			setState(146);
 			subPipeline();
 			}
@@ -1123,9 +1123,9 @@ public class BitflowParser extends Parser {
 		public IntermediateTransformContext intermediateTransform(int i) {
 			return getRuleContext(IntermediateTransformContext.class,i);
 		}
-		public List<TerminalNode> PIPE() { return getTokens(BitflowParser.PIPE); }
-		public TerminalNode PIPE(int i) {
-			return getToken(BitflowParser.PIPE, i);
+		public List<TerminalNode> NEXT() { return getTokens(BitflowParser.NEXT); }
+		public TerminalNode NEXT(int i) {
+			return getToken(BitflowParser.NEXT, i);
 		}
 		public SubPipelineContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -1158,11 +1158,11 @@ public class BitflowParser extends Parser {
 			setState(153);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while (_la==PIPE) {
+			while (_la==NEXT) {
 				{
 				{
 				setState(149);
-				match(PIPE);
+				match(NEXT);
 				setState(150);
 				intermediateTransform();
 				}
@@ -1389,9 +1389,9 @@ public class BitflowParser extends Parser {
 		public TransformContext transform(int i) {
 			return getRuleContext(TransformContext.class,i);
 		}
-		public List<TerminalNode> PIPE() { return getTokens(BitflowParser.PIPE); }
-		public TerminalNode PIPE(int i) {
-			return getToken(BitflowParser.PIPE, i);
+		public List<TerminalNode> NEXT() { return getTokens(BitflowParser.NEXT); }
+		public TerminalNode NEXT(int i) {
+			return getToken(BitflowParser.NEXT, i);
 		}
 		public WindowPipelineContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -1424,11 +1424,11 @@ public class BitflowParser extends Parser {
 			setState(186);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while (_la==PIPE) {
+			while (_la==NEXT) {
 				{
 				{
 				setState(182);
-				match(PIPE);
+				match(NEXT);
 				setState(183);
 				transform();
 				}
