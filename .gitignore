@@ -10,3 +10,4 @@
 /nbproject/
 test-pipeline-*
 test_data
+.attach_pid*

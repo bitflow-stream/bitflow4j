@@ -74,7 +74,7 @@ public class Fork extends AbstractPipelineStep implements TreeFormatter.Formatte
             return result;
         } else {
             SubPipeline result = new SubPipeline(pipe, key);
-            logger.fine(String.format("Starting forked sub pipeline for '%s'", key));
+            logger.info(String.format("Starting forked sub pipeline for '%s'", key));
             if (pipe.source != null) {
                 logger.log(Level.WARNING, String.format("The source field of the sub-pipeline for %s will be ignored, it is set to %s", key, pipe.source));
             }
@@ -119,6 +119,11 @@ public class Fork extends AbstractPipelineStep implements TreeFormatter.Formatte
     private class Merger extends DroppingStep {
 
         private final Object lock = new Object();
+
+        @Override
+        public void setOutgoingSink(PipelineStep sink) {
+            // Do not store the outgoing sink and do not error when it is re-initialized
+        }
 
         @Override
         public void writeSample(Sample sample) throws IOException {

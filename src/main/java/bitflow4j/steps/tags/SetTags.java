@@ -1,4 +1,4 @@
-package bitflow4j.steps.labels;
+package bitflow4j.steps.tags;
 
 import bitflow4j.AbstractPipelineStep;
 import bitflow4j.Sample;
@@ -9,12 +9,17 @@ import java.util.Map;
 /**
  * @author fschmidt
  */
-public class TagAdder extends AbstractPipelineStep {
+public class SetTags extends AbstractPipelineStep {
 
     private final Map<String, String> tags;
 
-    public TagAdder(Map<String, String> tags) {
+    public SetTags(Map<String, String> tags) {
         this.tags = tags;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Set tags: %s", tags);
     }
 
     @Override

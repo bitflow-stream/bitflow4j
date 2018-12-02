@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Represents one vector of data. The header contains labels for the values. In addition to the values, the Sample also contains a timestamp
+ * Represents one vector of data. The header contains tags for the values. In addition to the values, the Sample also contains a timestamp
  * and a Map of tags (key-value pairs).
  */
 public class Sample {

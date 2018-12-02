@@ -1,7 +1,5 @@
 package bitflow4j.script.registry;
 
-import java.util.Arrays;
-
 /**
  * AnalsisRegistration defines an analysis step, a function to apply it on a pipeline and the options to that function.
  */
@@ -48,18 +46,6 @@ public class AnalysisRegistration extends Registration {
 
     public boolean supportsBothModes() {
         return _supportsStreamProcessing && _supportsBatchProcessing;
-    }
-
-    @Override
-    public String toString() {
-        String batchSupport = "supports stream and batch";
-        if (!_supportsBatchProcessing) {
-            batchSupport = "supports stream only";
-        } else if (!_supportsStreamProcessing) {
-            batchSupport = "supports batch only";
-        }
-        return getName() + ": required parameters: " + Arrays.toString(getRequiredParameters().toArray()) +
-                "; optional parameter: " + Arrays.toString(getOptionalParameters().toArray()) + "; " + batchSupport;
     }
 
 }

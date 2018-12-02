@@ -57,7 +57,15 @@ public class Main {
         Config.initializeLogger();
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
+        try {
+            executeMain(args);
+        } catch (Throwable t) {
+            logger.log(Level.SEVERE, "Fatal error", t);
+        }
+    }
+
+    public static void executeMain(String[] args) throws IOException {
         CmdArgs cmdArgs = new CmdArgs();
         JCommander jc = JCommander.newBuilder()
                 .allowAbbreviatedOptions(true)
@@ -140,6 +148,8 @@ public class Main {
             logger.info("     Required parameters: " + analysisRegistration.getRequiredParameters());
         if (!analysisRegistration.getOptionalParameters().isEmpty())
             logger.info("     Optional parameters: " + analysisRegistration.getOptionalParameters());
+        if (analysisRegistration.hasGenericConstructor())
+            logger.info("     Accepts any parameters");
     }
 
     private static class CmdArgs {

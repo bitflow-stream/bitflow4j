@@ -10,6 +10,7 @@ public class Registration {
     private final String name;
     private final List<String> optionalParameters = new ArrayList<>();
     private final List<String> requiredParameters = new ArrayList<>();
+    private boolean hasGeneric = false;
 
     public Registration(String name) {
         this.name = name;
@@ -25,8 +26,16 @@ public class Registration {
         return this;
     }
 
+    public void acceptGenericConstructor() {
+        hasGeneric = true;
+    }
+
     public String getName() {
         return name;
+    }
+
+    public boolean hasGenericConstructor() {
+        return hasGeneric;
     }
 
     public List<String> getOptionalParameters() {
@@ -46,6 +55,10 @@ public class Registration {
      */
     public List<String> validateParameters(Map<String, String> params) {
         List<String> errors = new ArrayList<>();
+        if (hasGeneric) {
+            return errors;
+        }
+
         params.keySet().forEach(s -> {
             if (!optionalParameters.contains(s) && !requiredParameters.contains(s)) {
                 errors.add("Unexpected parameter '" + s + "'");

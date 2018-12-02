@@ -4,13 +4,14 @@ import bitflow4j.Pipeline;
 import bitflow4j.misc.Pair;
 import bitflow4j.misc.TreeFormatter;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public interface ScriptableDistributor extends Distributor, TreeFormatter.FormattedNode {
 
-    void setSubPipelines(Collection<Pair<String, Pipeline>> subPipelines);
+    void setSubPipelines(Collection<Pair<String, Pipeline>> subPipelines) throws IOException;
 
     static Collection<Object> formattedSubPipelines(Collection<Pair<String, Pipeline>> subPipelines) {
         return subPipelines.stream().map(TitledPipeline::new).collect(Collectors.toList());
@@ -22,7 +23,7 @@ public interface ScriptableDistributor extends Distributor, TreeFormatter.Format
         protected List<String> availableKeys;
 
         @Override
-        public void setSubPipelines(Collection<Pair<String, Pipeline>> subPipelines) {
+        public void setSubPipelines(Collection<Pair<String, Pipeline>> subPipelines) throws IOException {
             this.subPipelines = subPipelines;
             availableKeys = subPipelines.stream().map(Pair::getLeft).sorted().collect(Collectors.toList());
         }
