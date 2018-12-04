@@ -28,30 +28,6 @@ public class BitflowBaseListener implements BitflowListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterPipeline(BitflowParser.PipelineContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitPipeline(BitflowParser.PipelineContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterMultiInputPipeline(BitflowParser.MultiInputPipelineContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitMultiInputPipeline(BitflowParser.MultiInputPipelineContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterInput(BitflowParser.InputContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -83,30 +59,6 @@ public class BitflowBaseListener implements BitflowListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitName(BitflowParser.NameContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterNamedSubPipelineKey(BitflowParser.NamedSubPipelineKeyContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitNamedSubPipelineKey(BitflowParser.NamedSubPipelineKeyContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterEndpoint(BitflowParser.EndpointContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitEndpoint(BitflowParser.EndpointContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -148,13 +100,37 @@ public class BitflowBaseListener implements BitflowListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterIntermediateTransform(BitflowParser.IntermediateTransformContext ctx) { }
+	@Override public void enterPipeline(BitflowParser.PipelineContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitIntermediateTransform(BitflowParser.IntermediateTransformContext ctx) { }
+	@Override public void exitPipeline(BitflowParser.PipelineContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterMultiInputPipeline(BitflowParser.MultiInputPipelineContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitMultiInputPipeline(BitflowParser.MultiInputPipelineContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterPipelineElement(BitflowParser.PipelineElementContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitPipelineElement(BitflowParser.PipelineElementContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -263,6 +239,18 @@ public class BitflowBaseListener implements BitflowListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitSchedulingHints(BitflowParser.SchedulingHintsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterSchedulingParameter(BitflowParser.SchedulingParameterContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitSchedulingParameter(BitflowParser.SchedulingParameterContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

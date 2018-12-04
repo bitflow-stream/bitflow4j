@@ -163,23 +163,15 @@ class BitflowScriptCompiler {
             return ctx.STRING() == null ? ctx.getText() : unwrapSTRING(ctx.STRING());
         }
 
-        private String unwrap(BitflowParser.EndpointContext ctx) {
-            return ctx.STRING() == null ? ctx.getText() : unwrapSTRING(ctx.STRING());
-        }
-
         private String unwrap(BitflowParser.ValContext ctx) {
-            return ctx.STRING() == null ? ctx.getText() : unwrapSTRING(ctx.STRING());
-        }
-
-        private String unwrap(BitflowParser.NamedSubPipelineKeyContext ctx) {
             return ctx.STRING() == null ? ctx.getText() : unwrapSTRING(ctx.STRING());
         }
 
         @Override
         public void exitInput(BitflowParser.InputContext ctx) {
-            String input = unwrap(ctx.endpoint());
+            String[] inputs = ctx.name().stream().map(this::unwrap).toArray(String[]::new);
             try {
-                Source source = endpointFactory.createSource(input);
+                Source source = endpointFactory.createSource(inputs);
                 currentPipeline().input(source);
             } catch (IOException e) {
                 pushError(ctx, "Could not create source: " + e.getMessage());
@@ -188,7 +180,7 @@ class BitflowScriptCompiler {
 
         @Override
         public void exitOutput(BitflowParser.OutputContext ctx) {
-            String output = unwrap(ctx.endpoint());
+            String output = unwrap(ctx.name());
             try {
                 PipelineStep sink = endpointFactory.createSink(output);
                 currentPipeline().step(sink);
@@ -279,9 +271,8 @@ class BitflowScriptCompiler {
         @Override
         public void exitNamedSubPipeline(BitflowParser.NamedSubPipelineContext ctx) {
             Collection<Pair<String, Pipeline>> forkSubPipes = state.peek("forkedSubPipelines");
-            String subPipeKey = unwrap(ctx.namedSubPipelineKey());
             Pipeline subPipe = state.pop("pipeline");
-            forkSubPipes.add(new Pair<>(subPipeKey, subPipe));
+            ctx.name().stream().map(this::unwrap).forEach((key) -> forkSubPipes.add(new Pair<>(key, subPipe)));
         }
 
         @Override
