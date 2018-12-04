@@ -1,6 +1,6 @@
 package bitflow4j.script;
 
-import bitflow4j.script.registry.AnalysisRegistration;
+import bitflow4j.script.registry.RegisteredPipelineStep;
 import bitflow4j.script.registry.ScanForPipelineStepTest;
 import com.google.gson.Gson;
 import org.apache.commons.lang3.ArrayUtils;
@@ -123,7 +123,7 @@ public class MainTest {
         }
     }
 
-    private static class AnalysisList extends ArrayList<AnalysisRegistration> {
+    private static class AnalysisList extends ArrayList<RegisteredPipelineStep> {
     }
 
 }

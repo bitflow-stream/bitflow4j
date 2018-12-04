@@ -5,23 +5,24 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class Registration {
+public abstract class AbstractRegisteredStep {
 
-    private final String name;
-    private final List<String> optionalParameters = new ArrayList<>();
-    private final List<String> requiredParameters = new ArrayList<>();
+    public final String name;
+    public final List<String> optionalParameters = new ArrayList<>();
+    public final List<String> requiredParameters = new ArrayList<>();
+
     private boolean hasGeneric = false;
 
-    public Registration(String name) {
+    public AbstractRegisteredStep(String name) {
         this.name = name;
     }
 
-    public Registration optional(String... parameters) {
+    public AbstractRegisteredStep optional(String... parameters) {
         Collections.addAll(optionalParameters, parameters);
         return this;
     }
 
-    public Registration required(String... parameters) {
+    public AbstractRegisteredStep required(String... parameters) {
         Collections.addAll(requiredParameters, parameters);
         return this;
     }
@@ -30,20 +31,8 @@ public class Registration {
         hasGeneric = true;
     }
 
-    public String getName() {
-        return name;
-    }
-
     public boolean hasGenericConstructor() {
         return hasGeneric;
-    }
-
-    public List<String> getOptionalParameters() {
-        return optionalParameters;
-    }
-
-    public List<String> getRequiredParameters() {
-        return requiredParameters;
     }
 
     /**
