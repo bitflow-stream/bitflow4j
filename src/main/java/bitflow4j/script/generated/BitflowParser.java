@@ -18,7 +18,7 @@ public class BitflowParser extends Parser {
 		new PredictionContextCache();
 	public static final int
 		T__0=1, T__1=2, T__2=3, T__3=4, T__4=5, T__5=6, T__6=7, T__7=8, T__8=9, 
-		EOP=10, NEXT=11, STRING=12, NUMBER=13, IDENTIFIER=14, BOOL=15, COMMENT=16, 
+		EOP=10, NEXT=11, STRING=12, NUMBER=13, BOOL=14, IDENTIFIER=15, COMMENT=16, 
 		NEWLINE=17, WHITESPACE=18, TAB=19;
 	public static final int
 		RULE_script = 0, RULE_input = 1, RULE_output = 2, RULE_name = 3, RULE_val = 4, 
@@ -40,7 +40,7 @@ public class BitflowParser extends Parser {
 	};
 	private static final String[] _SYMBOLIC_NAMES = {
 		null, null, null, null, null, null, null, null, null, null, "EOP", "NEXT", 
-		"STRING", "NUMBER", "IDENTIFIER", "BOOL", "COMMENT", "NEWLINE", "WHITESPACE", 
+		"STRING", "NUMBER", "BOOL", "IDENTIFIER", "COMMENT", "NEWLINE", "WHITESPACE", 
 		"TAB"
 	};
 	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
@@ -225,7 +225,7 @@ public class BitflowParser extends Parser {
 				setState(56); 
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << STRING) | (1L << NUMBER) | (1L << IDENTIFIER) | (1L << BOOL))) != 0) );
+			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << STRING) | (1L << NUMBER) | (1L << BOOL) | (1L << IDENTIFIER))) != 0) );
 			setState(59);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
@@ -340,7 +340,7 @@ public class BitflowParser extends Parser {
 			{
 			setState(65);
 			_la = _input.LA(1);
-			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << STRING) | (1L << NUMBER) | (1L << IDENTIFIER) | (1L << BOOL))) != 0)) ) {
+			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << STRING) | (1L << NUMBER) | (1L << BOOL) | (1L << IDENTIFIER))) != 0)) ) {
 			_errHandler.recoverInline(this);
 			}
 			else {
@@ -503,7 +503,7 @@ public class BitflowParser extends Parser {
 			setState(82);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << STRING) | (1L << NUMBER) | (1L << IDENTIFIER) | (1L << BOOL))) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << STRING) | (1L << NUMBER) | (1L << BOOL) | (1L << IDENTIFIER))) != 0)) {
 				{
 				setState(74);
 				parameter();
@@ -589,8 +589,8 @@ public class BitflowParser extends Parser {
 			switch (_input.LA(1)) {
 			case STRING:
 			case NUMBER:
-			case IDENTIFIER:
 			case BOOL:
+			case IDENTIFIER:
 				{
 				setState(86);
 				input();
@@ -1030,7 +1030,7 @@ public class BitflowParser extends Parser {
 				setState(145); 
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << STRING) | (1L << NUMBER) | (1L << IDENTIFIER) | (1L << BOOL))) != 0) );
+			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << STRING) | (1L << NUMBER) | (1L << BOOL) | (1L << IDENTIFIER))) != 0) );
 			setState(147);
 			match(NEXT);
 			setState(148);
@@ -1420,7 +1420,7 @@ public class BitflowParser extends Parser {
 			setState(200);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << STRING) | (1L << NUMBER) | (1L << IDENTIFIER) | (1L << BOOL))) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << STRING) | (1L << NUMBER) | (1L << BOOL) | (1L << IDENTIFIER))) != 0)) {
 				{
 				setState(192);
 				schedulingParameter();
@@ -1520,12 +1520,12 @@ public class BitflowParser extends Parser {
 		"\3\23\7\23\u00bd\n\23\f\23\16\23\u00c0\13\23\3\24\3\24\3\24\3\24\7\24"+
 		"\u00c6\n\24\f\24\16\24\u00c9\13\24\5\24\u00cb\n\24\3\24\3\24\3\25\3\25"+
 		"\3\25\2\2\26\2\4\6\b\n\f\16\20\22\24\26\30\32\34\36 \"$&(\2\4\3\2\16\21"+
-		"\4\2\16\17\21\21\2\u00d7\2*\3\2\2\2\48\3\2\2\2\6?\3\2\2\2\bC\3\2\2\2\n"+
-		"E\3\2\2\2\fG\3\2\2\2\16K\3\2\2\2\20Z\3\2\2\2\22c\3\2\2\2\24v\3\2\2\2\26"+
-		"x\3\2\2\2\30}\3\2\2\2\32\u0091\3\2\2\2\34\u0098\3\2\2\2\36\u00a0\3\2\2"+
-		"\2 \u00ae\3\2\2\2\"\u00b0\3\2\2\2$\u00b9\3\2\2\2&\u00c1\3\2\2\2(\u00ce"+
-		"\3\2\2\2*/\5\20\t\2+,\7\f\2\2,.\5\20\t\2-+\3\2\2\2.\61\3\2\2\2/-\3\2\2"+
-		"\2/\60\3\2\2\2\60\63\3\2\2\2\61/\3\2\2\2\62\64\7\f\2\2\63\62\3\2\2\2\63"+
+		"\3\2\16\20\2\u00d7\2*\3\2\2\2\48\3\2\2\2\6?\3\2\2\2\bC\3\2\2\2\nE\3\2"+
+		"\2\2\fG\3\2\2\2\16K\3\2\2\2\20Z\3\2\2\2\22c\3\2\2\2\24v\3\2\2\2\26x\3"+
+		"\2\2\2\30}\3\2\2\2\32\u0091\3\2\2\2\34\u0098\3\2\2\2\36\u00a0\3\2\2\2"+
+		" \u00ae\3\2\2\2\"\u00b0\3\2\2\2$\u00b9\3\2\2\2&\u00c1\3\2\2\2(\u00ce\3"+
+		"\2\2\2*/\5\20\t\2+,\7\f\2\2,.\5\20\t\2-+\3\2\2\2.\61\3\2\2\2/-\3\2\2\2"+
+		"/\60\3\2\2\2\60\63\3\2\2\2\61/\3\2\2\2\62\64\7\f\2\2\63\62\3\2\2\2\63"+
 		"\64\3\2\2\2\64\65\3\2\2\2\65\66\7\2\2\3\66\3\3\2\2\2\679\5\b\5\28\67\3"+
 		"\2\2\29:\3\2\2\2:8\3\2\2\2:;\3\2\2\2;=\3\2\2\2<>\5&\24\2=<\3\2\2\2=>\3"+
 		"\2\2\2>\5\3\2\2\2?A\5\b\5\2@B\5&\24\2A@\3\2\2\2AB\3\2\2\2B\7\3\2\2\2C"+

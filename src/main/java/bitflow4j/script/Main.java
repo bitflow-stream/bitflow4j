@@ -186,11 +186,6 @@ public class Main {
 
         public String[] cleanPackagesToScan() {
             return packagesToScan.toArray(new String[0]);
-
-//            if (packagesToScan.equals("*")) {
-//                return null;
-//            }
-//            return packagesToScan.split(",");
         }
 
         public void configureLogging() {
