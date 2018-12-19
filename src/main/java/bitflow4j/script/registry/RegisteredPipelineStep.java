@@ -1,31 +1,31 @@
 package bitflow4j.script.registry;
 
+import bitflow4j.Pipeline;
+
+import java.util.Map;
+
 /**
- * AnalsisRegistration defines an analysis step, a function to apply it on a pipeline and the options to that function.
+ * RegisteredPipelineStep defines an analysis step, a function to apply it on a pipeline and the options to that function.
  */
-public class AnalysisRegistration extends Registration {
+public abstract class RegisteredPipelineStep extends AbstractRegisteredStep {
 
     private boolean _supportsBatchProcessing;
     private boolean _supportsStreamProcessing;
-    private final StepConstructor stepConstructor;
 
-    public AnalysisRegistration(String name, StepConstructor constructor) {
+    public RegisteredPipelineStep(String name) {
         super(name);
-        this.stepConstructor = constructor;
     }
 
-    public AnalysisRegistration supportBatch() {
+    public abstract void buildStep(Pipeline pipeline, Map<String, String> parameters) throws ConstructionException;
+
+    public RegisteredPipelineStep supportBatch() {
         _supportsBatchProcessing = true;
         return this;
     }
 
-    public AnalysisRegistration supportStream() {
+    public RegisteredPipelineStep supportStream() {
         _supportsStreamProcessing = true;
         return this;
-    }
-
-    public StepConstructor getStepConstructor() {
-        return stepConstructor;
     }
 
     public boolean supportsBatch() {

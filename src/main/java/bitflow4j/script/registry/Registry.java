@@ -19,8 +19,8 @@ public class Registry {
     private static final Logger logger = Logger.getLogger(Registry.class.getName());
 
     private Paranamer paranamer = new BytecodeReadingParanamer();
-    private Map<String, AnalysisRegistration> analysisRegistrationMap = new HashMap<>();
-    private Map<Object, ForkRegistration> forkRegistrationMap = new HashMap<>();
+    private Map<String, RegisteredPipelineStep> analysisRegistrationMap = new HashMap<>();
+    private Map<Object, RegisteredFork> forkRegistrationMap = new HashMap<>();
 
     // Store classes that did not have a fitting constructor
     private Set<Class<?>> unconstructableClasses = new HashSet<>();
@@ -47,8 +47,8 @@ public class Registry {
     /**
      * registerAnalysis takes a registration and stores it for retrieval by the pipeline builder.
      */
-    public void registerAnalysis(AnalysisRegistration analysisRegistration) {
-        analysisRegistrationMap.put(analysisRegistration.getName().toLowerCase(), analysisRegistration);
+    public void registerAnalysis(RegisteredPipelineStep registeredPipelineStep) {
+        analysisRegistrationMap.put(registeredPipelineStep.name.toLowerCase(), registeredPipelineStep);
     }
 
     /**
@@ -57,15 +57,15 @@ public class Registry {
      * @param analysisName the name of the analysis
      * @return the registered analysis or null
      */
-    public AnalysisRegistration getAnalysisRegistration(String analysisName) {
+    public RegisteredPipelineStep getAnalysisRegistration(String analysisName) {
         return analysisRegistrationMap.getOrDefault(analysisName.toLowerCase(), null);
     }
 
     /**
      * registerAnalysis takes a registration and stores it for retrieval by the pipeline builder.
      */
-    public void registerFork(ForkRegistration forkRegistration) {
-        forkRegistrationMap.put(forkRegistration.getName().toLowerCase(), forkRegistration);
+    public void registerFork(RegisteredFork registeredFork) {
+        forkRegistrationMap.put(registeredFork.name.toLowerCase(), registeredFork);
     }
 
     /**
@@ -74,11 +74,11 @@ public class Registry {
      * @param forkName the name of the fork
      * @return the registered Fork or null
      */
-    public ForkRegistration getFork(String forkName) {
+    public RegisteredFork getFork(String forkName) {
         return forkRegistrationMap.getOrDefault(forkName.toLowerCase(), null);
     }
 
-    public Collection<AnalysisRegistration> getCapabilities() {
+    public Collection<RegisteredPipelineStep> getCapabilities() {
         return analysisRegistrationMap.values();
     }
 
@@ -90,29 +90,22 @@ public class Registry {
         logger.info("Scanning for pipeline steps in package " + scanPackagePrefix);
         Reflections reflections = new Reflections(scanPackagePrefix);
 
-        // Scan for regular steps
-        Set<Class<? extends AbstractPipelineStep>> stepClasses = reflections.getSubTypesOf(AbstractPipelineStep.class);
-        for (Class<? extends AbstractPipelineStep> impl : stepClasses) {
-            registerClass(impl, false);
-        }
-
-        // Scan for fork steps
-        Set<Class<? extends ScriptableDistributor>> forkClasses = reflections.getSubTypesOf(ScriptableDistributor.class);
-        for (Class<? extends ScriptableDistributor> impl : forkClasses) {
-            registerClass(impl, true);
-        }
+        reflections.getSubTypesOf(AbstractPipelineStep.class).forEach(c -> registerClass(c, false, false));
+        reflections.getSubTypesOf(PipelineBuilder.class).forEach(c -> registerClass(c, false, true));
+        reflections.getSubTypesOf(ScriptableDistributor.class).forEach(c -> registerClass(c, true, false));
+        reflections.getSubTypesOf(ForkBuilder.class).forEach(c -> registerClass(c, true, true));
     }
 
-    public boolean registerClass(Class impl, boolean isFork) {
+    public boolean registerClass(Class impl, boolean isFork, boolean isBuilder) {
         if ((impl.getModifiers() & Modifier.ABSTRACT) == 0) {
-            GenericStepConstructor stepConstructor = new GenericStepConstructor(impl, paranamer);
+            RegistryConstructor stepConstructor = new RegistryConstructor(impl, paranamer, isBuilder);
             if (stepConstructor.hasConstructors()) {
                 if (getAnalysisRegistration(stepConstructor.getName()) != null) {
                     // TODO allow accessing conflicting classes via their fully qualified name
                     logger.warning("Pipeline step with name " + stepConstructor.getName() + " already registered, not registering class: " + impl.getName());
                 } else {
                     if (isFork) {
-                        registerFork(stepConstructor.createForkRegistration());
+                        registerFork(stepConstructor.createRegisteredFork());
                     } else {
                         registerAnalysis(stepConstructor.createAnalysisRegistration());
                     }

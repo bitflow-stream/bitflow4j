@@ -1,14 +1,14 @@
 package bitflow4j.script.registry;
 
 /**
- * StepConstructionException represents an Exception occurred during construction of a PipelineStep, it contains
+ * ConstructionException represents an Exception occurred during construction of a PipelineStep, it contains
  * the name of the step and the original error message.
  */
-public class StepConstructionException extends Exception {
+public class ConstructionException extends Exception {
 
     private String stepName;
 
-    public StepConstructionException(String stepName, String message) {
+    public ConstructionException(String stepName, String message) {
         super(message);
         this.stepName = stepName;
     }
@@ -16,4 +16,5 @@ public class StepConstructionException extends Exception {
     public String getStepName() {
         return stepName;
     }
+
 }

@@ -8,10 +8,10 @@ import bitflow4j.script.endpoints.EndpointFactory;
 import bitflow4j.script.generated.BitflowBaseListener;
 import bitflow4j.script.generated.BitflowLexer;
 import bitflow4j.script.generated.BitflowParser;
-import bitflow4j.script.registry.AnalysisRegistration;
-import bitflow4j.script.registry.ForkRegistration;
+import bitflow4j.script.registry.ConstructionException;
+import bitflow4j.script.registry.RegisteredFork;
+import bitflow4j.script.registry.RegisteredPipelineStep;
 import bitflow4j.script.registry.Registry;
-import bitflow4j.script.registry.StepConstructionException;
 import bitflow4j.steps.fork.Distributor;
 import bitflow4j.steps.fork.Fork;
 import bitflow4j.steps.fork.distribute.MultiplexDistributor;
@@ -163,23 +163,15 @@ class BitflowScriptCompiler {
             return ctx.STRING() == null ? ctx.getText() : unwrapSTRING(ctx.STRING());
         }
 
-        private String unwrap(BitflowParser.EndpointContext ctx) {
-            return ctx.STRING() == null ? ctx.getText() : unwrapSTRING(ctx.STRING());
-        }
-
         private String unwrap(BitflowParser.ValContext ctx) {
-            return ctx.STRING() == null ? ctx.getText() : unwrapSTRING(ctx.STRING());
-        }
-
-        private String unwrap(BitflowParser.NamedSubPipelineKeyContext ctx) {
             return ctx.STRING() == null ? ctx.getText() : unwrapSTRING(ctx.STRING());
         }
 
         @Override
         public void exitInput(BitflowParser.InputContext ctx) {
-            String input = unwrap(ctx.endpoint());
+            String[] inputs = ctx.name().stream().map(this::unwrap).toArray(String[]::new);
             try {
-                Source source = endpointFactory.createSource(input);
+                Source source = endpointFactory.createSource(inputs);
                 currentPipeline().input(source);
             } catch (IOException e) {
                 pushError(ctx, "Could not create source: " + e.getMessage());
@@ -188,7 +180,7 @@ class BitflowScriptCompiler {
 
         @Override
         public void exitOutput(BitflowParser.OutputContext ctx) {
-            String output = unwrap(ctx.endpoint());
+            String output = unwrap(ctx.name());
             try {
                 PipelineStep sink = endpointFactory.createSink(output);
                 currentPipeline().step(sink);
@@ -203,7 +195,7 @@ class BitflowScriptCompiler {
             Map<String, String> params = state.pop("parameters");
             Boolean isBatched = state.peekOrDefault("is_batched", Boolean.FALSE);
 
-            AnalysisRegistration regAnalysis = registry.getAnalysisRegistration(name);
+            RegisteredPipelineStep regAnalysis = registry.getAnalysisRegistration(name);
             if (regAnalysis == null) {
                 pushError(ctx, "Unknown Processor.");
                 return;
@@ -217,9 +209,8 @@ class BitflowScriptCompiler {
             regAnalysis.validateParameters(params).forEach(e -> pushError(ctx, e));
 
             try {
-                PipelineStep step = regAnalysis.getStepConstructor().constructPipelineStep(params);
-                currentPipeline().step(step);
-            } catch (StepConstructionException e) {
+                regAnalysis.buildStep(currentPipeline(), params);
+            } catch (ConstructionException e) {
                 pushError(ctx, e.getStepName() + ": " + e.getMessage());
             }
         }
@@ -279,9 +270,8 @@ class BitflowScriptCompiler {
         @Override
         public void exitNamedSubPipeline(BitflowParser.NamedSubPipelineContext ctx) {
             Collection<Pair<String, Pipeline>> forkSubPipes = state.peek("forkedSubPipelines");
-            String subPipeKey = unwrap(ctx.namedSubPipelineKey());
             Pipeline subPipe = state.pop("pipeline");
-            forkSubPipes.add(new Pair<>(subPipeKey, subPipe));
+            ctx.name().stream().map(this::unwrap).forEach((key) -> forkSubPipes.add(new Pair<>(key, subPipe)));
         }
 
         @Override
@@ -290,16 +280,15 @@ class BitflowScriptCompiler {
             Map<String, String> forkParams = state.pop("parameters");
             Collection<Pair<String, Pipeline>> subPipes = state.pop("forkedSubPipelines");
 
-            ForkRegistration forkReg = registry.getFork(forkName);
+            RegisteredFork forkReg = registry.getFork(forkName);
             if (forkReg == null) {
                 pushError(ctx, "Unknown fork: " + forkName);
                 return;
             }
 
             try {
-                Distributor distributor = forkReg.getForkConstructor().constructForkStep(subPipes, forkParams);
-                currentPipeline().step(new Fork(distributor));
-            } catch (StepConstructionException e) {
+                forkReg.buildFork(currentPipeline(), subPipes, forkParams);
+            } catch (ConstructionException e) {
                 pushError(ctx, e.getStepName() + ": " + e.getMessage());
             }
         }

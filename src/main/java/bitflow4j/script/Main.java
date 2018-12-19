@@ -4,7 +4,7 @@ import bitflow4j.Pipeline;
 import bitflow4j.misc.Config;
 import bitflow4j.misc.TreeFormatter;
 import bitflow4j.script.endpoints.EndpointFactory;
-import bitflow4j.script.registry.AnalysisRegistration;
+import bitflow4j.script.registry.RegisteredPipelineStep;
 import bitflow4j.script.registry.Registry;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -126,15 +126,15 @@ public class Main {
     }
 
     private static void logCapabilities(Registry registry) {
-        List<AnalysisRegistration> cap = Lists.newArrayList(registry.getCapabilities());
-        cap.sort((a1, a2) -> a1.getName().compareToIgnoreCase(a2.getName()));
-        logIfNotEmpty("Stream-Mode Processing Steps:", cap.stream().filter(AnalysisRegistration::supportsStreamOnly));
-        logIfNotEmpty("Batch-Mode Processing Steps:", cap.stream().filter(AnalysisRegistration::supportsBatchOnly));
-        logIfNotEmpty("Mixed-Mode Processing Steps:", cap.stream().filter(AnalysisRegistration::supportsBothModes));
+        List<RegisteredPipelineStep> cap = Lists.newArrayList(registry.getCapabilities());
+        cap.sort((a1, a2) -> a1.name.compareToIgnoreCase(a2.name));
+        logIfNotEmpty("Stream-Mode Processing Steps:", cap.stream().filter(RegisteredPipelineStep::supportsStreamOnly));
+        logIfNotEmpty("Batch-Mode Processing Steps:", cap.stream().filter(RegisteredPipelineStep::supportsBatchOnly));
+        logIfNotEmpty("Mixed-Mode Processing Steps:", cap.stream().filter(RegisteredPipelineStep::supportsBothModes));
     }
 
-    private static void logIfNotEmpty(String title, Stream<AnalysisRegistration> reg) {
-        Iterator<AnalysisRegistration> iter = reg.iterator();
+    private static void logIfNotEmpty(String title, Stream<RegisteredPipelineStep> reg) {
+        Iterator<RegisteredPipelineStep> iter = reg.iterator();
         if (!iter.hasNext())
             return;
         logger.info("");
@@ -142,13 +142,13 @@ public class Main {
         iter.forEachRemaining(Main::logCapability);
     }
 
-    private static void logCapability(AnalysisRegistration analysisRegistration) {
-        logger.info(" - " + analysisRegistration.getName());
-        if (!analysisRegistration.getRequiredParameters().isEmpty())
-            logger.info("     Required parameters: " + analysisRegistration.getRequiredParameters());
-        if (!analysisRegistration.getOptionalParameters().isEmpty())
-            logger.info("     Optional parameters: " + analysisRegistration.getOptionalParameters());
-        if (analysisRegistration.hasGenericConstructor())
+    private static void logCapability(RegisteredPipelineStep registeredPipelineStep) {
+        logger.info(" - " + registeredPipelineStep.name);
+        if (!registeredPipelineStep.requiredParameters.isEmpty())
+            logger.info("     Required parameters: " + registeredPipelineStep.requiredParameters);
+        if (!registeredPipelineStep.optionalParameters.isEmpty())
+            logger.info("     Optional parameters: " + registeredPipelineStep.optionalParameters);
+        if (registeredPipelineStep.hasGenericConstructor())
             logger.info("     Accepts any parameters");
     }
 
@@ -186,11 +186,6 @@ public class Main {
 
         public String[] cleanPackagesToScan() {
             return packagesToScan.toArray(new String[0]);
-
-//            if (packagesToScan.equals("*")) {
-//                return null;
-//            }
-//            return packagesToScan.split(",");
         }
 
         public void configureLogging() {
