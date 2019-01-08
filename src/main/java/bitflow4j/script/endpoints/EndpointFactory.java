@@ -119,7 +119,7 @@ public class EndpointFactory {
      *
      * @param input the full endpointToken, expected to be in the URLFormat
      **/
-    private Endpoint parseURLEndpoint(String input) {
+    public static Endpoint parseURLEndpoint(String input) {
         String[] urlParts = input.split("://");
         if (urlParts.length != 2 || urlParts[0].isEmpty() || urlParts[1].isEmpty()) {
             throw new EndpointParseException(input, "URL expected to be in form of: format+transport://target");
@@ -144,7 +144,7 @@ public class EndpointFactory {
             }
         }
         if (type == Endpoint.Type.STD && !"-".equals(target)) {
-            throw new EndpointParseException(this.toString(), "Type 'std' requires target '-', target was " + target);
+            throw new EndpointParseException(input, "Type 'std' requires target '-', target was " + target);
         }
         if (type == null) {
             type = guessEndpointType(target);
@@ -156,7 +156,7 @@ public class EndpointFactory {
         return new Endpoint(input, target, format, type);
     }
 
-    private Endpoint.Format guessFormat(Endpoint.Type type, String target) {
+    public static Endpoint.Format guessFormat(Endpoint.Type type, String target) {
         switch (type) {
             case TCP:
             case LISTEN:
@@ -185,7 +185,7 @@ public class EndpointFactory {
      *
      * @param target the target to be used to guess the type
      **/
-    private Endpoint.Type guessEndpointType(String target) {
+    public static Endpoint.Type guessEndpointType(String target) {
         if ("-".equals(target)) {
             return Endpoint.Type.STD;
         } else if (target.startsWith(":") && isValidPort(target.substring(1))) {
@@ -198,7 +198,7 @@ public class EndpointFactory {
         throw new EndpointParseException(target, "failed to guess target type");
     }
 
-    private static boolean isValidPort(String portString) {
+    public static boolean isValidPort(String portString) {
         try {
             return TcpSink.getPort("host:" + portString) > 0;
         } catch (MalformedURLException e) {
@@ -206,7 +206,7 @@ public class EndpointFactory {
         }
     }
 
-    private static boolean isValidHostAndPort(String input) {
+    public static boolean isValidHostAndPort(String input) {
         try {
             return !"".equals(TcpSink.getHost(input)) && TcpSink.getPort(input) > 0;
         } catch (MalformedURLException e) {
@@ -214,7 +214,7 @@ public class EndpointFactory {
         }
     }
 
-    private static boolean isValidFilename(String file) {
+    public static boolean isValidFilename(String file) {
         File f = new File(file);
         try {
             return !f.getCanonicalPath().isEmpty();

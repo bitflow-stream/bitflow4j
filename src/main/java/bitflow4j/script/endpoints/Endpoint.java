@@ -37,24 +37,7 @@ public class Endpoint {
     }
 
     public Marshaller getMarshaller() {
-        Marshaller marshaller;
-        switch (getFormat()) {
-            case BINARY:
-                marshaller = new BinaryMarshaller();
-                break;
-            case CSV:
-                marshaller = new CsvMarshaller();
-                break;
-            case WAV:
-                marshaller = new WavAudioMarshaller();
-                break;
-            case TEXT:
-                marshaller = new TextMarshaller();
-                break;
-            default:
-                throw new EndpointParseException(toString(), "Could not find a Marshaller for specified format " + getFormat());
-        }
-        return marshaller;
+        return getFormat().getMarshaller();
     }
 
     public enum Type {
@@ -85,6 +68,21 @@ public class Endpoint {
                 }
             }
             return null;
+        }
+
+        public Marshaller getMarshaller() {
+            switch (this) {
+                case BINARY:
+                    return new BinaryMarshaller();
+                case CSV:
+                    return new CsvMarshaller();
+                case WAV:
+                    return new WavAudioMarshaller();
+                case TEXT:
+                    return new TextMarshaller();
+                default:
+                    throw new EndpointParseException(toString(), "Could not find a Marshaller for specified format " + this);
+            }
         }
 
         @Override
