@@ -2,6 +2,7 @@ package bitflow4j.script.registry;
 
 import bitflow4j.Pipeline;
 import bitflow4j.misc.Pair;
+import bitflow4j.steps.fork.ScriptableDistributor;
 
 import java.util.Collection;
 import java.util.Map;
@@ -15,6 +16,6 @@ public abstract class RegisteredFork extends AbstractRegisteredStep {
         super(name);
     }
 
-    public abstract void buildFork(Pipeline pipeline, Collection<Pair<String, Pipeline>> subPipelines, Map<String, String> parameters) throws ConstructionException;
+    public abstract void buildFork(Pipeline pipeline, Collection<Pair<String, ScriptableDistributor.PipelineBuilder>> subPipelines, Map<String, String> parameters) throws ConstructionException;
 
 }

@@ -5,38 +5,80 @@ import bitflow4j.misc.Pair;
 import bitflow4j.misc.TreeFormatter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public interface ScriptableDistributor extends Distributor, TreeFormatter.FormattedNode {
 
-    void setSubPipelines(Collection<Pair<String, Pipeline>> subPipelines) throws IOException;
-
-    static Collection<Object> formattedSubPipelines(Collection<Pair<String, Pipeline>> subPipelines) {
-        return subPipelines.stream().map(TitledPipeline::new).collect(Collectors.toList());
+    default void setSubPipelines(Object... selectorsAndPipelines) throws IOException {
+        setSubPipelines(subPipelines(selectorsAndPipelines));
     }
 
-    abstract class Default implements ScriptableDistributor {
+    default void setStaticSubPipelines(Collection<Pair<String, Pipeline>> subPipelines) throws IOException {
+        setSubPipelines(subPipelines(subPipelines));
+    }
 
-        protected Collection<Pair<String, Pipeline>> subPipelines;
-        protected List<String> availableKeys;
+    void setSubPipelines(Collection<Pair<String, PipelineBuilder>> subPipelines) throws IOException;
 
-        @Override
-        public void setSubPipelines(Collection<Pair<String, Pipeline>> subPipelines) throws IOException {
-            this.subPipelines = subPipelines;
-            availableKeys = subPipelines.stream().map(Pair::getLeft).sorted().collect(Collectors.toList());
+    static Collection<Object> formattedSubPipelines(Collection<Pair<String, PipelineBuilder>> subPipelines) {
+        List<Object> list = new ArrayList<>();
+        for (Pair<String, PipelineBuilder> p : subPipelines) {
+            try {
+                list.add(new TitledPipeline(p.getLeft(), p.getRight()));
+            } catch (IOException e) {
+                throw new IllegalStateException("Failed to build example-pipeline-instance for formatting", e);
+            }
         }
+        return list;
+    }
 
-        @Override
-        public String toString() {
-            return String.format("A %s (%s sub pipelines)", getClass().getSimpleName(), subPipelines.size());
+    static Collection<Object> formattedStaticSubPipelines(Collection<Pair<String, Pipeline>> subPipelines) {
+        List<Object> list = new ArrayList<>();
+        for (Pair<String, Pipeline> p : subPipelines) {
+            list.add(new TitledPipeline(p.getLeft(), p.getRight()));
         }
+        return list;
+    }
 
-        @Override
-        public Collection<Object> formattedChildren() {
-            return formattedSubPipelines(subPipelines);
+    interface PipelineBuilder {
+        Pipeline build() throws IOException;
+    }
+
+    static PipelineBuilder subPipeline(Pipeline pipeline) {
+        return () -> pipeline;
+    }
+
+    static Collection<Pair<String, PipelineBuilder>> subPipelines(Collection<Pair<String, Pipeline>> subPipelines) {
+        return subPipelines.stream().map((p) -> new Pair<>(p.getLeft(), subPipeline(p.getRight()))).collect(Collectors.toList());
+    }
+
+    static Collection<Pair<String, PipelineBuilder>> subPipelines(Object... selectorsAndPipelines) {
+        Collection<Pair<String, PipelineBuilder>> result = new ArrayList<>();
+        List<String> labels = new ArrayList<>();
+        for (Object obj : selectorsAndPipelines) {
+            if (obj instanceof String) {
+                labels.add((String) obj);
+            } else if (obj instanceof Pipeline || obj instanceof PipelineBuilder) {
+                if (labels.isEmpty()) {
+                    throw new IllegalArgumentException("subPipelines(...): Pipelines must be preceded by at least one String label");
+                }
+                PipelineBuilder builder;
+                if (obj instanceof Pipeline) {
+                    builder = subPipeline((Pipeline) obj);
+                } else {
+                    builder = (PipelineBuilder) obj;
+                }
+                for (String label : labels) {
+                    result.add(new Pair<>(label, builder));
+                }
+                labels.clear();
+            } else {
+                throw new IllegalArgumentException("subPipelines(...): Arguments must be of type String, Pipeline or PipelineBuilder. Received: " + obj.getClass().getName());
+            }
         }
+        return result;
     }
 
     class TitledPipeline implements TreeFormatter.FormattedNode {
@@ -49,9 +91,9 @@ public interface ScriptableDistributor extends Distributor, TreeFormatter.Format
             this.pipeline = pipeline;
         }
 
-        public TitledPipeline(Pair<String, Pipeline> pair) {
-            this.title = pair.getLeft();
-            this.pipeline = pair.getRight();
+        public TitledPipeline(String title, PipelineBuilder pipeline) throws IOException {
+            // Build one example instance of the pipeline in order to format the pipeline steps
+            this(title, pipeline.build());
         }
 
         @Override

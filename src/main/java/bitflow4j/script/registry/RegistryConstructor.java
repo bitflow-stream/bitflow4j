@@ -71,7 +71,7 @@ class RegistryConstructor {
         }
     }
 
-    public void buildFork(Pipeline pipeline, Collection<Pair<String, Pipeline>> subPipelines, Map<String, String> parameters) throws ConstructionException {
+    public void buildFork(Pipeline pipeline, Collection<Pair<String, ScriptableDistributor.PipelineBuilder>> subPipelines, Map<String, String> parameters) throws ConstructionException {
         Object instance = constructObject(parameters);
         ScriptableDistributor fork;
         if (isBuilder) {
@@ -230,7 +230,7 @@ class RegistryConstructor {
     public RegisteredFork createRegisteredFork() {
         RegisteredFork result = new RegisteredFork(getName()) {
             @Override
-            public void buildFork(Pipeline pipeline, Collection<Pair<String, Pipeline>> subPipelines, Map<String, String> parameters) throws ConstructionException {
+            public void buildFork(Pipeline pipeline, Collection<Pair<String, ScriptableDistributor.PipelineBuilder>> subPipelines, Map<String, String> parameters) throws ConstructionException {
                 RegistryConstructor.this.buildFork(pipeline, subPipelines, parameters);
             }
         };

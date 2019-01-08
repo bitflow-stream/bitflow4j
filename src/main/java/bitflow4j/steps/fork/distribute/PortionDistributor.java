@@ -5,6 +5,7 @@ import bitflow4j.Sample;
 import bitflow4j.misc.Pair;
 import bitflow4j.steps.fork.ScriptableDistributor;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -43,13 +44,13 @@ public class PortionDistributor implements ScriptableDistributor {
     }
 
     @Override
-    public void setSubPipelines(Collection<Pair<String, Pipeline>> subPipelines) {
+    public void setSubPipelines(Collection<Pair<String, PipelineBuilder>> subPipelines) throws IOException {
         Set<String> unsupportedKeys = new HashSet<>();
-        for (Pair<String, Pipeline> pipe : subPipelines) {
+        for (Pair<String, PipelineBuilder> pipe : subPipelines) {
             if (pipe.getLeft().equals(MAIN_KEY)) {
-                addPrimary(pipe.getRight());
+                addPrimary(pipe.getRight().build());
             } else if (pipe.getLeft().equals(SECONDARY_KEY)) {
-                addSecondary(pipe.getRight());
+                addSecondary(pipe.getRight().build());
             } else {
                 unsupportedKeys.add(pipe.getLeft());
             }
@@ -70,6 +71,6 @@ public class PortionDistributor implements ScriptableDistributor {
         Collection<Pair<String, Pipeline>> subPipelines = new ArrayList<>();
         subPipelines.addAll(primary);
         subPipelines.addAll(secondary);
-        return ScriptableDistributor.formattedSubPipelines(subPipelines);
+        return ScriptableDistributor.formattedStaticSubPipelines(subPipelines);
     }
 }

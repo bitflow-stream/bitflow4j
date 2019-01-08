@@ -102,15 +102,15 @@ public class Main {
         String rawScript = cmdArgs.getRawScript();
         EndpointFactory endpoints = new EndpointFactory();
         BitflowScriptCompiler compiler = new BitflowScriptCompiler(registry, endpoints);
-        BitflowScriptCompiler.CompileResult res = compiler.parseScript(rawScript);
-
-        if (res.hasErrors()) {
+        Pipeline pipe;
+        try {
+            pipe = compiler.parseScript(rawScript);
+        } catch (CompilationException exc) {
             logger.severe("Failed to parse Bitflow script:");
-            res.getErrors().stream().map(s -> "\t" + s).forEach(logger::severe);
+            exc.getErrors().stream().map(s -> "\t" + s).forEach(logger::severe);
             return;
         }
 
-        Pipeline pipe = res.getPipeline();
         for (String line : TreeFormatter.standard.formatLines(pipe)) {
             logger.info(line);
         }
