@@ -21,6 +21,8 @@ import org.junit.runners.Suite;
         ScriptCompilationTest.class,
         EndpointFactoryTest.class,
 
+        SampleTest.class
+
         // Bitflow Query Language
         // TODO fix Bitflow Query Language scripts
 //        TestsForV1.class, TestsForV2.class, TestsForV3.class, TestsForV4.class

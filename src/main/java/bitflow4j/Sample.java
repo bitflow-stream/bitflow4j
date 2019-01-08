@@ -2,6 +2,8 @@ package bitflow4j;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Represents one vector of data. The header contains tags for the values. In addition to the values, the Sample also contains a timestamp
@@ -264,4 +266,20 @@ public class Sample {
         return Double.NaN;
     }
 
+    public String resolveTagTemplate(String featureStatFileTemplate) {
+        Pattern p = Pattern.compile("\\$\\{.+?}");
+        Matcher m = p.matcher(featureStatFileTemplate);
+        StringBuffer result = new StringBuffer();
+        while (m.find()) {
+            String tag = m.group();
+            tag = tag.substring(2, tag.length() - 1); // String the surrounding "${}"
+            String replacement = getTag(tag);
+            if (replacement == null) {
+                replacement = "";
+            }
+            m.appendReplacement(result, replacement);
+        }
+        m.appendTail(result);
+        return result.toString();
+    }
 }

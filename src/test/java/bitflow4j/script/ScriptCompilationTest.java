@@ -49,7 +49,7 @@ public class ScriptCompilationTest extends TestCase {
     }
 
     public void testEmpty() {
-        script(true, "", "Line 1 (0) '<EOF>': mismatched input '<EOF>' expecting {'{', STRING, NUMBER, IDENTIFIER, BOOL}");
+        script(true, "", "Line 1 (0) '<EOF>': mismatched input '<EOF>' expecting {'{', STRING, NUMBER, BOOL, IDENTIFIER}");
     }
 
     public void testInput() {
