@@ -38,7 +38,7 @@ public abstract class MarshallingSampleWriter extends AbstractPipelineStep {
     public synchronized void writeSample(Sample sample) throws IOException {
         OutputStream output = this.output; // Avoid race condition
         try {
-            if (output == null || header.changed(sample.getHeader())) {
+            if (header.changed(sample.getHeader()) || output == null) {
                 OutputStream newOutput = nextOutputStream();
 
                 // Use object identity to determine if the output stream has changed. If so, close the old one.

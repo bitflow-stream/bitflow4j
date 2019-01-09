@@ -18,6 +18,10 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Allows splitting samples into different files, based on a file name template that can contain tag names surrounded by '${}', e.g.:
+ *      ./data/${layer}/${host}.csv
+ */
 public class FileTemplateOutput extends Fork {
 
     private static final Logger logger = Logger.getLogger(FileTemplateOutput.class.getName());
