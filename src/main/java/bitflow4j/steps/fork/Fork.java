@@ -55,14 +55,11 @@ public class Fork extends AbstractPipelineStep implements TreeFormatter.Formatte
 
     @Override
     public void doClose() throws IOException {
-        for (SubPipeline subPipeline : subPipelines.values()) {
-            subPipeline.first.close();
-        }
+        pool.stop("Fork closed");
+        pool.waitForTasks();
         for (SubPipeline subPipeline : subPipelines.values()) {
             subPipeline.last.waitUntilClosed();
         }
-        pool.stop("Fork closed");
-        pool.waitForTasks();
     }
 
     private SubPipeline getPipeline(String key, Pipeline pipe) throws IOException {
