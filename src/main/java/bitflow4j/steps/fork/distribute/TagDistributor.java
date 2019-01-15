@@ -78,6 +78,10 @@ public class TagDistributor implements ScriptableDistributor {
     @Override
     public Collection<Pair<String, Pipeline>> distribute(Sample sample) {
         String value = sample.getTags().get(tag);
+        if(value==null){
+            value = "";
+            //TODO How to handle samples without the tag?
+        }
         if (tagValueCache.containsKey(value)) {
             return tagValueCache.get(value);
         } else {
@@ -86,7 +90,7 @@ public class TagDistributor implements ScriptableDistributor {
                 if (matches(available.getLeft(), value)) {
                     Pipeline pipeline = getPipeline(available.getLeft(), value, available.getRight());
                     if (pipeline != null) {
-                        result.add(new Pair<>(available.getLeft(), pipeline));
+                        result.add(new Pair<>(value, pipeline));
                     }
                 }
             }
@@ -99,13 +103,13 @@ public class TagDistributor implements ScriptableDistributor {
     }
 
     private Pipeline getPipeline(String key, String tagValue, PipelineBuilder builder) {
-        if (subPipelines.containsKey(key)) {
-            return subPipelines.get(key);
+        if (subPipelines.containsKey(tagValue)) {
+            return subPipelines.get(tagValue);
         }
 
         try {
             Pipeline pipe = builder.build();
-            subPipelines.put(key, pipe);
+            subPipelines.put(tagValue, pipe);
             return pipe;
         } catch (IOException e) {
             logger.log(Level.SEVERE, String.format("Failed to build sub-pipeline for tag value '%s' (matching %s)", tagValue, key), e);
