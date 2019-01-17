@@ -2,7 +2,7 @@ language: java
 
 install: true
 script: mvn clean install
-after_succes: mvn coveralls
+after_succes: mvn coveralls:report
 cache:
   directories:
   - $HOME/.m2
