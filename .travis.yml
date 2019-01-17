@@ -3,3 +3,7 @@ language: java
 install: true
 script: mvn clean install
 
+cache:
+  directories:
+  - $HOME/.m2
+
