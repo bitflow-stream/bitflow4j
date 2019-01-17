@@ -4,7 +4,7 @@ install: true
 
 script: mvn clean install
 
-after_succes: mvn clean cobertura:cobertura coveralls:cobertura
+after_succes: mvn clean test coveralls:report -DrepoToken=xOj6geyduUN1epbPe3Pz2MdeWFn6nctjU
 
 cache:
   directories:
