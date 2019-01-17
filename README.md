@@ -1,4 +1,6 @@
 [![Build Status](https://travis-ci.org/bitflow-stream/bitflow4j.svg?branch=develop)](https://travis-ci.org/bitflow-stream/bitflow4j)
+[![Coverage Status](https://coveralls.io/repos/github/bitflow-stream/bitflow4j/badge.svg?branch=develop)](https://coveralls.io/github/bitflow-stream/bitflow4j?branch=develop)
+
 
 # bitflow4j
 bitflow4j is a lightweight framework for performing data analysis on streamed timeseries data.
