@@ -7,7 +7,6 @@ script:
 mvn clean install
 
 after_succes:
-mvn coveralls:report
 mvn clean test jacoco:report coveralls:jacoco
 
 cache:
