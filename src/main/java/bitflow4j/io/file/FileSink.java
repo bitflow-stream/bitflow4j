@@ -4,6 +4,7 @@ import bitflow4j.io.MarshallingSampleWriter;
 import bitflow4j.io.marshall.Marshaller;
 
 import java.io.*;
+import java.util.logging.Logger;
 
 /**
  * Created by anton on 4/16/16.
@@ -13,6 +14,8 @@ import java.io.*;
  * to a single file, even if it already exists, which is essentially like using a SampleWriter directly.
  */
 public class FileSink extends MarshallingSampleWriter {
+
+    private static final Logger logger = Logger.getLogger(FileSink.class.getName());
 
     private final boolean append;
     private final boolean deleteFiles;
@@ -51,6 +54,7 @@ public class FileSink extends MarshallingSampleWriter {
         if (!file.exists() && !file.createNewFile()) {
             throw new IOException("Failed to create file " + file);
         }
+        logger.fine(String.format("Opening output file for writing (append: %s)", append));
         return new BufferedOutputStream(new FileOutputStream(file, append));
     }
 
