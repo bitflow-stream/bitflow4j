@@ -70,6 +70,14 @@
                     </includes>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.eluder.coveralls</groupId>
+                <artifactId>coveralls-maven-plugin</artifactId>
+                <version>4.3.0</version>
+                <configuration>
+                    <repoToken>xOj6geyduUN1epbPe3Pz2MdeWFn6nctjU</repoToken>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
