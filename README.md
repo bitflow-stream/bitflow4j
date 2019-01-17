@@ -1,3 +1,20 @@
+https://travis-ci.org/bitflow-stream/bitflow4j.svg?branch=develop
+
+[![Build Status](https://travis-ci.org/bitflow-stream/bitflow4j.svg?branch=develop)](https://travis-ci.org/bitflow-stream/bitflow4j)
+
+!https://travis-ci.org/bitflow-stream/bitflow4j.svg?branch=develop!:https://travis-ci.org/bitflow-stream/bitflow4j
+
+{<img src="https://travis-ci.org/bitflow-stream/bitflow4j.svg?branch=develop" alt="Build Status" />}[https://travis-ci.org/bitflow-stream/bitflow4j]
+
+image:https://travis-ci.org/bitflow-stream/bitflow4j.svg?branch=develop["Build Status", link="https://travis-ci.org/bitflow-stream/bitflow4j"]
+
+.. image:: https://travis-ci.org/bitflow-stream/bitflow4j.svg?branch=develop
+    :target: https://travis-ci.org/bitflow-stream/bitflow4j
+    
+=for html <a href="https://travis-ci.org/bitflow-stream/bitflow4j"><img src="https://travis-ci.org/bitflow-stream/bitflow4j.svg?branch=develop"></a>    
+
+#https://api.travis-ci.org/repos/bitflow-stream/bitflow4j/cc.xml?branch=develop
+
 # bitflow4j
 bitflow4j is a lightweight framework for performing data analysis on streamed timeseries data.
 This library implements sending and receiving of a data over various transport channels.
