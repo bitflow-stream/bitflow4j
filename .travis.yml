@@ -1,13 +1,10 @@
 language: java
 
-install:
-true
+install: true
 
-script:
-mvn clean install
+script: mvn clean install
 
-after_succes:
-mvn clean test jacoco:report coveralls:jacoco
+after_succes: mvn clean test jacoco:report coveralls:jacoco
 
 cache:
   directories:
