@@ -108,8 +108,8 @@ class BitflowScriptCompiler {
         Pipeline result = new Pipeline();
         if (ctx.multiInputPipeline() != null) {
             throw new CompilationException("Nested multi-input pipelines are not yet supported");
-        } else if (ctx.input() != null) {
-            result.input(buildInput(ctx.input()));
+        } else if (ctx.dataInput() != null) {
+            result.input(buildInput(ctx.dataInput()));
         }
         buildPipelineTail(ctx.pipelineElement(), result);
         return result;
@@ -137,7 +137,7 @@ class BitflowScriptCompiler {
         return ctx.STRING() == null ? ctx.getText() : unwrapSTRING(ctx.STRING());
     }
 
-    public Source buildInput(BitflowParser.InputContext ctx) throws CompilationException {
+    public Source buildInput(BitflowParser.DataInputContext ctx) throws CompilationException {
         String[] inputs = ctx.name().stream().map(this::unwrap).toArray(String[]::new);
         try {
             return endpointFactory.createSource(inputs);
@@ -146,7 +146,7 @@ class BitflowScriptCompiler {
         }
     }
 
-    public PipelineStep buildOutput(BitflowParser.OutputContext ctx) throws CompilationException {
+    public PipelineStep buildOutput(BitflowParser.DataOutputContext ctx) throws CompilationException {
         String output = unwrap(ctx.name());
         try {
             return endpointFactory.createSink(output);
@@ -156,8 +156,8 @@ class BitflowScriptCompiler {
     }
 
     public void buildStep(BitflowParser.PipelineElementContext ctx, Pipeline pipeline, boolean isBatched) throws CompilationException {
-        if (ctx.output() != null) {
-            pipeline.step(buildOutput(ctx.output()));
+        if (ctx.dataOutput() != null) {
+            pipeline.step(buildOutput(ctx.dataOutput()));
         } else if (ctx.transform() != null) {
             buildTransform(ctx.transform(), pipeline, isBatched);
         } else if (ctx.fork() != null) {

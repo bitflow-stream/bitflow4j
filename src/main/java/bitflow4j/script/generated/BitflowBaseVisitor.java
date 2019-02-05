@@ -24,14 +24,14 @@ public class BitflowBaseVisitor<T> extends AbstractParseTreeVisitor<T> implement
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitInput(BitflowParser.InputContext ctx) { return visitChildren(ctx); }
+	@Override public T visitDataInput(BitflowParser.DataInputContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitOutput(BitflowParser.OutputContext ctx) { return visitChildren(ctx); }
+	@Override public T visitDataOutput(BitflowParser.DataOutputContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *

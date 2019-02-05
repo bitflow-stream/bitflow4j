@@ -17,17 +17,17 @@ public interface BitflowVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitScript(BitflowParser.ScriptContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link BitflowParser#input}.
+	 * Visit a parse tree produced by {@link BitflowParser#dataInput}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitInput(BitflowParser.InputContext ctx);
+	T visitDataInput(BitflowParser.DataInputContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link BitflowParser#output}.
+	 * Visit a parse tree produced by {@link BitflowParser#dataOutput}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitOutput(BitflowParser.OutputContext ctx);
+	T visitDataOutput(BitflowParser.DataOutputContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link BitflowParser#name}.
 	 * @param ctx the parse tree

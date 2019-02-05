@@ -25,6 +25,7 @@ public class TagDistributor implements ScriptableDistributor {
 
     private Collection<Pair<String, PipelineBuilder>> subPipelineBuilders;
     private List<String> availableKeys;
+    private Collection<Object> formattedSubPipelines;
 
     public TagDistributor(String tag) {
         this(tag, true, false);
@@ -41,6 +42,7 @@ public class TagDistributor implements ScriptableDistributor {
         this.subPipelineBuilders = subPipelines;
         availableKeys = subPipelines.stream().map(Pair::getLeft).sorted().collect(Collectors.toList());
         compilePatterns();
+        formattedSubPipelines = ScriptableDistributor.formattedSubPipelines(subPipelineBuilders);
     }
 
     private void compilePatterns() throws IOException {
@@ -72,13 +74,13 @@ public class TagDistributor implements ScriptableDistributor {
 
     @Override
     public Collection<Object> formattedChildren() {
-        return ScriptableDistributor.formattedSubPipelines(subPipelineBuilders);
+        return formattedSubPipelines;
     }
 
     @Override
     public Collection<Pair<String, Pipeline>> distribute(Sample sample) {
         String value = sample.getTags().get(tag);
-        if(value==null){
+        if (value == null) {
             value = "";
             //TODO How to handle samples without the tag?
         }

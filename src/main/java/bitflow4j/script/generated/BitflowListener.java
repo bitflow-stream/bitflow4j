@@ -18,25 +18,25 @@ public interface BitflowListener extends ParseTreeListener {
 	 */
 	void exitScript(BitflowParser.ScriptContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link BitflowParser#input}.
+	 * Enter a parse tree produced by {@link BitflowParser#dataInput}.
 	 * @param ctx the parse tree
 	 */
-	void enterInput(BitflowParser.InputContext ctx);
+	void enterDataInput(BitflowParser.DataInputContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link BitflowParser#input}.
+	 * Exit a parse tree produced by {@link BitflowParser#dataInput}.
 	 * @param ctx the parse tree
 	 */
-	void exitInput(BitflowParser.InputContext ctx);
+	void exitDataInput(BitflowParser.DataInputContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link BitflowParser#output}.
+	 * Enter a parse tree produced by {@link BitflowParser#dataOutput}.
 	 * @param ctx the parse tree
 	 */
-	void enterOutput(BitflowParser.OutputContext ctx);
+	void enterDataOutput(BitflowParser.DataOutputContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link BitflowParser#output}.
+	 * Exit a parse tree produced by {@link BitflowParser#dataOutput}.
 	 * @param ctx the parse tree
 	 */
-	void exitOutput(BitflowParser.OutputContext ctx);
+	void exitDataOutput(BitflowParser.DataOutputContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link BitflowParser#name}.
 	 * @param ctx the parse tree

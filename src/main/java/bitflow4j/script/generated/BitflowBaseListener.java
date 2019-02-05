@@ -28,25 +28,25 @@ public class BitflowBaseListener implements BitflowListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterInput(BitflowParser.InputContext ctx) { }
+	@Override public void enterDataInput(BitflowParser.DataInputContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitInput(BitflowParser.InputContext ctx) { }
+	@Override public void exitDataInput(BitflowParser.DataInputContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterOutput(BitflowParser.OutputContext ctx) { }
+	@Override public void enterDataOutput(BitflowParser.DataOutputContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitOutput(BitflowParser.OutputContext ctx) { }
+	@Override public void exitDataOutput(BitflowParser.DataOutputContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
