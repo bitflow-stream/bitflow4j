@@ -64,18 +64,6 @@ public class BitflowBaseListener implements BitflowListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterVal(BitflowParser.ValContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitVal(BitflowParser.ValContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterParameter(BitflowParser.ParameterContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -88,13 +76,37 @@ public class BitflowBaseListener implements BitflowListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterTransformParameters(BitflowParser.TransformParametersContext ctx) { }
+	@Override public void enterParameterList(BitflowParser.ParameterListContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitTransformParameters(BitflowParser.TransformParametersContext ctx) { }
+	@Override public void exitParameterList(BitflowParser.ParameterListContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterParameters(BitflowParser.ParametersContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitParameters(BitflowParser.ParametersContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterPipelines(BitflowParser.PipelinesContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitPipelines(BitflowParser.PipelinesContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -112,18 +124,6 @@ public class BitflowBaseListener implements BitflowListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterMultiInputPipeline(BitflowParser.MultiInputPipelineContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitMultiInputPipeline(BitflowParser.MultiInputPipelineContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterPipelineElement(BitflowParser.PipelineElementContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -136,13 +136,25 @@ public class BitflowBaseListener implements BitflowListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterTransform(BitflowParser.TransformContext ctx) { }
+	@Override public void enterPipelineTailElement(BitflowParser.PipelineTailElementContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitTransform(BitflowParser.TransformContext ctx) { }
+	@Override public void exitPipelineTailElement(BitflowParser.PipelineTailElementContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterProcessingStep(BitflowParser.ProcessingStepContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitProcessingStep(BitflowParser.ProcessingStepContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -196,18 +208,6 @@ public class BitflowBaseListener implements BitflowListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterMultiplexSubPipeline(BitflowParser.MultiplexSubPipelineContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitMultiplexSubPipeline(BitflowParser.MultiplexSubPipelineContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterWindow(BitflowParser.WindowContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -220,18 +220,6 @@ public class BitflowBaseListener implements BitflowListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterWindowPipeline(BitflowParser.WindowPipelineContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitWindowPipeline(BitflowParser.WindowPipelineContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterSchedulingHints(BitflowParser.SchedulingHintsContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -239,18 +227,6 @@ public class BitflowBaseListener implements BitflowListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitSchedulingHints(BitflowParser.SchedulingHintsContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterSchedulingParameter(BitflowParser.SchedulingParameterContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitSchedulingParameter(BitflowParser.SchedulingParameterContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

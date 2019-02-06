@@ -93,34 +93,52 @@ class BitflowScriptCompiler {
     }
 
     public Pipeline buildPipeline(BitflowParser.ScriptContext parsedScript) throws CompilationException {
-        return buildPipeline(parsedScript.multiInputPipeline());
+        return buildPipeline(parsedScript.pipelines());
     }
 
-    public Pipeline buildPipeline(BitflowParser.MultiInputPipelineContext ctx) throws CompilationException {
+    public Pipeline buildPipeline(BitflowParser.PipelinesContext ctx) throws CompilationException {
         if (ctx.pipeline().size() != 1) {
             // TODO implement parallel multi input
-            throw new CompilationException("Multiple parallel multi-input pipelines are not yet supported");
+            throw new CompilationException("Multiple parallel input pipelines are not yet supported");
         }
         return buildPipeline(ctx.pipeline(0));
     }
 
     public Pipeline buildPipeline(BitflowParser.PipelineContext ctx) throws CompilationException {
-        Pipeline result = new Pipeline();
-        if (ctx.multiInputPipeline() != null) {
-            throw new CompilationException("Nested multi-input pipelines are not yet supported");
+        Pipeline pipe = new Pipeline();
+
+        if (ctx.pipelines() != null) {
+            // TODO implement
+            throw new CompilationException("Nested input pipelines are not yet supported");
         } else if (ctx.dataInput() != null) {
-            result.input(buildInput(ctx.dataInput()));
+            pipe.input(buildInput(ctx.dataInput()));
+        } else if (ctx.pipelineElement() != null) {
+            buildPipelineElement(pipe, ctx.pipelineElement());
         }
-        buildPipelineTail(ctx.pipelineElement(), result);
-        return result;
+
+        buildPipelineTail(pipe, ctx.pipelineTailElement());
+        return pipe;
     }
 
-    public void buildPipelineTail(List<BitflowParser.PipelineElementContext> ctx, Pipeline pipeline) throws CompilationException {
-        for (BitflowParser.PipelineElementContext elem : ctx) {
+    public void buildPipelineElement(Pipeline pipe, BitflowParser.PipelineElementContext ctx) throws CompilationException {
+        if (ctx.processingStep() != null) {
+            buildProcessingStep(pipe, ctx.processingStep(), false);
+        } else if (ctx.fork() != null) {
+            buildFork(pipe, ctx.fork());
+        } else if (ctx.window() != null) {
+            throw new CompilationException(ctx, "Window is not yet supported");
+        }
+    }
 
-            // TODO implement batch mode
-
-            buildStep(elem, pipeline, false);
+    public void buildPipelineTail(Pipeline pipe, List<BitflowParser.PipelineTailElementContext> elements) throws CompilationException {
+        for (BitflowParser.PipelineTailElementContext elem : elements) {
+            if (elem.dataOutput() != null) {
+                pipe.step(buildOutput(elem.dataOutput()));
+            } else if (elem.multiplexFork() != null) {
+                pipe.step(buildMultiplexFork(elem.multiplexFork()));
+            } else if (elem.pipelineElement() != null) {
+                buildPipelineElement(pipe, elem.pipelineElement());
+            }
         }
     }
 
@@ -130,10 +148,6 @@ class BitflowScriptCompiler {
     }
 
     private String unwrap(BitflowParser.NameContext ctx) {
-        return ctx.STRING() == null ? ctx.getText() : unwrapSTRING(ctx.STRING());
-    }
-
-    private String unwrap(BitflowParser.ValContext ctx) {
         return ctx.STRING() == null ? ctx.getText() : unwrapSTRING(ctx.STRING());
     }
 
@@ -155,25 +169,9 @@ class BitflowScriptCompiler {
         }
     }
 
-    public void buildStep(BitflowParser.PipelineElementContext ctx, Pipeline pipeline, boolean isBatched) throws CompilationException {
-        if (ctx.dataOutput() != null) {
-            pipeline.step(buildOutput(ctx.dataOutput()));
-        } else if (ctx.transform() != null) {
-            buildTransform(ctx.transform(), pipeline, isBatched);
-        } else if (ctx.fork() != null) {
-            buildFork(ctx.fork(), pipeline);
-        } else if (ctx.multiplexFork() != null) {
-            pipeline.step(buildMultiplexFork(ctx.multiplexFork()));
-        } else if (ctx.window() != null) {
-            throw new CompilationException(ctx, "Window is not yet supported");
-        } else {
-            throw new CompilationException(ctx, "Unexpected pipeline element: " + ctx);
-        }
-    }
-
-    public void buildTransform(BitflowParser.TransformContext ctx, Pipeline pipeline, boolean isBatched) throws CompilationException {
+    public void buildProcessingStep(Pipeline pipe, BitflowParser.ProcessingStepContext ctx, boolean isBatched) throws CompilationException {
         String name = unwrap(ctx.name());
-        Map<String, String> params = buildParameters(ctx.transformParameters());
+        Map<String, String> params = buildParameters(ctx.parameters());
 
         RegisteredPipelineStep regAnalysis = registry.getAnalysisRegistration(name);
         if (regAnalysis == null) {
@@ -188,14 +186,14 @@ class BitflowScriptCompiler {
         });
 
         try {
-            regAnalysis.buildStep(pipeline, params);
+            regAnalysis.buildStep(pipe, params);
         } catch (ConstructionException e) {
             throw new CompilationException(ctx, e.getStepName() + ": " + e.getMessage());
         }
     }
 
-    public void buildFork(BitflowParser.ForkContext ctx, Pipeline pipeline) throws CompilationException {
-        Map<String, String> forkParams = buildParameters(ctx.transformParameters());
+    public void buildFork(Pipeline pipe, BitflowParser.ForkContext ctx) throws CompilationException {
+        Map<String, String> forkParams = buildParameters(ctx.parameters());
         String forkName = unwrap(ctx.name());
 
         RegisteredFork forkReg = registry.getFork(forkName);
@@ -212,16 +210,16 @@ class BitflowScriptCompiler {
         }
 
         try {
-            forkReg.buildFork(pipeline, subPipes, forkParams);
+            forkReg.buildFork(pipe, subPipes, forkParams);
         } catch (ConstructionException e) {
             throw new CompilationException(ctx, e.getStepName() + ": " + e.getMessage());
         }
     }
 
     public Pipeline buildSubPipeline(BitflowParser.SubPipelineContext ctx) {
-        Pipeline result = new Pipeline();
-        buildPipelineTail(ctx.pipelineElement(), result);
-        return result;
+        Pipeline pipe = new Pipeline();
+        buildPipelineTail(pipe, ctx.pipelineTailElement());
+        return pipe;
     }
 
     public class SubPipelineBuilder implements ScriptableDistributor.PipelineBuilder {
@@ -240,22 +238,24 @@ class BitflowScriptCompiler {
 
     public PipelineStep buildMultiplexFork(BitflowParser.MultiplexForkContext ctx) throws CompilationException {
         List<Pipeline> subPipes = new ArrayList<>();
-        for (BitflowParser.MultiplexSubPipelineContext subPipeContext : ctx.multiplexSubPipeline()) {
-            subPipes.add(buildSubPipeline(subPipeContext.subPipeline()));
+        for (BitflowParser.SubPipelineContext subPipeContext : ctx.subPipeline()) {
+            subPipes.add(buildSubPipeline(subPipeContext));
         }
         MultiplexDistributor multiplex = new MultiplexDistributor(subPipes);
         return new Fork(multiplex);
     }
 
-    public Map<String, String> buildParameters(BitflowParser.TransformParametersContext ctx) throws CompilationException {
+    public Map<String, String> buildParameters(BitflowParser.ParametersContext ctx) throws CompilationException {
         Map<String, String> params = new HashMap<>();
-        for (BitflowParser.ParameterContext param : ctx.parameter()) {
-            String key = unwrap(param.name());
-            String value = unwrap(param.val());
-            if (params.containsKey(key)) {
-                throw new CompilationException(ctx, String.format("Duplicate parameter %s (values '%s' and '%s')", key, params.get(key), value));
-            } else {
-                params.put(key, value);
+        if (ctx.parameterList() != null) {
+            for (BitflowParser.ParameterContext param : ctx.parameterList().parameter()) {
+                String key = unwrap(param.name(0));
+                String value = unwrap(param.name(1));
+                if (params.containsKey(key)) {
+                    throw new CompilationException(ctx, String.format("Duplicate parameter %s (values '%s' and '%s')", key, params.get(key), value));
+                } else {
+                    params.put(key, value);
+                }
             }
         }
         return params;

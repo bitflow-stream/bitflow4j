@@ -48,16 +48,6 @@ public interface BitflowListener extends ParseTreeListener {
 	 */
 	void exitName(BitflowParser.NameContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link BitflowParser#val}.
-	 * @param ctx the parse tree
-	 */
-	void enterVal(BitflowParser.ValContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link BitflowParser#val}.
-	 * @param ctx the parse tree
-	 */
-	void exitVal(BitflowParser.ValContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link BitflowParser#parameter}.
 	 * @param ctx the parse tree
 	 */
@@ -68,15 +58,35 @@ public interface BitflowListener extends ParseTreeListener {
 	 */
 	void exitParameter(BitflowParser.ParameterContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link BitflowParser#transformParameters}.
+	 * Enter a parse tree produced by {@link BitflowParser#parameterList}.
 	 * @param ctx the parse tree
 	 */
-	void enterTransformParameters(BitflowParser.TransformParametersContext ctx);
+	void enterParameterList(BitflowParser.ParameterListContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link BitflowParser#transformParameters}.
+	 * Exit a parse tree produced by {@link BitflowParser#parameterList}.
 	 * @param ctx the parse tree
 	 */
-	void exitTransformParameters(BitflowParser.TransformParametersContext ctx);
+	void exitParameterList(BitflowParser.ParameterListContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link BitflowParser#parameters}.
+	 * @param ctx the parse tree
+	 */
+	void enterParameters(BitflowParser.ParametersContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link BitflowParser#parameters}.
+	 * @param ctx the parse tree
+	 */
+	void exitParameters(BitflowParser.ParametersContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link BitflowParser#pipelines}.
+	 * @param ctx the parse tree
+	 */
+	void enterPipelines(BitflowParser.PipelinesContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link BitflowParser#pipelines}.
+	 * @param ctx the parse tree
+	 */
+	void exitPipelines(BitflowParser.PipelinesContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link BitflowParser#pipeline}.
 	 * @param ctx the parse tree
@@ -88,16 +98,6 @@ public interface BitflowListener extends ParseTreeListener {
 	 */
 	void exitPipeline(BitflowParser.PipelineContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link BitflowParser#multiInputPipeline}.
-	 * @param ctx the parse tree
-	 */
-	void enterMultiInputPipeline(BitflowParser.MultiInputPipelineContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link BitflowParser#multiInputPipeline}.
-	 * @param ctx the parse tree
-	 */
-	void exitMultiInputPipeline(BitflowParser.MultiInputPipelineContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link BitflowParser#pipelineElement}.
 	 * @param ctx the parse tree
 	 */
@@ -108,15 +108,25 @@ public interface BitflowListener extends ParseTreeListener {
 	 */
 	void exitPipelineElement(BitflowParser.PipelineElementContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link BitflowParser#transform}.
+	 * Enter a parse tree produced by {@link BitflowParser#pipelineTailElement}.
 	 * @param ctx the parse tree
 	 */
-	void enterTransform(BitflowParser.TransformContext ctx);
+	void enterPipelineTailElement(BitflowParser.PipelineTailElementContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link BitflowParser#transform}.
+	 * Exit a parse tree produced by {@link BitflowParser#pipelineTailElement}.
 	 * @param ctx the parse tree
 	 */
-	void exitTransform(BitflowParser.TransformContext ctx);
+	void exitPipelineTailElement(BitflowParser.PipelineTailElementContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link BitflowParser#processingStep}.
+	 * @param ctx the parse tree
+	 */
+	void enterProcessingStep(BitflowParser.ProcessingStepContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link BitflowParser#processingStep}.
+	 * @param ctx the parse tree
+	 */
+	void exitProcessingStep(BitflowParser.ProcessingStepContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link BitflowParser#fork}.
 	 * @param ctx the parse tree
@@ -158,16 +168,6 @@ public interface BitflowListener extends ParseTreeListener {
 	 */
 	void exitMultiplexFork(BitflowParser.MultiplexForkContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link BitflowParser#multiplexSubPipeline}.
-	 * @param ctx the parse tree
-	 */
-	void enterMultiplexSubPipeline(BitflowParser.MultiplexSubPipelineContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link BitflowParser#multiplexSubPipeline}.
-	 * @param ctx the parse tree
-	 */
-	void exitMultiplexSubPipeline(BitflowParser.MultiplexSubPipelineContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link BitflowParser#window}.
 	 * @param ctx the parse tree
 	 */
@@ -178,16 +178,6 @@ public interface BitflowListener extends ParseTreeListener {
 	 */
 	void exitWindow(BitflowParser.WindowContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link BitflowParser#windowPipeline}.
-	 * @param ctx the parse tree
-	 */
-	void enterWindowPipeline(BitflowParser.WindowPipelineContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link BitflowParser#windowPipeline}.
-	 * @param ctx the parse tree
-	 */
-	void exitWindowPipeline(BitflowParser.WindowPipelineContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link BitflowParser#schedulingHints}.
 	 * @param ctx the parse tree
 	 */
@@ -197,14 +187,4 @@ public interface BitflowListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitSchedulingHints(BitflowParser.SchedulingHintsContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link BitflowParser#schedulingParameter}.
-	 * @param ctx the parse tree
-	 */
-	void enterSchedulingParameter(BitflowParser.SchedulingParameterContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link BitflowParser#schedulingParameter}.
-	 * @param ctx the parse tree
-	 */
-	void exitSchedulingParameter(BitflowParser.SchedulingParameterContext ctx);
 }

@@ -35,23 +35,29 @@ public interface BitflowVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitName(BitflowParser.NameContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link BitflowParser#val}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitVal(BitflowParser.ValContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link BitflowParser#parameter}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitParameter(BitflowParser.ParameterContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link BitflowParser#transformParameters}.
+	 * Visit a parse tree produced by {@link BitflowParser#parameterList}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitTransformParameters(BitflowParser.TransformParametersContext ctx);
+	T visitParameterList(BitflowParser.ParameterListContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link BitflowParser#parameters}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitParameters(BitflowParser.ParametersContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link BitflowParser#pipelines}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPipelines(BitflowParser.PipelinesContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link BitflowParser#pipeline}.
 	 * @param ctx the parse tree
@@ -59,23 +65,23 @@ public interface BitflowVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitPipeline(BitflowParser.PipelineContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link BitflowParser#multiInputPipeline}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitMultiInputPipeline(BitflowParser.MultiInputPipelineContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link BitflowParser#pipelineElement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitPipelineElement(BitflowParser.PipelineElementContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link BitflowParser#transform}.
+	 * Visit a parse tree produced by {@link BitflowParser#pipelineTailElement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitTransform(BitflowParser.TransformContext ctx);
+	T visitPipelineTailElement(BitflowParser.PipelineTailElementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link BitflowParser#processingStep}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitProcessingStep(BitflowParser.ProcessingStepContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link BitflowParser#fork}.
 	 * @param ctx the parse tree
@@ -101,33 +107,15 @@ public interface BitflowVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitMultiplexFork(BitflowParser.MultiplexForkContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link BitflowParser#multiplexSubPipeline}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitMultiplexSubPipeline(BitflowParser.MultiplexSubPipelineContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link BitflowParser#window}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitWindow(BitflowParser.WindowContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link BitflowParser#windowPipeline}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitWindowPipeline(BitflowParser.WindowPipelineContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link BitflowParser#schedulingHints}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitSchedulingHints(BitflowParser.SchedulingHintsContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link BitflowParser#schedulingParameter}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitSchedulingParameter(BitflowParser.SchedulingParameterContext ctx);
 }
