@@ -11,7 +11,7 @@ before_script:
 script:
   - mvn test jacoco:report
 after_script:
-  - ./cc-test-reporter format-coverage -d -t jacoco ./target/jacoco-ut/jacoco.xml
+  - /cc-test-reporter format-coverage -d -t jacoco build/reports/jacoco/test/jacoco.xml
   - ./cc-test-reporter upload-coverage -d
 after_success:
   - mvn coveralls:report
