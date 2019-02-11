@@ -1,7 +1,7 @@
 language: java
 env:
   global:
-    - CC_TEST_REPORTER_ID=ee5057534a023432e0ecb0101cf2990c7f3e397258dc6e7132c720fbdb40b730
+    - CC_TEST_REPORTER_ID= a5972a3e562b44f5d471f208b4d60b9538fe95faf4ed9ecee8365763641ee0b4
 install:
   - mvn test-compile -DskipTests=true -Dmaven.javadoc.skip=true -B -V
 before_script:
