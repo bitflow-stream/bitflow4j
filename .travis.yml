@@ -1,12 +1,8 @@
 language: java
 
-install: true
-
-script: mvn clean install
-
-after_succes: mvn clean test coveralls:report -DrepoToken=xOj6geyduUN1epbPe3Pz2MdeWFn6nctjU
-
-cache:
-  directories:
-  - $HOME/.m2
-
+install:
+  - mvn test-compile -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+script:
+  - mvn test jacoco:report
+after_success:
+  - mvn coveralls:report
