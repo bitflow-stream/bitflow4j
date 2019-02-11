@@ -1,18 +1,11 @@
 language: java
-env:
-  global:
-    - CC_TEST_REPORTER_ID= a5972a3e562b44f5d471f208b4d60b9538fe95faf4ed9ecee8365763641ee0b4
+
 install:
   - mvn test-compile -DskipTests=true -Dmaven.javadoc.skip=true -B -V
-before_script:
-  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-  - chmod +x ./cc-test-reporter
-  - ./cc-test-reporter before-build
+
 script:
   - mvn test jacoco:report
-after_script:
-  - /cc-test-reporter format-coverage -d -t jacoco build/reports/jacoco/test/jacoco.xml
-  - ./cc-test-reporter upload-coverage -d
+
 after_success:
   - mvn coveralls:report
 
@@ -20,4 +13,6 @@ cache:
   directories:
   - .autoconf
   - $HOME/.m2
+
+
 
