@@ -29,7 +29,6 @@ public class Main {
     private static final Logger logger = Logger.getLogger(Main.class.getName());
 
     static {
-        Config.setDefaultLogLevel(Level.ALL);
         Config.initializeLogger();
     }
 
