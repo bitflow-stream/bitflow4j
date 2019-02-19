@@ -9,7 +9,7 @@ public class StdoutConsoleHandler extends ConsoleHandler {
 
     public StdoutConsoleHandler() {
         super();
-        setOutputStream(System.out);
+        setOutputStream(System.err);
     }
 
 }

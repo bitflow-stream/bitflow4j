@@ -12,16 +12,13 @@ import com.beust.jcommander.ParameterException;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -95,9 +92,10 @@ public class Main {
             return;
         }
 
-        if (!cmdArgs.isScriptValid()) {
-            logger.severe("Please provide a script either as file using the -f parameter or as positional arguments");
+        if (!cmdArgs.hasValidScript()) {
+            logger.severe("Please provide a Bitflow script either as file (-f parameter) or ");
             jc.usage();
+            return;
         }
         String rawScript = cmdArgs.getRawScript();
         EndpointFactory endpoints = new EndpointFactory();
@@ -117,12 +115,6 @@ public class Main {
         if (cmdArgs.printPipeline)
             return;
         pipe.runAndWait();
-    }
-
-    private static String readRawScript(String fileName) throws IOException {
-        File file = new File(fileName);
-        BufferedReader reader = new BufferedReader(new FileReader(file));
-        return reader.lines().collect(Collectors.joining(System.lineSeparator()));
     }
 
     private static void logCapabilities(Registry registry) {
@@ -154,34 +146,39 @@ public class Main {
 
     private static class CmdArgs {
         @Parameter(names = {"-h", "--help"}, help = true, order = 0)
-        private boolean printHelp = false;
-        @Parameter(names = {"-f", "--file"}, description = "A file containing the script to parse.", order = 1)
-        private String fileName = null;
+        public boolean printHelp = false;
+        @Parameter(names = {"-f", "--file"}, description = "A file containing the script to parse (cannot be used with -s).", order = 1)
+        public String fileName = null;
+        @Parameter(names = {"-s", "--script"}, description = "The Bitflow script to execute (cannot be used with -f).")
+        public String script = null;
         @Parameter(names = {"-P", "--scan"}, description = "Package names that will be scanned automatically. Wildcards allowed.", order = 2)
-        private List<String> packagesToScan = Lists.newArrayList("bitflow4j");
+        public List<String> packagesToScan = Lists.newArrayList("bitflow4j");
         @Parameter(names = {"-c", "--capabilities"}, description = "Prints the capabilities of this jar in a human readable format.")
-        private boolean printCapabilities = false;
+        public boolean printCapabilities = false;
         @Parameter(names = {"-j", "--json-capabilities"}, description = "Prints the capabilities of this jar in json format.")
-        private boolean printJsonCapabilities = false;
+        public boolean printJsonCapabilities = false;
         @Parameter(names = {"-p", "--pipeline"}, description = "Prints the pipeline steps resulting from parsing the input script and exits.")
-        private boolean printPipeline = false;
+        public boolean printPipeline = false;
         @Parameter(names = {"-v", "--verbose"}, description = "Set the log level to FINER.")
-        private boolean verboseLogging = false;
-        @Parameter(names = {"-s", "--silent"}, description = "Set the log level to WARNING.")
-        private boolean silentLogging = false;
-        @Parameter(description = "[Bitflow Script]")
-        private List<String> scriptParts = new ArrayList<>();
+        public boolean verboseLogging = false;
+        @Parameter(names = {"-q", "--quiet"}, description = "Set the log level to WARNING.")
+        public boolean silentLogging = false;
 
-        public boolean isScriptValid() {
-            return fileName != null || (scriptParts != null && !scriptParts.isEmpty());
+        public boolean hasValidScript() {
+            boolean hasFile = fileName != null;
+            boolean hasScript = script != null;
+            return (hasFile || hasScript) && !(hasFile && hasScript);
         }
 
         public String getRawScript() throws IOException {
             if (fileName != null) {
                 return readRawScript(fileName);
-            } else {
-                return String.join(" ", scriptParts);
             }
+            return script;
+        }
+
+        private String readRawScript(String fileName) throws IOException {
+            return new String(Files.readAllBytes(Paths.get(fileName)));
         }
 
         public String[] cleanPackagesToScan() {
