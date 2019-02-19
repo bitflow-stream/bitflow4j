@@ -23,34 +23,13 @@ import java.util.stream.Stream;
 
 /**
  * Main parses a BitflowScript and executes the resulting Pipeline.
- *
- * <pre>
- * Usage: bitflow4j.script.Main [options] [Bitflow Script]
- *   Options:
- *     --help
- *
- *     -f, --file
- *       A file containing the script to parse.
- *     -p, --scan-packages
- *       Comma-separated package names that will be scanned automatically.
- *       Wildcards allowed.
- *       Default: *
- *     --capabilities
- *       Prints the capabilities of this jar in a human readable format.
- *       Default: false
- *     --json-capabilities
- *       Prints the capabilities of this jar in json format.
- *       Default: false
- *     --pipeline
- *       Prints the pipeline steps resulting from parsing the input script and exits.
- *       Default: false
- * </pre>
  */
 public class Main {
 
     private static final Logger logger = Logger.getLogger(Main.class.getName());
 
     static {
+        Config.setDefaultLogLevel(Level.ALL);
         Config.initializeLogger();
     }
 
@@ -71,11 +50,11 @@ public class Main {
         try {
             jc.parse(args);
         } catch (ParameterException e) {
-            logger.severe(e.getMessage());
+            System.err.println(e.getMessage());
             e.usage();
             return;
         }
-        if (args.length == 0 | cmdArgs.printHelp) {
+        if (args.length == 0 || cmdArgs.printHelp) {
             jc.usage();
             return;
         }
@@ -94,7 +73,7 @@ public class Main {
 
         if (!cmdArgs.hasValidScript()) {
             logger.severe("Please provide a Bitflow script either as file (-f parameter) or ");
-            jc.usage();
+            logger.severe(jc.toString());
             return;
         }
         String rawScript = cmdArgs.getRawScript();

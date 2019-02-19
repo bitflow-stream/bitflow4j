@@ -114,7 +114,7 @@ public class MainTest {
 
     private String callMainWithArgs(String... args) {
         try {
-            String[] extraArgs = new String[]{"--scan-packages", ScanForPipelineStepTest.SCRIPT_PACKAGE};
+            String[] extraArgs = new String[]{"--scan", ScanForPipelineStepTest.SCRIPT_PACKAGE};
             startCaptureOutput();
             Main.executeMain(ArrayUtils.addAll(extraArgs, args));
             return stopCaptureOutput();
