@@ -22,20 +22,20 @@ after_success:
   - mvn coveralls:report
 
   #docker:
-  - docker build -t test1034/testing-docker-impl:latest .
-  - docker run test1034/testing-docker-impl:latest
+  #- docker build -t test1034/testing-docker-impl:latest .
+  #- docker run test1034/testing-docker-impl:latest
 
 after_script:
-  - docker images
+  #- docker images
 
 before_deploy:
-  - docker login -u "$REGISTRY_USER" -p "$REGISTRY_PASS"
+  #- docker login -u "$REGISTRY_USER" -p "$REGISTRY_PASS"
 
-deploy:
-  provider: script
-  script: docker push test1034/testing-docker-impl:latest
-  on:
-    branch: develop
+#deploy:
+ # provider: script
+  #script: docker push test1034/testing-docker-impl:latest
+  #on:
+   # branch: develop
 
 
 
