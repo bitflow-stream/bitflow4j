@@ -37,7 +37,7 @@ deploy:
  on:
   branch: develop
 
-# cache:
-  # directories:
-    #- ".autoconf"
-    #- "$HOME/.m2"
+ cache:
+   directories:
+    - .autoconf
+    - $HOME/.m2
