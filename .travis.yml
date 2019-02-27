@@ -33,15 +33,11 @@ before_deploy:
 
 deploy:
  provider: script
-  script: docker push test1034/testing-docker-impl:latest
-  on:
-    branch: develop
+ script: docker push test1034/testing-docker-impl:latest
+ on:
+  branch: develop
 
-
-
-
-
-cache:
-  directories:
-    - ".autoconf"
-    - "$HOME/.m2"
+# cache:
+  # directories:
+    #- ".autoconf"
+    #- "$HOME/.m2"
