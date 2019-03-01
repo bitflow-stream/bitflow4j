@@ -88,11 +88,13 @@ public class TagDistributor implements ScriptableDistributor {
             return tagValueCache.get(value);
         } else {
             List<Pair<String, Pipeline>> result = new ArrayList<>();
-            for (Pair<String, PipelineBuilder> available : subPipelineBuilders) {
-                if (matches(available.getLeft(), value)) {
-                    Pipeline pipeline = getPipeline(available.getLeft(), value, available.getRight());
-                    if (pipeline != null) {
-                        result.add(new Pair<>(value, pipeline));
+            if(subPipelineBuilders != null){
+                for (Pair<String, PipelineBuilder> available : subPipelineBuilders) {
+                    if (matches(available.getLeft(), value)) {
+                        Pipeline pipeline = getPipeline(available.getLeft(), value, available.getRight());
+                        if (pipeline != null) {
+                            result.add(new Pair<>(value, pipeline));
+                        }
                     }
                 }
             }
