@@ -80,10 +80,11 @@ public abstract class BatchPipelineStep extends AbstractPipelineStep {
 
     @Override
     public final synchronized void writeSample(Sample sample) throws IOException {
-        window.add(sample);
         startTime = new Date().getTime();
-        if (shouldFlush(sample))
+        if (shouldFlush(sample)) {
             flushResults();
+        }
+        window.add(sample);
     }
 
     private boolean shouldFlush(Sample sample) {
