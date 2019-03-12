@@ -66,6 +66,7 @@ public abstract class BatchPipelineStep extends AbstractPipelineStep {
                     long currentTime = new Date().getTime();
                     if (currentTime - startTime > timeoutMs) {
                         try {
+                            logger.log(Level.INFO, "Flushed batch due to timeout (" + timeoutMs + "ms).");
                             flushResults();
                         } catch (IOException ex) {
                             logger.log(Level.SEVERE, "Failed to automatically flush batch", ex);
