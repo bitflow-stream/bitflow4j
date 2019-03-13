@@ -6,11 +6,9 @@ import bitflow4j.io.marshall.Marshaller;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Socket;
-import java.net.SocketException;
 import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,7 +21,6 @@ public class TcpSink extends MarshallingSampleWriter {
     private static final Logger logger = Logger.getLogger(TcpSink.class.getName());
 
     public static final int TCP_CONNECT_TIMEOUT_MILLIS = 3000;
-    public static final int TCP_RECONNECT_TIMEOUT_MILLIS = 4000;
 
     private final String targetHost;
     private final int targetPort;
@@ -58,19 +55,17 @@ public class TcpSink extends MarshallingSampleWriter {
         try {
             super.writeSample(sample);
         } catch (IOException exc) {
-            if(exc instanceof SocketException && exc.getMessage().contains("Broken Pipe")) {
-                reconnectSocket(sample);
-            }
-            else{
-                TcpErrorLogger.log(String.format("Failed to send sample to %s:%s", targetHost, targetPort), exc);
-                closeSocket();
-            }
+            TcpErrorLogger.log(String.format("Failed to send sample to %s:%s", targetHost, targetPort), exc);
+            closeSocket();
         }
     }
 
     protected OutputStream nextOutputStream() {
         try {
-            return openOutputStream();
+            closeSocket();
+            socket = new Socket();
+            socket.connect(new InetSocketAddress(targetHost, targetPort), TCP_CONNECT_TIMEOUT_MILLIS);
+            return socket.getOutputStream();
         } catch (IOException exc) {
             TcpErrorLogger.log(String.format("Failed to connect to %s:%s", targetHost, targetPort), exc);
             closeSocket();
@@ -79,6 +74,7 @@ public class TcpSink extends MarshallingSampleWriter {
     }
 
     private void closeSocket() {
+        super.closeStream();
         try {
             if (socket != null)
                 socket.close();
@@ -88,34 +84,6 @@ public class TcpSink extends MarshallingSampleWriter {
             socket = null;
             output = null;
         }
-    }
-
-    private OutputStream openOutputStream() throws IOException {
-        closeSocket();
-        socket = new Socket();
-        socket.connect(new InetSocketAddress(targetHost, targetPort), TCP_CONNECT_TIMEOUT_MILLIS);
-        return socket.getOutputStream();
-    }
-
-    private void reconnectSocket(Sample sample) throws IOException {
-        TcpErrorLogger.log(String.format("Failed to send sample to %s:%s. Trying to reconnect socket after timeout of %dms.", targetHost, targetPort, TCP_RECONNECT_TIMEOUT_MILLIS), null);
-        closeSocket();
-        try {
-            Thread.sleep(TCP_RECONNECT_TIMEOUT_MILLIS);
-        }
-        catch(Exception e){
-            TcpErrorLogger.log(String.format("Exception during timeout for reconnect."), e);
-        }
-        try {
-            super.output = openOutputStream();
-        }
-        catch(ConnectException connExc){
-            //Log the failure of the reconnect and try again
-            TcpErrorLogger.log(String.format("Failed to reconnect to %s:%s. Trying to connect again.", targetHost, targetPort), connExc);
-            reconnectSocket(sample);
-            return;
-        }
-        writeSample(sample);
     }
 
 }
