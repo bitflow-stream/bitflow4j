@@ -55,7 +55,8 @@ public class TcpSink extends MarshallingSampleWriter {
         try {
             super.writeSample(sample);
         } catch (IOException exc) {
-            TcpErrorLogger.log(String.format("Failed to send sample to %s:%s", targetHost, targetPort), exc);
+            TcpErrorLogger.log(String.format("Failed to send sample to %s:%s due to following exception. Will retry to connect for the next sample.",
+                    targetHost, targetPort), exc);
             closeSocket();
         }
     }
@@ -74,6 +75,7 @@ public class TcpSink extends MarshallingSampleWriter {
     }
 
     private void closeSocket() {
+        super.closeStream();
         try {
             if (socket != null)
                 socket.close();
