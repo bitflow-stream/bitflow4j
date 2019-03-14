@@ -1,9 +1,13 @@
-FROM ubuntu:18.04
-
-RUN apt-get update
-RUN apt-get install -y git
-RUN apt-get install -y maven
-RUN git clone https://github.com/bitflow-stream/bitflow4j.git
-RUN cd bitflow4j/
+# docker build -t teambitflow/bitflow4j-build --target build .
+# docker build -t teambitflow/bitflow4j .
+FROM maven:3.6-jdk-8 as build
+WORKDIR /build-bitflow4j
+COPY . .
 RUN mvn install
+
+FROM java:8-jre-alpine
+WORKDIR /
+COPY --from=build /build-bitflow4j/target/bitflow4j-0.1-jar-with-dependencies.jar .
+ENTRYPOINT ["java", "-jar", "bitflow4j-0.1-jar-with-dependencies.jar"]
+
 
