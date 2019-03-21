@@ -22,9 +22,8 @@ after_success:
   - mvn coveralls:report
 
   #docker:
-  - docker build -t test1034/testing-docker-impl:latest .
-  - docker run test1034/testing-docker-impl:latest
-
+  - docker build -t test1034/testing-docker-build:latest  --target build .
+  - docker build -t test1034/testing-docker .
 after_script:
   - docker images
 
