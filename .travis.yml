@@ -32,7 +32,9 @@ before_deploy:
 
 deploy:
  provider: script
- script: docker push test1034/testing-docker-impl:latest
+ script:
+  docker push test1034/testing-docker:latest
+  docker push test1034/testing-docker
  on:
   branch: develop
 
