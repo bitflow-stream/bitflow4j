@@ -8,13 +8,15 @@ import java.util.Map;
 public abstract class AbstractRegisteredStep {
 
     public final String name;
+    public final String description;
     public final List<String> optionalParameters = new ArrayList<>();
     public final List<String> requiredParameters = new ArrayList<>();
 
     private boolean hasGeneric = false;
 
-    public AbstractRegisteredStep(String name) {
+    public AbstractRegisteredStep(String name, String description) {
         this.name = name;
+        this.description = description;
     }
 
     public AbstractRegisteredStep optional(String... parameters) {

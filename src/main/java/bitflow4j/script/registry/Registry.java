@@ -128,11 +128,36 @@ public class Registry {
     // Splits a camelCase string into a lowercase string with delimiters instead of Uppercase
     private String splitCamelCase(String camelCase, String delimiter){
         // Splits the string at uppercase letters
-        String[] classWords = camelCase.split("(?=\\p{Upper})");
+        String[] classCapitals = camelCase.split("(?=\\p{Upper})");
+        ArrayList<String> classWords = new ArrayList<>();
+        int counter = 0;
+        for (int i = 0; i < classCapitals.length; i++) {
+            if(classCapitals[i].toLowerCase().equals("step")) continue;
+
+            //We are not at the end of the list & at least this and the next String only contain one capitalized letter
+            if(i < classCapitals.length - 1 && classCapitals[i].length() == 1 && classCapitals[i + 1].length() == 1){
+                if(classWords.size() <= counter) {
+                    classWords.add(classCapitals[i] + classCapitals[i + 1]);
+                    counter = i;
+                }
+                else {
+                    classWords.set(counter, classWords.get(counter) + classCapitals[i + 1]);
+                }
+            }
+            else {
+                if(i < classCapitals.length - 1 && classCapitals[i].length() == 1 && classCapitals[i + 1].length() != 1){
+                    counter++;
+                    continue;
+                }
+                classWords.add(classCapitals[i]);
+                counter++;
+            }
+        }
+
         String result = "";
-        for (int i = 0; i < classWords.length; i++) {
-            result += classWords[i].toLowerCase();
-            if (i < classWords.length - 1){
+        for (int i = 0; i < classWords.size(); i++) {
+            result += classWords.get(i).toLowerCase();
+            if (i < classWords.size() - 1){
                 result += delimiter;
             }
         }

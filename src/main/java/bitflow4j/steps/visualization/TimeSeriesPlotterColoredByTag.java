@@ -3,6 +3,7 @@ package bitflow4j.steps.visualization;
 import bitflow4j.AbstractPipelineStep;
 import bitflow4j.Header;
 import bitflow4j.Sample;
+import bitflow4j.script.registry.Description;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
@@ -24,6 +25,7 @@ import java.util.logging.Logger;
  * @author Vincent Hennig on 03.11.17. This Class will create one colored timeseries plot for each metric. Samples will be colored according
  * to the value of a given tag choosing a different color for each different value up to 20 different colors
  */
+@Description("This Processing Step will create one colored timeseries plot for each metric.")
 public class TimeSeriesPlotterColoredByTag extends AbstractPipelineStep {
 
     private static final Logger logger = Logger.getLogger(TimeSeriesPlotterColoredByTag.class.getName());
