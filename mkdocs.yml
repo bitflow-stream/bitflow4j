@@ -1,0 +1,26 @@
+
+site_name: Bitflow4j
+repo_url: https://github.com/bitflow-stream/bitflow4j
+site_author: Florian Schmidt
+site_description: Bitflow4j Documentation
+theme: readthedocs
+plugins:
+    - search
+markdown_extensions:
+    - sane_lists
+    - smarty
+    - toc:
+        permalink: True
+nav:
+    - Home:
+        - The Bitflow Project: "https://bitflow.readthedocs.io/en/latest/"
+        - Data Sources, Sinks and Format: "https://bitflow.readthedocs.io/en/latest/data-format/"
+        - Bitflow Script: "https://bitflow.readthedocs.io/projects/bitflow-antlr-grammars/en/latest/bitflow-script/"
+    - Implementations:
+        - go-bitflow: "https://github.com/bitflow-stream/go-bitflow"
+        - bitflow4j (Github): index.md
+        - python-bitflow: "https://bitflow.readthedocs.io/projects/python-bitflow/en/latest/"
+    - Related Projects:
+        - bitflow-collector: "https://bitflow.readthedocs.io/projects/go-bitflow-collector/en/latest/"
+        - bitflow-coordinator (Github): "https://github.com/bitflow-stream/bitflow-coordinator"
+        - bitflow-process-agent (Github): "https://github.com/bitflow-stream/bitflow-process-agent"
