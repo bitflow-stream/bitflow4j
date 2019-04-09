@@ -1,5 +1,6 @@
 package bitflow4j.http;
 
+import bitflow4j.misc.Pair;
 import fi.iki.elonen.NanoHTTPD;
 import fi.iki.elonen.NanoHTTPD.Response.IStatus;
 import fi.iki.elonen.NanoWSD;
@@ -8,6 +9,8 @@ import fi.iki.elonen.router.RouterNanoHTTPD.UriResource;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,6 +20,8 @@ import java.util.logging.Logger;
 public class Server extends NanoWSD {
 
     private static final Logger logger = Logger.getLogger(Server.class.getName());
+
+    private static final Map<Pair<String, Integer>, Server> runningServers = new HashMap<>();
 
     private final UriRouter httpRouter = new UriRouter();
     private final UriRouter websocketRouter = new UriRouter();
@@ -30,10 +35,30 @@ public class Server extends NanoWSD {
         super(hostname, port);
     }
 
+    public static Server on(int port) {
+        return on(null, port);
+    }
+
+    public static Server on(String hostname, int port) {
+        Pair<String, Integer> key = new Pair<>(hostname, port);
+        if (runningServers.containsKey(key)) {
+            return runningServers.get(key);
+        }
+        try {
+            Server server = new Server(hostname, port);
+            server.start();
+            runningServers.put(key, server);
+            return server;
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, String.format("Failed to start web server (host %s, port %s)", hostname, port), e);
+            return null;
+        }
+    }
+
     @Override
     public void start() throws IOException {
         start(-1); // No timeout by default
-        logger.info("Serving HTTP on " + String.valueOf(getHostname()) + ":" + getListeningPort());
+        logger.info("Serving HTTP on " + getHostname() + ":" + getListeningPort());
     }
 
     public void addRoute(String url, Class<? extends Handler> handler, Object... initParameter) {

@@ -44,14 +44,17 @@ public class TaskPool {
             throw new TaskException("Task already started in this TaskPool, possible recursive invocation of TaskPool.start(): " + task);
         }
         startedTasks.put(task, null);
+        boolean isParallel = task instanceof ParallelTask;
+        boolean isStoppable = task instanceof StoppableTask;
+        logger.fine(String.format("Starting task (parallel: %s, stoppable: %s, background: %s): %s", isParallel, isStoppable, backgroundTask, task));
 
         task.start(this);
-        if (task instanceof ParallelTask) {
+        if (isParallel) {
             Runner runner = new Runner((ParallelTask) task, backgroundTask);
             runners.add(runner);
             runner.start();
         }
-        if (task instanceof StoppableTask) {
+        if (isStoppable) {
             stoppable.add((StoppableTask) task);
         }
     }
@@ -111,13 +114,15 @@ public class TaskPool {
         do {
             haveRunningThread = false;
             for (Runner runner : runners) {
-                if (runner.isAlive()) haveRunningThread = true;
-                logger.fine("Waiting for task to finish: " + runner);
-                while (true) {
-                    try {
-                        runner.join();
-                        break;
-                    } catch (InterruptedException ignored) {
+                if (runner.isAlive()) {
+                    haveRunningThread = true;
+                    logger.fine("Waiting for task to finish: " + runner);
+                    while (true) {
+                        try {
+                            runner.join();
+                            break;
+                        } catch (InterruptedException ignored) {
+                        }
                     }
                 }
             }

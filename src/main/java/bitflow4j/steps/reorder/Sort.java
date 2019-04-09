@@ -20,6 +20,16 @@ public class Sort extends BatchPipelineStep implements Comparator<Sample> {
         this.metricNames = metricNames;
     }
 
+    public Sort(String batchSeparationTag, int timeout, String... metricNames) {
+        super(batchSeparationTag, timeout);
+        this.metricNames = metricNames;
+    }
+
+    public Sort(String batchSeparationTag, int timeout) {
+        super(batchSeparationTag, timeout);
+        this.metricNames = new String[0];
+    }
+
     @Override
     protected void flush(List<Sample> window) throws IOException {
         window.sort(this);

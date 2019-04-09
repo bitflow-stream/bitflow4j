@@ -17,31 +17,30 @@ public class BitflowParser extends Parser {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		T__0=1, T__1=2, T__2=3, T__3=4, T__4=5, T__5=6, T__6=7, T__7=8, T__8=9, 
-		EOP=10, NEXT=11, STRING=12, NUMBER=13, BOOL=14, IDENTIFIER=15, COMMENT=16, 
-		NEWLINE=17, WHITESPACE=18, TAB=19;
+		OPEN=1, CLOSE=2, EOP=3, NEXT=4, OPEN_PARAMS=5, CLOSE_PARAMS=6, EQ=7, SEP=8, 
+		OPEN_HINTS=9, CLOSE_HINTS=10, WINDOW=11, STRING=12, IDENTIFIER=13, COMMENT=14, 
+		NEWLINE=15, WHITESPACE=16, TAB=17;
 	public static final int
-		RULE_script = 0, RULE_input = 1, RULE_output = 2, RULE_name = 3, RULE_val = 4, 
-		RULE_parameter = 5, RULE_transformParameters = 6, RULE_pipeline = 7, RULE_multiInputPipeline = 8, 
-		RULE_pipelineElement = 9, RULE_transform = 10, RULE_fork = 11, RULE_namedSubPipeline = 12, 
-		RULE_subPipeline = 13, RULE_multiplexFork = 14, RULE_multiplexSubPipeline = 15, 
-		RULE_window = 16, RULE_windowPipeline = 17, RULE_schedulingHints = 18, 
-		RULE_schedulingParameter = 19;
+		RULE_script = 0, RULE_dataInput = 1, RULE_dataOutput = 2, RULE_name = 3, 
+		RULE_parameter = 4, RULE_parameterList = 5, RULE_parameters = 6, RULE_pipelines = 7, 
+		RULE_pipeline = 8, RULE_pipelineElement = 9, RULE_pipelineTailElement = 10, 
+		RULE_processingStep = 11, RULE_fork = 12, RULE_namedSubPipeline = 13, 
+		RULE_subPipeline = 14, RULE_multiplexFork = 15, RULE_window = 16, RULE_schedulingHints = 17;
 	public static final String[] ruleNames = {
-		"script", "input", "output", "name", "val", "parameter", "transformParameters", 
-		"pipeline", "multiInputPipeline", "pipelineElement", "transform", "fork", 
-		"namedSubPipeline", "subPipeline", "multiplexFork", "multiplexSubPipeline", 
-		"window", "windowPipeline", "schedulingHints", "schedulingParameter"
+		"script", "dataInput", "dataOutput", "name", "parameter", "parameterList", 
+		"parameters", "pipelines", "pipeline", "pipelineElement", "pipelineTailElement", 
+		"processingStep", "fork", "namedSubPipeline", "subPipeline", "multiplexFork", 
+		"window", "schedulingHints"
 	};
 
 	private static final String[] _LITERAL_NAMES = {
-		null, "'='", "'('", "','", "')'", "'{'", "'}'", "'window'", "'['", "']'", 
-		"';'", "'->'", null, null, null, null, null, null, null, "'\t'"
+		null, "'{'", "'}'", "';'", "'->'", "'('", "')'", "'='", "','", "'['", 
+		"']'", "'window'", null, null, null, null, null, "'\t'"
 	};
 	private static final String[] _SYMBOLIC_NAMES = {
-		null, null, null, null, null, null, null, null, null, null, "EOP", "NEXT", 
-		"STRING", "NUMBER", "BOOL", "IDENTIFIER", "COMMENT", "NEWLINE", "WHITESPACE", 
-		"TAB"
+		null, "OPEN", "CLOSE", "EOP", "NEXT", "OPEN_PARAMS", "CLOSE_PARAMS", "EQ", 
+		"SEP", "OPEN_HINTS", "CLOSE_HINTS", "WINDOW", "STRING", "IDENTIFIER", 
+		"COMMENT", "NEWLINE", "WHITESPACE", "TAB"
 	};
 	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
 
@@ -93,17 +92,10 @@ public class BitflowParser extends Parser {
 		_interp = new ParserATNSimulator(this,_ATN,_decisionToDFA,_sharedContextCache);
 	}
 	public static class ScriptContext extends ParserRuleContext {
-		public List<PipelineContext> pipeline() {
-			return getRuleContexts(PipelineContext.class);
-		}
-		public PipelineContext pipeline(int i) {
-			return getRuleContext(PipelineContext.class,i);
+		public PipelinesContext pipelines() {
+			return getRuleContext(PipelinesContext.class,0);
 		}
 		public TerminalNode EOF() { return getToken(BitflowParser.EOF, 0); }
-		public List<TerminalNode> EOP() { return getTokens(BitflowParser.EOP); }
-		public TerminalNode EOP(int i) {
-			return getToken(BitflowParser.EOP, i);
-		}
 		public ScriptContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -126,42 +118,12 @@ public class BitflowParser extends Parser {
 	public final ScriptContext script() throws RecognitionException {
 		ScriptContext _localctx = new ScriptContext(_ctx, getState());
 		enterRule(_localctx, 0, RULE_script);
-		int _la;
 		try {
-			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(40);
-			pipeline();
-			setState(45);
-			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,0,_ctx);
-			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
-				if ( _alt==1 ) {
-					{
-					{
-					setState(41);
-					match(EOP);
-					setState(42);
-					pipeline();
-					}
-					} 
-				}
-				setState(47);
-				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,0,_ctx);
-			}
-			setState(49);
-			_errHandler.sync(this);
-			_la = _input.LA(1);
-			if (_la==EOP) {
-				{
-				setState(48);
-				match(EOP);
-				}
-			}
-
-			setState(51);
+			setState(36);
+			pipelines();
+			setState(37);
 			match(EOF);
 			}
 		}
@@ -176,7 +138,7 @@ public class BitflowParser extends Parser {
 		return _localctx;
 	}
 
-	public static class InputContext extends ParserRuleContext {
+	public static class DataInputContext extends ParserRuleContext {
 		public List<NameContext> name() {
 			return getRuleContexts(NameContext.class);
 		}
@@ -186,52 +148,52 @@ public class BitflowParser extends Parser {
 		public SchedulingHintsContext schedulingHints() {
 			return getRuleContext(SchedulingHintsContext.class,0);
 		}
-		public InputContext(ParserRuleContext parent, int invokingState) {
+		public DataInputContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
-		@Override public int getRuleIndex() { return RULE_input; }
+		@Override public int getRuleIndex() { return RULE_dataInput; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).enterInput(this);
+			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).enterDataInput(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitInput(this);
+			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitDataInput(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitInput(this);
+			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitDataInput(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
-	public final InputContext input() throws RecognitionException {
-		InputContext _localctx = new InputContext(_ctx, getState());
-		enterRule(_localctx, 2, RULE_input);
+	public final DataInputContext dataInput() throws RecognitionException {
+		DataInputContext _localctx = new DataInputContext(_ctx, getState());
+		enterRule(_localctx, 2, RULE_dataInput);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(54); 
+			setState(40); 
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			do {
 				{
 				{
-				setState(53);
+				setState(39);
 				name();
 				}
 				}
-				setState(56); 
+				setState(42); 
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << STRING) | (1L << NUMBER) | (1L << BOOL) | (1L << IDENTIFIER))) != 0) );
-			setState(59);
+			} while ( _la==STRING || _la==IDENTIFIER );
+			setState(45);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if (_la==T__7) {
+			if (_la==OPEN_HINTS) {
 				{
-				setState(58);
+				setState(44);
 				schedulingHints();
 				}
 			}
@@ -249,47 +211,47 @@ public class BitflowParser extends Parser {
 		return _localctx;
 	}
 
-	public static class OutputContext extends ParserRuleContext {
+	public static class DataOutputContext extends ParserRuleContext {
 		public NameContext name() {
 			return getRuleContext(NameContext.class,0);
 		}
 		public SchedulingHintsContext schedulingHints() {
 			return getRuleContext(SchedulingHintsContext.class,0);
 		}
-		public OutputContext(ParserRuleContext parent, int invokingState) {
+		public DataOutputContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
-		@Override public int getRuleIndex() { return RULE_output; }
+		@Override public int getRuleIndex() { return RULE_dataOutput; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).enterOutput(this);
+			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).enterDataOutput(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitOutput(this);
+			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitDataOutput(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitOutput(this);
+			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitDataOutput(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
-	public final OutputContext output() throws RecognitionException {
-		OutputContext _localctx = new OutputContext(_ctx, getState());
-		enterRule(_localctx, 4, RULE_output);
+	public final DataOutputContext dataOutput() throws RecognitionException {
+		DataOutputContext _localctx = new DataOutputContext(_ctx, getState());
+		enterRule(_localctx, 4, RULE_dataOutput);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(61);
+			setState(47);
 			name();
-			setState(63);
+			setState(49);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if (_la==T__7) {
+			if (_la==OPEN_HINTS) {
 				{
-				setState(62);
+				setState(48);
 				schedulingHints();
 				}
 			}
@@ -309,8 +271,6 @@ public class BitflowParser extends Parser {
 
 	public static class NameContext extends ParserRuleContext {
 		public TerminalNode IDENTIFIER() { return getToken(BitflowParser.IDENTIFIER, 0); }
-		public TerminalNode NUMBER() { return getToken(BitflowParser.NUMBER, 0); }
-		public TerminalNode BOOL() { return getToken(BitflowParser.BOOL, 0); }
 		public TerminalNode STRING() { return getToken(BitflowParser.STRING, 0); }
 		public NameContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -338,62 +298,9 @@ public class BitflowParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(65);
+			setState(51);
 			_la = _input.LA(1);
-			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << STRING) | (1L << NUMBER) | (1L << BOOL) | (1L << IDENTIFIER))) != 0)) ) {
-			_errHandler.recoverInline(this);
-			}
-			else {
-				if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
-				_errHandler.reportMatch(this);
-				consume();
-			}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	public static class ValContext extends ParserRuleContext {
-		public TerminalNode NUMBER() { return getToken(BitflowParser.NUMBER, 0); }
-		public TerminalNode BOOL() { return getToken(BitflowParser.BOOL, 0); }
-		public TerminalNode STRING() { return getToken(BitflowParser.STRING, 0); }
-		public ValContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_val; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).enterVal(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitVal(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitVal(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-
-	public final ValContext val() throws RecognitionException {
-		ValContext _localctx = new ValContext(_ctx, getState());
-		enterRule(_localctx, 8, RULE_val);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-			setState(67);
-			_la = _input.LA(1);
-			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << STRING) | (1L << NUMBER) | (1L << BOOL))) != 0)) ) {
+			if ( !(_la==STRING || _la==IDENTIFIER) ) {
 			_errHandler.recoverInline(this);
 			}
 			else {
@@ -415,12 +322,13 @@ public class BitflowParser extends Parser {
 	}
 
 	public static class ParameterContext extends ParserRuleContext {
-		public NameContext name() {
-			return getRuleContext(NameContext.class,0);
+		public List<NameContext> name() {
+			return getRuleContexts(NameContext.class);
 		}
-		public ValContext val() {
-			return getRuleContext(ValContext.class,0);
+		public NameContext name(int i) {
+			return getRuleContext(NameContext.class,i);
 		}
+		public TerminalNode EQ() { return getToken(BitflowParser.EQ, 0); }
 		public ParameterContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -442,16 +350,16 @@ public class BitflowParser extends Parser {
 
 	public final ParameterContext parameter() throws RecognitionException {
 		ParameterContext _localctx = new ParameterContext(_ctx, getState());
-		enterRule(_localctx, 10, RULE_parameter);
+		enterRule(_localctx, 8, RULE_parameter);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(69);
+			setState(53);
 			name();
-			setState(70);
-			match(T__0);
-			setState(71);
-			val();
+			setState(54);
+			match(EQ);
+			setState(55);
+			name();
 			}
 		}
 		catch (RecognitionException re) {
@@ -465,69 +373,214 @@ public class BitflowParser extends Parser {
 		return _localctx;
 	}
 
-	public static class TransformParametersContext extends ParserRuleContext {
+	public static class ParameterListContext extends ParserRuleContext {
 		public List<ParameterContext> parameter() {
 			return getRuleContexts(ParameterContext.class);
 		}
 		public ParameterContext parameter(int i) {
 			return getRuleContext(ParameterContext.class,i);
 		}
-		public TransformParametersContext(ParserRuleContext parent, int invokingState) {
+		public List<TerminalNode> SEP() { return getTokens(BitflowParser.SEP); }
+		public TerminalNode SEP(int i) {
+			return getToken(BitflowParser.SEP, i);
+		}
+		public ParameterListContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
-		@Override public int getRuleIndex() { return RULE_transformParameters; }
+		@Override public int getRuleIndex() { return RULE_parameterList; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).enterTransformParameters(this);
+			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).enterParameterList(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitTransformParameters(this);
+			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitParameterList(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitTransformParameters(this);
+			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitParameterList(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
-	public final TransformParametersContext transformParameters() throws RecognitionException {
-		TransformParametersContext _localctx = new TransformParametersContext(_ctx, getState());
-		enterRule(_localctx, 12, RULE_transformParameters);
+	public final ParameterListContext parameterList() throws RecognitionException {
+		ParameterListContext _localctx = new ParameterListContext(_ctx, getState());
+		enterRule(_localctx, 10, RULE_parameterList);
+		try {
+			int _alt;
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(57);
+			parameter();
+			setState(62);
+			_errHandler.sync(this);
+			_alt = getInterpreter().adaptivePredict(_input,3,_ctx);
+			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
+				if ( _alt==1 ) {
+					{
+					{
+					setState(58);
+					match(SEP);
+					setState(59);
+					parameter();
+					}
+					} 
+				}
+				setState(64);
+				_errHandler.sync(this);
+				_alt = getInterpreter().adaptivePredict(_input,3,_ctx);
+			}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class ParametersContext extends ParserRuleContext {
+		public TerminalNode OPEN_PARAMS() { return getToken(BitflowParser.OPEN_PARAMS, 0); }
+		public TerminalNode CLOSE_PARAMS() { return getToken(BitflowParser.CLOSE_PARAMS, 0); }
+		public ParameterListContext parameterList() {
+			return getRuleContext(ParameterListContext.class,0);
+		}
+		public TerminalNode SEP() { return getToken(BitflowParser.SEP, 0); }
+		public ParametersContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_parameters; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).enterParameters(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitParameters(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitParameters(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final ParametersContext parameters() throws RecognitionException {
+		ParametersContext _localctx = new ParametersContext(_ctx, getState());
+		enterRule(_localctx, 12, RULE_parameters);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(73);
-			match(T__1);
-			setState(82);
+			setState(65);
+			match(OPEN_PARAMS);
+			setState(70);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << STRING) | (1L << NUMBER) | (1L << BOOL) | (1L << IDENTIFIER))) != 0)) {
+			if (_la==STRING || _la==IDENTIFIER) {
 				{
-				setState(74);
-				parameter();
-				setState(79);
+				setState(66);
+				parameterList();
+				setState(68);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-				while (_la==T__2) {
+				if (_la==SEP) {
 					{
-					{
-					setState(75);
-					match(T__2);
-					setState(76);
-					parameter();
+					setState(67);
+					match(SEP);
 					}
-					}
-					setState(81);
-					_errHandler.sync(this);
-					_la = _input.LA(1);
 				}
+
 				}
 			}
 
-			setState(84);
-			match(T__3);
+			setState(72);
+			match(CLOSE_PARAMS);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class PipelinesContext extends ParserRuleContext {
+		public List<PipelineContext> pipeline() {
+			return getRuleContexts(PipelineContext.class);
+		}
+		public PipelineContext pipeline(int i) {
+			return getRuleContext(PipelineContext.class,i);
+		}
+		public List<TerminalNode> EOP() { return getTokens(BitflowParser.EOP); }
+		public TerminalNode EOP(int i) {
+			return getToken(BitflowParser.EOP, i);
+		}
+		public PipelinesContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_pipelines; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).enterPipelines(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitPipelines(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitPipelines(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final PipelinesContext pipelines() throws RecognitionException {
+		PipelinesContext _localctx = new PipelinesContext(_ctx, getState());
+		enterRule(_localctx, 14, RULE_pipelines);
+		int _la;
+		try {
+			int _alt;
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(74);
+			pipeline();
+			setState(79);
+			_errHandler.sync(this);
+			_alt = getInterpreter().adaptivePredict(_input,6,_ctx);
+			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
+				if ( _alt==1 ) {
+					{
+					{
+					setState(75);
+					match(EOP);
+					setState(76);
+					pipeline();
+					}
+					} 
+				}
+				setState(81);
+				_errHandler.sync(this);
+				_alt = getInterpreter().adaptivePredict(_input,6,_ctx);
+			}
+			setState(83);
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			if (_la==EOP) {
+				{
+				setState(82);
+				match(EOP);
+				}
+			}
+
 			}
 		}
 		catch (RecognitionException re) {
@@ -542,21 +595,26 @@ public class BitflowParser extends Parser {
 	}
 
 	public static class PipelineContext extends ParserRuleContext {
-		public InputContext input() {
-			return getRuleContext(InputContext.class,0);
+		public DataInputContext dataInput() {
+			return getRuleContext(DataInputContext.class,0);
 		}
-		public MultiInputPipelineContext multiInputPipeline() {
-			return getRuleContext(MultiInputPipelineContext.class,0);
+		public PipelineElementContext pipelineElement() {
+			return getRuleContext(PipelineElementContext.class,0);
 		}
+		public TerminalNode OPEN() { return getToken(BitflowParser.OPEN, 0); }
+		public PipelinesContext pipelines() {
+			return getRuleContext(PipelinesContext.class,0);
+		}
+		public TerminalNode CLOSE() { return getToken(BitflowParser.CLOSE, 0); }
 		public List<TerminalNode> NEXT() { return getTokens(BitflowParser.NEXT); }
 		public TerminalNode NEXT(int i) {
 			return getToken(BitflowParser.NEXT, i);
 		}
-		public List<PipelineElementContext> pipelineElement() {
-			return getRuleContexts(PipelineElementContext.class);
+		public List<PipelineTailElementContext> pipelineTailElement() {
+			return getRuleContexts(PipelineTailElementContext.class);
 		}
-		public PipelineElementContext pipelineElement(int i) {
-			return getRuleContext(PipelineElementContext.class,i);
+		public PipelineTailElementContext pipelineTailElement(int i) {
+			return getRuleContext(PipelineTailElementContext.class,i);
 		}
 		public PipelineContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -579,45 +637,50 @@ public class BitflowParser extends Parser {
 
 	public final PipelineContext pipeline() throws RecognitionException {
 		PipelineContext _localctx = new PipelineContext(_ctx, getState());
-		enterRule(_localctx, 14, RULE_pipeline);
+		enterRule(_localctx, 16, RULE_pipeline);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(88);
+			setState(91);
 			_errHandler.sync(this);
-			switch (_input.LA(1)) {
-			case STRING:
-			case NUMBER:
-			case BOOL:
-			case IDENTIFIER:
+			switch ( getInterpreter().adaptivePredict(_input,8,_ctx) ) {
+			case 1:
+				{
+				setState(85);
+				dataInput();
+				}
+				break;
+			case 2:
 				{
 				setState(86);
-				input();
+				pipelineElement();
 				}
 				break;
-			case T__4:
+			case 3:
 				{
 				setState(87);
-				multiInputPipeline();
+				match(OPEN);
+				setState(88);
+				pipelines();
+				setState(89);
+				match(CLOSE);
 				}
 				break;
-			default:
-				throw new NoViableAltException(this);
 			}
-			setState(94);
+			setState(97);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==NEXT) {
 				{
 				{
-				setState(90);
+				setState(93);
 				match(NEXT);
-				setState(91);
-				pipelineElement();
+				setState(94);
+				pipelineTailElement();
 				}
 				}
-				setState(96);
+				setState(99);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -634,106 +697,15 @@ public class BitflowParser extends Parser {
 		return _localctx;
 	}
 
-	public static class MultiInputPipelineContext extends ParserRuleContext {
-		public List<PipelineContext> pipeline() {
-			return getRuleContexts(PipelineContext.class);
-		}
-		public PipelineContext pipeline(int i) {
-			return getRuleContext(PipelineContext.class,i);
-		}
-		public List<TerminalNode> EOP() { return getTokens(BitflowParser.EOP); }
-		public TerminalNode EOP(int i) {
-			return getToken(BitflowParser.EOP, i);
-		}
-		public MultiInputPipelineContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_multiInputPipeline; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).enterMultiInputPipeline(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitMultiInputPipeline(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitMultiInputPipeline(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-
-	public final MultiInputPipelineContext multiInputPipeline() throws RecognitionException {
-		MultiInputPipelineContext _localctx = new MultiInputPipelineContext(_ctx, getState());
-		enterRule(_localctx, 16, RULE_multiInputPipeline);
-		int _la;
-		try {
-			int _alt;
-			enterOuterAlt(_localctx, 1);
-			{
-			setState(97);
-			match(T__4);
-			setState(98);
-			pipeline();
-			setState(103);
-			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,9,_ctx);
-			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
-				if ( _alt==1 ) {
-					{
-					{
-					setState(99);
-					match(EOP);
-					setState(100);
-					pipeline();
-					}
-					} 
-				}
-				setState(105);
-				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,9,_ctx);
-			}
-			setState(107);
-			_errHandler.sync(this);
-			_la = _input.LA(1);
-			if (_la==EOP) {
-				{
-				setState(106);
-				match(EOP);
-				}
-			}
-
-			setState(109);
-			match(T__5);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
 	public static class PipelineElementContext extends ParserRuleContext {
-		public TransformContext transform() {
-			return getRuleContext(TransformContext.class,0);
+		public ProcessingStepContext processingStep() {
+			return getRuleContext(ProcessingStepContext.class,0);
 		}
 		public ForkContext fork() {
 			return getRuleContext(ForkContext.class,0);
 		}
-		public MultiplexForkContext multiplexFork() {
-			return getRuleContext(MultiplexForkContext.class,0);
-		}
 		public WindowContext window() {
 			return getRuleContext(WindowContext.class,0);
-		}
-		public OutputContext output() {
-			return getRuleContext(OutputContext.class,0);
 		}
 		public PipelineElementContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -758,42 +730,28 @@ public class BitflowParser extends Parser {
 		PipelineElementContext _localctx = new PipelineElementContext(_ctx, getState());
 		enterRule(_localctx, 18, RULE_pipelineElement);
 		try {
-			setState(116);
+			setState(103);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,11,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,10,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(111);
-				transform();
+				setState(100);
+				processingStep();
 				}
 				break;
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(112);
+				setState(101);
 				fork();
 				}
 				break;
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(113);
-				multiplexFork();
-				}
-				break;
-			case 4:
-				enterOuterAlt(_localctx, 4);
-				{
-				setState(114);
+				setState(102);
 				window();
-				}
-				break;
-			case 5:
-				enterOuterAlt(_localctx, 5);
-				{
-				setState(115);
-				output();
 				}
 				break;
 			}
@@ -809,52 +767,122 @@ public class BitflowParser extends Parser {
 		return _localctx;
 	}
 
-	public static class TransformContext extends ParserRuleContext {
-		public NameContext name() {
-			return getRuleContext(NameContext.class,0);
+	public static class PipelineTailElementContext extends ParserRuleContext {
+		public PipelineElementContext pipelineElement() {
+			return getRuleContext(PipelineElementContext.class,0);
 		}
-		public TransformParametersContext transformParameters() {
-			return getRuleContext(TransformParametersContext.class,0);
+		public MultiplexForkContext multiplexFork() {
+			return getRuleContext(MultiplexForkContext.class,0);
 		}
-		public SchedulingHintsContext schedulingHints() {
-			return getRuleContext(SchedulingHintsContext.class,0);
+		public DataOutputContext dataOutput() {
+			return getRuleContext(DataOutputContext.class,0);
 		}
-		public TransformContext(ParserRuleContext parent, int invokingState) {
+		public PipelineTailElementContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
-		@Override public int getRuleIndex() { return RULE_transform; }
+		@Override public int getRuleIndex() { return RULE_pipelineTailElement; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).enterTransform(this);
+			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).enterPipelineTailElement(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitTransform(this);
+			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitPipelineTailElement(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitTransform(this);
+			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitPipelineTailElement(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
-	public final TransformContext transform() throws RecognitionException {
-		TransformContext _localctx = new TransformContext(_ctx, getState());
-		enterRule(_localctx, 20, RULE_transform);
+	public final PipelineTailElementContext pipelineTailElement() throws RecognitionException {
+		PipelineTailElementContext _localctx = new PipelineTailElementContext(_ctx, getState());
+		enterRule(_localctx, 20, RULE_pipelineTailElement);
+		try {
+			setState(108);
+			_errHandler.sync(this);
+			switch ( getInterpreter().adaptivePredict(_input,11,_ctx) ) {
+			case 1:
+				enterOuterAlt(_localctx, 1);
+				{
+				setState(105);
+				pipelineElement();
+				}
+				break;
+			case 2:
+				enterOuterAlt(_localctx, 2);
+				{
+				setState(106);
+				multiplexFork();
+				}
+				break;
+			case 3:
+				enterOuterAlt(_localctx, 3);
+				{
+				setState(107);
+				dataOutput();
+				}
+				break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class ProcessingStepContext extends ParserRuleContext {
+		public NameContext name() {
+			return getRuleContext(NameContext.class,0);
+		}
+		public ParametersContext parameters() {
+			return getRuleContext(ParametersContext.class,0);
+		}
+		public SchedulingHintsContext schedulingHints() {
+			return getRuleContext(SchedulingHintsContext.class,0);
+		}
+		public ProcessingStepContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_processingStep; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).enterProcessingStep(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitProcessingStep(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitProcessingStep(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final ProcessingStepContext processingStep() throws RecognitionException {
+		ProcessingStepContext _localctx = new ProcessingStepContext(_ctx, getState());
+		enterRule(_localctx, 22, RULE_processingStep);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(118);
+			setState(110);
 			name();
-			setState(119);
-			transformParameters();
-			setState(121);
+			setState(111);
+			parameters();
+			setState(113);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if (_la==T__7) {
+			if (_la==OPEN_HINTS) {
 				{
-				setState(120);
+				setState(112);
 				schedulingHints();
 				}
 			}
@@ -876,15 +904,17 @@ public class BitflowParser extends Parser {
 		public NameContext name() {
 			return getRuleContext(NameContext.class,0);
 		}
-		public TransformParametersContext transformParameters() {
-			return getRuleContext(TransformParametersContext.class,0);
+		public ParametersContext parameters() {
+			return getRuleContext(ParametersContext.class,0);
 		}
+		public TerminalNode OPEN() { return getToken(BitflowParser.OPEN, 0); }
 		public List<NamedSubPipelineContext> namedSubPipeline() {
 			return getRuleContexts(NamedSubPipelineContext.class);
 		}
 		public NamedSubPipelineContext namedSubPipeline(int i) {
 			return getRuleContext(NamedSubPipelineContext.class,i);
 		}
+		public TerminalNode CLOSE() { return getToken(BitflowParser.CLOSE, 0); }
 		public SchedulingHintsContext schedulingHints() {
 			return getRuleContext(SchedulingHintsContext.class,0);
 		}
@@ -913,60 +943,60 @@ public class BitflowParser extends Parser {
 
 	public final ForkContext fork() throws RecognitionException {
 		ForkContext _localctx = new ForkContext(_ctx, getState());
-		enterRule(_localctx, 22, RULE_fork);
+		enterRule(_localctx, 24, RULE_fork);
 		int _la;
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(123);
+			setState(115);
 			name();
-			setState(124);
-			transformParameters();
-			setState(126);
+			setState(116);
+			parameters();
+			setState(118);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if (_la==T__7) {
+			if (_la==OPEN_HINTS) {
 				{
-				setState(125);
+				setState(117);
 				schedulingHints();
 				}
 			}
 
-			setState(128);
-			match(T__4);
-			setState(129);
+			setState(120);
+			match(OPEN);
+			setState(121);
 			namedSubPipeline();
-			setState(134);
+			setState(126);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,14,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					{
 					{
-					setState(130);
+					setState(122);
 					match(EOP);
-					setState(131);
+					setState(123);
 					namedSubPipeline();
 					}
 					} 
 				}
-				setState(136);
+				setState(128);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,14,_ctx);
 			}
-			setState(138);
+			setState(130);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==EOP) {
 				{
-				setState(137);
+				setState(129);
 				match(EOP);
 				}
 			}
 
-			setState(140);
-			match(T__5);
+			setState(132);
+			match(CLOSE);
 			}
 		}
 		catch (RecognitionException re) {
@@ -1012,28 +1042,28 @@ public class BitflowParser extends Parser {
 
 	public final NamedSubPipelineContext namedSubPipeline() throws RecognitionException {
 		NamedSubPipelineContext _localctx = new NamedSubPipelineContext(_ctx, getState());
-		enterRule(_localctx, 24, RULE_namedSubPipeline);
+		enterRule(_localctx, 26, RULE_namedSubPipeline);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(143); 
+			setState(135); 
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			do {
 				{
 				{
-				setState(142);
+				setState(134);
 				name();
 				}
 				}
-				setState(145); 
+				setState(137); 
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << STRING) | (1L << NUMBER) | (1L << BOOL) | (1L << IDENTIFIER))) != 0) );
-			setState(147);
+			} while ( _la==STRING || _la==IDENTIFIER );
+			setState(139);
 			match(NEXT);
-			setState(148);
+			setState(140);
 			subPipeline();
 			}
 		}
@@ -1049,11 +1079,11 @@ public class BitflowParser extends Parser {
 	}
 
 	public static class SubPipelineContext extends ParserRuleContext {
-		public List<PipelineElementContext> pipelineElement() {
-			return getRuleContexts(PipelineElementContext.class);
+		public List<PipelineTailElementContext> pipelineTailElement() {
+			return getRuleContexts(PipelineTailElementContext.class);
 		}
-		public PipelineElementContext pipelineElement(int i) {
-			return getRuleContext(PipelineElementContext.class,i);
+		public PipelineTailElementContext pipelineTailElement(int i) {
+			return getRuleContext(PipelineTailElementContext.class,i);
 		}
 		public List<TerminalNode> NEXT() { return getTokens(BitflowParser.NEXT); }
 		public TerminalNode NEXT(int i) {
@@ -1080,26 +1110,26 @@ public class BitflowParser extends Parser {
 
 	public final SubPipelineContext subPipeline() throws RecognitionException {
 		SubPipelineContext _localctx = new SubPipelineContext(_ctx, getState());
-		enterRule(_localctx, 26, RULE_subPipeline);
+		enterRule(_localctx, 28, RULE_subPipeline);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(150);
-			pipelineElement();
-			setState(155);
+			setState(142);
+			pipelineTailElement();
+			setState(147);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==NEXT) {
 				{
 				{
-				setState(151);
+				setState(143);
 				match(NEXT);
-				setState(152);
-				pipelineElement();
+				setState(144);
+				pipelineTailElement();
 				}
 				}
-				setState(157);
+				setState(149);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -1117,12 +1147,14 @@ public class BitflowParser extends Parser {
 	}
 
 	public static class MultiplexForkContext extends ParserRuleContext {
-		public List<MultiplexSubPipelineContext> multiplexSubPipeline() {
-			return getRuleContexts(MultiplexSubPipelineContext.class);
+		public TerminalNode OPEN() { return getToken(BitflowParser.OPEN, 0); }
+		public List<SubPipelineContext> subPipeline() {
+			return getRuleContexts(SubPipelineContext.class);
 		}
-		public MultiplexSubPipelineContext multiplexSubPipeline(int i) {
-			return getRuleContext(MultiplexSubPipelineContext.class,i);
+		public SubPipelineContext subPipeline(int i) {
+			return getRuleContext(SubPipelineContext.class,i);
 		}
+		public TerminalNode CLOSE() { return getToken(BitflowParser.CLOSE, 0); }
 		public List<TerminalNode> EOP() { return getTokens(BitflowParser.EOP); }
 		public TerminalNode EOP(int i) {
 			return getToken(BitflowParser.EOP, i);
@@ -1148,90 +1180,46 @@ public class BitflowParser extends Parser {
 
 	public final MultiplexForkContext multiplexFork() throws RecognitionException {
 		MultiplexForkContext _localctx = new MultiplexForkContext(_ctx, getState());
-		enterRule(_localctx, 28, RULE_multiplexFork);
+		enterRule(_localctx, 30, RULE_multiplexFork);
 		int _la;
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(158);
-			match(T__4);
-			setState(159);
-			multiplexSubPipeline();
-			setState(164);
+			setState(150);
+			match(OPEN);
+			setState(151);
+			subPipeline();
+			setState(156);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,18,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					{
 					{
-					setState(160);
+					setState(152);
 					match(EOP);
-					setState(161);
-					multiplexSubPipeline();
+					setState(153);
+					subPipeline();
 					}
 					} 
 				}
-				setState(166);
+				setState(158);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,18,_ctx);
 			}
-			setState(168);
+			setState(160);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==EOP) {
 				{
-				setState(167);
+				setState(159);
 				match(EOP);
 				}
 			}
 
-			setState(170);
-			match(T__5);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	public static class MultiplexSubPipelineContext extends ParserRuleContext {
-		public SubPipelineContext subPipeline() {
-			return getRuleContext(SubPipelineContext.class,0);
-		}
-		public MultiplexSubPipelineContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_multiplexSubPipeline; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).enterMultiplexSubPipeline(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitMultiplexSubPipeline(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitMultiplexSubPipeline(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-
-	public final MultiplexSubPipelineContext multiplexSubPipeline() throws RecognitionException {
-		MultiplexSubPipelineContext _localctx = new MultiplexSubPipelineContext(_ctx, getState());
-		enterRule(_localctx, 30, RULE_multiplexSubPipeline);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-			setState(172);
-			subPipeline();
+			setState(162);
+			match(CLOSE);
 			}
 		}
 		catch (RecognitionException re) {
@@ -1246,14 +1234,24 @@ public class BitflowParser extends Parser {
 	}
 
 	public static class WindowContext extends ParserRuleContext {
-		public TransformParametersContext transformParameters() {
-			return getRuleContext(TransformParametersContext.class,0);
+		public TerminalNode WINDOW() { return getToken(BitflowParser.WINDOW, 0); }
+		public ParametersContext parameters() {
+			return getRuleContext(ParametersContext.class,0);
 		}
-		public WindowPipelineContext windowPipeline() {
-			return getRuleContext(WindowPipelineContext.class,0);
+		public TerminalNode OPEN() { return getToken(BitflowParser.OPEN, 0); }
+		public List<ProcessingStepContext> processingStep() {
+			return getRuleContexts(ProcessingStepContext.class);
 		}
+		public ProcessingStepContext processingStep(int i) {
+			return getRuleContext(ProcessingStepContext.class,i);
+		}
+		public TerminalNode CLOSE() { return getToken(BitflowParser.CLOSE, 0); }
 		public SchedulingHintsContext schedulingHints() {
 			return getRuleContext(SchedulingHintsContext.class,0);
+		}
+		public List<TerminalNode> NEXT() { return getTokens(BitflowParser.NEXT); }
+		public TerminalNode NEXT(int i) {
+			return getToken(BitflowParser.NEXT, i);
 		}
 		public WindowContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -1281,94 +1279,42 @@ public class BitflowParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(174);
-			match(T__6);
-			setState(175);
-			transformParameters();
-			setState(177);
+			setState(164);
+			match(WINDOW);
+			setState(165);
+			parameters();
+			setState(167);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if (_la==T__7) {
+			if (_la==OPEN_HINTS) {
 				{
-				setState(176);
+				setState(166);
 				schedulingHints();
 				}
 			}
 
-			setState(179);
-			match(T__4);
-			setState(180);
-			windowPipeline();
-			setState(181);
-			match(T__5);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	public static class WindowPipelineContext extends ParserRuleContext {
-		public List<TransformContext> transform() {
-			return getRuleContexts(TransformContext.class);
-		}
-		public TransformContext transform(int i) {
-			return getRuleContext(TransformContext.class,i);
-		}
-		public List<TerminalNode> NEXT() { return getTokens(BitflowParser.NEXT); }
-		public TerminalNode NEXT(int i) {
-			return getToken(BitflowParser.NEXT, i);
-		}
-		public WindowPipelineContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_windowPipeline; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).enterWindowPipeline(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitWindowPipeline(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitWindowPipeline(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-
-	public final WindowPipelineContext windowPipeline() throws RecognitionException {
-		WindowPipelineContext _localctx = new WindowPipelineContext(_ctx, getState());
-		enterRule(_localctx, 34, RULE_windowPipeline);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-			setState(183);
-			transform();
-			setState(188);
+			setState(169);
+			match(OPEN);
+			setState(170);
+			processingStep();
+			setState(175);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==NEXT) {
 				{
 				{
-				setState(184);
+				setState(171);
 				match(NEXT);
-				setState(185);
-				transform();
+				setState(172);
+				processingStep();
 				}
 				}
-				setState(190);
+				setState(177);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
+			setState(178);
+			match(CLOSE);
 			}
 		}
 		catch (RecognitionException re) {
@@ -1383,12 +1329,12 @@ public class BitflowParser extends Parser {
 	}
 
 	public static class SchedulingHintsContext extends ParserRuleContext {
-		public List<SchedulingParameterContext> schedulingParameter() {
-			return getRuleContexts(SchedulingParameterContext.class);
+		public TerminalNode OPEN_HINTS() { return getToken(BitflowParser.OPEN_HINTS, 0); }
+		public TerminalNode CLOSE_HINTS() { return getToken(BitflowParser.CLOSE_HINTS, 0); }
+		public ParameterListContext parameterList() {
+			return getRuleContext(ParameterListContext.class,0);
 		}
-		public SchedulingParameterContext schedulingParameter(int i) {
-			return getRuleContext(SchedulingParameterContext.class,i);
-		}
+		public TerminalNode SEP() { return getToken(BitflowParser.SEP, 0); }
 		public SchedulingHintsContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -1410,85 +1356,35 @@ public class BitflowParser extends Parser {
 
 	public final SchedulingHintsContext schedulingHints() throws RecognitionException {
 		SchedulingHintsContext _localctx = new SchedulingHintsContext(_ctx, getState());
-		enterRule(_localctx, 36, RULE_schedulingHints);
+		enterRule(_localctx, 34, RULE_schedulingHints);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(191);
-			match(T__7);
-			setState(200);
+			setState(180);
+			match(OPEN_HINTS);
+			setState(185);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << STRING) | (1L << NUMBER) | (1L << BOOL) | (1L << IDENTIFIER))) != 0)) {
+			if (_la==STRING || _la==IDENTIFIER) {
 				{
-				setState(192);
-				schedulingParameter();
-				setState(197);
+				setState(181);
+				parameterList();
+				setState(183);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-				while (_la==T__2) {
+				if (_la==SEP) {
 					{
-					{
-					setState(193);
-					match(T__2);
-					setState(194);
-					schedulingParameter();
+					setState(182);
+					match(SEP);
 					}
-					}
-					setState(199);
-					_errHandler.sync(this);
-					_la = _input.LA(1);
 				}
+
 				}
 			}
 
-			setState(202);
-			match(T__8);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	public static class SchedulingParameterContext extends ParserRuleContext {
-		public ParameterContext parameter() {
-			return getRuleContext(ParameterContext.class,0);
-		}
-		public SchedulingParameterContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_schedulingParameter; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).enterSchedulingParameter(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitSchedulingParameter(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitSchedulingParameter(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-
-	public final SchedulingParameterContext schedulingParameter() throws RecognitionException {
-		SchedulingParameterContext _localctx = new SchedulingParameterContext(_ctx, getState());
-		enterRule(_localctx, 38, RULE_schedulingParameter);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-			setState(204);
-			parameter();
+			setState(187);
+			match(CLOSE_HINTS);
 			}
 		}
 		catch (RecognitionException re) {
@@ -1503,70 +1399,64 @@ public class BitflowParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\25\u00d1\4\2\t\2"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\23\u00c0\4\2\t\2"+
 		"\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13"+
 		"\t\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22"+
-		"\4\23\t\23\4\24\t\24\4\25\t\25\3\2\3\2\3\2\7\2.\n\2\f\2\16\2\61\13\2\3"+
-		"\2\5\2\64\n\2\3\2\3\2\3\3\6\39\n\3\r\3\16\3:\3\3\5\3>\n\3\3\4\3\4\5\4"+
-		"B\n\4\3\5\3\5\3\6\3\6\3\7\3\7\3\7\3\7\3\b\3\b\3\b\3\b\7\bP\n\b\f\b\16"+
-		"\bS\13\b\5\bU\n\b\3\b\3\b\3\t\3\t\5\t[\n\t\3\t\3\t\7\t_\n\t\f\t\16\tb"+
-		"\13\t\3\n\3\n\3\n\3\n\7\nh\n\n\f\n\16\nk\13\n\3\n\5\nn\n\n\3\n\3\n\3\13"+
-		"\3\13\3\13\3\13\3\13\5\13w\n\13\3\f\3\f\3\f\5\f|\n\f\3\r\3\r\3\r\5\r\u0081"+
-		"\n\r\3\r\3\r\3\r\3\r\7\r\u0087\n\r\f\r\16\r\u008a\13\r\3\r\5\r\u008d\n"+
-		"\r\3\r\3\r\3\16\6\16\u0092\n\16\r\16\16\16\u0093\3\16\3\16\3\16\3\17\3"+
-		"\17\3\17\7\17\u009c\n\17\f\17\16\17\u009f\13\17\3\20\3\20\3\20\3\20\7"+
-		"\20\u00a5\n\20\f\20\16\20\u00a8\13\20\3\20\5\20\u00ab\n\20\3\20\3\20\3"+
-		"\21\3\21\3\22\3\22\3\22\5\22\u00b4\n\22\3\22\3\22\3\22\3\22\3\23\3\23"+
-		"\3\23\7\23\u00bd\n\23\f\23\16\23\u00c0\13\23\3\24\3\24\3\24\3\24\7\24"+
-		"\u00c6\n\24\f\24\16\24\u00c9\13\24\5\24\u00cb\n\24\3\24\3\24\3\25\3\25"+
-		"\3\25\2\2\26\2\4\6\b\n\f\16\20\22\24\26\30\32\34\36 \"$&(\2\4\3\2\16\21"+
-		"\3\2\16\20\2\u00d7\2*\3\2\2\2\48\3\2\2\2\6?\3\2\2\2\bC\3\2\2\2\nE\3\2"+
-		"\2\2\fG\3\2\2\2\16K\3\2\2\2\20Z\3\2\2\2\22c\3\2\2\2\24v\3\2\2\2\26x\3"+
-		"\2\2\2\30}\3\2\2\2\32\u0091\3\2\2\2\34\u0098\3\2\2\2\36\u00a0\3\2\2\2"+
-		" \u00ae\3\2\2\2\"\u00b0\3\2\2\2$\u00b9\3\2\2\2&\u00c1\3\2\2\2(\u00ce\3"+
-		"\2\2\2*/\5\20\t\2+,\7\f\2\2,.\5\20\t\2-+\3\2\2\2.\61\3\2\2\2/-\3\2\2\2"+
-		"/\60\3\2\2\2\60\63\3\2\2\2\61/\3\2\2\2\62\64\7\f\2\2\63\62\3\2\2\2\63"+
-		"\64\3\2\2\2\64\65\3\2\2\2\65\66\7\2\2\3\66\3\3\2\2\2\679\5\b\5\28\67\3"+
-		"\2\2\29:\3\2\2\2:8\3\2\2\2:;\3\2\2\2;=\3\2\2\2<>\5&\24\2=<\3\2\2\2=>\3"+
-		"\2\2\2>\5\3\2\2\2?A\5\b\5\2@B\5&\24\2A@\3\2\2\2AB\3\2\2\2B\7\3\2\2\2C"+
-		"D\t\2\2\2D\t\3\2\2\2EF\t\3\2\2F\13\3\2\2\2GH\5\b\5\2HI\7\3\2\2IJ\5\n\6"+
-		"\2J\r\3\2\2\2KT\7\4\2\2LQ\5\f\7\2MN\7\5\2\2NP\5\f\7\2OM\3\2\2\2PS\3\2"+
-		"\2\2QO\3\2\2\2QR\3\2\2\2RU\3\2\2\2SQ\3\2\2\2TL\3\2\2\2TU\3\2\2\2UV\3\2"+
-		"\2\2VW\7\6\2\2W\17\3\2\2\2X[\5\4\3\2Y[\5\22\n\2ZX\3\2\2\2ZY\3\2\2\2[`"+
-		"\3\2\2\2\\]\7\r\2\2]_\5\24\13\2^\\\3\2\2\2_b\3\2\2\2`^\3\2\2\2`a\3\2\2"+
-		"\2a\21\3\2\2\2b`\3\2\2\2cd\7\7\2\2di\5\20\t\2ef\7\f\2\2fh\5\20\t\2ge\3"+
-		"\2\2\2hk\3\2\2\2ig\3\2\2\2ij\3\2\2\2jm\3\2\2\2ki\3\2\2\2ln\7\f\2\2ml\3"+
-		"\2\2\2mn\3\2\2\2no\3\2\2\2op\7\b\2\2p\23\3\2\2\2qw\5\26\f\2rw\5\30\r\2"+
-		"sw\5\36\20\2tw\5\"\22\2uw\5\6\4\2vq\3\2\2\2vr\3\2\2\2vs\3\2\2\2vt\3\2"+
-		"\2\2vu\3\2\2\2w\25\3\2\2\2xy\5\b\5\2y{\5\16\b\2z|\5&\24\2{z\3\2\2\2{|"+
-		"\3\2\2\2|\27\3\2\2\2}~\5\b\5\2~\u0080\5\16\b\2\177\u0081\5&\24\2\u0080"+
-		"\177\3\2\2\2\u0080\u0081\3\2\2\2\u0081\u0082\3\2\2\2\u0082\u0083\7\7\2"+
-		"\2\u0083\u0088\5\32\16\2\u0084\u0085\7\f\2\2\u0085\u0087\5\32\16\2\u0086"+
-		"\u0084\3\2\2\2\u0087\u008a\3\2\2\2\u0088\u0086\3\2\2\2\u0088\u0089\3\2"+
-		"\2\2\u0089\u008c\3\2\2\2\u008a\u0088\3\2\2\2\u008b\u008d\7\f\2\2\u008c"+
-		"\u008b\3\2\2\2\u008c\u008d\3\2\2\2\u008d\u008e\3\2\2\2\u008e\u008f\7\b"+
-		"\2\2\u008f\31\3\2\2\2\u0090\u0092\5\b\5\2\u0091\u0090\3\2\2\2\u0092\u0093"+
-		"\3\2\2\2\u0093\u0091\3\2\2\2\u0093\u0094\3\2\2\2\u0094\u0095\3\2\2\2\u0095"+
-		"\u0096\7\r\2\2\u0096\u0097\5\34\17\2\u0097\33\3\2\2\2\u0098\u009d\5\24"+
-		"\13\2\u0099\u009a\7\r\2\2\u009a\u009c\5\24\13\2\u009b\u0099\3\2\2\2\u009c"+
-		"\u009f\3\2\2\2\u009d\u009b\3\2\2\2\u009d\u009e\3\2\2\2\u009e\35\3\2\2"+
-		"\2\u009f\u009d\3\2\2\2\u00a0\u00a1\7\7\2\2\u00a1\u00a6\5 \21\2\u00a2\u00a3"+
-		"\7\f\2\2\u00a3\u00a5\5 \21\2\u00a4\u00a2\3\2\2\2\u00a5\u00a8\3\2\2\2\u00a6"+
-		"\u00a4\3\2\2\2\u00a6\u00a7\3\2\2\2\u00a7\u00aa\3\2\2\2\u00a8\u00a6\3\2"+
-		"\2\2\u00a9\u00ab\7\f\2\2\u00aa\u00a9\3\2\2\2\u00aa\u00ab\3\2\2\2\u00ab"+
-		"\u00ac\3\2\2\2\u00ac\u00ad\7\b\2\2\u00ad\37\3\2\2\2\u00ae\u00af\5\34\17"+
-		"\2\u00af!\3\2\2\2\u00b0\u00b1\7\t\2\2\u00b1\u00b3\5\16\b\2\u00b2\u00b4"+
-		"\5&\24\2\u00b3\u00b2\3\2\2\2\u00b3\u00b4\3\2\2\2\u00b4\u00b5\3\2\2\2\u00b5"+
-		"\u00b6\7\7\2\2\u00b6\u00b7\5$\23\2\u00b7\u00b8\7\b\2\2\u00b8#\3\2\2\2"+
-		"\u00b9\u00be\5\26\f\2\u00ba\u00bb\7\r\2\2\u00bb\u00bd\5\26\f\2\u00bc\u00ba"+
-		"\3\2\2\2\u00bd\u00c0\3\2\2\2\u00be\u00bc\3\2\2\2\u00be\u00bf\3\2\2\2\u00bf"+
-		"%\3\2\2\2\u00c0\u00be\3\2\2\2\u00c1\u00ca\7\n\2\2\u00c2\u00c7\5(\25\2"+
-		"\u00c3\u00c4\7\5\2\2\u00c4\u00c6\5(\25\2\u00c5\u00c3\3\2\2\2\u00c6\u00c9"+
-		"\3\2\2\2\u00c7\u00c5\3\2\2\2\u00c7\u00c8\3\2\2\2\u00c8\u00cb\3\2\2\2\u00c9"+
-		"\u00c7\3\2\2\2\u00ca\u00c2\3\2\2\2\u00ca\u00cb\3\2\2\2\u00cb\u00cc\3\2"+
-		"\2\2\u00cc\u00cd\7\13\2\2\u00cd\'\3\2\2\2\u00ce\u00cf\5\f\7\2\u00cf)\3"+
-		"\2\2\2\32/\63:=AQTZ`imv{\u0080\u0088\u008c\u0093\u009d\u00a6\u00aa\u00b3"+
-		"\u00be\u00c7\u00ca";
+		"\4\23\t\23\3\2\3\2\3\2\3\3\6\3+\n\3\r\3\16\3,\3\3\5\3\60\n\3\3\4\3\4\5"+
+		"\4\64\n\4\3\5\3\5\3\6\3\6\3\6\3\6\3\7\3\7\3\7\7\7?\n\7\f\7\16\7B\13\7"+
+		"\3\b\3\b\3\b\5\bG\n\b\5\bI\n\b\3\b\3\b\3\t\3\t\3\t\7\tP\n\t\f\t\16\tS"+
+		"\13\t\3\t\5\tV\n\t\3\n\3\n\3\n\3\n\3\n\3\n\5\n^\n\n\3\n\3\n\7\nb\n\n\f"+
+		"\n\16\ne\13\n\3\13\3\13\3\13\5\13j\n\13\3\f\3\f\3\f\5\fo\n\f\3\r\3\r\3"+
+		"\r\5\rt\n\r\3\16\3\16\3\16\5\16y\n\16\3\16\3\16\3\16\3\16\7\16\177\n\16"+
+		"\f\16\16\16\u0082\13\16\3\16\5\16\u0085\n\16\3\16\3\16\3\17\6\17\u008a"+
+		"\n\17\r\17\16\17\u008b\3\17\3\17\3\17\3\20\3\20\3\20\7\20\u0094\n\20\f"+
+		"\20\16\20\u0097\13\20\3\21\3\21\3\21\3\21\7\21\u009d\n\21\f\21\16\21\u00a0"+
+		"\13\21\3\21\5\21\u00a3\n\21\3\21\3\21\3\22\3\22\3\22\5\22\u00aa\n\22\3"+
+		"\22\3\22\3\22\3\22\7\22\u00b0\n\22\f\22\16\22\u00b3\13\22\3\22\3\22\3"+
+		"\23\3\23\3\23\5\23\u00ba\n\23\5\23\u00bc\n\23\3\23\3\23\3\23\2\2\24\2"+
+		"\4\6\b\n\f\16\20\22\24\26\30\32\34\36 \"$\2\3\3\2\16\17\2\u00c8\2&\3\2"+
+		"\2\2\4*\3\2\2\2\6\61\3\2\2\2\b\65\3\2\2\2\n\67\3\2\2\2\f;\3\2\2\2\16C"+
+		"\3\2\2\2\20L\3\2\2\2\22]\3\2\2\2\24i\3\2\2\2\26n\3\2\2\2\30p\3\2\2\2\32"+
+		"u\3\2\2\2\34\u0089\3\2\2\2\36\u0090\3\2\2\2 \u0098\3\2\2\2\"\u00a6\3\2"+
+		"\2\2$\u00b6\3\2\2\2&\'\5\20\t\2\'(\7\2\2\3(\3\3\2\2\2)+\5\b\5\2*)\3\2"+
+		"\2\2+,\3\2\2\2,*\3\2\2\2,-\3\2\2\2-/\3\2\2\2.\60\5$\23\2/.\3\2\2\2/\60"+
+		"\3\2\2\2\60\5\3\2\2\2\61\63\5\b\5\2\62\64\5$\23\2\63\62\3\2\2\2\63\64"+
+		"\3\2\2\2\64\7\3\2\2\2\65\66\t\2\2\2\66\t\3\2\2\2\678\5\b\5\289\7\t\2\2"+
+		"9:\5\b\5\2:\13\3\2\2\2;@\5\n\6\2<=\7\n\2\2=?\5\n\6\2><\3\2\2\2?B\3\2\2"+
+		"\2@>\3\2\2\2@A\3\2\2\2A\r\3\2\2\2B@\3\2\2\2CH\7\7\2\2DF\5\f\7\2EG\7\n"+
+		"\2\2FE\3\2\2\2FG\3\2\2\2GI\3\2\2\2HD\3\2\2\2HI\3\2\2\2IJ\3\2\2\2JK\7\b"+
+		"\2\2K\17\3\2\2\2LQ\5\22\n\2MN\7\5\2\2NP\5\22\n\2OM\3\2\2\2PS\3\2\2\2Q"+
+		"O\3\2\2\2QR\3\2\2\2RU\3\2\2\2SQ\3\2\2\2TV\7\5\2\2UT\3\2\2\2UV\3\2\2\2"+
+		"V\21\3\2\2\2W^\5\4\3\2X^\5\24\13\2YZ\7\3\2\2Z[\5\20\t\2[\\\7\4\2\2\\^"+
+		"\3\2\2\2]W\3\2\2\2]X\3\2\2\2]Y\3\2\2\2^c\3\2\2\2_`\7\6\2\2`b\5\26\f\2"+
+		"a_\3\2\2\2be\3\2\2\2ca\3\2\2\2cd\3\2\2\2d\23\3\2\2\2ec\3\2\2\2fj\5\30"+
+		"\r\2gj\5\32\16\2hj\5\"\22\2if\3\2\2\2ig\3\2\2\2ih\3\2\2\2j\25\3\2\2\2"+
+		"ko\5\24\13\2lo\5 \21\2mo\5\6\4\2nk\3\2\2\2nl\3\2\2\2nm\3\2\2\2o\27\3\2"+
+		"\2\2pq\5\b\5\2qs\5\16\b\2rt\5$\23\2sr\3\2\2\2st\3\2\2\2t\31\3\2\2\2uv"+
+		"\5\b\5\2vx\5\16\b\2wy\5$\23\2xw\3\2\2\2xy\3\2\2\2yz\3\2\2\2z{\7\3\2\2"+
+		"{\u0080\5\34\17\2|}\7\5\2\2}\177\5\34\17\2~|\3\2\2\2\177\u0082\3\2\2\2"+
+		"\u0080~\3\2\2\2\u0080\u0081\3\2\2\2\u0081\u0084\3\2\2\2\u0082\u0080\3"+
+		"\2\2\2\u0083\u0085\7\5\2\2\u0084\u0083\3\2\2\2\u0084\u0085\3\2\2\2\u0085"+
+		"\u0086\3\2\2\2\u0086\u0087\7\4\2\2\u0087\33\3\2\2\2\u0088\u008a\5\b\5"+
+		"\2\u0089\u0088\3\2\2\2\u008a\u008b\3\2\2\2\u008b\u0089\3\2\2\2\u008b\u008c"+
+		"\3\2\2\2\u008c\u008d\3\2\2\2\u008d\u008e\7\6\2\2\u008e\u008f\5\36\20\2"+
+		"\u008f\35\3\2\2\2\u0090\u0095\5\26\f\2\u0091\u0092\7\6\2\2\u0092\u0094"+
+		"\5\26\f\2\u0093\u0091\3\2\2\2\u0094\u0097\3\2\2\2\u0095\u0093\3\2\2\2"+
+		"\u0095\u0096\3\2\2\2\u0096\37\3\2\2\2\u0097\u0095\3\2\2\2\u0098\u0099"+
+		"\7\3\2\2\u0099\u009e\5\36\20\2\u009a\u009b\7\5\2\2\u009b\u009d\5\36\20"+
+		"\2\u009c\u009a\3\2\2\2\u009d\u00a0\3\2\2\2\u009e\u009c\3\2\2\2\u009e\u009f"+
+		"\3\2\2\2\u009f\u00a2\3\2\2\2\u00a0\u009e\3\2\2\2\u00a1\u00a3\7\5\2\2\u00a2"+
+		"\u00a1\3\2\2\2\u00a2\u00a3\3\2\2\2\u00a3\u00a4\3\2\2\2\u00a4\u00a5\7\4"+
+		"\2\2\u00a5!\3\2\2\2\u00a6\u00a7\7\r\2\2\u00a7\u00a9\5\16\b\2\u00a8\u00aa"+
+		"\5$\23\2\u00a9\u00a8\3\2\2\2\u00a9\u00aa\3\2\2\2\u00aa\u00ab\3\2\2\2\u00ab"+
+		"\u00ac\7\3\2\2\u00ac\u00b1\5\30\r\2\u00ad\u00ae\7\6\2\2\u00ae\u00b0\5"+
+		"\30\r\2\u00af\u00ad\3\2\2\2\u00b0\u00b3\3\2\2\2\u00b1\u00af\3\2\2\2\u00b1"+
+		"\u00b2\3\2\2\2\u00b2\u00b4\3\2\2\2\u00b3\u00b1\3\2\2\2\u00b4\u00b5\7\4"+
+		"\2\2\u00b5#\3\2\2\2\u00b6\u00bb\7\13\2\2\u00b7\u00b9\5\f\7\2\u00b8\u00ba"+
+		"\7\n\2\2\u00b9\u00b8\3\2\2\2\u00b9\u00ba\3\2\2\2\u00ba\u00bc\3\2\2\2\u00bb"+
+		"\u00b7\3\2\2\2\u00bb\u00bc\3\2\2\2\u00bc\u00bd\3\2\2\2\u00bd\u00be\7\f"+
+		"\2\2\u00be%\3\2\2\2\32,/\63@FHQU]cinsx\u0080\u0084\u008b\u0095\u009e\u00a2"+
+		"\u00a9\u00b1\u00b9\u00bb";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

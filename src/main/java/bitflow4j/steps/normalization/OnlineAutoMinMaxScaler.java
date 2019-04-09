@@ -22,17 +22,13 @@ public class OnlineAutoMinMaxScaler extends OnlineAbstractFeatureScaler {
     // In percent: how much must scalingMin/scalingMax values change before a concept change is fired
     private final double conceptChangeThreshold;
 
-    private final ConceptChangeHandler handler;
+    private ConceptChangeHandler handler;
 
     public OnlineAutoMinMaxScaler(double conceptChangeThreshold, ConceptChangeHandler handler, FeatureStatistics stats) {
         this.conceptChangeThreshold = conceptChangeThreshold;
         this.handler = handler;
         this.features = new HashMap<>();
-        if (stats != null) {
-            for (FeatureStatistics.Feature stat : stats.allFeatures()) {
-                features.put(stat.name, new Feature(stat.name, stat.min, stat.max, conceptChangeThreshold));
-            }
-        }
+        setFeatures(stats);
     }
 
     public OnlineAutoMinMaxScaler(ConceptChangeHandler handler, Map<String, Feature> features, double conceptChangeThreshold) {
@@ -139,8 +135,20 @@ public class OnlineAutoMinMaxScaler extends OnlineAbstractFeatureScaler {
         }
     }
 
-    public Map<String, Feature> getFeatures(){
+    public Map<String, Feature> getFeatures() {
         return features;
+    }
+
+    public void setFeatures(FeatureStatistics stats) {
+        if (stats != null) {
+            for (FeatureStatistics.Feature stat : stats.allFeatures()) {
+                features.put(stat.name, new Feature(stat.name, stat.min, stat.max, conceptChangeThreshold));
+            }
+        }
+    }
+
+    public void setConceptChangeHandler(ConceptChangeHandler handler) {
+        this.handler = handler;
     }
 
     @Override

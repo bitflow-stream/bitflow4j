@@ -28,7 +28,6 @@ public class Pipeline implements TreeFormatter.FormattedNode {
     // =================================================
     // Printing ========================================
     // =================================================
-
     public String toString() {
         return "Pipeline";
     }
@@ -36,8 +35,9 @@ public class Pipeline implements TreeFormatter.FormattedNode {
     @Override
     public Collection<Object> formattedChildren() {
         List<Object> children = new ArrayList<>();
-        if (source != null)
+        if (source != null) {
             children.add(source);
+        }
         children.addAll(steps);
         return children;
     }
@@ -45,7 +45,6 @@ public class Pipeline implements TreeFormatter.FormattedNode {
     // ===============================================
     // Inputs ========================================
     // ===============================================
-
     public Pipeline input(Source input) {
         if (this.source != null) {
             throw new IllegalStateException("sink was already configured");
@@ -67,7 +66,6 @@ public class Pipeline implements TreeFormatter.FormattedNode {
     // ===============================================
     // Steps & output ================================
     // ===============================================
-
     public Pipeline step(PipelineStep algo) {
         steps.add(algo);
         return this;
@@ -81,7 +79,6 @@ public class Pipeline implements TreeFormatter.FormattedNode {
     // =========================================
     // Running =================================
     // =========================================
-
     public void runAndWait() {
         runAndWait(new TaskPool());
     }

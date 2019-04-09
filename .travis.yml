@@ -1,0 +1,44 @@
+language: java
+
+sudo: required
+
+services:
+    - docker
+env:
+  global:
+    # REGISTRY_USER=...
+    - secure: "UrzBEKjS0JuIjetseLUclbPZzHfS8dImcCENLqnCKTRGNjl07qmhwGgZICONd4o85waC5xwoSC1wwYe3yV4L+qIR6uqo8g+b0u29PZCe2fFCPMrmQIW33sRLsY0K1HjnWkKYtwLAUqBnr3GApV5diCgpSlo47NThqfTFWvtpJtbSNIL8qeuEsnBXnZqGuA0ID3eyD1Flc9inSD+cYC1xwwXnyQ7HputYY37zUvengdzy+hCj0pvKjDSJNtSQHOiAcwBiXsBHBFomuVeK+280deQ2mEcVybrledvZGrr33wCmYW5emKc2qlT/l0Ww8qweM9zqGcPVXhLpGmOU4vxP6PlQCvwgiWqYrkEl2fxVfZTBnBfOwz4ZLyghKW9HU4W59e/QbuU5vXsewiluDOvqP6v75d1OsIeuuDifu/G0rkAovFJBEzhzU/Izad+IhwyKLCjxg9DpvhjjK6VAfaTslvsJHGxD6FH4hSEU9AKMt8KSmdwe7AIpnaaXZUccU8ZPBrv2lSiBG9vP6P+WZS7069c+Yn60lN9uHnkxGQU+TOqcBM2kLs7FQYqhwPyV1pYXlrn4Fs9k+5loAwo7fq8sP211sFoUehv1DfenCVL+RSlIynVkB1OtcmuyP+NW7vukX7SGnhaaOXcuTu2NNOSrFyr3D1NfoZUxJqE/ccUoRHw="
+    # REGISTRY_PASS=...
+    - secure: "ZYSeLnLfOfSGKM+bi9jlRVRCkZM1xAmKhX5yuw12SdC/6N3E9/8FdAKaMJ3DJ73Z9Wg5ClhE4rdGG0Vt6cjJT7zSzXBSy5rUVva1IzVJQR4Wtk9Q19WiGHIdJVR55VfC50MqIg+htp0mISH26iEv6hDSv21PyZOMP5U+OPsKCluKSzCw7g0Fon3uaU9VX6HzG6MRXB9a116BLXTYBSCFq2ccBPECUbm+Om2dcltkIrX/JqE9KKegbdC0d+afLFsFBgGoUtnk/2znhOvyLlo6IvqG1UdyIhm0/XXoGLV3yjF4QrGK0yShB2Jx51lZdLPA2cLaX69zXVis21oGXiiLTbxICra4N7BGkpfgBR91YzaUUL0Lj40Epn5IpfXoQdzfdqG5LOHGL99TH8EY1f6cWVMKUk5MehjtcHgUCgnzQ+QU3nvgfY1+jWLO6eq8elSis10o0kmg4NviTWuxnOYFJr91N8l10hXyBFX1ct8WUQiKYJh6Y5hkFJe/tiTuDik0vMqc0sWmpxWgHLe04kljp8JhC55SXyYadKKh7bP2/C0kJbV5bYfXY0GifWKlqFt7P2PtnXbrbN8RYvFUrGz/Ppvc3/eHJ4t2Z0sCaHPggrLoAfnNmu0MT7ZgT69te9r8SSsNVT9rjHbn2N0WxOIfCXHhGB7+byBmdw0HnjKM/HM="
+
+install:
+  - mvn test-compile -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+
+script:
+- mvn test jacoco:report
+
+after_success:
+  #coveralls:
+  - mvn coveralls:report
+
+  #docker:
+  - docker build -t test1034/testing-docker-build:latest  --target build .
+  - docker build -t test1034/testing-docker .
+after_script:
+  - docker images
+
+before_deploy:
+  - docker login -u "$REGISTRY_USER" -p "$REGISTRY_PASS"
+
+deploy:
+ provider: script
+ script:
+  docker push test1034/testing-docker:latest
+  docker push test1034/testing-docker
+ on:
+  branch: develop
+
+ cache:
+   directories:
+    - .autoconf
+    - $HOME/.m2

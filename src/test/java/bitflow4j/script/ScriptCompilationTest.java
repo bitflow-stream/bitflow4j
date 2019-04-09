@@ -33,14 +33,22 @@ public class ScriptCompilationTest extends TestCase {
         Registry registry = new Registry();
         registry.scanForPipelineSteps("bitflow4j");
         BitflowScriptCompiler compiler = new BitflowScriptCompiler(registry, new EndpointFactory());
-        BitflowScriptCompiler.CompileResult res = compiler.parseScript(script);
+        CompilationException exc = null;
+        Pipeline pipe = null;
+
+        try {
+            pipe = compiler.parseScript(script);
+        } catch (CompilationException e) {
+            exc = e;
+        }
+
         if (fail) {
-            assertTrue(res.hasErrors());
-            assertNull(res.getPipeline());
-            Assert.assertArrayEquals(expected, res.getErrors().toArray(new String[0]));
+            assertNotNull(exc);
+            assertNull(pipe);
+            Assert.assertArrayEquals(expected, exc.getErrors().toArray(new String[0]));
         } else {
-            assertFalse("Unexpected compilation errors: " + res.getErrors(), res.hasErrors());
-            Pipeline pipe = res.getPipeline();
+            assertNull(exc);
+            assertNotNull(pipe);
             List<String> expectedList = Lists.newArrayList(expected);
             expectedList.add(0, "Pipeline");
             List<String> steps = TreeFormatter.standard.formatLines(pipe);
@@ -49,7 +57,7 @@ public class ScriptCompilationTest extends TestCase {
     }
 
     public void testEmpty() {
-        script(true, "", "Line 1 (0) '<EOF>': mismatched input '<EOF>' expecting {'{', STRING, NUMBER, IDENTIFIER, BOOL}");
+        script(true, "", "Line 1 (0) '<EOF>': mismatched input '<EOF>' expecting {'{', 'window', STRING, IDENTIFIER}");
     }
 
     public void testInput() {

@@ -28,6 +28,18 @@ public class MetricFilter extends AbstractPipelineStep {
         this(new MetricNameSelection(excludedCols));
     }
 
+    /** Constructor for bitflow-script, specifying whether to include or exclude the comma-separated string of columns **/
+    public MetricFilter(boolean include, String columns) {
+        String[] cols = Arrays.stream(columns.split(",")).map(String::trim).toArray(String[]::new);
+
+        if (include) {
+            this.filter = new MetricNameIncludeSelection(cols);
+        }
+        else { //exclude
+            this.filter = new MetricNameSelection(cols);
+        }
+    }
+
     @Override
     public void writeSample(Sample sample) throws IOException {
         if (sample.headerChanged(lastHeader)) {

@@ -66,7 +66,10 @@ public abstract class BatchPipelineStep extends AbstractPipelineStep {
                     long currentTime = new Date().getTime();
                     if (currentTime - startTime > timeoutMs) {
                         try {
-                            flushResults();
+                            boolean flushed = flushResults();
+                            if(flushed){
+                                logger.log(Level.INFO, "Flushed batch due to timeout (" + timeoutMs + "ms).");
+                            }
                         } catch (IOException ex) {
                             logger.log(Level.SEVERE, "Failed to automatically flush batch", ex);
                         }
@@ -79,10 +82,11 @@ public abstract class BatchPipelineStep extends AbstractPipelineStep {
 
     @Override
     public final synchronized void writeSample(Sample sample) throws IOException {
-        window.add(sample);
         startTime = new Date().getTime();
-        if (shouldFlush(sample))
+        if (shouldFlush(sample)) {
             flushResults();
+        }
+        window.add(sample);
     }
 
     private boolean shouldFlush(Sample sample) {
@@ -108,12 +112,13 @@ public abstract class BatchPipelineStep extends AbstractPipelineStep {
         super.doClose();
     }
 
-    private synchronized void flushResults() throws IOException {
+    private synchronized boolean flushResults() throws IOException {
         if (window.isEmpty())
-            return;
+            return false;
         printFlushMessage();
         flush(window);
         window.clear();
+        return true;
     }
 
     private void printFlushMessage() {

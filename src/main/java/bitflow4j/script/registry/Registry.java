@@ -48,6 +48,8 @@ public class Registry {
      * registerAnalysis takes a registration and stores it for retrieval by the pipeline builder.
      */
     public void registerAnalysis(RegisteredPipelineStep registeredPipelineStep) {
+        String conventionName = splitCamelCase(registeredPipelineStep.name, "-");
+        analysisRegistrationMap.put(conventionName, registeredPipelineStep);
         analysisRegistrationMap.put(registeredPipelineStep.name.toLowerCase(), registeredPipelineStep);
     }
 
@@ -65,6 +67,8 @@ public class Registry {
      * registerAnalysis takes a registration and stores it for retrieval by the pipeline builder.
      */
     public void registerFork(RegisteredFork registeredFork) {
+        String conventionName = splitCamelCase(registeredFork.name, "-");
+        forkRegistrationMap.put(conventionName, registeredFork);
         forkRegistrationMap.put(registeredFork.name.toLowerCase(), registeredFork);
     }
 
@@ -119,6 +123,20 @@ public class Registry {
         }
         unconstructableClasses.add(impl);
         return false;
+    }
+
+    // Splits a camelCase string into a lowercase string with delimiters instead of Uppercase
+    private String splitCamelCase(String camelCase, String delimiter){
+        // Splits the string at uppercase letters
+        String[] classWords = camelCase.split("(?=\\p{Upper})");
+        String result = "";
+        for (int i = 0; i < classWords.length; i++) {
+            result += classWords[i].toLowerCase();
+            if (i < classWords.length - 1){
+                result += delimiter;
+            }
+        }
+        return result;
     }
 
 }
