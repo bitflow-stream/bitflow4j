@@ -92,16 +92,7 @@ public class FeatureStatistics {
     }
 
     public FeatureStatistics(String iniFile) {
-        Ini ini = new Ini();
-        ini.getConfig().setTree(false);
-        try {
-            ini.load(new File(iniFile));
-        } catch (IOException io) {
-            logger.warning("Error loading features.ini file: " + io);
-            return;
-        }
-        logger.info("Loading feature stats from " + iniFile);
-        fillFromIni(ini);
+        loadIniFile(iniFile);
     }
 
     public Feature getFeature(String name) {
@@ -130,6 +121,34 @@ public class FeatureStatistics {
         }
         fillIni(ini);
         ini.store(file);
+    }
+    
+    public Ini loadIniFile(String iniFile){
+        Ini ini = new Ini();
+        ini.getConfig().setTree(false);
+        try {
+            ini.load(new File(iniFile));
+        } catch (IOException io) {
+            logger.warning("Error loading features.ini file: " + io);
+            return null;
+        }
+        logger.info("Loading feature stats from " + iniFile);
+        fillFromIni(ini);
+        return ini;
+    }
+    
+    public Ini createIniFile(String iniFile){
+        Ini ini = new Ini();
+        ini.getConfig().setTree(false);
+        try {
+            ini.load(new File(iniFile));
+        } catch (IOException io) {
+            logger.warning("Error loading features.ini file: " + io);
+            return null;
+        }
+        logger.info("Loading feature stats from " + iniFile);
+        fillFromIni(ini);
+        return ini;
     }
 
     private void fillFromIni(Ini ini) {
