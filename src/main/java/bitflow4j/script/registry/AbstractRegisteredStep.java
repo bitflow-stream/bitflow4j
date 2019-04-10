@@ -7,17 +7,17 @@ import java.util.Map;
 
 public abstract class AbstractRegisteredStep {
 
-    public final String name;
-    public String conventionName;
+    public final String className;
+    public String stepName;
     public final String description;
     public final List<String> optionalParameters = new ArrayList<>();
     public final List<String> requiredParameters = new ArrayList<>();
 
     private boolean hasGeneric = false;
 
-    public AbstractRegisteredStep(String name, String description) {
-        this.name = name;
-        this.conventionName = splitCamelCase(name, "-");
+    public AbstractRegisteredStep(String className, String description) {
+        this.className = className;
+        this.stepName = splitCamelCase(this.className, "-");
         this.description = description;
     }
 
@@ -65,12 +65,12 @@ public abstract class AbstractRegisteredStep {
         return errors;
     }
 
-    public String getConventionName() {
-        return conventionName;
+    public String getStepName() {
+        return stepName;
     }
 
     // Splits a camelCase string into a lowercase string with delimiters instead of Uppercase
-    private String splitCamelCase(String camelCase, String delimiter){
+    private static String splitCamelCase(String camelCase, String delimiter){
         //Check for 'processingstep', 'batchstep' or 'step' (and any uppercase variants) at the end of the Class-name and remove them
         String lowerCase = camelCase.toLowerCase();
         int index_processingstep = lowerCase.indexOf("processingstep");

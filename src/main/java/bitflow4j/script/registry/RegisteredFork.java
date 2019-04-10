@@ -12,8 +12,8 @@ import java.util.Map;
  */
 public abstract class RegisteredFork extends AbstractRegisteredStep {
 
-    public RegisteredFork(String name, String description) {
-        super(name, description);
+    public RegisteredFork(String className, String description) {
+        super(className, description);
     }
 
     public abstract void buildFork(Pipeline pipeline, Collection<Pair<String, ScriptableDistributor.PipelineBuilder>> subPipelines, Map<String, String> parameters) throws ConstructionException;

@@ -49,9 +49,9 @@ public class Registry {
      * registerAnalysis takes a registration and stores it for retrieval by the pipeline builder.
      */
     public void registerAnalysis(RegisteredPipelineStep registeredPipelineStep) {
-        analysisRegistrationMap.put(registeredPipelineStep.getConventionName(), registeredPipelineStep);
+        analysisRegistrationMap.put(registeredPipelineStep.getStepName(), registeredPipelineStep);
         //TODO: Remove this line later on, it supports downwards-compatibility but leads to doubled entries in the capabilities list
-        analysisRegistrationMap.put(registeredPipelineStep.name.toLowerCase(), registeredPipelineStep);
+        analysisRegistrationMap.put(registeredPipelineStep.className.toLowerCase(), registeredPipelineStep);
     }
 
     /**
@@ -68,9 +68,9 @@ public class Registry {
      * registerAnalysis takes a registration and stores it for retrieval by the pipeline builder.
      */
     public void registerFork(RegisteredFork registeredFork) {
-        forkRegistrationMap.put(registeredFork.getConventionName(), registeredFork);
+        forkRegistrationMap.put(registeredFork.getStepName(), registeredFork);
         //TODO: Remove this line later on, it supports downwards-compatibility but leads to doubled entries in the capabilities list
-        forkRegistrationMap.put(registeredFork.name.toLowerCase(), registeredFork);
+        forkRegistrationMap.put(registeredFork.className.toLowerCase(), registeredFork);
     }
 
     /**

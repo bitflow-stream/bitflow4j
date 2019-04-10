@@ -97,7 +97,7 @@ public class Main {
 
     private static void logCapabilities(Registry registry) {
         List<RegisteredPipelineStep> cap = Lists.newArrayList(registry.getCapabilities());
-        cap.sort((a1, a2) -> a1.name.compareToIgnoreCase(a2.name));
+        cap.sort((a1, a2) -> a1.className.compareToIgnoreCase(a2.className));
         logIfNotEmpty("Stream-Mode Processing Steps:", cap.stream().filter(RegisteredPipelineStep::supportsStreamOnly));
         logIfNotEmpty("Batch-Mode Processing Steps:", cap.stream().filter(RegisteredPipelineStep::supportsBatchOnly));
         logIfNotEmpty("Mixed-Mode Processing Steps:", cap.stream().filter(RegisteredPipelineStep::supportsBothModes));
@@ -113,8 +113,8 @@ public class Main {
     }
 
     private static void logCapability(RegisteredPipelineStep registeredPipelineStep) {
-        logger.info(" - " + registeredPipelineStep.name);
-        logger.info("     Bitflow-Script: " + registeredPipelineStep.conventionName);
+        logger.info(" - " + registeredPipelineStep.className);
+        logger.info("     Bitflow-Script: " + registeredPipelineStep.stepName);
         logger.info("     Description: " + registeredPipelineStep.description);
         if (!registeredPipelineStep.requiredParameters.isEmpty())
             logger.info("     Required parameters: " + registeredPipelineStep.requiredParameters);
