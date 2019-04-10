@@ -8,6 +8,7 @@ import org.reflections.Reflections;
 
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -48,9 +49,9 @@ public class Registry {
      * registerAnalysis takes a registration and stores it for retrieval by the pipeline builder.
      */
     public void registerAnalysis(RegisteredPipelineStep registeredPipelineStep) {
-        String conventionName = splitCamelCase(registeredPipelineStep.name, "-");
-        analysisRegistrationMap.put(conventionName, registeredPipelineStep);
-        analysisRegistrationMap.put(registeredPipelineStep.name.toLowerCase(), registeredPipelineStep);
+        analysisRegistrationMap.put(registeredPipelineStep.getStepName(), registeredPipelineStep);
+        //TODO: Remove this line later on, it supports downwards-compatibility but leads to doubled entries in the capabilities list
+        analysisRegistrationMap.put(registeredPipelineStep.className.toLowerCase(), registeredPipelineStep);
     }
 
     /**
@@ -67,9 +68,9 @@ public class Registry {
      * registerAnalysis takes a registration and stores it for retrieval by the pipeline builder.
      */
     public void registerFork(RegisteredFork registeredFork) {
-        String conventionName = splitCamelCase(registeredFork.name, "-");
-        forkRegistrationMap.put(conventionName, registeredFork);
-        forkRegistrationMap.put(registeredFork.name.toLowerCase(), registeredFork);
+        forkRegistrationMap.put(registeredFork.getStepName(), registeredFork);
+        //TODO: Remove this line later on, it supports downwards-compatibility but leads to doubled entries in the capabilities list
+        forkRegistrationMap.put(registeredFork.className.toLowerCase(), registeredFork);
     }
 
     /**
@@ -83,6 +84,9 @@ public class Registry {
     }
 
     public Collection<RegisteredPipelineStep> getCapabilities() {
+        for(String s : analysisRegistrationMap.keySet()){
+            logger.log(Level.FINER, String.format("Registered key: %s", s));
+        }
         return analysisRegistrationMap.values();
     }
 
@@ -125,18 +129,6 @@ public class Registry {
         return false;
     }
 
-    // Splits a camelCase string into a lowercase string with delimiters instead of Uppercase
-    private String splitCamelCase(String camelCase, String delimiter){
-        // Splits the string at uppercase letters
-        String[] classWords = camelCase.split("(?=\\p{Upper})");
-        String result = "";
-        for (int i = 0; i < classWords.length; i++) {
-            result += classWords[i].toLowerCase();
-            if (i < classWords.length - 1){
-                result += delimiter;
-            }
-        }
-        return result;
-    }
+
 
 }
