@@ -12,13 +12,13 @@ import static org.junit.Assert.assertNotNull;
 
 public class RegisteredPipelineStepTest {
 
-    private final RegisteredPipelineStep sampleRegisteredPipelineStep = (RegisteredPipelineStep)
-            new RegisteredPipelineStep("This is the description.") {
-                @Override
-                public void buildStep(Pipeline pipeline, Map<String, String> parameters) throws ConstructionException {
-                    // Do nothing
-                }
-            }.required("require_me").optional("optional_me");
+    private final RegisteredPipelineStep sampleRegisteredPipelineStep = (RegisteredPipelineStep) new RegisteredPipelineStep("test",
+            "This is the description.") {
+        @Override
+        public void buildStep(Pipeline pipeline, Map<String, String> parameters) throws ConstructionException {
+            // Do nothing
+        }
+    }.required("require_me").optional("optional_me");
 
     @Test
     public void givenParamsWithMissingRequiredParam_whenValidateParameters_thenReturnErrorMessage() {
