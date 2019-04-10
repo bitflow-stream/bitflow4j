@@ -6,7 +6,7 @@
 
     <groupId>bitflow4j</groupId>
     <artifactId>bitflow4j</artifactId>
-    <version>0.1.1</version>
+    <version>0.0.1</version>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
