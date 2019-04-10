@@ -8,6 +8,7 @@ import org.reflections.Reflections;
 
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -48,8 +49,8 @@ public class Registry {
      * registerAnalysis takes a registration and stores it for retrieval by the pipeline builder.
      */
     public void registerAnalysis(RegisteredPipelineStep registeredPipelineStep) {
-        String conventionName = splitCamelCase(registeredPipelineStep.name, "-");
-        analysisRegistrationMap.put(conventionName, registeredPipelineStep);
+        analysisRegistrationMap.put(registeredPipelineStep.getConventionName(), registeredPipelineStep);
+        //TODO: Remove this line later on, it supports downwards-compatibility but leads to doubled entries in the capabilities list
         analysisRegistrationMap.put(registeredPipelineStep.name.toLowerCase(), registeredPipelineStep);
     }
 
@@ -67,8 +68,8 @@ public class Registry {
      * registerAnalysis takes a registration and stores it for retrieval by the pipeline builder.
      */
     public void registerFork(RegisteredFork registeredFork) {
-        String conventionName = splitCamelCase(registeredFork.name, "-");
-        forkRegistrationMap.put(conventionName, registeredFork);
+        forkRegistrationMap.put(registeredFork.getConventionName(), registeredFork);
+        //TODO: Remove this line later on, it supports downwards-compatibility but leads to doubled entries in the capabilities list
         forkRegistrationMap.put(registeredFork.name.toLowerCase(), registeredFork);
     }
 
@@ -83,6 +84,9 @@ public class Registry {
     }
 
     public Collection<RegisteredPipelineStep> getCapabilities() {
+        for(String s : analysisRegistrationMap.keySet()){
+            logger.log(Level.FINER, String.format("Registered key: %s", s));
+        }
         return analysisRegistrationMap.values();
     }
 
@@ -125,43 +129,6 @@ public class Registry {
         return false;
     }
 
-    // Splits a camelCase string into a lowercase string with delimiters instead of Uppercase
-    private String splitCamelCase(String camelCase, String delimiter){
-        // Splits the string at uppercase letters
-        String[] classCapitals = camelCase.split("(?=\\p{Upper})");
-        ArrayList<String> classWords = new ArrayList<>();
-        int counter = 0;
-        for (int i = 0; i < classCapitals.length; i++) {
-            if(classCapitals[i].toLowerCase().equals("step")) continue;
 
-            //We are not at the end of the list & at least this and the next String only contain one capitalized letter
-            if(i < classCapitals.length - 1 && classCapitals[i].length() == 1 && classCapitals[i + 1].length() == 1){
-                if(classWords.size() <= counter) {
-                    classWords.add(classCapitals[i] + classCapitals[i + 1]);
-                    counter = i;
-                }
-                else {
-                    classWords.set(counter, classWords.get(counter) + classCapitals[i + 1]);
-                }
-            }
-            else {
-                if(i < classCapitals.length - 1 && classCapitals[i].length() == 1 && classCapitals[i + 1].length() != 1){
-                    counter++;
-                    continue;
-                }
-                classWords.add(classCapitals[i]);
-                counter++;
-            }
-        }
-
-        String result = "";
-        for (int i = 0; i < classWords.size(); i++) {
-            result += classWords.get(i).toLowerCase();
-            if (i < classWords.size() - 1){
-                result += delimiter;
-            }
-        }
-        return result;
-    }
 
 }

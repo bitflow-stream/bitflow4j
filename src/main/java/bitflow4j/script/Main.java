@@ -114,6 +114,7 @@ public class Main {
 
     private static void logCapability(RegisteredPipelineStep registeredPipelineStep) {
         logger.info(" - " + registeredPipelineStep.name);
+        logger.info("     Bitflow-Script: " + registeredPipelineStep.conventionName);
         logger.info("     Description: " + registeredPipelineStep.description);
         if (!registeredPipelineStep.requiredParameters.isEmpty())
             logger.info("     Required parameters: " + registeredPipelineStep.requiredParameters);

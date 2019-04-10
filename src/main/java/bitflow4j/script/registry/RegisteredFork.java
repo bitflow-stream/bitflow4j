@@ -12,10 +12,6 @@ import java.util.Map;
  */
 public abstract class RegisteredFork extends AbstractRegisteredStep {
 
-    public RegisteredFork(String name){
-        super(name, "");
-    }
-
     public RegisteredFork(String name, String description) {
         super(name, description);
     }

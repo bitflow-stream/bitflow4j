@@ -12,10 +12,6 @@ public abstract class RegisteredPipelineStep extends AbstractRegisteredStep {
     private boolean _supportsBatchProcessing;
     private boolean _supportsStreamProcessing;
 
-    public RegisteredPipelineStep(String name){
-        super(name, "");
-    }
-
     public RegisteredPipelineStep(String name, String description) {
         super(name, description);
     }
