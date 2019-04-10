@@ -13,7 +13,7 @@ import static org.junit.Assert.assertNotNull;
 public class RegisteredPipelineStepTest {
 
     private final RegisteredPipelineStep sampleRegisteredPipelineStep = (RegisteredPipelineStep)
-            new RegisteredPipelineStep("test", "This is the description.") {
+            new RegisteredPipelineStep("This is the description.") {
                 @Override
                 public void buildStep(Pipeline pipeline, Map<String, String> parameters) throws ConstructionException {
                     // Do nothing
