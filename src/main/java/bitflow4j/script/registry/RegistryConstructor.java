@@ -7,11 +7,14 @@ import bitflow4j.steps.fork.Fork;
 import bitflow4j.steps.fork.ScriptableDistributor;
 import com.google.common.collect.Lists;
 import com.thoughtworks.paranamer.Paranamer;
+import javassist.runtime.Desc;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 class RegistryConstructor {
@@ -20,6 +23,7 @@ class RegistryConstructor {
 
     private final Paranamer paranamer;
     private final String name;
+    private final String description;
     private final Class<?> cls;
     private final List<Constructor> constructors;
     private final Constructor stringMapConstructor;
@@ -30,6 +34,7 @@ class RegistryConstructor {
         this.cls = cls;
         this.paranamer = paranamer;
         this.name = cls.getSimpleName();
+        this.description = getDescriptionField(cls);
         this.constructors = Lists.newArrayList(cls.getConstructors());
         filterBadConstructors();
         stringMapConstructor = getMapConstructor();
@@ -53,6 +58,10 @@ class RegistryConstructor {
 
     String getName() {
         return name;
+    }
+
+    String getDescription() {
+        return description;
     }
 
     public void buildStep(Pipeline pipeline, Map<String, String> parameters) throws ConstructionException {
@@ -213,7 +222,7 @@ class RegistryConstructor {
     }
 
     public RegisteredPipelineStep createAnalysisRegistration() {
-        RegisteredPipelineStep result = new RegisteredPipelineStep(getName()) {
+        RegisteredPipelineStep result = new RegisteredPipelineStep(getName(), getDescription()) {
             @Override
             public void buildStep(Pipeline pipeline, Map<String, String> parameters) throws ConstructionException {
                 RegistryConstructor.this.buildStep(pipeline, parameters);
@@ -228,7 +237,7 @@ class RegistryConstructor {
     }
 
     public RegisteredFork createRegisteredFork() {
-        RegisteredFork result = new RegisteredFork(getName()) {
+        RegisteredFork result = new RegisteredFork(getName(), getDescription()) {
             @Override
             public void buildFork(Pipeline pipeline, Collection<Pair<String, ScriptableDistributor.PipelineBuilder>> subPipelines, Map<String, String> parameters) throws ConstructionException {
                 RegistryConstructor.this.buildFork(pipeline, subPipelines, parameters);
@@ -269,6 +278,15 @@ class RegistryConstructor {
         if (stringMapConstructor != null) {
             reg.acceptGenericConstructor();
         }
+    }
+
+    private String getDescriptionField(Class cls){
+        Annotation annotation =  cls.getAnnotation(Description.class);
+        if(annotation != null){
+            Description desc = (Description) annotation;
+            return desc.value();
+        }
+        return "";
     }
 
 }
