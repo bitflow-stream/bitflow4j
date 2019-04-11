@@ -175,11 +175,11 @@ class BitflowScriptCompiler {
 
         RegisteredPipelineStep regAnalysis = registry.getAnalysisRegistration(name);
         if (regAnalysis == null) {
-            throw new CompilationException(ctx, "Unknown Processor.");
+            throw new CompilationException(ctx, String.format("Unknown Processor: '%s'", name));
         } else if (isBatched && !regAnalysis.supportsBatch()) {
-            throw new CompilationException(ctx, "Processor used in window, but does not support batch processing.");
+            throw new CompilationException(ctx, String.format("Processor '%s' used in window, but does not support batch processing.", name));
         } else if (!isBatched && !regAnalysis.supportsStream()) {
-            throw new CompilationException(ctx, "Processor used outside window, but does not support stream processing.");
+            throw new CompilationException(ctx, String.format("Processor '%s' used outside window, but does not support stream processing.", name));
         }
         regAnalysis.validateParameters(params).forEach(e -> {
             throw new CompilationException(ctx, e);
