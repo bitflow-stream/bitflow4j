@@ -108,7 +108,10 @@ public abstract class AbstractRegisteredStep {
                     counter++;
                     continue;
                 }
-                // Normal Words with forst letter capitalized can be simply added
+                // If last letter is a single capitalized letter, it has already been added
+                if(i == classCapitals.length - 1 && classCapitals[i].length() == 1) continue;
+
+                // Normal Words with first letter capitalized can be simply added
                 classWords.add(classCapitals[i]);
                 counter++;
             }
