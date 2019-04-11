@@ -5,6 +5,7 @@ import org.ini4j.Profile;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,7 +14,7 @@ import java.util.logging.Logger;
 /**
  * Created by anton on 6/26/16.
  */
-public class FeatureStatistics {
+public class FeatureStatistics implements Serializable{
 
     private static final Logger logger = Logger.getLogger(FeatureStatistics.class.getName());
 
