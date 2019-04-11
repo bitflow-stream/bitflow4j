@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/bitflow-stream/bitflow4j.svg?branch=develop)](https://travis-ci.org/bitflow-stream/bitflow4j)
-[![Coverage Status](https://coveralls.io/repos/github/bitflow-stream/bitflow4j/badge.svg?branch=develop)](https://coveralls.io/github/bitflow-stream/bitflow4j?branch=develop)
+[![Build Status](https://travis-ci.org/bitflow-stream/bitflow4j.svg?branch=master)](https://travis-ci.org/bitflow-stream/bitflow4j)
+[![Coverage Status](https://coveralls.io/repos/github/bitflow-stream/bitflow4j/badge.svg?branch=master)](https://coveralls.io/github/bitflow-stream/bitflow4j?branch=master)
 [![Maintainability](https://api.codeclimate.com/v1/badges/8666202f5acd4a22b917/maintainability)](https://codeclimate.com/github/bitflow-stream/bitflow4j/maintainability)
 
 # bitflow4j
