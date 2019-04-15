@@ -113,7 +113,7 @@ public class Fork extends AbstractPipelineStep implements TreeFormatter.Formatte
         }
     }
 
-    private class Merger extends DroppingStep {
+    private class Merger extends DropStep {
 
         private final Object lock = new Object();
 

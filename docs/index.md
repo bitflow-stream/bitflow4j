@@ -93,17 +93,17 @@ new Pipeline()
 	.runAndWait();
 ```
 
-Also parallel pipelines can be defined via forks. Forks are also steps, which provide the possibility to define several different subpipelines. There exists different distribution techniques like `TagDistributor`, `MultiplexDistributor` and `RoundRobinDistributor`.
+Also parallel pipelines can be defined via forks. Forks are also steps, which provide the possibility to define several different subpipelines. There exists different distribution techniques like `ForkTag`, `MultiplexDistributor` and `RoundRobinDistributor`.
 
 ```
-TagDistributor distributor = new TagDistributor("tagName");
-distributor.setSubPipelines(
+ForkTag forkTag = new ForkTag("tagName");
+forkTag.setSubPipelines(
 	Arrays.asList(
 		new Pair<>("key1", new Pipeline().step(new BatchFeatureScaler.MinMax())), 
 		new Pair<>("key2", new Pipeline().step(new BatchFeatureScaler.Standardize()))));
 new Pipeline()
 	.inputCsv("/some/path/to/data.csv")
-	.step(new Fork(distributor))
+	.step(new Fork(forkTag))
 	.outputCsv("/path/to/output/results.csv")
 	.runAndWait();
 ```

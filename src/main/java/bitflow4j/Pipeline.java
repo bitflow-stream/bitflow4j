@@ -111,7 +111,7 @@ public class Pipeline implements TreeFormatter.FormattedNode {
         }
 
         // Make sure every pipeline step has a valid outgoing sink
-        PipelineStep lastStep = new DroppingStep();
+        PipelineStep lastStep = new DropStep();
         source.setOutgoingSink(lastStep);
         tasks.add(lastStep);
 

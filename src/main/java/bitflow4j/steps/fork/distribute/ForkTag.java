@@ -13,9 +13,9 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
-public class TagDistributor implements ScriptableDistributor {
+public class ForkTag implements ScriptableDistributor {
 
-    private static final Logger logger = Logger.getLogger(TagDistributor.class.getName());
+    private static final Logger logger = Logger.getLogger(ForkTag.class.getName());
 
     private final boolean wildcardMatch, regexMatch;
     private final String tag;
@@ -27,11 +27,11 @@ public class TagDistributor implements ScriptableDistributor {
     private List<String> availableKeys;
     private Collection<Object> formattedSubPipelines;
 
-    public TagDistributor(String tag) {
+    public ForkTag(String tag) {
         this(tag, true, false);
     }
 
-    public TagDistributor(String tag, boolean wildcard, boolean regex) {
+    public ForkTag(String tag, boolean wildcard, boolean regex) {
         this.tag = tag;
         this.wildcardMatch = wildcard;
         this.regexMatch = regex;
