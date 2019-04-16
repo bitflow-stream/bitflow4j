@@ -35,7 +35,7 @@ public class BitflowParser extends Parser {
 
 	private static final String[] _LITERAL_NAMES = {
 		null, "'{'", "'}'", "';'", "'->'", "'('", "')'", "'='", "','", "'['", 
-		"']'", "'window'", null, null, null, null, null, "'\t'"
+		"']'", "'batch'", null, null, null, null, null, "'\t'"
 	};
 	private static final String[] _SYMBOLIC_NAMES = {
 		null, "OPEN", "CLOSE", "EOP", "NEXT", "OPEN_PARAMS", "CLOSE_PARAMS", "EQ", 
