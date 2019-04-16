@@ -4,7 +4,10 @@ import bitflow4j.AbstractPipelineStep;
 import bitflow4j.Header;
 import bitflow4j.Sample;
 import bitflow4j.io.MarshallingSampleWriter;
+import bitflow4j.io.marshall.BinaryMarshaller;
+import bitflow4j.io.marshall.CsvMarshaller;
 import bitflow4j.io.marshall.Marshaller;
+import bitflow4j.io.marshall.TextMarshaller;
 import bitflow4j.script.registry.Description;
 
 import java.io.*;
@@ -32,6 +35,10 @@ public class OutputFiles extends AbstractPipelineStep {
     private String baseFileTemplate;
 
     private Map<String, File> valueFiles = new HashMap<String, File>();
+
+    public OutputFiles(String file) throws IOException {
+        this(file, determineMarshaller(file));
+    }
 
     public OutputFiles(String file, String marshaller) throws IOException {
         this(file, Marshaller.get(marshaller));
@@ -128,6 +135,16 @@ public class OutputFiles extends AbstractPipelineStep {
             valueFiles.put(value, file);
 
             return new BufferedOutputStream(new FileOutputStream(file, append));
+        }
+    }
+
+    private static Marshaller determineMarshaller(String fileName) {
+        if (fileName.endsWith(".bin")) {
+            return new BinaryMarshaller();
+        } else if (fileName.endsWith(".text")) {
+            return new TextMarshaller();
+        } else {
+            return new CsvMarshaller();
         }
     }
 
