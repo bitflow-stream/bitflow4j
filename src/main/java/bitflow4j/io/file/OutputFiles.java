@@ -8,6 +8,8 @@ import bitflow4j.io.marshall.Marshaller;
 import bitflow4j.script.registry.Description;
 
 import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -15,7 +17,7 @@ import java.util.logging.Logger;
  * Created by kevinstyp on 15/04/2019.
  */
 @Description("Uses the provided template in parameter file to save samples in their respective file. Example call: " +
-        "output-files('./${data_type}/${serial}.csv', 'CSV') " +
+        "output-files(file='./${data_type}/${serial}.csv', marshaller='CSV') " +
         "This will evaluate the tags data_type and serial of every sample and save the sample in the proper file.")
 public class OutputFiles extends AbstractPipelineStep {
 
@@ -29,6 +31,7 @@ public class OutputFiles extends AbstractPipelineStep {
     private int index = 0;
     private String baseFileTemplate;
 
+    private Map<String, File> valueFiles = new HashMap<String, File>();
 
     public OutputFiles(String file, String marshaller) throws IOException {
         this(file, Marshaller.get(marshaller));
@@ -102,17 +105,30 @@ public class OutputFiles extends AbstractPipelineStep {
             // Do not create new files for new headers
             return output;
         }
-        File file;
-        FileGroup files = new FileGroup(sample.resolveTagTemplate(baseFileTemplate));
-        do {
-            file = new File(files.getFile(index++));
-        } while (!append && file.exists());
 
-        if (!file.exists() && !file.createNewFile()) {
-            throw new IOException("Failed to create file " + file);
+        String value = sample.resolveTagTemplate(baseFileTemplate);
+        if (valueFiles.get(value) != null) {
+            // Take the file form the 'cache' (has been written to previously already)
+            return new BufferedOutputStream(new FileOutputStream(valueFiles.get(value), true));
         }
-        logger.fine(String.format("Opening output file for writing (append: %s)", append));
-        return new BufferedOutputStream(new FileOutputStream(file, append));
+        else {
+            index = 0;
+            File file;
+            FileGroup files = new FileGroup(value);
+            // Create new file following the behaviour of FileGroup and remember it, if similar samples occur
+            do {
+                file = new File(files.getFile(index++));
+            } while (!append && file.exists());
+
+            if (!file.exists() && !file.createNewFile()) {
+                throw new IOException("Failed to create file " + file);
+            }
+            logger.fine(String.format("Opening output file for writing (append: %s)", append));
+
+            valueFiles.put(value, file);
+
+            return new BufferedOutputStream(new FileOutputStream(file, append));
+        }
     }
 
 }
