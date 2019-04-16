@@ -4,7 +4,7 @@ import bitflow4j.Pipeline;
 import bitflow4j.misc.Config;
 import bitflow4j.misc.TreeFormatter;
 import bitflow4j.script.endpoints.EndpointFactory;
-import bitflow4j.script.registry.RegisteredPipelineStep;
+import bitflow4j.script.registry.AbstractRegisteredStep;
 import bitflow4j.script.registry.Registry;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -15,11 +15,11 @@ import com.google.gson.Gson;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Iterator;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
 
 /**
  * Main parses a BitflowScript and executes the resulting Pipeline.
@@ -63,7 +63,7 @@ public class Main {
         registry.scanForPipelineSteps(cmdArgs.cleanPackagesToScan());
 
         if (cmdArgs.printJsonCapabilities) {
-            System.out.println(new Gson().toJson(registry.getCapabilities()));
+            System.out.println(new Gson().toJson(registry.getAllCapabilities()));
             return;
         } else if (cmdArgs.printCapabilities) {
             logCapabilities(registry);
@@ -95,24 +95,23 @@ public class Main {
         pipe.runAndWait();
     }
 
+    private static final Comparator<AbstractRegisteredStep> stepComparator = (a1, a2) -> a1.className.compareToIgnoreCase(a2.className);
+
     private static void logCapabilities(Registry registry) {
-        List<RegisteredPipelineStep> cap = Lists.newArrayList(registry.getCapabilities());
-        cap.sort((a1, a2) -> a1.className.compareToIgnoreCase(a2.className));
-        logIfNotEmpty("Stream-Mode Processing Steps:", cap.stream().filter(RegisteredPipelineStep::supportsStreamOnly));
-        logIfNotEmpty("Batch-Mode Processing Steps:", cap.stream().filter(RegisteredPipelineStep::supportsBatchOnly));
-        logIfNotEmpty("Mixed-Mode Processing Steps:", cap.stream().filter(RegisteredPipelineStep::supportsBothModes));
+        logIfNotEmpty("Stream Processing Steps:", registry.getStreamCapabilities());
+        logIfNotEmpty("Batch Processing Steps:", registry.getBatchCapabilities());
+        logIfNotEmpty("Fork Steps:", registry.getForkCapabilities());
     }
 
-    private static void logIfNotEmpty(String title, Stream<RegisteredPipelineStep> reg) {
-        Iterator<RegisteredPipelineStep> iter = reg.iterator();
-        if (!iter.hasNext())
+    private static void logIfNotEmpty(String title, Collection<? extends AbstractRegisteredStep> reg) {
+        if (reg.isEmpty())
             return;
         logger.info("");
         logger.info(title);
-        iter.forEachRemaining(Main::logCapability);
+        reg.stream().sorted(stepComparator).forEach(Main::logCapability);
     }
 
-    private static void logCapability(RegisteredPipelineStep registeredPipelineStep) {
+    private static void logCapability(AbstractRegisteredStep registeredPipelineStep) {
         logger.info(" - " + registeredPipelineStep.className);
         logger.info("     Bitflow-Script: " + registeredPipelineStep.stepName);
         logger.info("     Description: " + registeredPipelineStep.description);

@@ -3,10 +3,11 @@ package bitflow4j.steps.metrics;
 import bitflow4j.Header;
 import bitflow4j.Sample;
 import bitflow4j.misc.OnlineStatistics;
-import bitflow4j.steps.BatchPipelineStep;
+import bitflow4j.steps.BatchHandler;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -16,7 +17,7 @@ import java.util.logging.Logger;
  * <p>
  * Created by anton on 4/7/16.
  */
-public class VarianceFilter extends BatchPipelineStep {
+public class VarianceFilter implements BatchHandler {
 
     private static final Logger logger = Logger.getLogger(VarianceFilter.class.getName());
 
@@ -27,7 +28,7 @@ public class VarianceFilter extends BatchPipelineStep {
     }
 
     @Override
-    protected void flush(List<Sample> window) throws IOException {
+    public List<Sample> handleBatch(List<Sample> window) throws IOException {
         double avgDeviation = 0;
 
         Header inHeader = window.get(0).getHeader();
@@ -54,7 +55,7 @@ public class VarianceFilter extends BatchPipelineStep {
         }
         if (validStats.isEmpty()) {
             logger.warning(toString() + " produced no output");
-            return;
+            return Collections.emptyList();
         }
         avgDeviation /= validStats.size();
 
@@ -62,17 +63,19 @@ public class VarianceFilter extends BatchPipelineStep {
         Header outHeader = new Header(validHeaderFields.toArray(new String[0]));
 
         // Construct samples from remaining metrics
+        List<Sample> output = new ArrayList<>(window.size());
         for (Sample sample : window) {
             double[] metrics = new double[outHeader.header.length];
             for (int i = 0; i < metrics.length; i++) {
                 metrics[i] = sample.getValue(validMetricIndices.get(i));
             }
-            output.writeSample(new Sample(outHeader, metrics, sample));
+            output.add(new Sample(outHeader, metrics, sample));
         }
 
         logger.info(validStats.size() + " of " + numFields +
                 " metrics passed stdDeviation filter (" + (numFields - validStats.size()) +
                 " filtered out). Avg normalized variance: " + avgDeviation);
+        return output;
     }
 
 }

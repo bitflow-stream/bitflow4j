@@ -7,6 +7,9 @@ import java.util.Map;
 
 public abstract class AbstractRegisteredStep {
 
+    private static final String[] removedSuffixes = new String[]{"processingstep", "batchstep", "step"};
+    private static final String processingStepDelimiter = "-";
+
     public final String className;
     public String stepName;
     public final String description;
@@ -17,7 +20,7 @@ public abstract class AbstractRegisteredStep {
 
     public AbstractRegisteredStep(String className, String description) {
         this.className = className;
-        this.stepName = splitCamelCase(this.className, "-");
+        this.stepName = splitCamelCase(className, processingStepDelimiter);
         this.description = description;
     }
 
@@ -69,23 +72,13 @@ public abstract class AbstractRegisteredStep {
         return stepName;
     }
 
-    // Splits a camelCase string into a lowercase string with delimiters instead of Uppercase
-    private static String splitCamelCase(String camelCase, String delimiter){
-        //Check for 'processingstep', 'batchstep' or 'step' (and any uppercase variants) at the end of the Class-name and remove them
-        String lowerCase = camelCase.toLowerCase();
-        int index_processingstep = lowerCase.indexOf("processingstep");
-        int index_batchstep = lowerCase.indexOf("batchstep");
-        int index_step = lowerCase.indexOf("step");
-        //Found word at the end
-        if (index_processingstep >= 0 && lowerCase.length() == index_processingstep + "processingstep".length()) {
-            camelCase = camelCase.substring(0, index_processingstep);
-        }
-        else if (index_batchstep >= 0 && lowerCase.length() == index_batchstep + "batchstep".length()) {
-            camelCase = camelCase.substring(0, index_batchstep);
-        }
-        else if (index_processingstep == -1 && index_batchstep == -1 && index_step >= 0
-                && lowerCase.length() == index_step + "step".length()) {
-            camelCase = camelCase.substring(0, index_step);
+    /**
+     * Splits a camelCase string into a lowercase string with delimiters instead of Uppercase
+     */
+    public static String splitCamelCase(String camelCase, String delimiter) {
+        // Remove redundant suffixes at the end of the class name
+        for (String suffix : removedSuffixes) {
+            camelCase = removeSuffix(camelCase, suffix);
         }
 
         // Splits the string at uppercase letters
@@ -94,17 +87,15 @@ public abstract class AbstractRegisteredStep {
         int counter = 0;
         for (int i = 0; i < classCapitals.length; i++) {
             //We are not at the end of the list & at least this and the next String only contain one capitalized letter
-            if(i < classCapitals.length - 1 && classCapitals[i].length() == 1 && classCapitals[i + 1].length() == 1){
-                if(classWords.size() <= counter) {
+            if (i < classCapitals.length - 1 && classCapitals[i].length() == 1 && classCapitals[i + 1].length() == 1) {
+                if (classWords.size() <= counter) {
                     classWords.add(classCapitals[i] + classCapitals[i + 1]);
                     counter = i;
-                }
-                else {
+                } else {
                     classWords.set(counter, classWords.get(counter) + classCapitals[i + 1]);
                 }
-            }
-            else {
-                if(i < classCapitals.length - 1 && classCapitals[i].length() == 1 && classCapitals[i + 1].length() != 1){
+            } else {
+                if (i < classCapitals.length - 1 && classCapitals[i].length() == 1 && classCapitals[i + 1].length() != 1) {
                     counter++;
                     continue;
                 }
@@ -114,14 +105,23 @@ public abstract class AbstractRegisteredStep {
             }
         }
 
-        String result = "";
+        StringBuilder result = new StringBuilder();
         for (int i = 0; i < classWords.size(); i++) {
-            result += classWords.get(i).toLowerCase();
-            if (i < classWords.size() - 1){
-                result += delimiter;
+            result.append(classWords.get(i).toLowerCase());
+            if (i < classWords.size() - 1) {
+                result.append(delimiter);
             }
         }
-        return result;
+        return result.toString();
+    }
+
+    private static String removeSuffix(String name, String lowerCaseSuffix) {
+        String lowerCase = name.toLowerCase();
+        int index = lowerCase.indexOf(lowerCaseSuffix);
+        if (index >= 0 && lowerCase.length() == index + lowerCaseSuffix.length()) {
+            name = name.substring(0, index);
+        }
+        return name;
     }
 
 }

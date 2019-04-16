@@ -1,6 +1,7 @@
 package bitflow4j.script.registry;
 
 import bitflow4j.AbstractPipelineStep;
+import bitflow4j.steps.BatchHandler;
 import bitflow4j.steps.fork.ScriptableDistributor;
 import com.thoughtworks.paranamer.BytecodeReadingParanamer;
 import com.thoughtworks.paranamer.Paranamer;
@@ -8,7 +9,6 @@ import org.reflections.Reflections;
 
 import java.lang.reflect.Modifier;
 import java.util.*;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -21,6 +21,7 @@ public class Registry {
 
     private Paranamer paranamer = new BytecodeReadingParanamer();
     private Map<String, RegisteredPipelineStep> analysisRegistrationMap = new HashMap<>();
+    private Map<String, RegisteredBatchStep> batchRegistrationMap = new HashMap<>();
     private Map<Object, RegisteredFork> forkRegistrationMap = new HashMap<>();
 
     // Store classes that did not have a fitting constructor
@@ -83,11 +84,32 @@ public class Registry {
         return forkRegistrationMap.getOrDefault(forkName.toLowerCase(), null);
     }
 
-    public Collection<RegisteredPipelineStep> getCapabilities() {
-        for(String s : analysisRegistrationMap.keySet()){
-            logger.log(Level.FINER, String.format("Registered key: %s", s));
-        }
+    public void registerBatchStep(RegisteredBatchStep step) {
+        batchRegistrationMap.put(step.getStepName(), step);
+    }
+
+    public RegisteredBatchStep getBatchStepRegistration(String name) {
+        return batchRegistrationMap.getOrDefault(name.toLowerCase(), null);
+    }
+
+    public Collection<RegisteredPipelineStep> getStreamCapabilities() {
         return analysisRegistrationMap.values();
+    }
+
+    public Collection<RegisteredBatchStep> getBatchCapabilities() {
+        return batchRegistrationMap.values();
+    }
+
+    public Collection<RegisteredFork> getForkCapabilities() {
+        return forkRegistrationMap.values();
+    }
+
+    public Collection<AbstractRegisteredStep> getAllCapabilities() {
+        Collection<AbstractRegisteredStep> result = new ArrayList<>();
+        result.addAll(getStreamCapabilities());
+        result.addAll(getBatchCapabilities());
+        result.addAll(getForkCapabilities());
+        return result;
     }
 
     public Set<Class<?>> getUnconstructableClasses() {
@@ -98,13 +120,14 @@ public class Registry {
         logger.info("Scanning for pipeline steps in package " + scanPackagePrefix);
         Reflections reflections = new Reflections(scanPackagePrefix);
 
-        reflections.getSubTypesOf(AbstractPipelineStep.class).forEach(c -> registerClass(c, false, false));
-        reflections.getSubTypesOf(PipelineBuilder.class).forEach(c -> registerClass(c, false, true));
-        reflections.getSubTypesOf(ScriptableDistributor.class).forEach(c -> registerClass(c, true, false));
-        reflections.getSubTypesOf(ForkBuilder.class).forEach(c -> registerClass(c, true, true));
+        reflections.getSubTypesOf(AbstractPipelineStep.class).forEach(c -> registerClass(c, false, false, false));
+        reflections.getSubTypesOf(PipelineBuilder.class).forEach(c -> registerClass(c, false, false, true));
+        reflections.getSubTypesOf(ScriptableDistributor.class).forEach(c -> registerClass(c, false, true, false));
+        reflections.getSubTypesOf(ForkBuilder.class).forEach(c -> registerClass(c, false, true, true));
+        reflections.getSubTypesOf(BatchHandler.class).forEach(c -> registerClass(c, true, false, false));
     }
 
-    public boolean registerClass(Class impl, boolean isFork, boolean isBuilder) {
+    public boolean registerClass(Class impl, boolean isBatch, boolean isFork, boolean isBuilder) {
         if ((impl.getModifiers() & Modifier.ABSTRACT) == 0) {
             RegistryConstructor stepConstructor = new RegistryConstructor(impl, paranamer, isBuilder);
             if (stepConstructor.hasConstructors()) {
@@ -114,6 +137,8 @@ public class Registry {
                 } else {
                     if (isFork) {
                         registerFork(stepConstructor.createRegisteredFork());
+                    } else if (isBatch) {
+                        registerBatchStep(stepConstructor.createBatchRegistration());
                     } else {
                         registerAnalysis(stepConstructor.createAnalysisRegistration());
                     }
@@ -128,7 +153,5 @@ public class Registry {
         unconstructableClasses.add(impl);
         return false;
     }
-
-
 
 }

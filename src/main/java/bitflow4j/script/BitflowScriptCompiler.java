@@ -7,10 +7,9 @@ import bitflow4j.misc.Pair;
 import bitflow4j.script.endpoints.EndpointFactory;
 import bitflow4j.script.generated.BitflowLexer;
 import bitflow4j.script.generated.BitflowParser;
-import bitflow4j.script.registry.ConstructionException;
-import bitflow4j.script.registry.RegisteredFork;
-import bitflow4j.script.registry.RegisteredPipelineStep;
-import bitflow4j.script.registry.Registry;
+import bitflow4j.script.registry.*;
+import bitflow4j.steps.BatchHandler;
+import bitflow4j.steps.BatchPipelineStep;
 import bitflow4j.steps.fork.Fork;
 import bitflow4j.steps.fork.ScriptableDistributor;
 import bitflow4j.steps.fork.distribute.MultiplexDistributor;
@@ -92,11 +91,11 @@ class BitflowScriptCompiler {
         }
     }
 
-    public Pipeline buildPipeline(BitflowParser.ScriptContext parsedScript) throws CompilationException {
+    private Pipeline buildPipeline(BitflowParser.ScriptContext parsedScript) throws CompilationException {
         return buildPipeline(parsedScript.pipelines());
     }
 
-    public Pipeline buildPipeline(BitflowParser.PipelinesContext ctx) throws CompilationException {
+    private Pipeline buildPipeline(BitflowParser.PipelinesContext ctx) throws CompilationException {
         if (ctx.pipeline().size() != 1) {
             // TODO implement parallel multi input
             throw new CompilationException("Multiple parallel input pipelines are not yet supported");
@@ -104,7 +103,7 @@ class BitflowScriptCompiler {
         return buildPipeline(ctx.pipeline(0));
     }
 
-    public Pipeline buildPipeline(BitflowParser.PipelineContext ctx) throws CompilationException {
+    private Pipeline buildPipeline(BitflowParser.PipelineContext ctx) throws CompilationException {
         Pipeline pipe = new Pipeline();
 
         if (ctx.pipelines() != null) {
@@ -120,17 +119,17 @@ class BitflowScriptCompiler {
         return pipe;
     }
 
-    public void buildPipelineElement(Pipeline pipe, BitflowParser.PipelineElementContext ctx) throws CompilationException {
+    private void buildPipelineElement(Pipeline pipe, BitflowParser.PipelineElementContext ctx) throws CompilationException {
         if (ctx.processingStep() != null) {
-            buildProcessingStep(pipe, ctx.processingStep(), false);
+            buildProcessingStep(pipe, ctx.processingStep());
         } else if (ctx.fork() != null) {
             buildFork(pipe, ctx.fork());
         } else if (ctx.window() != null) {
-            throw new CompilationException(ctx, "Window is not yet supported");
+            buildWindow(pipe, ctx.window());
         }
     }
 
-    public void buildPipelineTail(Pipeline pipe, List<BitflowParser.PipelineTailElementContext> elements) throws CompilationException {
+    private void buildPipelineTail(Pipeline pipe, List<BitflowParser.PipelineTailElementContext> elements) throws CompilationException {
         for (BitflowParser.PipelineTailElementContext elem : elements) {
             if (elem.dataOutput() != null) {
                 pipe.step(buildOutput(elem.dataOutput()));
@@ -151,7 +150,7 @@ class BitflowScriptCompiler {
         return ctx.STRING() == null ? ctx.getText() : unwrapSTRING(ctx.STRING());
     }
 
-    public Source buildInput(BitflowParser.DataInputContext ctx) throws CompilationException {
+    private Source buildInput(BitflowParser.DataInputContext ctx) throws CompilationException {
         String[] inputs = ctx.name().stream().map(this::unwrap).toArray(String[]::new);
         try {
             return endpointFactory.createSource(inputs);
@@ -160,7 +159,7 @@ class BitflowScriptCompiler {
         }
     }
 
-    public PipelineStep buildOutput(BitflowParser.DataOutputContext ctx) throws CompilationException {
+    private PipelineStep buildOutput(BitflowParser.DataOutputContext ctx) throws CompilationException {
         String output = unwrap(ctx.name());
         try {
             return endpointFactory.createSink(output);
@@ -169,17 +168,13 @@ class BitflowScriptCompiler {
         }
     }
 
-    public void buildProcessingStep(Pipeline pipe, BitflowParser.ProcessingStepContext ctx, boolean isBatched) throws CompilationException {
+    private void buildProcessingStep(Pipeline pipe, BitflowParser.ProcessingStepContext ctx) throws CompilationException {
         String name = unwrap(ctx.name());
         Map<String, String> params = buildParameters(ctx.parameters());
 
         RegisteredPipelineStep regAnalysis = registry.getAnalysisRegistration(name);
         if (regAnalysis == null) {
             throw new CompilationException(ctx, String.format("Unknown Processor: '%s'", name));
-        } else if (isBatched && !regAnalysis.supportsBatch()) {
-            throw new CompilationException(ctx, String.format("Processor '%s' used in window, but does not support batch processing.", name));
-        } else if (!isBatched && !regAnalysis.supportsStream()) {
-            throw new CompilationException(ctx, String.format("Processor '%s' used outside window, but does not support stream processing.", name));
         }
         regAnalysis.validateParameters(params).forEach(e -> {
             throw new CompilationException(ctx, e);
@@ -192,7 +187,7 @@ class BitflowScriptCompiler {
         }
     }
 
-    public void buildFork(Pipeline pipe, BitflowParser.ForkContext ctx) throws CompilationException {
+    private void buildFork(Pipeline pipe, BitflowParser.ForkContext ctx) throws CompilationException {
         Map<String, String> forkParams = buildParameters(ctx.parameters());
         String forkName = unwrap(ctx.name());
 
@@ -216,13 +211,13 @@ class BitflowScriptCompiler {
         }
     }
 
-    public Pipeline buildSubPipeline(BitflowParser.SubPipelineContext ctx) {
+    private Pipeline buildSubPipeline(BitflowParser.SubPipelineContext ctx) {
         Pipeline pipe = new Pipeline();
         buildPipelineTail(pipe, ctx.pipelineTailElement());
         return pipe;
     }
 
-    public class SubPipelineBuilder implements ScriptableDistributor.PipelineBuilder {
+    private class SubPipelineBuilder implements ScriptableDistributor.PipelineBuilder {
 
         private final BitflowParser.SubPipelineContext ctx;
 
@@ -236,7 +231,7 @@ class BitflowScriptCompiler {
         }
     }
 
-    public PipelineStep buildMultiplexFork(BitflowParser.MultiplexForkContext ctx) throws CompilationException {
+    private PipelineStep buildMultiplexFork(BitflowParser.MultiplexForkContext ctx) throws CompilationException {
         List<Pipeline> subPipes = new ArrayList<>();
         for (BitflowParser.SubPipelineContext subPipeContext : ctx.subPipeline()) {
             subPipes.add(buildSubPipeline(subPipeContext));
@@ -245,7 +240,7 @@ class BitflowScriptCompiler {
         return new Fork(multiplex);
     }
 
-    public Map<String, String> buildParameters(BitflowParser.ParametersContext ctx) throws CompilationException {
+    private Map<String, String> buildParameters(BitflowParser.ParametersContext ctx) throws CompilationException {
         Map<String, String> params = new HashMap<>();
         if (ctx.parameterList() != null) {
             for (BitflowParser.ParameterContext param : ctx.parameterList().parameter()) {
@@ -259,6 +254,27 @@ class BitflowScriptCompiler {
             }
         }
         return params;
+    }
+
+    private void buildWindow(Pipeline pipe, BitflowParser.WindowContext window) {
+        Map<String, String> params = buildParameters(window.parameters());
+        BatchPipelineStep batchStep = BatchPipelineStep.createFromParameters(params);
+        for (BitflowParser.ProcessingStepContext step : window.processingStep()) {
+            String name = unwrap(step.name());
+            RegisteredBatchStep registeredStep = registry.getBatchStepRegistration(name);
+            if (registeredStep == null) {
+                throw new CompilationException(step, "Unknown batch processing step: " + name);
+            }
+            Map<String, String> registeredStepParams = buildParameters(step.parameters());
+
+            try {
+                BatchHandler handler = registeredStep.buildStep(registeredStepParams);
+                batchStep.addBatchHandler(handler);
+            } catch (ConstructionException e) {
+                throw new CompilationException(step, e.getStepName() + ": " + e.getMessage());
+            }
+        }
+        pipe.step(batchStep);
     }
 
 }

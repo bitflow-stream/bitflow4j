@@ -2,7 +2,7 @@ package bitflow4j.steps.normalization;
 
 import bitflow4j.Sample;
 import bitflow4j.misc.MetricScaler;
-import bitflow4j.steps.BatchPipelineStep;
+import bitflow4j.steps.BatchHandler;
 
 import java.io.IOException;
 import java.util.List;
@@ -10,10 +10,10 @@ import java.util.List;
 /**
  * @author fschmidt
  */
-public abstract class BatchFeatureScaler extends BatchPipelineStep {
+public abstract class BatchFeatureScaler implements BatchHandler {
 
     @Override
-    protected void flush(List<Sample> window) throws IOException {
+    public List<Sample> handleBatch(List<Sample> window) throws IOException {
         int numFields = window.get(0).getHeader().numFields();
         MetricScaler[] scalers = new MetricScaler[numFields];
 
@@ -25,8 +25,8 @@ public abstract class BatchFeatureScaler extends BatchPipelineStep {
             for (int i = 0; i < numFields; i++) {
                 sample.getMetrics()[i] = scalers[i].scale(sample.getValue(i));
             }
-            output.writeSample(sample);
         }
+        return window;
     }
 
     protected abstract MetricScaler createScaler(List<Sample> sample, int metricIndex);

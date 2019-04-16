@@ -3,18 +3,17 @@ package bitflow4j.script.registry;
 import bitflow4j.Pipeline;
 import bitflow4j.PipelineStep;
 import bitflow4j.misc.Pair;
+import bitflow4j.steps.BatchHandler;
 import bitflow4j.steps.fork.Fork;
 import bitflow4j.steps.fork.ScriptableDistributor;
 import com.google.common.collect.Lists;
 import com.thoughtworks.paranamer.Paranamer;
-import javassist.runtime.Desc;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;
 import java.util.*;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 class RegistryConstructor {
@@ -102,6 +101,18 @@ class RegistryConstructor {
             throw new ConstructionException(name, e.getMessage());
         }
         pipeline.step(new Fork(fork));
+    }
+
+    public BatchHandler buildBatchStep(Map<String, String> parameters) throws ConstructionException {
+        Object instance = constructObject(parameters);
+        BatchHandler result;
+        if (isBuilder) {
+            throw new ConstructionException(getName(), "Builders cannot be registered for batch processing steps");
+        } else {
+            checkInstance(instance, BatchHandler.class);
+            result = (BatchHandler) instance;
+        }
+        return result;
     }
 
     private void checkInstance(Object instance, Class expectedCls) throws ConstructionException {
@@ -229,10 +240,6 @@ class RegistryConstructor {
             }
         };
         configureRegistration(result);
-
-        // TODO somehow find out whether BATCH processing is supported
-        result.supportStream();
-
         return result;
     }
 
@@ -241,6 +248,17 @@ class RegistryConstructor {
             @Override
             public void buildFork(Pipeline pipeline, Collection<Pair<String, ScriptableDistributor.PipelineBuilder>> subPipelines, Map<String, String> parameters) throws ConstructionException {
                 RegistryConstructor.this.buildFork(pipeline, subPipelines, parameters);
+            }
+        };
+        configureRegistration(result);
+        return result;
+    }
+
+    public RegisteredBatchStep createBatchRegistration() {
+        RegisteredBatchStep result = new RegisteredBatchStep(getName(), getDescription()) {
+            @Override
+            public BatchHandler buildStep(Map<String, String> parameters) throws ConstructionException {
+                return RegistryConstructor.this.buildBatchStep(parameters);
             }
         };
         configureRegistration(result);
@@ -280,9 +298,9 @@ class RegistryConstructor {
         }
     }
 
-    private String getDescriptionField(Class cls){
-        Annotation annotation =  cls.getAnnotation(Description.class);
-        if(annotation != null){
+    private String getDescriptionField(Class cls) {
+        Annotation annotation = cls.getAnnotation(Description.class);
+        if (annotation != null) {
             Description desc = (Description) annotation;
             return desc.value();
         }
