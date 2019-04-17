@@ -37,7 +37,7 @@ public class NameResolveTest {
         testExpectedResult("KAMeans", "ka-means");
         testExpectedResult("SomeKMeans", "some-k-means");
         testExpectedResult("SomeKAMeans", "some-ka-means");
-        testExpectedResult("SomeMeansK", "some-means");
+        testExpectedResult("SomeMeansK", "some-means-k");
         testExpectedResult("SomeMeansKA", "some-means-ka");
         testExpectedResult("FFTCalculator", "fft-calculator");
         testExpectedResult("CalculateFFT", "calculate-fft");

@@ -118,10 +118,11 @@ public abstract class AbstractRegisteredStep {
                     summarizedCapitals = false;
                     continue;
                 }
-                summarizedCapitals = false;
 
                 // If last letter is (not the first and) a single capitalized letter, it has already been added
-                if(i != 0 && i == classCapitals.length - 1 && classCapitals[i].length() == 1) continue;
+                if(i != 0 && i == classCapitals.length - 1 && classCapitals[i].length() == 1 && summarizedCapitals) continue;
+
+                summarizedCapitals = false;
 
                 // Normal Words with first letter capitalized can be simply added
                 classWords.add(classCapitals[i]);
