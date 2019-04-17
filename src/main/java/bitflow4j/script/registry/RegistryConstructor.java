@@ -27,7 +27,7 @@ class RegistryConstructor implements ProcessingStepBuilder, ForkBuilder, BatchSt
     RegistryConstructor(Class<?> cls, Paranamer paranamer) {
         this.cls = cls;
         this.paranamer = paranamer;
-        this.name = cls.getSimpleName();
+        this.name = RegisteredStep.splitCamelCase(cls.getSimpleName());
         this.description = getDescriptionField(cls);
         this.constructors = Lists.newArrayList(cls.getConstructors());
         filterBadConstructors();
@@ -144,15 +144,15 @@ class RegistryConstructor implements ProcessingStepBuilder, ForkBuilder, BatchSt
     }
 
     private boolean isProcessingStep() {
-        return cls.isAssignableFrom(ProcessingStepBuilder.class) || cls.isAssignableFrom(PipelineStep.class);
+        return ProcessingStepBuilder.class.isAssignableFrom(cls) || PipelineStep.class.isAssignableFrom(cls);
     }
 
     private boolean isBatchStep() {
-        return cls.isAssignableFrom(BatchStepBuilder.class) || cls.isAssignableFrom(BatchHandler.class);
+        return BatchStepBuilder.class.isAssignableFrom(cls) || BatchHandler.class.isAssignableFrom(cls);
     }
 
     private boolean isFork() {
-        return cls.isAssignableFrom(ForkBuilder.class) || cls.isAssignableFrom(ScriptableDistributor.class);
+        return ForkBuilder.class.isAssignableFrom(cls) || ScriptableDistributor.class.isAssignableFrom(cls);
     }
 
     //
@@ -183,31 +183,33 @@ class RegistryConstructor implements ProcessingStepBuilder, ForkBuilder, BatchSt
     }
 
     private <T> RegisteredStep<T> configureRegisteredStep(RegisteredStep<T> reg) {
-        String[] constructor0ParamNames = paranamer.lookupParameterNames(constructors.get(0), false);
-        Set<String> optionalParams = new HashSet<>();
-        Set<String> requiredParams = new HashSet<>(Arrays.asList(constructor0ParamNames));
+        if (!constructors.isEmpty()) {
+            String[] constructor0ParamNames = paranamer.lookupParameterNames(constructors.get(0), false);
+            Set<String> optionalParams = new HashSet<>();
+            Set<String> requiredParams = new HashSet<>(Arrays.asList(constructor0ParamNames));
 
-        constructors.forEach(constructor -> {
-            List<String> paramNames = Arrays.asList(paranamer.lookupParameterNames(constructor, false));
+            constructors.forEach(constructor -> {
+                List<String> paramNames = Arrays.asList(paranamer.lookupParameterNames(constructor, false));
 
-            // build optional parameters
-            for (String paramName : paramNames) {
-                if (!requiredParams.contains(paramName)) {
-                    optionalParams.add(paramName);
+                // build optional parameters
+                for (String paramName : paramNames) {
+                    if (!requiredParams.contains(paramName)) {
+                        optionalParams.add(paramName);
+                    }
                 }
-            }
 
-            // clean requiredParams by moving extraneous parameters from requiredParams to optionalParams
-            for (Iterator<String> i = requiredParams.iterator(); i.hasNext(); ) {
-                String element = i.next();
-                if (!paramNames.contains(element)) {
-                    optionalParams.add(element);
-                    i.remove();
+                // clean requiredParams by moving extraneous parameters from requiredParams to optionalParams
+                for (Iterator<String> i = requiredParams.iterator(); i.hasNext(); ) {
+                    String element = i.next();
+                    if (!paramNames.contains(element)) {
+                        optionalParams.add(element);
+                        i.remove();
+                    }
                 }
-            }
-        });
-        reg.optional(optionalParams.toArray(new String[0]));
-        reg.required(requiredParams.toArray(new String[0]));
+            });
+            reg.optional(optionalParams.toArray(new String[0]));
+            reg.required(requiredParams.toArray(new String[0]));
+        }
         if (stringMapConstructor != null) {
             reg.acceptGenericConstructor();
         }

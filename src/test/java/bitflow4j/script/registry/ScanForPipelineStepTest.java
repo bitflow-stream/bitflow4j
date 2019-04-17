@@ -24,9 +24,9 @@ public class ScanForPipelineStepTest {
     public void prepare() {
         registry = new Registry();
         registry.scanForProcessingSteps(SCRIPT_PACKAGE);
-        requiredParamsRegistration = registry.getRegisteredStep("RequiredParamStep");
+        requiredParamsRegistration = registry.getRegisteredStep("required-param");
         assertNotNull(requiredParamsRegistration);
-        mixedParamsRegistration = registry.getRegisteredStep("MixedParamStep");
+        mixedParamsRegistration = registry.getRegisteredStep("mixed-param");
         assertNotNull(mixedParamsRegistration);
     }
 
@@ -78,7 +78,7 @@ public class ScanForPipelineStepTest {
             Pipeline pipe = new Pipeline();
             pipe.step(requiredParamsRegistration.builder.buildProcessingStep(params));
         } catch (ConstructionException e) {
-            assertEquals("RequiredParamStep", e.getStepName());
+            assertEquals("required-param", e.getStepName());
             assertTrue(e.getMessage().contains("No matching Constructor found for parameters "));
             throw e;
         }

@@ -15,9 +15,7 @@ import com.google.gson.Gson;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -63,7 +61,7 @@ public class Main {
         registry.scanForProcessingSteps(cmdArgs.cleanPackagesToScan());
 
         if (cmdArgs.printJsonCapabilities) {
-            System.out.println(new Gson().toJson(registry.getAllCapabilities()));
+            logJsonCapabilities(registry);
             return;
         } else if (cmdArgs.printCapabilities) {
             logCapabilities(registry);
@@ -106,20 +104,54 @@ public class Main {
     private static void logIfNotEmpty(String title, Collection<? extends RegisteredStep> reg) {
         if (reg.isEmpty())
             return;
-        logger.info(""); // Force new line in log output
-        logger.info(title);
+        System.out.println(); // Fore new line
+        System.out.println(title);
         reg.stream().sorted(stepComparator).forEach(Main::logCapability);
     }
 
     private static void logCapability(RegisteredStep registeredPipelineStep) {
-        logger.info(" - " + registeredPipelineStep.getStepName());
-        logger.info("     Description: " + registeredPipelineStep.getDescription());
+        System.out.println(" - " + registeredPipelineStep.getStepName());
+        System.out.println("     Description: " + registeredPipelineStep.getDescription());
         if (!registeredPipelineStep.getRequiredParameters().isEmpty())
-            logger.info("     Required parameters: " + registeredPipelineStep.getRequiredParameters());
+            System.out.println("     Required parameters: " + registeredPipelineStep.getRequiredParameters());
         if (!registeredPipelineStep.getOptionalParameters().isEmpty())
-            logger.info("     Optional parameters: " + registeredPipelineStep.getOptionalParameters());
+            System.out.println("     Optional parameters: " + registeredPipelineStep.getOptionalParameters());
         if (registeredPipelineStep.hasGenericConstructor())
-            logger.info("     Accepts any parameters");
+            System.out.println("     Accepts any parameters");
+    }
+
+    private static void logJsonCapabilities(Registry registry) {
+        Map<String, Object> root = new HashMap<>();
+        addJsonCapabilities(root, "stream_processing_steps", registry.getStreamCapabilities());
+        addJsonCapabilities(root, "batch_processing_steps", registry.getBatchCapabilities());
+        addJsonCapabilities(root, "fork_steps", registry.getForkCapabilities());
+        System.out.println(new Gson().toJson(root));
+    }
+
+    private static void addJsonCapabilities(Map<String, Object> root, String name, Collection<? extends RegisteredStep> reg) {
+        if (reg.isEmpty())
+            return;
+        Map<String, Object> capabilities = new HashMap<>();
+        for (RegisteredStep<?> step : reg) {
+            capabilities.put(step.getStepName(), new JsonCapability(step));
+        }
+        root.put(name, capabilities);
+    }
+
+    private static final class JsonCapability {
+        public final String name;
+        public final String description;
+        public final List<String> required_parameters;
+        public final List<String> optional_parameters;
+        public final boolean accepts_generic_parameters;
+
+        private JsonCapability(RegisteredStep<?> step) {
+            this.name = step.getStepName();
+            this.description = step.getDescription();
+            this.required_parameters = step.getRequiredParameters();
+            this.optional_parameters = step.getOptionalParameters();
+            this.accepts_generic_parameters = step.hasGenericConstructor();
+        }
     }
 
     private static class CmdArgs {
