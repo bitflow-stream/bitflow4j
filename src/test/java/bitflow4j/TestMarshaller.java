@@ -58,7 +58,7 @@ public class TestMarshaller extends TestWithSamples {
 
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         SampleWriter printer = new SampleWriter(buf, marshaller, "buffer");
-        printer.setOutgoingSink(new DroppingStep());
+        printer.setOutgoingSink(new DropStep());
 
         int x = 0;
         for (Pair<Header, List<Sample>> header : headers) {
