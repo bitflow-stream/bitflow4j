@@ -2,23 +2,26 @@ package bitflow4j.steps;
 
 import bitflow4j.AbstractPipelineStep;
 import bitflow4j.Sample;
+import bitflow4j.misc.TreeFormatter;
 import bitflow4j.task.LoopTask;
 import bitflow4j.task.TaskPool;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Instead of immediately handling every Sample, fill up a obsolete of samples and then push all of them at once, possibly outputting a
- * different number of resulting Samples.
+ * Instead of immediately handling every Sample, fill up a list of samples based on a number of criteria (time, tag values, ...).
+ * The resulting list is then processed through a number of BatchHandlers, which possibly output a different number of samples in the end.
+ * Afterwards, the resulting list of samples is forwarded to the subsequent processing step in the resulting order.
+ * <p>
+ * The class is marked as final, because the obsolete way to use it was subclassing. Now, one or more BatchHandler instances must be added
+ * through the addBatchHandler() method instead.
  * <p>
  * Created by anton on 5/8/16.
  */
-public abstract class BatchPipelineStep extends AbstractPipelineStep {
+public final class BatchPipelineStep extends AbstractPipelineStep implements TreeFormatter.FormattedNode {
 
     protected static final Logger logger = Logger.getLogger(BatchPipelineStep.class.getName());
 
@@ -29,12 +32,23 @@ public abstract class BatchPipelineStep extends AbstractPipelineStep {
     private final long timeoutMs;
     private long startTime;
 
+    private List<Sample> window = new ArrayList<>();
+    private final List<BatchHandler> handlers = new ArrayList<>();
+
     public BatchPipelineStep() {
-        this(null);
+        this((String) null);
+    }
+
+    public BatchPipelineStep(BatchHandler... handlers) {
+        this(null, handlers);
     }
 
     public BatchPipelineStep(String batchSeparationTag) {
         this(batchSeparationTag, 0);
+    }
+
+    public BatchPipelineStep(String batchSeparationTag, BatchHandler... handlers) {
+        this(batchSeparationTag, 0, handlers);
     }
 
     public BatchPipelineStep(String batchSeparationTag, long timeoutMs) {
@@ -42,9 +56,28 @@ public abstract class BatchPipelineStep extends AbstractPipelineStep {
         this.timeoutMs = timeoutMs;
     }
 
-    private List<Sample> window = new ArrayList<>();
+    public BatchPipelineStep(String batchSeparationTag, long timeoutMs, BatchHandler... handlers) {
+        this.batchSeparationTag = batchSeparationTag;
+        this.timeoutMs = timeoutMs;
+        this.handlers.addAll(Arrays.asList(handlers));
+    }
 
-    protected abstract void flush(List<Sample> window) throws IOException;
+    public static BatchPipelineStep createFromParameters(Map<String, String> params) throws IllegalArgumentException {
+        String separationTag = params.remove("separationTag");
+        String timeoutStr = params.remove("timeout");
+        long timeout = 0;
+        if (timeoutStr != null) {
+            timeout = Long.parseLong(timeoutStr);
+        }
+        if (!params.isEmpty()) {
+            throw new IllegalArgumentException("Unsupported batch parameters: " + params);
+        }
+        return new BatchPipelineStep(separationTag, timeout);
+    }
+
+    public void addBatchHandler(BatchHandler handler) {
+        handlers.add(handler);
+    }
 
     @Override
     public void start(TaskPool pool) throws IOException {
@@ -67,7 +100,7 @@ public abstract class BatchPipelineStep extends AbstractPipelineStep {
                     if (currentTime - startTime > timeoutMs) {
                         try {
                             boolean flushed = flushResults();
-                            if(flushed){
+                            if (flushed) {
                                 logger.log(Level.INFO, "Flushed batch due to timeout (" + timeoutMs + "ms).");
                             }
                         } catch (IOException ex) {
@@ -131,6 +164,29 @@ public abstract class BatchPipelineStep extends AbstractPipelineStep {
             info += "(" + numSamples + " samples, " + numMetrics + " metrics)";
         }
         logger.info(toString() + " computing results " + info);
+    }
+
+    private void flush(List<Sample> window) throws IOException {
+        for (BatchHandler handler : handlers) {
+            window = handler.handleBatch(window);
+        }
+        for (Sample sample : window) {
+            this.output().writeSample(sample);
+        }
+    }
+
+    // =================================================
+    // Printing ========================================
+    // =================================================
+    public String toString() {
+        return String.format("Batch processing, %s handler(s)", handlers.size());
+    }
+
+    @Override
+    public Collection<Object> formattedChildren() {
+        List<Object> children = new ArrayList<>(handlers.size());
+        children.addAll(handlers);
+        return children;
     }
 
 }

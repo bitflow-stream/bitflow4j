@@ -75,7 +75,7 @@ public interface ScriptableDistributor extends Distributor, TreeFormatter.Format
                 }
                 labels.clear();
             } else {
-                throw new IllegalArgumentException("subPipelines(...): Arguments must be of type String, Pipeline or PipelineBuilder. Received: " + obj.getClass().getName());
+                throw new IllegalArgumentException("subPipelines(...): Arguments must be of type String, Pipeline or ProcessingStepBuilder. Received: " + obj.getClass().getName());
             }
         }
         return result;

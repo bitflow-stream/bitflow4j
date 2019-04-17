@@ -6,18 +6,12 @@ import static org.junit.Assert.assertEquals;
 
 public class NameResolveTest {
 
-    private AbstractRegisteredStep constructRegisteredStep(String name) {
-        AbstractRegisteredStep testObject = new AbstractRegisteredStep(name, "") {
-            @Override
-            public AbstractRegisteredStep optional(String... parameters) {
-                return super.optional(parameters);
-            }
-        };
-        return testObject;
+    private RegisteredStep constructRegisteredStep(String name) {
+        return new RegisteredStep<ProcessingStepBuilder>(name, "", parameters -> null);
     }
 
     private void testExpectedResult(String input, String expectation) {
-        AbstractRegisteredStep testObject = constructRegisteredStep(input);
+        RegisteredStep testObject = constructRegisteredStep(input);
         assertEquals(expectation, testObject.getStepName());
     }
 

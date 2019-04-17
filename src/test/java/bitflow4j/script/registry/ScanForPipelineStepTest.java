@@ -6,6 +6,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,18 +15,18 @@ import static org.junit.Assert.*;
 public class ScanForPipelineStepTest {
 
     private Registry registry;
-    private RegisteredPipelineStep requiredParamsRegistration;
-    private RegisteredPipelineStep mixedParamsRegistration;
+    private RegisteredStep<ProcessingStepBuilder> requiredParamsRegistration;
+    private RegisteredStep<ProcessingStepBuilder> mixedParamsRegistration;
 
     public static final String SCRIPT_PACKAGE = "bitflow4j.script.registry";
 
     @Before
     public void prepare() {
         registry = new Registry();
-        registry.scanForPipelineSteps(SCRIPT_PACKAGE);
-        requiredParamsRegistration = registry.getAnalysisRegistration("RequiredParamStep");
+        registry.scanForProcessingSteps(SCRIPT_PACKAGE);
+        requiredParamsRegistration = registry.getRegisteredStep("RequiredParamStep");
         assertNotNull(requiredParamsRegistration);
-        mixedParamsRegistration = registry.getAnalysisRegistration("MixedParamStep");
+        mixedParamsRegistration = registry.getRegisteredStep("MixedParamStep");
         assertNotNull(mixedParamsRegistration);
     }
 
@@ -38,13 +39,13 @@ public class ScanForPipelineStepTest {
 
     // ##### Tests using class RequiredParamStep for testing required and optional params #######
     @Test
-    public void givenStepConstructor_whenInvokeWithOptionalAndRequiredArgs_thenSetBothProperties() throws ConstructionException {
+    public void givenStepConstructor_whenInvokeWithOptionalAndRequiredArgs_thenSetBothProperties() throws IOException {
         Map<String, String> params = new HashMap<>();
         params.put("requiredArg", "requiredArgValue");
         params.put("optionalArg", "optionalArgValue");
 
         Pipeline pipe = new Pipeline();
-        requiredParamsRegistration.buildStep(pipe, params);
+        pipe.step(requiredParamsRegistration.builder.buildProcessingStep(params));
         PipelineStep res = pipe.steps.get(0);
 
         assertTrue(res instanceof RequiredParamStep);
@@ -54,12 +55,12 @@ public class ScanForPipelineStepTest {
     }
 
     @Test
-    public void givenStepConstructor_whenInvokeWithRequiredArgsOnly_thenSetRequiredArgOnly() throws ConstructionException {
+    public void givenStepConstructor_whenInvokeWithRequiredArgsOnly_thenSetRequiredArgOnly() throws IOException {
         Map<String, String> params = new HashMap<>();
         params.put("requiredArg", "requiredArgValue");
 
         Pipeline pipe = new Pipeline();
-        requiredParamsRegistration.buildStep(pipe, params);
+        pipe.step(requiredParamsRegistration.builder.buildProcessingStep(params));
         PipelineStep res = pipe.steps.get(0);
 
         assertTrue(res instanceof RequiredParamStep);
@@ -69,13 +70,13 @@ public class ScanForPipelineStepTest {
     }
 
     @Test(expected = ConstructionException.class)
-    public void givenStepConstructor_whenInvokeWithoutRequiredArgs_thenThrowException() throws ConstructionException {
+    public void givenStepConstructor_whenInvokeWithoutRequiredArgs_thenThrowException() throws IOException {
         Map<String, String> params = new HashMap<>();
         params.put("optionalArg", "optionalArgValue");
 
         try {
             Pipeline pipe = new Pipeline();
-            requiredParamsRegistration.buildStep(pipe, params);
+            pipe.step(requiredParamsRegistration.builder.buildProcessingStep(params));
         } catch (ConstructionException e) {
             assertEquals("RequiredParamStep", e.getStepName());
             assertTrue(e.getMessage().contains("No matching Constructor found for parameters "));
@@ -84,53 +85,53 @@ public class ScanForPipelineStepTest {
     }
 
     // ##### Tests using MixedParamStep for testing different parameter types and mixed constructors #######
-    private MixedParamStep executeMixedStepConstruction(String parameterName, String parameterValue) throws ConstructionException {
+    private MixedParamStep executeMixedStepConstruction(String parameterName, String parameterValue) throws IOException {
         Map<String, String> params = new HashMap<>();
         params.put(parameterName, parameterValue);
         return executeMixedStepConstruction(params);
     }
 
-    private MixedParamStep executeMixedStepConstruction(Map<String, String> params) throws ConstructionException {
+    private MixedParamStep executeMixedStepConstruction(Map<String, String> params) throws IOException {
         Pipeline pipe = new Pipeline();
-        mixedParamsRegistration.buildStep(pipe, params);
+        pipe.step(mixedParamsRegistration.builder.buildProcessingStep(params));
         PipelineStep res = pipe.steps.get(0);
         assertTrue(res instanceof MixedParamStep);
         return (MixedParamStep) res;
     }
 
     @Test
-    public void testMixedStep_withStringArg() throws ConstructionException {
+    public void testMixedStep_withStringArg() throws IOException {
         MixedParamStep res = executeMixedStepConstruction("stringArg", "value");
         assertEquals("value", res.stringArg);
     }
 
     @Test
-    public void testMixedStep_withIntArg() throws ConstructionException {
+    public void testMixedStep_withIntArg() throws IOException {
         MixedParamStep res = executeMixedStepConstruction("intArg", "5");
         assertEquals(5, res.intArg);
     }
 
     @Test
-    public void testMixedStep_withDoubleArg() throws ConstructionException {
+    public void testMixedStep_withDoubleArg() throws IOException {
         MixedParamStep res = executeMixedStepConstruction("doubleArg", "5.5");
         assertEquals(5.5, res.doubleArg, 0);
     }
 
     @Test
-    public void testMixedStep_withBooleanArg() throws ConstructionException {
+    public void testMixedStep_withBooleanArg() throws IOException {
         MixedParamStep res = executeMixedStepConstruction("booleanArg", "true");
         assertTrue(res.booleanArg);
     }
 
     @Test
-    public void testMixedStep_withoutArg() throws ConstructionException {
+    public void testMixedStep_withoutArg() throws IOException {
         MixedParamStep res = executeMixedStepConstruction(new HashMap<>());
         assertNotNull(res);
         assertTrue(res.emptyConstructorCalled);
     }
 
     @Test
-    public void testMixedStep_withAllArgs() throws ConstructionException {
+    public void testMixedStep_withAllArgs() throws IOException {
         Map<String, String> params = new HashMap<>();
         params.put("stringArg", "value");
         params.put("intArg", "5");
@@ -142,7 +143,7 @@ public class ScanForPipelineStepTest {
     }
 
     @Test
-    public void testMixedStep_withSomeArgs() throws ConstructionException {
+    public void testMixedStep_withSomeArgs() throws IOException {
         Map<String, String> params = new HashMap<>();
         params.put("doubleArg", "5.5");
         params.put("booleanArg", "TRUE");
@@ -152,7 +153,7 @@ public class ScanForPipelineStepTest {
     }
 
     @Test(expected = ConstructionException.class)
-    public void testMixedStep_withNonexistentCombination_shouldThrowException() throws ConstructionException {
+    public void testMixedStep_withNonexistentCombination_shouldThrowException() throws IOException {
         Map<String, String> params = new HashMap<>();
         params.put("stringArg", "value");
         params.put("intArg", "5");

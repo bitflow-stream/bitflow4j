@@ -5,30 +5,49 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public abstract class AbstractRegisteredStep {
+public class RegisteredStep<BuilderClass> {
 
-    public final String className;
-    public String stepName;
-    public final String description;
-    public final List<String> optionalParameters = new ArrayList<>();
-    public final List<String> requiredParameters = new ArrayList<>();
+    private static final String[] removedSuffixes = new String[]{"processingstep", "batchstep", "step"};
+    private static final String processingStepDelimiter = "-";
 
+    private final String stepName;
+    private final String description;
+    private final List<String> optionalParameters = new ArrayList<>();
+    private final List<String> requiredParameters = new ArrayList<>();
     private boolean hasGeneric = false;
 
-    public AbstractRegisteredStep(String className, String description) {
-        this.className = className;
-        this.stepName = splitCamelCase(this.className, "-");
+    public final BuilderClass builder;
+
+    public RegisteredStep(String classOrStepName, String description, BuilderClass builder) {
+        this.stepName = splitCamelCase(classOrStepName, processingStepDelimiter);
         this.description = description;
+        this.builder = builder;
     }
 
-    public AbstractRegisteredStep optional(String... parameters) {
+    public RegisteredStep optional(String... parameters) {
         Collections.addAll(optionalParameters, parameters);
         return this;
     }
 
-    public AbstractRegisteredStep required(String... parameters) {
+    public RegisteredStep required(String... parameters) {
         Collections.addAll(requiredParameters, parameters);
         return this;
+    }
+
+    public List<String> getOptionalParameters() {
+        return optionalParameters;
+    }
+
+    public List<String> getRequiredParameters() {
+        return requiredParameters;
+    }
+
+    public String getStepName() {
+        return stepName;
+    }
+
+    public String getDescription() {
+        return description;
     }
 
     public void acceptGenericConstructor() {
@@ -65,27 +84,13 @@ public abstract class AbstractRegisteredStep {
         return errors;
     }
 
-    public String getStepName() {
-        return stepName;
-    }
-
-    // Splits a camelCase string into a lowercase string with delimiters instead of Uppercase
-    private static String splitCamelCase(String camelCase, String delimiter){
-        //Check for 'processingstep', 'batchstep' or 'step' (and any uppercase variants) at the end of the Class-name and remove them
-        String lowerCase = camelCase.toLowerCase();
-        int index_processingstep = lowerCase.indexOf("processingstep");
-        int index_batchstep = lowerCase.indexOf("batchstep");
-        int index_step = lowerCase.indexOf("step");
-        //Found word at the end
-        if (index_processingstep >= 0 && lowerCase.length() == index_processingstep + "processingstep".length()) {
-            camelCase = camelCase.substring(0, index_processingstep);
-        }
-        else if (index_batchstep >= 0 && lowerCase.length() == index_batchstep + "batchstep".length()) {
-            camelCase = camelCase.substring(0, index_batchstep);
-        }
-        else if (index_processingstep == -1 && index_batchstep == -1 && index_step >= 0
-                && lowerCase.length() == index_step + "step".length()) {
-            camelCase = camelCase.substring(0, index_step);
+    /**
+     * Splits a camelCase string into a lowercase string with delimiters instead of Uppercase
+     */
+    public static String splitCamelCase(String camelCase, String delimiter) {
+        // Remove redundant suffixes at the end of the class name
+        for (String suffix : removedSuffixes) {
+            camelCase = removeSuffix(camelCase, suffix);
         }
 
         // Splits the string at uppercase letters
@@ -96,31 +101,30 @@ public abstract class AbstractRegisteredStep {
         boolean summarizedCapitals = false;
         for (int i = 0; i < classCapitals.length; i++) {
             //We are not at the end of the list & at least this and the next String only contain one capitalized letter
-            if(i < classCapitals.length - 1 && classCapitals[i].length() == 1 && classCapitals[i + 1].length() == 1){
-                if(classWords.size() <= counter) {
+            if (i < classCapitals.length - 1 && classCapitals[i].length() == 1 && classCapitals[i + 1].length() == 1) {
+                if (classWords.size() <= counter) {
                     classWords.add(classCapitals[i] + classCapitals[i + 1]);
                     counter = i - offset;
                     summarizedCapitals = true;
                     offset++;
-                }
-                else {
+                } else {
                     classWords.set(counter, classWords.get(counter) + classCapitals[i + 1]);
                     summarizedCapitals = true;
                     offset++;
                 }
-            }
-            else {
+            } else {
                 // Not the end of the list and the current string is a capital while the next one is a word,
                 // add only if it has not been added yet.
-                if(i < classCapitals.length - 1 && classCapitals[i].length() == 1 && classCapitals[i + 1].length() != 1
-                        && summarizedCapitals){
+                if (i < classCapitals.length - 1 && classCapitals[i].length() == 1 && classCapitals[i + 1].length() != 1
+                        && summarizedCapitals) {
                     counter++;
                     summarizedCapitals = false;
                     continue;
                 }
 
                 // If last letter is (not the first and) a single capitalized letter, it has already been added
-                if(i != 0 && i == classCapitals.length - 1 && classCapitals[i].length() == 1 && summarizedCapitals) continue;
+                if (i != 0 && i == classCapitals.length - 1 && classCapitals[i].length() == 1 && summarizedCapitals)
+                    continue;
 
                 summarizedCapitals = false;
 
@@ -130,14 +134,23 @@ public abstract class AbstractRegisteredStep {
             }
         }
 
-        String result = "";
+        StringBuilder result = new StringBuilder();
         for (int i = 0; i < classWords.size(); i++) {
-            result += classWords.get(i).toLowerCase();
-            if (i < classWords.size() - 1){
-                result += delimiter;
+            result.append(classWords.get(i).toLowerCase());
+            if (i < classWords.size() - 1) {
+                result.append(delimiter);
             }
         }
-        return result;
+        return result.toString();
+    }
+
+    private static String removeSuffix(String name, String lowerCaseSuffix) {
+        String lowerCase = name.toLowerCase();
+        int index = lowerCase.indexOf(lowerCaseSuffix);
+        if (index >= 0 && lowerCase.length() == index + lowerCaseSuffix.length()) {
+            name = name.substring(0, index);
+        }
+        return name;
     }
 
 }

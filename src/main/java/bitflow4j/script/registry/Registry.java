@@ -1,14 +1,16 @@
 package bitflow4j.script.registry;
 
-import bitflow4j.AbstractPipelineStep;
+import bitflow4j.PipelineStep;
+import bitflow4j.steps.BatchHandler;
 import bitflow4j.steps.fork.ScriptableDistributor;
 import com.thoughtworks.paranamer.BytecodeReadingParanamer;
 import com.thoughtworks.paranamer.Paranamer;
 import org.reflections.Reflections;
 
-import java.lang.reflect.Modifier;
-import java.util.*;
-import java.util.logging.Level;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
@@ -20,11 +22,9 @@ public class Registry {
     private static final Logger logger = Logger.getLogger(Registry.class.getName());
 
     private Paranamer paranamer = new BytecodeReadingParanamer();
-    private Map<String, RegisteredPipelineStep> analysisRegistrationMap = new HashMap<>();
-    private Map<Object, RegisteredFork> forkRegistrationMap = new HashMap<>();
-
-    // Store classes that did not have a fitting constructor
-    private Set<Class<?>> unconstructableClasses = new HashSet<>();
+    private Map<String, RegisteredStep<ProcessingStepBuilder>> registeredSteps = new HashMap<>();
+    private Map<String, RegisteredStep<BatchStepBuilder>> registeredBatchSteps = new HashMap<>();
+    private Map<String, RegisteredStep<ForkBuilder>> registeredForks = new HashMap<>();
 
     /**
      * scans specified packages automatically for SubTypes of AbstractPipelineStep and registers them according to the
@@ -32,103 +32,108 @@ public class Registry {
      * Warning: If no prefix is provided, all packages in classpath will be scanned,
      * this can result in significant higher compile times! (during tests 5s instead of 20ms)
      *
-     * @param scanPackagePrefixes varargs of package prefixes, null for anything
+     * @param scanPackagePrefixes varargs of package prefixes, null or empty to scan every package
      */
-    public void scanForPipelineSteps(String... scanPackagePrefixes) {
+    public void scanForProcessingSteps(String... scanPackagePrefixes) {
         if (scanPackagePrefixes == null || scanPackagePrefixes.length == 0) {
-            _scanForPipelineSteps(null);
+            _scanForProcessingSteps(null);
             return;
         }
 
         for (String packagePrefix : scanPackagePrefixes) {
-            _scanForPipelineSteps(packagePrefix);
+            _scanForProcessingSteps(packagePrefix);
         }
     }
 
     /**
-     * registerAnalysis takes a registration and stores it for retrieval by the pipeline builder.
+     * registerStep takes a registration and stores it for retrieval by the pipeline builder.
      */
-    public void registerAnalysis(RegisteredPipelineStep registeredPipelineStep) {
-        analysisRegistrationMap.put(registeredPipelineStep.getStepName(), registeredPipelineStep);
-        //TODO: Remove this line later on, it supports downwards-compatibility but leads to doubled entries in the capabilities list
-        analysisRegistrationMap.put(registeredPipelineStep.className.toLowerCase(), registeredPipelineStep);
+    public void registerStep(RegisteredStep<ProcessingStepBuilder> registeredStep) {
+        checkAlreadyRegistered(registeredSteps, registeredStep, "Processing step");
+        registeredSteps.put(registeredStep.getStepName(), registeredStep);
     }
 
     /**
      * returns a registered Analysis by name or null if none found.
-     *
-     * @param analysisName the name of the analysis
-     * @return the registered analysis or null
      */
-    public RegisteredPipelineStep getAnalysisRegistration(String analysisName) {
-        return analysisRegistrationMap.getOrDefault(analysisName.toLowerCase(), null);
+    public RegisteredStep<ProcessingStepBuilder> getRegisteredStep(String stepName) {
+        return registeredSteps.getOrDefault(stepName.toLowerCase(), null);
     }
 
     /**
-     * registerAnalysis takes a registration and stores it for retrieval by the pipeline builder.
+     * registerStep takes a registration and stores it for retrieval by the pipeline builder.
      */
-    public void registerFork(RegisteredFork registeredFork) {
-        forkRegistrationMap.put(registeredFork.getStepName(), registeredFork);
-        //TODO: Remove this line later on, it supports downwards-compatibility but leads to doubled entries in the capabilities list
-        forkRegistrationMap.put(registeredFork.className.toLowerCase(), registeredFork);
+    public void registerFork(RegisteredStep<ForkBuilder> registeredFork) {
+        checkAlreadyRegistered(registeredForks, registeredFork, "Fork");
+        registeredForks.put(registeredFork.getStepName(), registeredFork);
     }
 
     /**
      * returns a registered Fork by name or null if none found.
-     *
-     * @param forkName the name of the fork
-     * @return the registered Fork or null
      */
-    public RegisteredFork getFork(String forkName) {
-        return forkRegistrationMap.getOrDefault(forkName.toLowerCase(), null);
+    public RegisteredStep<ForkBuilder> getRegisteredFork(String forkName) {
+        return registeredForks.getOrDefault(forkName.toLowerCase(), null);
     }
 
-    public Collection<RegisteredPipelineStep> getCapabilities() {
-        for(String s : analysisRegistrationMap.keySet()){
-            logger.log(Level.FINER, String.format("Registered key: %s", s));
+    /**
+     * registerBatchStep registers the given batch step under its name, so it can be retrieved later.
+     */
+    public void registerBatchStep(RegisteredStep<BatchStepBuilder> batchStep) {
+        checkAlreadyRegistered(registeredBatchSteps, batchStep, "Batch step");
+        registeredBatchSteps.put(batchStep.getStepName(), batchStep);
+    }
+
+    private void checkAlreadyRegistered(Map<String, ?> map, RegisteredStep step, String stepType) {
+        if (map.containsKey(step.getStepName())) {
+            // TODO allow accessing conflicting classes via their fully qualified name
+            logger.warning(stepType + " with name " + step.getStepName() + " already registered, ignoring repeated registration");
         }
-        return analysisRegistrationMap.values();
     }
 
-    public Set<Class<?>> getUnconstructableClasses() {
-        return unconstructableClasses;
+    /**
+     * returns a registered batch processing step by name or null if none found.
+     */
+    public RegisteredStep<BatchStepBuilder> getRegisteredBatchStep(String name) {
+        return registeredBatchSteps.getOrDefault(name.toLowerCase(), null);
     }
 
-    private void _scanForPipelineSteps(String scanPackagePrefix) {
+    public Collection<RegisteredStep<ProcessingStepBuilder>> getStreamCapabilities() {
+        return registeredSteps.values();
+    }
+
+    public Collection<RegisteredStep<BatchStepBuilder>> getBatchCapabilities() {
+        return registeredBatchSteps.values();
+    }
+
+    public Collection<RegisteredStep<ForkBuilder>> getForkCapabilities() {
+        return registeredForks.values();
+    }
+
+    public Collection<RegisteredStep> getAllCapabilities() {
+        Collection<RegisteredStep> result = new ArrayList<>();
+        result.addAll(getStreamCapabilities());
+        result.addAll(getBatchCapabilities());
+        result.addAll(getForkCapabilities());
+        return result;
+    }
+
+    private void _scanForProcessingSteps(String scanPackagePrefix) {
         logger.info("Scanning for pipeline steps in package " + scanPackagePrefix);
         Reflections reflections = new Reflections(scanPackagePrefix);
 
-        reflections.getSubTypesOf(AbstractPipelineStep.class).forEach(c -> registerClass(c, false, false));
-        reflections.getSubTypesOf(PipelineBuilder.class).forEach(c -> registerClass(c, false, true));
-        reflections.getSubTypesOf(ScriptableDistributor.class).forEach(c -> registerClass(c, true, false));
-        reflections.getSubTypesOf(ForkBuilder.class).forEach(c -> registerClass(c, true, true));
+        // Check implementations of steps that can be directly instantiated
+        reflections.getSubTypesOf(PipelineStep.class).forEach(this::registerClass);
+        reflections.getSubTypesOf(BatchHandler.class).forEach(this::registerClass);
+        reflections.getSubTypesOf(ScriptableDistributor.class).forEach(this::registerClass);
+
+        // Check for implementations of "builder" types that can create steps
+        reflections.getSubTypesOf(ProcessingStepBuilder.class).forEach(this::registerClass);
+        reflections.getSubTypesOf(ForkBuilder.class).forEach(this::registerClass);
+        reflections.getSubTypesOf(BatchStepBuilder.class).forEach(this::registerClass);
     }
 
-    public boolean registerClass(Class impl, boolean isFork, boolean isBuilder) {
-        if ((impl.getModifiers() & Modifier.ABSTRACT) == 0) {
-            RegistryConstructor stepConstructor = new RegistryConstructor(impl, paranamer, isBuilder);
-            if (stepConstructor.hasConstructors()) {
-                if (getAnalysisRegistration(stepConstructor.getName()) != null) {
-                    // TODO allow accessing conflicting classes via their fully qualified name
-                    logger.warning("Pipeline step with name " + stepConstructor.getName() + " already registered, not registering class: " + impl.getName());
-                } else {
-                    if (isFork) {
-                        registerFork(stepConstructor.createRegisteredFork());
-                    } else {
-                        registerAnalysis(stepConstructor.createAnalysisRegistration());
-                    }
-                    return true;
-                }
-            } else {
-                logger.fine("Class missing simple constructor, not registered: " + impl.getName());
-            }
-        } else {
-            logger.fine("Class is abstract, not registered: " + impl.getName());
-        }
-        unconstructableClasses.add(impl);
-        return false;
+    public boolean registerClass(Class impl) {
+        return new RegistryConstructor(impl, paranamer).register(this);
     }
-
-
 
 }

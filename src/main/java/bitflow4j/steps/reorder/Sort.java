@@ -1,7 +1,7 @@
 package bitflow4j.steps.reorder;
 
 import bitflow4j.Sample;
-import bitflow4j.steps.BatchPipelineStep;
+import bitflow4j.steps.BatchHandler;
 
 import java.io.IOException;
 import java.util.Comparator;
@@ -12,7 +12,7 @@ import java.util.List;
  * <p>
  * Read all samples from the input into memory and output them, sorted by their timestamp.
  */
-public class Sort extends BatchPipelineStep implements Comparator<Sample> {
+public class Sort implements BatchHandler, Comparator<Sample> {
 
     private final String[] metricNames;
 
@@ -20,22 +20,10 @@ public class Sort extends BatchPipelineStep implements Comparator<Sample> {
         this.metricNames = metricNames;
     }
 
-    public Sort(String batchSeparationTag, int timeout, String... metricNames) {
-        super(batchSeparationTag, timeout);
-        this.metricNames = metricNames;
-    }
-
-    public Sort(String batchSeparationTag, int timeout) {
-        super(batchSeparationTag, timeout);
-        this.metricNames = new String[0];
-    }
-
     @Override
-    protected void flush(List<Sample> window) throws IOException {
+    public List<Sample> handleBatch(List<Sample> window) throws IOException {
         window.sort(this);
-        for (Sample sample : window) {
-            output.writeSample(sample);
-        }
+        return window;
     }
 
     @Override

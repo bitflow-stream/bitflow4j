@@ -4,7 +4,7 @@ import bitflow4j.Pipeline;
 import bitflow4j.misc.Config;
 import bitflow4j.misc.TreeFormatter;
 import bitflow4j.script.endpoints.EndpointFactory;
-import bitflow4j.script.registry.RegisteredPipelineStep;
+import bitflow4j.script.registry.RegisteredStep;
 import bitflow4j.script.registry.Registry;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -15,11 +15,11 @@ import com.google.gson.Gson;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Iterator;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
 
 /**
  * Main parses a BitflowScript and executes the resulting Pipeline.
@@ -60,10 +60,10 @@ public class Main {
         cmdArgs.configureLogging();
 
         Registry registry = new Registry();
-        registry.scanForPipelineSteps(cmdArgs.cleanPackagesToScan());
+        registry.scanForProcessingSteps(cmdArgs.cleanPackagesToScan());
 
         if (cmdArgs.printJsonCapabilities) {
-            System.out.println(new Gson().toJson(registry.getCapabilities()));
+            System.out.println(new Gson().toJson(registry.getAllCapabilities()));
             return;
         } else if (cmdArgs.printCapabilities) {
             logCapabilities(registry);
@@ -95,31 +95,29 @@ public class Main {
         pipe.runAndWait();
     }
 
+    private static final Comparator<RegisteredStep> stepComparator = (a1, a2) -> a1.getStepName().compareToIgnoreCase(a2.getStepName());
+
     private static void logCapabilities(Registry registry) {
-        List<RegisteredPipelineStep> cap = Lists.newArrayList(registry.getCapabilities());
-        cap.sort((a1, a2) -> a1.className.compareToIgnoreCase(a2.className));
-        logIfNotEmpty("Stream-Mode Processing Steps:", cap.stream().filter(RegisteredPipelineStep::supportsStreamOnly));
-        logIfNotEmpty("Batch-Mode Processing Steps:", cap.stream().filter(RegisteredPipelineStep::supportsBatchOnly));
-        logIfNotEmpty("Mixed-Mode Processing Steps:", cap.stream().filter(RegisteredPipelineStep::supportsBothModes));
+        logIfNotEmpty("Stream Processing Steps:", registry.getStreamCapabilities());
+        logIfNotEmpty("Batch Processing Steps:", registry.getBatchCapabilities());
+        logIfNotEmpty("Fork Steps:", registry.getForkCapabilities());
     }
 
-    private static void logIfNotEmpty(String title, Stream<RegisteredPipelineStep> reg) {
-        Iterator<RegisteredPipelineStep> iter = reg.iterator();
-        if (!iter.hasNext())
+    private static void logIfNotEmpty(String title, Collection<? extends RegisteredStep> reg) {
+        if (reg.isEmpty())
             return;
-        logger.info("");
+        logger.info(""); // Force new line in log output
         logger.info(title);
-        iter.forEachRemaining(Main::logCapability);
+        reg.stream().sorted(stepComparator).forEach(Main::logCapability);
     }
 
-    private static void logCapability(RegisteredPipelineStep registeredPipelineStep) {
-        logger.info(" - " + registeredPipelineStep.className);
-        logger.info("     Bitflow-Script: " + registeredPipelineStep.stepName);
-        logger.info("     Description: " + registeredPipelineStep.description);
-        if (!registeredPipelineStep.requiredParameters.isEmpty())
-            logger.info("     Required parameters: " + registeredPipelineStep.requiredParameters);
-        if (!registeredPipelineStep.optionalParameters.isEmpty())
-            logger.info("     Optional parameters: " + registeredPipelineStep.optionalParameters);
+    private static void logCapability(RegisteredStep registeredPipelineStep) {
+        logger.info(" - " + registeredPipelineStep.getStepName());
+        logger.info("     Description: " + registeredPipelineStep.getDescription());
+        if (!registeredPipelineStep.getRequiredParameters().isEmpty())
+            logger.info("     Required parameters: " + registeredPipelineStep.getRequiredParameters());
+        if (!registeredPipelineStep.getOptionalParameters().isEmpty())
+            logger.info("     Optional parameters: " + registeredPipelineStep.getOptionalParameters());
         if (registeredPipelineStep.hasGenericConstructor())
             logger.info("     Accepts any parameters");
     }
