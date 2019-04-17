@@ -92,23 +92,39 @@ public abstract class AbstractRegisteredStep {
         String[] classCapitals = camelCase.split("(?=\\p{Upper})");
         ArrayList<String> classWords = new ArrayList<>();
         int counter = 0;
+        int offset = 0;
+        boolean summarizedCapitals = false;
         for (int i = 0; i < classCapitals.length; i++) {
             //We are not at the end of the list & at least this and the next String only contain one capitalized letter
             if(i < classCapitals.length - 1 && classCapitals[i].length() == 1 && classCapitals[i + 1].length() == 1){
                 if(classWords.size() <= counter) {
                     classWords.add(classCapitals[i] + classCapitals[i + 1]);
-                    counter = i;
+                    counter = i - offset;
+                    summarizedCapitals = true;
+                    offset++;
                 }
                 else {
                     classWords.set(counter, classWords.get(counter) + classCapitals[i + 1]);
+                    summarizedCapitals = true;
+                    offset++;
                 }
             }
             else {
-                if(i < classCapitals.length - 1 && classCapitals[i].length() == 1 && classCapitals[i + 1].length() != 1){
+                // Not the end of the list and the current string is a capital while the next one is a word,
+                // add only if it has not been added yet.
+                if(i < classCapitals.length - 1 && classCapitals[i].length() == 1 && classCapitals[i + 1].length() != 1
+                        && summarizedCapitals){
                     counter++;
+                    summarizedCapitals = false;
                     continue;
                 }
-                // Normal Words with forst letter capitalized can be simply added
+
+                // If last letter is (not the first and) a single capitalized letter, it has already been added
+                if(i != 0 && i == classCapitals.length - 1 && classCapitals[i].length() == 1 && summarizedCapitals) continue;
+
+                summarizedCapitals = false;
+
+                // Normal Words with first letter capitalized can be simply added
                 classWords.add(classCapitals[i]);
                 counter++;
             }
