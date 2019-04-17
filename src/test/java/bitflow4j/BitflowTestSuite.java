@@ -4,6 +4,7 @@ import bitflow4j.misc.TreeFormatterTest;
 import bitflow4j.script.MainTest;
 import bitflow4j.script.ScriptCompilationTest;
 import bitflow4j.script.endpoints.EndpointFactoryTest;
+import bitflow4j.script.registry.NameResolveTest;
 import bitflow4j.script.registry.RegisteredPipelineStepTest;
 import bitflow4j.script.registry.ScanForPipelineStepTest;
 import org.junit.runners.Suite;
@@ -16,6 +17,7 @@ import org.junit.runners.Suite;
 
         // Bitflow Script
         RegisteredPipelineStepTest.class,
+        NameResolveTest.class,
         ScanForPipelineStepTest.class,
         MainTest.class,
         ScriptCompilationTest.class,
