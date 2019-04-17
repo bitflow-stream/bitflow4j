@@ -10,7 +10,6 @@ import com.google.common.collect.Lists;
 import com.thoughtworks.paranamer.Paranamer;
 
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;
 import java.util.*;
@@ -28,7 +27,7 @@ class RegistryConstructor {
     private final Constructor stringMapConstructor;
     private final boolean isBuilder;
 
-    RegistryConstructor(Class cls, Paranamer paranamer, boolean isBuilder) {
+    RegistryConstructor(Class<?> cls, Paranamer paranamer, boolean isBuilder) {
         this.isBuilder = isBuilder;
         this.cls = cls;
         this.paranamer = paranamer;
@@ -298,11 +297,10 @@ class RegistryConstructor {
         }
     }
 
-    private String getDescriptionField(Class cls) {
-        Annotation annotation = cls.getAnnotation(Description.class);
+    private String getDescriptionField(Class<?> cls) {
+        Description annotation = cls.getAnnotation(Description.class);
         if (annotation != null) {
-            Description desc = (Description) annotation;
-            return desc.value();
+            return annotation.value();
         }
         return "";
     }
