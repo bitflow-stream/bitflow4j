@@ -3,6 +3,7 @@ package bitflow4j.steps.fork.distribute;
 import bitflow4j.Pipeline;
 import bitflow4j.Sample;
 import bitflow4j.misc.Pair;
+import bitflow4j.script.registry.Description;
 import bitflow4j.steps.fork.ScriptableDistributor;
 
 import java.io.IOException;
@@ -13,12 +14,14 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
-public class TagDistributor implements ScriptableDistributor {
+@Description("A Fork that forks the samples based on the provided template. Samples with the same template values of the provided" +
+        " template name will be passed to the same fork. Use ${tagName} Syntax to evaluate the given tags value.")
+public class ForkTemplate implements ScriptableDistributor {
 
-    private static final Logger logger = Logger.getLogger(TagDistributor.class.getName());
+    private static final Logger logger = Logger.getLogger(ForkTemplate.class.getName());
 
     private final boolean wildcardMatch, regexMatch;
-    private final String tag;
+    private final String template;
     private final Map<String, Pipeline> subPipelines = new HashMap<>();
     private final Map<String, Collection<Pair<String, Pipeline>>> tagValueCache = new HashMap<>(); // Additional cache just for reducing object creation
     private final Map<String, Pattern> patterns = new HashMap<>();
@@ -27,12 +30,12 @@ public class TagDistributor implements ScriptableDistributor {
     private List<String> availableKeys;
     private Collection<Object> formattedSubPipelines;
 
-    public TagDistributor(String tag) {
-        this(tag, true, false);
+    public ForkTemplate(String template) {
+        this(template, true, false);
     }
 
-    public TagDistributor(String tag, boolean wildcard, boolean regex) {
-        this.tag = tag;
+    public ForkTemplate(String template, boolean wildcard, boolean regex) {
+        this.template = template;
         this.wildcardMatch = wildcard;
         this.regexMatch = regex;
     }
@@ -68,8 +71,8 @@ public class TagDistributor implements ScriptableDistributor {
 
     @Override
     public String toString() {
-        return String.format("Distribute tag '%s' to %s sub pipelines (wildcards: %s, regex: %s)",
-                tag, subPipelineBuilders.size(), wildcardMatch, regexMatch);
+        return String.format("Distribute template '%s' to %s sub pipelines (wildcards: %s, regex: %s)",
+                template, subPipelineBuilders.size(), wildcardMatch, regexMatch);
     }
 
     @Override
@@ -79,7 +82,7 @@ public class TagDistributor implements ScriptableDistributor {
 
     @Override
     public Collection<Pair<String, Pipeline>> distribute(Sample sample) {
-        String value = sample.getTags().get(tag);
+        String value = sample.resolveTagTemplate(template);
         if (value == null) {
             value = "";
             //TODO How to handle samples without the tag?
@@ -116,7 +119,7 @@ public class TagDistributor implements ScriptableDistributor {
             subPipelines.put(tagValue, pipe);
             return pipe;
         } catch (IOException e) {
-            logger.log(Level.SEVERE, String.format("Failed to build sub-pipeline for tag value '%s' (matching %s)", tagValue, key), e);
+            logger.log(Level.SEVERE, String.format("Failed to build sub-pipeline for template value '%s' (matching %s)", tagValue, key), e);
             return null;
         }
     }
@@ -126,7 +129,7 @@ public class TagDistributor implements ScriptableDistributor {
             if (patterns.containsKey(key)) {
                 return patterns.get(key).matcher(tag).matches();
             } else {
-                throw new IllegalStateException(String.format("No pattern compiled for '%s' (trying to match tag '%s')", key, tag));
+                throw new IllegalStateException(String.format("No pattern compiled for '%s' (trying to match template '%s')", key, tag));
             }
         } else {
             return key.equals(tag);

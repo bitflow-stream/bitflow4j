@@ -1,12 +1,12 @@
-package bitflow4j.steps.output;
+package bitflow4j.io.file;
 
 import bitflow4j.Pipeline;
 import bitflow4j.Sample;
-import bitflow4j.io.file.FileSink;
 import bitflow4j.io.marshall.Marshaller;
 import bitflow4j.misc.Pair;
 import bitflow4j.script.endpoints.Endpoint;
 import bitflow4j.script.endpoints.EndpointFactory;
+import bitflow4j.script.registry.Description;
 import bitflow4j.steps.fork.Distributor;
 import bitflow4j.steps.fork.Fork;
 
@@ -22,23 +22,26 @@ import java.util.logging.Logger;
  * Allows splitting samples into different files, based on a file name template that can contain tag names surrounded by '${}', e.g.:
  *      ./data/${layer}/${host}.csv
  */
-public class FileTemplateOutput extends Fork {
+@Description("Uses the provided template in parameter file to save samples in their respective file. Example call: " +
+        "output-files(file='./${data_type}/${serial}.csv', marshaller='CSV') " +
+        "This will evaluate the tags data_type and serial of every sample and save the sample in the proper file.")
+public class OutputFiles extends Fork {
 
-    private static final Logger logger = Logger.getLogger(FileTemplateOutput.class.getName());
+    private static final Logger logger = Logger.getLogger(OutputFiles.class.getName());
 
     private final String fileNameTemplate;
 
-    public FileTemplateOutput(String fileNameTemplate) {
-        this(fileNameTemplate, EndpointFactory.guessFormat(Endpoint.Type.FILE, fileNameTemplate).getMarshaller());
+    public OutputFiles(String file) {
+        this(file, EndpointFactory.guessFormat(Endpoint.Type.FILE, file).getMarshaller());
     }
 
-    public FileTemplateOutput(String fileNameTemplate, String format) {
-        this(fileNameTemplate, Marshaller.get(format));
+    public OutputFiles(String file, String format) {
+        this(file, Marshaller.get(format));
     }
 
-    public FileTemplateOutput(String fileNameTemplate, Marshaller marshaller) {
-        super(new MultiFileDistributor(fileNameTemplate, marshaller));
-        this.fileNameTemplate = fileNameTemplate;
+    public OutputFiles(String file, Marshaller marshaller) {
+        super(new MultiFileDistributor(file, marshaller));
+        this.fileNameTemplate = file;
     }
 
     @Override

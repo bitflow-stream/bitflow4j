@@ -1,5 +1,6 @@
 package bitflow4j;
 
+import bitflow4j.script.registry.Description;
 import bitflow4j.task.TaskPool;
 
 import java.io.IOException;
@@ -9,7 +10,8 @@ import java.io.IOException;
  * <p>
  * This PipelineStep drops incoming samples.
  */
-public class DroppingStep extends AbstractPipelineStep {
+@Description("Drops all samples, which means they are not forwarded.")
+public class DropStep extends AbstractPipelineStep {
 
     @Override
     public void start(TaskPool pool) throws IOException {
