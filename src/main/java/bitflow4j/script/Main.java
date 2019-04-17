@@ -4,7 +4,7 @@ import bitflow4j.Pipeline;
 import bitflow4j.misc.Config;
 import bitflow4j.misc.TreeFormatter;
 import bitflow4j.script.endpoints.EndpointFactory;
-import bitflow4j.script.registry.AbstractRegisteredStep;
+import bitflow4j.script.registry.RegisteredStep;
 import bitflow4j.script.registry.Registry;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -60,7 +60,7 @@ public class Main {
         cmdArgs.configureLogging();
 
         Registry registry = new Registry();
-        registry.scanForPipelineSteps(cmdArgs.cleanPackagesToScan());
+        registry.scanForProcessingSteps(cmdArgs.cleanPackagesToScan());
 
         if (cmdArgs.printJsonCapabilities) {
             System.out.println(new Gson().toJson(registry.getAllCapabilities()));
@@ -95,7 +95,7 @@ public class Main {
         pipe.runAndWait();
     }
 
-    private static final Comparator<AbstractRegisteredStep> stepComparator = (a1, a2) -> a1.className.compareToIgnoreCase(a2.className);
+    private static final Comparator<RegisteredStep> stepComparator = (a1, a2) -> a1.getStepName().compareToIgnoreCase(a2.getStepName());
 
     private static void logCapabilities(Registry registry) {
         logIfNotEmpty("Stream Processing Steps:", registry.getStreamCapabilities());
@@ -103,22 +103,21 @@ public class Main {
         logIfNotEmpty("Fork Steps:", registry.getForkCapabilities());
     }
 
-    private static void logIfNotEmpty(String title, Collection<? extends AbstractRegisteredStep> reg) {
+    private static void logIfNotEmpty(String title, Collection<? extends RegisteredStep> reg) {
         if (reg.isEmpty())
             return;
-        logger.info("");
+        logger.info(""); // Force new line in log output
         logger.info(title);
         reg.stream().sorted(stepComparator).forEach(Main::logCapability);
     }
 
-    private static void logCapability(AbstractRegisteredStep registeredPipelineStep) {
-        logger.info(" - " + registeredPipelineStep.className);
-        logger.info("     Bitflow-Script: " + registeredPipelineStep.stepName);
-        logger.info("     Description: " + registeredPipelineStep.description);
-        if (!registeredPipelineStep.requiredParameters.isEmpty())
-            logger.info("     Required parameters: " + registeredPipelineStep.requiredParameters);
-        if (!registeredPipelineStep.optionalParameters.isEmpty())
-            logger.info("     Optional parameters: " + registeredPipelineStep.optionalParameters);
+    private static void logCapability(RegisteredStep registeredPipelineStep) {
+        logger.info(" - " + registeredPipelineStep.getStepName());
+        logger.info("     Description: " + registeredPipelineStep.getDescription());
+        if (!registeredPipelineStep.getRequiredParameters().isEmpty())
+            logger.info("     Required parameters: " + registeredPipelineStep.getRequiredParameters());
+        if (!registeredPipelineStep.getOptionalParameters().isEmpty())
+            logger.info("     Optional parameters: " + registeredPipelineStep.getOptionalParameters());
         if (registeredPipelineStep.hasGenericConstructor())
             logger.info("     Accepts any parameters");
     }

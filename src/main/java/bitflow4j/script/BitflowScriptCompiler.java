@@ -172,18 +172,18 @@ class BitflowScriptCompiler {
         String name = unwrap(ctx.name());
         Map<String, String> params = buildParameters(ctx.parameters());
 
-        RegisteredPipelineStep regAnalysis = registry.getAnalysisRegistration(name);
+        RegisteredStep<ProcessingStepBuilder> regAnalysis = registry.getRegisteredStep(name);
         if (regAnalysis == null) {
-            throw new CompilationException(ctx, String.format("Unknown Processor: '%s'", name));
+            throw new CompilationException(ctx, String.format("Unknown processing step: '%s'", name));
         }
         regAnalysis.validateParameters(params).forEach(e -> {
             throw new CompilationException(ctx, e);
         });
 
         try {
-            regAnalysis.buildStep(pipe, params);
-        } catch (ConstructionException e) {
-            throw new CompilationException(ctx, e.getStepName() + ": " + e.getMessage());
+            pipe.step(regAnalysis.builder.buildProcessingStep(params));
+        } catch (IOException e) {
+            throw new CompilationException(ctx, name + ": " + e.getMessage());
         }
     }
 
@@ -191,7 +191,7 @@ class BitflowScriptCompiler {
         Map<String, String> forkParams = buildParameters(ctx.parameters());
         String forkName = unwrap(ctx.name());
 
-        RegisteredFork forkReg = registry.getFork(forkName);
+        RegisteredStep<ForkBuilder> forkReg = registry.getRegisteredFork(forkName);
         if (forkReg == null) {
             throw new CompilationException(ctx, "Unknown fork: " + forkName);
         }
@@ -205,9 +205,15 @@ class BitflowScriptCompiler {
         }
 
         try {
-            forkReg.buildFork(pipe, subPipes, forkParams);
-        } catch (ConstructionException e) {
-            throw new CompilationException(ctx, e.getStepName() + ": " + e.getMessage());
+            ScriptableDistributor distributor = forkReg.builder.buildFork(forkParams);
+            try {
+                distributor.setSubPipelines(subPipes);
+            } catch (IOException e) {
+                throw new ConstructionException(forkName, e.getMessage());
+            }
+            pipe.step(new Fork(distributor));
+        } catch (IOException e) {
+            throw new CompilationException(ctx, forkName + ": " + e.getMessage());
         }
     }
 
@@ -261,17 +267,17 @@ class BitflowScriptCompiler {
         BatchPipelineStep batchStep = BatchPipelineStep.createFromParameters(params);
         for (BitflowParser.ProcessingStepContext step : window.processingStep()) {
             String name = unwrap(step.name());
-            RegisteredBatchStep registeredStep = registry.getBatchStepRegistration(name);
+            RegisteredStep<BatchStepBuilder> registeredStep = registry.getRegisteredBatchStep(name);
             if (registeredStep == null) {
                 throw new CompilationException(step, "Unknown batch processing step: " + name);
             }
             Map<String, String> registeredStepParams = buildParameters(step.parameters());
 
             try {
-                BatchHandler handler = registeredStep.buildStep(registeredStepParams);
+                BatchHandler handler = registeredStep.builder.buildBatchStep(registeredStepParams);
                 batchStep.addBatchHandler(handler);
-            } catch (ConstructionException e) {
-                throw new CompilationException(step, e.getStepName() + ": " + e.getMessage());
+            } catch (IOException e) {
+                throw new CompilationException(step, name + ": " + e.getMessage());
             }
         }
         pipe.step(batchStep);

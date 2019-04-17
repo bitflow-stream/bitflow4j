@@ -31,7 +31,7 @@ public class ScriptCompilationTest extends TestCase {
 
     public void script(boolean fail, String script, String... expected) {
         Registry registry = new Registry();
-        registry.scanForPipelineSteps("bitflow4j");
+        registry.scanForProcessingSteps("bitflow4j");
         BitflowScriptCompiler compiler = new BitflowScriptCompiler(registry, new EndpointFactory());
         CompilationException exc = null;
         Pipeline pipe = null;

@@ -5,33 +5,49 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public abstract class AbstractRegisteredStep {
+public class RegisteredStep<BuilderClass> {
 
     private static final String[] removedSuffixes = new String[]{"processingstep", "batchstep", "step"};
     private static final String processingStepDelimiter = "-";
 
-    public final String className;
-    public String stepName;
-    public final String description;
-    public final List<String> optionalParameters = new ArrayList<>();
-    public final List<String> requiredParameters = new ArrayList<>();
-
+    private final String stepName;
+    private final String description;
+    private final List<String> optionalParameters = new ArrayList<>();
+    private final List<String> requiredParameters = new ArrayList<>();
     private boolean hasGeneric = false;
 
-    public AbstractRegisteredStep(String className, String description) {
-        this.className = className;
-        this.stepName = splitCamelCase(className, processingStepDelimiter);
+    public final BuilderClass builder;
+
+    public RegisteredStep(String classOrStepName, String description, BuilderClass builder) {
+        this.stepName = splitCamelCase(classOrStepName, processingStepDelimiter);
         this.description = description;
+        this.builder = builder;
     }
 
-    public AbstractRegisteredStep optional(String... parameters) {
+    public RegisteredStep optional(String... parameters) {
         Collections.addAll(optionalParameters, parameters);
         return this;
     }
 
-    public AbstractRegisteredStep required(String... parameters) {
+    public RegisteredStep required(String... parameters) {
         Collections.addAll(requiredParameters, parameters);
         return this;
+    }
+
+    public List<String> getOptionalParameters() {
+        return optionalParameters;
+    }
+
+    public List<String> getRequiredParameters() {
+        return requiredParameters;
+    }
+
+    public String getStepName() {
+        return stepName;
+    }
+
+    public String getDescription() {
+        return description;
     }
 
     public void acceptGenericConstructor() {
@@ -68,10 +84,6 @@ public abstract class AbstractRegisteredStep {
         return errors;
     }
 
-    public String getStepName() {
-        return stepName;
-    }
-
     /**
      * Splits a camelCase string into a lowercase string with delimiters instead of Uppercase
      */
@@ -95,25 +107,24 @@ public abstract class AbstractRegisteredStep {
                     counter = i - offset;
                     summarizedCapitals = true;
                     offset++;
-                }
-                else {
+                } else {
                     classWords.set(counter, classWords.get(counter) + classCapitals[i + 1]);
                     summarizedCapitals = true;
                     offset++;
                 }
-            }
-            else {
+            } else {
                 // Not the end of the list and the current string is a capital while the next one is a word,
                 // add only if it has not been added yet.
-                if(i < classCapitals.length - 1 && classCapitals[i].length() == 1 && classCapitals[i + 1].length() != 1
-                        && summarizedCapitals){
+                if (i < classCapitals.length - 1 && classCapitals[i].length() == 1 && classCapitals[i + 1].length() != 1
+                        && summarizedCapitals) {
                     counter++;
                     summarizedCapitals = false;
                     continue;
                 }
 
                 // If last letter is (not the first and) a single capitalized letter, it has already been added
-                if(i != 0 && i == classCapitals.length - 1 && classCapitals[i].length() == 1 && summarizedCapitals) continue;
+                if (i != 0 && i == classCapitals.length - 1 && classCapitals[i].length() == 1 && summarizedCapitals)
+                    continue;
 
                 summarizedCapitals = false;
 

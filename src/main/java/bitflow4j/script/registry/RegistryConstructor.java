@@ -1,21 +1,19 @@
 package bitflow4j.script.registry;
 
-import bitflow4j.Pipeline;
 import bitflow4j.PipelineStep;
-import bitflow4j.misc.Pair;
 import bitflow4j.steps.BatchHandler;
-import bitflow4j.steps.fork.Fork;
 import bitflow4j.steps.fork.ScriptableDistributor;
 import com.google.common.collect.Lists;
 import com.thoughtworks.paranamer.Paranamer;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.*;
 import java.util.logging.Logger;
 
-class RegistryConstructor {
+class RegistryConstructor implements ProcessingStepBuilder, ForkBuilder, BatchStepBuilder {
 
     private static final Logger logger = Logger.getLogger(RegistryConstructor.class.getName());
 
@@ -25,10 +23,8 @@ class RegistryConstructor {
     private final Class<?> cls;
     private final List<Constructor> constructors;
     private final Constructor stringMapConstructor;
-    private final boolean isBuilder;
 
-    RegistryConstructor(Class<?> cls, Paranamer paranamer, boolean isBuilder) {
-        this.isBuilder = isBuilder;
+    RegistryConstructor(Class<?> cls, Paranamer paranamer) {
         this.cls = cls;
         this.paranamer = paranamer;
         this.name = cls.getSimpleName();
@@ -38,8 +34,24 @@ class RegistryConstructor {
         stringMapConstructor = getMapConstructor();
     }
 
+    //
+    // ==================== Class metadata ====================
+    //
+
+    private static String getDescriptionField(Class<?> cls) {
+        Description annotation = cls.getAnnotation(Description.class);
+        if (annotation != null) {
+            return annotation.value();
+        }
+        return "";
+    }
+
     private void filterBadConstructors() {
         constructors.removeIf(constructor -> !isConstructable(constructor));
+    }
+
+    private boolean hasConstructors() {
+        return !constructors.isEmpty() || stringMapConstructor != null;
     }
 
     private Constructor getMapConstructor() {
@@ -50,76 +62,161 @@ class RegistryConstructor {
         }
     }
 
-    boolean hasConstructors() {
-        return !constructors.isEmpty() || stringMapConstructor != null;
-    }
+    private boolean isConstructable(Constructor constructor) {
+        String[] names = paranamer.lookupParameterNames(constructor, false);
+        if (names == null) {
+            logger.fine("No Paranamer information found for class: " + constructor.getDeclaringClass().getName());
+            return false;
+        }
 
-    String getName() {
-        return name;
-    }
-
-    String getDescription() {
-        return description;
-    }
-
-    public void buildStep(Pipeline pipeline, Map<String, String> parameters) throws ConstructionException {
-        Object instance = constructObject(parameters);
-        if (isBuilder) {
-            checkInstance(instance, PipelineBuilder.class);
-            try {
-                ((PipelineBuilder) instance).buildPipeline(pipeline);
-            } catch (IOException e) {
-                throw new ConstructionException(name, String.format("PipelineBuilder %s (class %s) failed to build fork: %s",
-                        instance, instance.getClass().getName(), e.getMessage()));
+        Parameter[] constructorParams = constructor.getParameters();
+        for (Parameter param : constructorParams) {
+            switch (param.getType().getSimpleName()) {
+                case "String":
+                case "Double":
+                case "double":
+                case "Long":
+                case "long":
+                case "Float":
+                case "float":
+                case "Integer":
+                case "int":
+                case "Boolean":
+                case "boolean":
+                    break;
+                default:
+                    return false;
             }
+        }
+        return true;
+    }
+
+    //
+    // ==================== Building steps ====================
+    //
+
+    @Override
+    public PipelineStep buildProcessingStep(Map<String, String> parameters) throws IOException {
+        if (!isProcessingStep())
+            throw new ConstructionException(name, "Class cannot be instantiated as processing step: " + cls.getName());
+
+        Object instance = constructObject(parameters);
+        if (instance instanceof ProcessingStepBuilder) {
+            return ((ProcessingStepBuilder) instance).buildProcessingStep(parameters);
+        } else if (instance instanceof PipelineStep) {
+            return (PipelineStep) instance;
         } else {
-            checkInstance(instance, PipelineStep.class);
-            pipeline.step((PipelineStep) instance);
+            throw new ConstructionException(name, String.format("Constructor of class %s did not return instance of %s or %s, but %s: %s",
+                    cls.getName(), ProcessingStepBuilder.class.getName(), PipelineStep.class.getName(), instance.getClass().getName(), instance));
         }
     }
 
-    public void buildFork(Pipeline pipeline, Collection<Pair<String, ScriptableDistributor.PipelineBuilder>> subPipelines, Map<String, String> parameters) throws ConstructionException {
+    @Override
+    public BatchHandler buildBatchStep(Map<String, String> parameters) throws IOException {
+        if (!isBatchStep())
+            throw new ConstructionException(name, "Class cannot be instantiated as batch processing step: " + cls.getName());
+
         Object instance = constructObject(parameters);
-        ScriptableDistributor fork;
-        if (isBuilder) {
-            checkInstance(instance, ForkBuilder.class);
-            ForkBuilder builder = (ForkBuilder) instance;
-            try {
-                fork = builder.buildFork();
-            } catch (IOException e) {
-                throw new ConstructionException(name, String.format("ForkBuilder %s (class %s) failed to build fork: %s",
-                        instance, instance.getClass().getName(), e.getMessage()));
+        if (instance instanceof BatchStepBuilder) {
+            return ((BatchStepBuilder) instance).buildBatchStep(parameters);
+        } else if (instance instanceof BatchHandler) {
+            return (BatchHandler) instance;
+        } else {
+            throw new ConstructionException(name, String.format("Constructor of class %s did not return instance of %s or %s, but %s: %s",
+                    cls.getName(), BatchStepBuilder.class.getName(), BatchHandler.class.getName(), instance.getClass().getName(), instance));
+        }
+    }
+
+    @Override
+    public ScriptableDistributor buildFork(Map<String, String> parameters) throws IOException {
+        if (!isFork())
+            throw new ConstructionException(name, "Class cannot be instantiated as fork: " + cls.getName());
+
+        Object instance = constructObject(parameters);
+        if (instance instanceof ForkBuilder) {
+            return ((ForkBuilder) instance).buildFork(parameters);
+        } else if (instance instanceof ScriptableDistributor) {
+            return (ScriptableDistributor) instance;
+        } else {
+            throw new ConstructionException(name, String.format("Constructor of class %s did not return instance of %s or %s, but %s: %s",
+                    cls.getName(), ForkBuilder.class.getName(), ScriptableDistributor.class.getName(), instance.getClass().getName(), instance));
+        }
+    }
+
+    private boolean isProcessingStep() {
+        return cls.isAssignableFrom(ProcessingStepBuilder.class) || cls.isAssignableFrom(PipelineStep.class);
+    }
+
+    private boolean isBatchStep() {
+        return cls.isAssignableFrom(BatchStepBuilder.class) || cls.isAssignableFrom(BatchHandler.class);
+    }
+
+    private boolean isFork() {
+        return cls.isAssignableFrom(ForkBuilder.class) || cls.isAssignableFrom(ScriptableDistributor.class);
+    }
+
+    //
+    // ==================== Registration ====================
+    //
+
+    public boolean register(Registry registry) {
+        if ((cls.getModifiers() & (Modifier.ABSTRACT | Modifier.INTERFACE)) != 0) {
+            logger.fine("Class is abstract or interface, not registered: " + cls.getName());
+            return false;
+        }
+        if (!hasConstructors()) {
+            logger.fine("Class missing valid constructor, not registered: " + cls.getName());
+            return false;
+        }
+
+        if (isFork()) {
+            registry.registerFork(configureRegisteredStep(new RegisteredStep<>(name, description, this)));
+        } else if (isBatchStep()) {
+            registry.registerBatchStep(configureRegisteredStep(new RegisteredStep<>(name, description, this)));
+        } else if (isProcessingStep()) {
+            registry.registerStep(configureRegisteredStep(new RegisteredStep<>(name, description, this)));
+        } else {
+            logger.warning("Not registering class, because it does not implement/subclass any supported type: " + cls.getName());
+            return false;
+        }
+        return true;
+    }
+
+    private <T> RegisteredStep<T> configureRegisteredStep(RegisteredStep<T> reg) {
+        String[] constructor0ParamNames = paranamer.lookupParameterNames(constructors.get(0), false);
+        Set<String> optionalParams = new HashSet<>();
+        Set<String> requiredParams = new HashSet<>(Arrays.asList(constructor0ParamNames));
+
+        constructors.forEach(constructor -> {
+            List<String> paramNames = Arrays.asList(paranamer.lookupParameterNames(constructor, false));
+
+            // build optional parameters
+            for (String paramName : paramNames) {
+                if (!requiredParams.contains(paramName)) {
+                    optionalParams.add(paramName);
+                }
             }
-        } else {
-            checkInstance(instance, ScriptableDistributor.class);
-            fork = (ScriptableDistributor) instance;
+
+            // clean requiredParams by moving extraneous parameters from requiredParams to optionalParams
+            for (Iterator<String> i = requiredParams.iterator(); i.hasNext(); ) {
+                String element = i.next();
+                if (!paramNames.contains(element)) {
+                    optionalParams.add(element);
+                    i.remove();
+                }
+            }
+        });
+        reg.optional(optionalParams.toArray(new String[0]));
+        reg.required(requiredParams.toArray(new String[0]));
+        if (stringMapConstructor != null) {
+            reg.acceptGenericConstructor();
         }
-        try {
-            fork.setSubPipelines(subPipelines);
-        } catch (IOException e) {
-            throw new ConstructionException(name, e.getMessage());
-        }
-        pipeline.step(new Fork(fork));
+        return reg;
     }
 
-    public BatchHandler buildBatchStep(Map<String, String> parameters) throws ConstructionException {
-        Object instance = constructObject(parameters);
-        BatchHandler result;
-        if (isBuilder) {
-            throw new ConstructionException(getName(), "Builders cannot be registered for batch processing steps");
-        } else {
-            checkInstance(instance, BatchHandler.class);
-            result = (BatchHandler) instance;
-        }
-        return result;
-    }
-
-    private void checkInstance(Object instance, Class expectedCls) throws ConstructionException {
-        if (!expectedCls.isInstance(instance)) {
-            throw new ConstructionException(name, String.format("Constructor of class %s did not return instance of %s, but %s (%s)",
-                    cls.getName(), expectedCls.getName(), instance.getClass().getName(), instance));
-        }
-    }
+    //
+    // ==================== Object instantiation ====================
+    //
 
     private Object constructObject(Map<String, String> parameters) throws ConstructionException {
         String inputParamStr = sortedConcatenation(parameters.keySet());
@@ -150,35 +247,6 @@ class RegistryConstructor {
             return "";
         }
         return parameters.stream().sorted().reduce((s, s2) -> s.toLowerCase() + "_" + s2.toLowerCase()).get();
-    }
-
-    private boolean isConstructable(Constructor constructor) {
-        String[] names = paranamer.lookupParameterNames(constructor, false);
-        if (names == null) {
-            logger.fine("No Paranamer information found for class: " + constructor.getDeclaringClass().getName());
-            return false;
-        }
-
-        Parameter[] constructorParams = constructor.getParameters();
-        for (Parameter param : constructorParams) {
-            switch (param.getType().getSimpleName()) {
-                case "String":
-                case "Double":
-                case "double":
-                case "Long":
-                case "long":
-                case "Float":
-                case "float":
-                case "Integer":
-                case "int":
-                case "Boolean":
-                case "boolean":
-                    break;
-                default:
-                    return false;
-            }
-        }
-        return true;
     }
 
     private Object invokeSpecializedConstructor(Constructor<?> constructor, String[] parameterNames, Map<String, String> dirtyParameters) throws ConstructionException {
@@ -217,7 +285,7 @@ class RegistryConstructor {
                     invokeParameters[i] = Boolean.parseBoolean(value);
                     break;
                 default:
-                    throw new IllegalArgumentException("Parameter Type not allowed for automatic construction. Please implement and register a custom PipelineBuilder to accept parameters of type " + param.getType().getSimpleName());
+                    throw new IllegalArgumentException("Parameter Type not allowed for automatic construction. Please implement and register a custom ProcessingStepBuilder to accept parameters of type " + param.getType().getSimpleName());
             }
         }
         return invokeConstructor(constructor, invokeParameters);
@@ -229,80 +297,6 @@ class RegistryConstructor {
         } catch (Exception e) {
             throw new ConstructionException(name, "Failed to create '" + name + "' with parameters " + Arrays.toString(parameters) + ": " + e.getMessage());
         }
-    }
-
-    public RegisteredPipelineStep createAnalysisRegistration() {
-        RegisteredPipelineStep result = new RegisteredPipelineStep(getName(), getDescription()) {
-            @Override
-            public void buildStep(Pipeline pipeline, Map<String, String> parameters) throws ConstructionException {
-                RegistryConstructor.this.buildStep(pipeline, parameters);
-            }
-        };
-        configureRegistration(result);
-        return result;
-    }
-
-    public RegisteredFork createRegisteredFork() {
-        RegisteredFork result = new RegisteredFork(getName(), getDescription()) {
-            @Override
-            public void buildFork(Pipeline pipeline, Collection<Pair<String, ScriptableDistributor.PipelineBuilder>> subPipelines, Map<String, String> parameters) throws ConstructionException {
-                RegistryConstructor.this.buildFork(pipeline, subPipelines, parameters);
-            }
-        };
-        configureRegistration(result);
-        return result;
-    }
-
-    public RegisteredBatchStep createBatchRegistration() {
-        RegisteredBatchStep result = new RegisteredBatchStep(getName(), getDescription()) {
-            @Override
-            public BatchHandler buildStep(Map<String, String> parameters) throws ConstructionException {
-                return RegistryConstructor.this.buildBatchStep(parameters);
-            }
-        };
-        configureRegistration(result);
-        return result;
-    }
-
-    private void configureRegistration(AbstractRegisteredStep reg) {
-        if (!constructors.isEmpty()) {
-            String[] constr0ParamNames = paranamer.lookupParameterNames(constructors.get(0), false);
-            Set<String> optionalParams = new HashSet<>();
-            Set<String> requiredParams = new HashSet<>(Arrays.asList(constr0ParamNames));
-
-            constructors.forEach(constructor -> {
-                List<String> paramNames = Arrays.asList(paranamer.lookupParameterNames(constructor, false));
-
-                // build optional parameters
-                for (String paramName : paramNames) {
-                    if (!requiredParams.contains(paramName)) {
-                        optionalParams.add(paramName);
-                    }
-                }
-
-                // clean requiredParams by moving extraneous parameters from requiredParams to optionalParams
-                for (Iterator<String> i = requiredParams.iterator(); i.hasNext(); ) {
-                    String element = i.next();
-                    if (!paramNames.contains(element)) {
-                        optionalParams.add(element);
-                        i.remove();
-                    }
-                }
-            });
-            reg.optional(optionalParams.toArray(new String[0]));
-            reg.required(requiredParams.toArray(new String[0]));
-        }
-        if (stringMapConstructor != null) {
-            reg.acceptGenericConstructor();
-        }
-    }
-
-    private String getDescriptionField(Class<?> cls) {
-        Description annotation = cls.getAnnotation(Description.class);
-        if (annotation != null) {
-            return annotation.value();
-        }
-        return "";
     }
 
 }
