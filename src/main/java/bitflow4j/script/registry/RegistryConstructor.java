@@ -307,4 +307,3 @@ class RegistryConstructor implements ProcessingStepBuilder, ForkBuilder, BatchSt
     }
 
 }
-t
