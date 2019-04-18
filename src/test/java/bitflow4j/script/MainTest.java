@@ -1,25 +1,24 @@
 package bitflow4j.script;
 
-import bitflow4j.script.registry.RegisteredStep;
 import bitflow4j.script.registry.ScanForPipelineStepTest;
 import com.google.gson.Gson;
 import org.apache.commons.lang3.ArrayUtils;
+import org.hamcrest.CoreMatchers;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import java.util.HashMap;
 
 public class MainTest {
 
     private ByteArrayOutputStream baos;
     private PrintStream originalOut;
     private PrintStream originalErr;
+
     private File dataFile;
     private static final String testSamples = "time,val\n" +
             "2006-01-02 15:04:05.999999980,11111\n" +
@@ -67,20 +66,21 @@ public class MainTest {
         return output;
     }
 
+    @Test
     public void testCapabilitiesPrinting() {
         String console = callMainWithArgs("--capabilities");
-
-        assertTrue(console.contains("MixedParamStep:"));
-        assertTrue(console.contains("RequiredParamStep:"));
+        Assert.assertThat(console, CoreMatchers.containsString("- mixed-param"));
+        Assert.assertThat(console, CoreMatchers.containsString("- required-param"));
     }
 
+    @Test
     public void testJSONCapabilitiesPrinting() {
         String console = callMainWithArgs("--json-capabilities");
 
-        assertTrue(console.contains("MixedParamStep"));
-        assertTrue(console.contains("RequiredParamStep"));
+        Assert.assertThat(console, CoreMatchers.containsString("mixed-param"));
+        Assert.assertThat(console, CoreMatchers.containsString("required-param"));
         // throws Exception if not valid json
-        new Gson().fromJson(console, AnalysisList.class);
+        new Gson().fromJson(console, HashMap.class);
     }
 
     @Test(timeout = 5000)
@@ -89,27 +89,26 @@ public class MainTest {
         tempDir.toFile().deleteOnExit();
         String outFile = tempDir.toAbsolutePath() + "/output-file";
 
-        String scriptFileName = writeScriptFile(dataFile.getAbsolutePath() + " ->MixedParamStep()->MixedParamStep()->" + outFile);
-
+        String scriptFileName = writeScriptFile(dataFile.getAbsolutePath() + " ->mixed-param()->mixed-param()->" + outFile);
         String console = callMainWithArgs("--file ", scriptFileName);
 
-        assertFalse(console.contains("Error"));
-        assertFalse(console.contains("Exception"));
+        Assert.assertThat(console, CoreMatchers.not(CoreMatchers.containsString("Error")));
+        Assert.assertThat(console, CoreMatchers.not(CoreMatchers.containsString("Exception")));
     }
 
     @Test(timeout = 5000)
     public void testFileInputAndConsoleOutput() throws IOException {
-        String scriptFileName = writeScriptFile(dataFile.getAbsolutePath() + " ->MixedParamStep()->MixedParamStep()-> -");
+        String scriptFileName = writeScriptFile(dataFile.getAbsolutePath() + " ->mixed-param()->mixed-param()-> -");
         String console = callMainWithArgs("--file", scriptFileName);
 
-        assertFalse(console.contains("Error"));
-        assertFalse(console.contains("Exception"));
+        Assert.assertThat(console, CoreMatchers.not(CoreMatchers.containsString("Error")));
+        Assert.assertThat(console, CoreMatchers.not(CoreMatchers.containsString("Exception")));
 
         // assert console contains each sample value
-        assertTrue(console.contains("11111"));
-        assertTrue(console.contains("22222"));
-        assertTrue(console.contains("33333"));
-        assertTrue(console.contains("44444"));
+        Assert.assertThat(console, CoreMatchers.containsString("11111"));
+        Assert.assertThat(console, CoreMatchers.containsString("22222"));
+        Assert.assertThat(console, CoreMatchers.containsString("33333"));
+        Assert.assertThat(console, CoreMatchers.containsString("44444"));
     }
 
     private String callMainWithArgs(String... args) {
@@ -121,9 +120,6 @@ public class MainTest {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private static class AnalysisList extends ArrayList<RegisteredStep> {
     }
 
 }

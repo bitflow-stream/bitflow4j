@@ -19,7 +19,7 @@ public class RegisteredStep<BuilderClass> {
     public final BuilderClass builder;
 
     public RegisteredStep(String classOrStepName, String description, BuilderClass builder) {
-        this.stepName = splitCamelCase(classOrStepName, processingStepDelimiter);
+        this.stepName = splitCamelCase(classOrStepName);
         this.description = description;
         this.builder = builder;
     }
@@ -82,6 +82,10 @@ public class RegisteredStep<BuilderClass> {
             }
         });
         return errors;
+    }
+
+    public static String splitCamelCase(String camelCase) {
+        return splitCamelCase(camelCase, processingStepDelimiter);
     }
 
     /**

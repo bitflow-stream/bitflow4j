@@ -16,7 +16,7 @@ public class CompilationException extends RuntimeException {
     private List<String> errors;
 
     public CompilationException(List<String> errors) {
-        super();
+        super(concatErrors(errors));
         this.errors = errors;
     }
 
@@ -52,6 +52,21 @@ public class CompilationException extends RuntimeException {
 
     public List<String> getErrors() {
         return errors;
+    }
+
+    private static String concatErrors(List<String> errors) {
+        if (errors.isEmpty())
+            return "no errors";
+        else if (errors.size() == 1)
+            return errors.get(0);
+        else {
+            StringBuilder result = new StringBuilder("Multiple errors:");
+            int i = 1;
+            for (String err : errors) {
+                result.append("\n").append(i++).append(": ").append(err);
+            }
+            return result.toString();
+        }
     }
 
 }

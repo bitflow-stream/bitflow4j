@@ -47,7 +47,8 @@ public class ScriptCompilationTest extends TestCase {
             assertNull(pipe);
             Assert.assertArrayEquals(expected, exc.getErrors().toArray(new String[0]));
         } else {
-            assertNull(exc);
+            if (exc != null)
+                throw exc;
             assertNotNull(pipe);
             List<String> expectedList = Lists.newArrayList(expected);
             expectedList.add(0, "Pipeline");
@@ -74,20 +75,20 @@ public class ScriptCompilationTest extends TestCase {
     }
 
     public void testUnwrapStrings() {
-        script(false, " ':7777' -> `MixedParamStep`( `doubleArg` = '1.00', \"booleanArg\" = `true` ) -> \"csv://-\" ",
+        script(false, " ':7777' -> `mixed-param`( `doubleArg` = '1.00', \"booleanArg\" = `true` ) -> \"csv://-\" ",
                 "├─Listen for incoming samples on :7777 (format BIN)",
                 "├─a MixedParamStep",
                 "└─Writing to stdout (format CSV)");
     }
 
     public void testSomeSteps() {
-        script(false, dataFileName + " -> MixedParamStep()->inter_file ->MixedParamStep()->out.bin",
+        script(false, dataFileName + " -> mixed-param()->inter_file ->mixed-param()->out.bin",
                 "├─Reading file: " + dataFileName + " (format CSV)",
                 "├─a MixedParamStep",
                 "├─Writing file inter_file (append: false, deleteFiles: false, format: CSV)",
                 "├─a MixedParamStep",
                 "└─Writing file out.bin (append: false, deleteFiles: false, format: BIN)");
-        script(false, "  " + dataFileName + "  ->  MixedParamStep   ( )  ->  MixedParamStep (  )  ->  out.bin   ",
+        script(false, "  " + dataFileName + "  ->  mixed-param   ( )  ->  mixed-param (  )  ->  out.bin   ",
                 "├─Reading file: " + dataFileName + " (format CSV)",
                 "├─a MixedParamStep",
                 "├─a MixedParamStep",
