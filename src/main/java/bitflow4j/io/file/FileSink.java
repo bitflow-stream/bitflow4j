@@ -51,6 +51,10 @@ public class FileSink extends MarshallingSampleWriter {
             file = new File(files.getFile(index++));
         } while (!append && file.exists());
 
+        //Create directory structure if it does not exist yet
+        File directory = new File(file.getParentFile().getAbsolutePath());
+        directory.mkdirs();
+
         if (!file.exists() && !file.createNewFile()) {
             throw new IOException("Failed to create file " + file);
         }
