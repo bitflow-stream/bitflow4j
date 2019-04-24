@@ -15,6 +15,16 @@ public class ConstructionException extends IOException {
         this.stepName = stepName;
     }
 
+    public ConstructionException(String stepName, Throwable cause) {
+        super(cause);
+        this.stepName = stepName;
+    }
+
+    public ConstructionException(String stepName, String message, Throwable cause) {
+        super(message, cause);
+        this.stepName = stepName;
+    }
+
     public String getStepName() {
         return stepName;
     }

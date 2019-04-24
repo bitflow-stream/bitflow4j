@@ -6,10 +6,7 @@ import bitflow4j.steps.fork.ScriptableDistributor;
 import com.google.common.collect.Lists;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Executable;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Parameter;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -286,11 +283,15 @@ class RegistryConstructor implements ProcessingStepBuilder, ForkBuilder, BatchSt
     }
 
     private Object invokeConstructor(Constructor c, Object[] parameters) throws ConstructionException {
+        Throwable exc;
         try {
             return c.newInstance(parameters);
+        } catch (InvocationTargetException e) {
+            exc = e.getTargetException();
         } catch (Exception e) {
-            throw new ConstructionException(name, "Failed to create '" + name + "' with parameters " + Arrays.toString(parameters) + ": " + e.getMessage());
+            exc = e;
         }
+        throw new ConstructionException(name, "Failed to create '" + name + "' with parameters " + Arrays.toString(parameters) + ": " + exc.getMessage(), exc);
     }
 
 }
