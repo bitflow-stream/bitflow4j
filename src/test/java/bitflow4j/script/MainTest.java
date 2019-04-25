@@ -4,11 +4,12 @@ import bitflow4j.script.registry.ScanForPipelineStepTest;
 import com.google.gson.Gson;
 import org.apache.commons.lang3.ArrayUtils;
 import org.hamcrest.CoreMatchers;
-import org.junit.Assert;
+import org.hamcrest.MatcherAssert;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -31,7 +32,7 @@ public class MainTest {
         try {
             dataFile = File.createTempFile("test-data-", ".csv");
             dataFile.deleteOnExit();
-            PrintWriter writer = new PrintWriter(dataFile, "UTF-8");
+            PrintWriter writer = new PrintWriter(dataFile, StandardCharsets.UTF_8);
             writer.write(testSamples);
             writer.close();
         } catch (IOException e) {
@@ -42,7 +43,7 @@ public class MainTest {
     private String writeScriptFile(String script) throws IOException {
         File tempFile = File.createTempFile("test-pipeline-", ".bf");
         tempFile.deleteOnExit();
-        PrintWriter writer = new PrintWriter(tempFile, "UTF-8");
+        PrintWriter writer = new PrintWriter(tempFile, StandardCharsets.UTF_8);
         writer.println(script);
         writer.close();
         return tempFile.getAbsolutePath();
@@ -69,16 +70,16 @@ public class MainTest {
     @Test
     public void testCapabilitiesPrinting() {
         String console = callMainWithArgs("--capabilities");
-        Assert.assertThat(console, CoreMatchers.containsString("- mixed-param"));
-        Assert.assertThat(console, CoreMatchers.containsString("- required-param"));
+        MatcherAssert.assertThat(console, CoreMatchers.containsString("- mixed-param"));
+        MatcherAssert.assertThat(console, CoreMatchers.containsString("- required-param"));
     }
 
     @Test
     public void testJSONCapabilitiesPrinting() {
         String console = callMainWithArgs("--json-capabilities");
 
-        Assert.assertThat(console, CoreMatchers.containsString("mixed-param"));
-        Assert.assertThat(console, CoreMatchers.containsString("required-param"));
+        MatcherAssert.assertThat(console, CoreMatchers.containsString("mixed-param"));
+        MatcherAssert.assertThat(console, CoreMatchers.containsString("required-param"));
         // throws Exception if not valid json
         new Gson().fromJson(console, HashMap.class);
     }
@@ -92,8 +93,8 @@ public class MainTest {
         String scriptFileName = writeScriptFile(dataFile.getAbsolutePath() + " ->mixed-param()->mixed-param()->" + outFile);
         String console = callMainWithArgs("--file ", scriptFileName);
 
-        Assert.assertThat(console, CoreMatchers.not(CoreMatchers.containsString("Error")));
-        Assert.assertThat(console, CoreMatchers.not(CoreMatchers.containsString("Exception")));
+        MatcherAssert.assertThat(console, CoreMatchers.not(CoreMatchers.containsString("Error")));
+        MatcherAssert.assertThat(console, CoreMatchers.not(CoreMatchers.containsString("Exception")));
     }
 
     @Test(timeout = 5000)
@@ -101,14 +102,14 @@ public class MainTest {
         String scriptFileName = writeScriptFile(dataFile.getAbsolutePath() + " ->mixed-param()->mixed-param()-> -");
         String console = callMainWithArgs("--file", scriptFileName);
 
-        Assert.assertThat(console, CoreMatchers.not(CoreMatchers.containsString("Error")));
-        Assert.assertThat(console, CoreMatchers.not(CoreMatchers.containsString("Exception")));
+        MatcherAssert.assertThat(console, CoreMatchers.not(CoreMatchers.containsString("Error")));
+        MatcherAssert.assertThat(console, CoreMatchers.not(CoreMatchers.containsString("Exception")));
 
         // assert console contains each sample value
-        Assert.assertThat(console, CoreMatchers.containsString("11111"));
-        Assert.assertThat(console, CoreMatchers.containsString("22222"));
-        Assert.assertThat(console, CoreMatchers.containsString("33333"));
-        Assert.assertThat(console, CoreMatchers.containsString("44444"));
+        MatcherAssert.assertThat(console, CoreMatchers.containsString("11111"));
+        MatcherAssert.assertThat(console, CoreMatchers.containsString("22222"));
+        MatcherAssert.assertThat(console, CoreMatchers.containsString("33333"));
+        MatcherAssert.assertThat(console, CoreMatchers.containsString("44444"));
     }
 
     private String callMainWithArgs(String... args) {

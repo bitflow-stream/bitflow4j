@@ -24,12 +24,12 @@ public class RegisteredStep<BuilderClass> {
         this.builder = builder;
     }
 
-    public RegisteredStep optional(String... parameters) {
+    public RegisteredStep<BuilderClass> optional(String... parameters) {
         Collections.addAll(optionalParameters, parameters);
         return this;
     }
 
-    public RegisteredStep required(String... parameters) {
+    public RegisteredStep<BuilderClass> required(String... parameters) {
         Collections.addAll(requiredParameters, parameters);
         return this;
     }
