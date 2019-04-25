@@ -1,4 +1,5 @@
 # teambitflow/bitflow4j
+# docker build -t teambitflow/bitflow4j .
 FROM maven:3.6-jdk-11 as build
 WORKDIR /build-bitflow4j
 COPY . .
