@@ -3,7 +3,6 @@
          xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>bitflow4j</groupId>
     <artifactId>bitflow4j</artifactId>
     <version>0.0.1</version>
@@ -178,7 +177,6 @@
             </plugin>
         </plugins>
     </build>
-
     <dependencies>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -188,7 +186,7 @@
         <dependency>
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>
-            <version>20040616</version>
+            <version>3.2.2</version>
         </dependency>
         <dependency>
             <groupId>org.ini4j</groupId>
