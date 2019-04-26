@@ -13,7 +13,6 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-//TODO: Change
 @Description("A Fork that forks the samples based on the provided tag-name. Samples with the tag will be forked to the 'present' fork." +
         "Samples without the tag will be forked to the 'missing' fork.")
 public class ForkTagByPresence implements ScriptableDistributor {
