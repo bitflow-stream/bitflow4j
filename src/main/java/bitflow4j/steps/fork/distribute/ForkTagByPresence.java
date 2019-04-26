@@ -86,7 +86,7 @@ public class ForkTagByPresence implements ScriptableDistributor {
             subPipelines.put(tagValue, pipe);
             return pipe;
         } catch (IOException e) {
-            logger.log(Level.SEVERE, String.format("Failed to build sub-pipeline for template value '%s' (matching %s)", tagValue, key), e);
+            logger.log(Level.SEVERE, String.format("Failed to build sub-pipeline for value '%s' (matching %s)", tagValue, key), e);
             return null;
         }
     }
