@@ -12,7 +12,7 @@ import static org.junit.Assert.assertNotNull;
 
 public class RegisteredStepTest {
 
-    private final RegisteredStep sampleRegisteredStep = new RegisteredStep<ProcessingStepBuilder>("test",
+    private final RegisteredStep<ProcessingStepBuilder> sampleRegisteredStep = new RegisteredStep<ProcessingStepBuilder>("test",
             "This is the description.", parameters -> new NoopStep())
             .required("require_me").optional("optional_me");
 

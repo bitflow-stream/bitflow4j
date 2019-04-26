@@ -3,8 +3,6 @@ package bitflow4j.script.registry;
 import bitflow4j.PipelineStep;
 import bitflow4j.steps.BatchHandler;
 import bitflow4j.steps.fork.ScriptableDistributor;
-import com.thoughtworks.paranamer.BytecodeReadingParanamer;
-import com.thoughtworks.paranamer.Paranamer;
 import org.reflections.Reflections;
 
 import java.util.ArrayList;
@@ -21,7 +19,6 @@ public class Registry {
 
     private static final Logger logger = Logger.getLogger(Registry.class.getName());
 
-    private Paranamer paranamer = new BytecodeReadingParanamer();
     private Map<String, RegisteredStep<ProcessingStepBuilder>> registeredSteps = new HashMap<>();
     private Map<String, RegisteredStep<BatchStepBuilder>> registeredBatchSteps = new HashMap<>();
     private Map<String, RegisteredStep<ForkBuilder>> registeredForks = new HashMap<>();
@@ -133,7 +130,7 @@ public class Registry {
     }
 
     public boolean registerClass(Class impl) {
-        return new RegistryConstructor(impl, paranamer).register(this);
+        return new RegistryConstructor(impl).register(this);
     }
 
 }

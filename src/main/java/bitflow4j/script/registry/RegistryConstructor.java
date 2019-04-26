@@ -4,30 +4,25 @@ import bitflow4j.PipelineStep;
 import bitflow4j.steps.BatchHandler;
 import bitflow4j.steps.fork.ScriptableDistributor;
 import com.google.common.collect.Lists;
-import com.thoughtworks.paranamer.Paranamer;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Parameter;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 class RegistryConstructor implements ProcessingStepBuilder, ForkBuilder, BatchStepBuilder {
 
     private static final Logger logger = Logger.getLogger(RegistryConstructor.class.getName());
 
-    private final Paranamer paranamer;
     private final String name;
     private final String description;
     private final Class<?> cls;
     private final List<Constructor> constructors;
     private final Constructor stringMapConstructor;
 
-    RegistryConstructor(Class<?> cls, Paranamer paranamer) {
+    RegistryConstructor(Class<?> cls) {
         this.cls = cls;
-        this.paranamer = paranamer;
         this.name = RegisteredStep.splitCamelCase(cls.getSimpleName());
         this.description = getDescriptionField(cls);
         this.constructors = Lists.newArrayList(cls.getConstructors());
@@ -64,14 +59,7 @@ class RegistryConstructor implements ProcessingStepBuilder, ForkBuilder, BatchSt
     }
 
     private boolean isConstructable(Constructor constructor) {
-        String[] names = paranamer.lookupParameterNames(constructor, false);
-        if (names == null) {
-            logger.fine("No Paranamer information found for class: " + constructor.getDeclaringClass().getName());
-            return false;
-        }
-
-        Parameter[] constructorParams = constructor.getParameters();
-        for (Parameter param : constructorParams) {
+        for (Parameter param : constructor.getParameters()) {
             switch (param.getType().getSimpleName()) {
                 case "String":
                 case "Double":
@@ -183,14 +171,18 @@ class RegistryConstructor implements ProcessingStepBuilder, ForkBuilder, BatchSt
         return true;
     }
 
+    private List<String> getParameterNames(Executable methodOrConstructor) {
+        return Arrays.stream(methodOrConstructor.getParameters()).map(Parameter::getName).collect(Collectors.toList());
+    }
+
     private <T> RegisteredStep<T> configureRegisteredStep(RegisteredStep<T> reg) {
         if (!constructors.isEmpty()) {
-            String[] constructor0ParamNames = paranamer.lookupParameterNames(constructors.get(0), false);
+            List<String> constructor0ParamNames = getParameterNames(constructors.get(0));
             Set<String> optionalParams = new HashSet<>();
-            Set<String> requiredParams = new HashSet<>(Arrays.asList(constructor0ParamNames));
+            Set<String> requiredParams = new HashSet<>(constructor0ParamNames);
 
             constructors.forEach(constructor -> {
-                List<String> paramNames = Arrays.asList(paranamer.lookupParameterNames(constructor, false));
+                List<String> paramNames = getParameterNames(constructor);
 
                 // build optional parameters
                 for (String paramName : paramNames) {
@@ -227,12 +219,8 @@ class RegistryConstructor implements ProcessingStepBuilder, ForkBuilder, BatchSt
             if (constructor.getParameters().length != parameters.size()) {
                 continue;
             }
-            String[] parameterNames = paranamer.lookupParameterNames(constructor, false);
-            if (parameterNames == null) {
-                throw new ConstructionException(name, "No Paranamer information found in class: " + cls.getName());
-            }
-
-            String constructorParamConc = sortedConcatenation(Arrays.asList(parameterNames));
+            List<String> parameterNames = getParameterNames(constructor);
+            String constructorParamConc = sortedConcatenation(parameterNames);
             if (inputParamStr.equals(constructorParamConc)) {
                 return invokeSpecializedConstructor(constructor, parameterNames, parameters);
             }
@@ -252,7 +240,7 @@ class RegistryConstructor implements ProcessingStepBuilder, ForkBuilder, BatchSt
         return parameters.stream().sorted().reduce((s, s2) -> s.toLowerCase() + "_" + s2.toLowerCase()).get();
     }
 
-    private Object invokeSpecializedConstructor(Constructor<?> constructor, String[] parameterNames, Map<String, String> dirtyParameters) throws ConstructionException {
+    private Object invokeSpecializedConstructor(Constructor<?> constructor, List<String> parameterNames, Map<String, String> dirtyParameters) throws ConstructionException {
         Map<String, String> parameters = new HashMap<>();
         dirtyParameters.forEach((key, val) -> parameters.put(key.toLowerCase(), val));
         if (parameters.size() == 0) {
@@ -262,7 +250,7 @@ class RegistryConstructor implements ProcessingStepBuilder, ForkBuilder, BatchSt
         Object[] invokeParameters = new Object[parameters.size()];
         for (int i = 0; i < constructorParams.length; i++) {
             Parameter param = constructorParams[i];
-            String value = parameters.get(parameterNames[i].toLowerCase());
+            String value = parameters.get(parameterNames.get(i).toLowerCase());
             switch (param.getType().getSimpleName()) {
                 case "String":
                     invokeParameters[i] = value;
@@ -295,7 +283,7 @@ class RegistryConstructor implements ProcessingStepBuilder, ForkBuilder, BatchSt
     }
 
     private Object invokeConstructor(Constructor c, Object[] parameters) throws ConstructionException {
-        Throwable exc = null;
+        Throwable exc;
         try {
             return c.newInstance(parameters);
         } catch (InvocationTargetException e) {
