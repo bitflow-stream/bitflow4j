@@ -6,7 +6,7 @@ COPY . .
 RUN mvn clean install
 RUN cp /build-bitflow4j/target/bitflow4j-*-jar-with-dependencies.jar /build-bitflow4j/bitflow4j-with-dependencies.jar
 
-FROM java:11-jre-alpine
+FROM openjdk:11-jre-slim
 WORKDIR /
 COPY --from=build /build-bitflow4j/bitflow4j-with-dependencies.jar .
 ENTRYPOINT ["java", "-jar", "bitflow4j-with-dependencies.jar"]
