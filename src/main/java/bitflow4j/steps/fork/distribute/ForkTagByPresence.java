@@ -14,85 +14,48 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Description("A Fork that forks the samples based on the provided tag-name. Samples with the tag will be forked to the 'present' fork." +
-        "Samples without the tag will be forked to the 'missing' fork.")
-public class ForkTagByPresence implements ScriptableDistributor {
+        "Samples without the tag will be forked to the 'absent' fork.")
+public class ForkTagByPresence extends AbstractTagFork {
 
     private static final Logger logger = Logger.getLogger(ForkTagByPresence.class.getName());
 
     private final String tagName;
-    private final Map<String, Pipeline> subPipelines = new HashMap<>();
-    private final Map<String, Collection<Pair<String, Pipeline>>> tagValueCache = new HashMap<>(); // Additional cache just for reducing object creation
+    private final static String TAGPRESENT = "present";
+    private final static String TAGABSENT = "absent";
 
-    private Collection<Pair<String, PipelineBuilder>> subPipelineBuilders;
-    private List<String> availableKeys;
-    private Collection<Object> formattedSubPipelines;
 
     public ForkTagByPresence(String tagName) {
+        super(true, false);
         this.tagName = tagName;
     }
 
     @Override
-    public void setSubPipelines(Collection<Pair<String, PipelineBuilder>> subPipelines) throws IOException {
-        this.subPipelineBuilders = subPipelines;
-        availableKeys = subPipelines.stream().map(Pair::getLeft).sorted().collect(Collectors.toList());
-        formattedSubPipelines = ScriptableDistributor.formattedSubPipelines(subPipelineBuilders);
-    }
-
-    @Override
     public String toString() {
-        return String.format("Distribute samples by the presence of the given tag to forks 'missing' and 'present'.");
+        return String.format("Distribute samples by the presence of the given tag to forks '%s' and '%s'.", TAGPRESENT, TAGABSENT);
     }
 
     @Override
-    public Collection<Object> formattedChildren() {
-        return formattedSubPipelines;
+    public void setSubPipelines(Collection<Pair<String, PipelineBuilder>> subPipelines) throws IOException {
+        System.out.println("subPipelines-length:" + subPipelines.size());
+        for(Pair pair : subPipelines){
+            if(!pair.getLeft().equals(TAGPRESENT) && !pair.getLeft().equals(TAGABSENT)){
+                System.out.println("A different identifer was found.");
+                logger.warning("A different identifer was found.:");
+                throw new IOException(String.format("A different identifer than '%s' and '%s' was found: '%s'",
+                        TAGPRESENT, TAGABSENT, pair.getLeft()));
+            }
+        }
+        super.setSubPipelines(subPipelines);
     }
 
     @Override
-    public Collection<Pair<String, Pipeline>> distribute(Sample sample) {
-        final boolean present = sample.hasTag(tagName);
-        String value = present ? "present" : "missing";
-
-        if (tagValueCache.containsKey(value)) {
-            return tagValueCache.get(value);
-        } else {
-            List<Pair<String, Pipeline>> result = new ArrayList<>();
-            if(subPipelineBuilders != null){
-                for (Pair<String, PipelineBuilder> available : subPipelineBuilders) {
-                    if (matches(available.getLeft(), present)) {
-                        Pipeline pipeline = getPipeline(available.getLeft(), value, available.getRight());
-                        if (pipeline != null) {
-                            result.add(new Pair<>(value, pipeline));
-                        }
-                    }
-                }
-            }
-            if (result.isEmpty()) {
-                logger.warning(String.format("No sub-pipeline for value %s (available keys: %s)", value, availableKeys));
-            }
-            tagValueCache.put(value, result);
-            return result;
-        }
+    protected String getSampleKey(Sample sample) {
+        return sample.hasTag(tagName) ? TAGPRESENT : TAGABSENT;
     }
 
-    private Pipeline getPipeline(String key, String tagValue, PipelineBuilder builder) {
-        if (subPipelines.containsKey(tagValue)) {
-            return subPipelines.get(tagValue);
-        }
-
-        try {
-            Pipeline pipe = builder.build();
-            subPipelines.put(tagValue, pipe);
-            return pipe;
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, String.format("Failed to build sub-pipeline for value '%s' (matching %s)", tagValue, key), e);
-            return null;
-        }
-    }
-
-    private boolean matches(String key, boolean present) {
-        if(present) return key.equals("present");
-        else return key.equals("missing");
+    @Override
+    protected boolean matches(String key, String present) {
+        return key.equals(present);
     }
 
 }
