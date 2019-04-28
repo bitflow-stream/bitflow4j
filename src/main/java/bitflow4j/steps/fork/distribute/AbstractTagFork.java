@@ -20,22 +20,17 @@ public abstract class AbstractTagFork implements ScriptableDistributor {
 
     private static final Logger logger = Logger.getLogger(AbstractTagFork.class.getName());
 
-    private final boolean wildcardMatch, regexMatch;
-    //private final String template;
+    protected final boolean wildcardMatch, regexMatch;
     private final Map<String, Pipeline> subPipelines = new HashMap<>();
     private final Map<String, Collection<Pair<String, Pipeline>>> tagValueCache = new HashMap<>(); // Additional cache just for reducing object creation
     private final Map<String, Pattern> patterns = new HashMap<>();
 
-    private Collection<Pair<String, PipelineBuilder>> subPipelineBuilders;
+    protected  Collection<Pair<String, PipelineBuilder>> subPipelineBuilders;
     private List<String> availableKeys;
     private Collection<Object> formattedSubPipelines;
 
-    /*public AbstractTagFork(String template) {
-        this(template, true, false);
-    }*/
 
     public AbstractTagFork(boolean wildcard, boolean regex) {
-        //this.template = template;
         this.wildcardMatch = wildcard;
         this.regexMatch = regex;
     }
@@ -43,8 +38,6 @@ public abstract class AbstractTagFork implements ScriptableDistributor {
     @Override
     public void setSubPipelines(Collection<Pair<String, PipelineBuilder>> subPipelines) throws IOException {
         this.subPipelineBuilders = subPipelines;
-        System.out.println("trololol");
-        logger.warning("There is something wrong");
         availableKeys = subPipelines.stream().map(Pair::getLeft).sorted().collect(Collectors.toList());
         compilePatterns();
         formattedSubPipelines = ScriptableDistributor.formattedSubPipelines(subPipelineBuilders);
@@ -124,18 +117,6 @@ public abstract class AbstractTagFork implements ScriptableDistributor {
             return null;
         }
     }
-
-    /*private boolean matches(String key, String tag) {
-        if (wildcardMatch || regexMatch) {
-            if (patterns.containsKey(key)) {
-                return patterns.get(key).matcher(tag).matches();
-            } else {
-                throw new IllegalStateException(String.format("No pattern compiled for '%s' (trying to match template '%s')", key, tag));
-            }
-        } else {
-            return key.equals(tag);
-        }
-    }*/
 
     protected String getSampleKey(Sample sample){
         return null;
