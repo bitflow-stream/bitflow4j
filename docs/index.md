@@ -15,7 +15,7 @@ $ git clone https://github.com/bitflow-stream/bitflow4j
 $ cd bitflow4j
 $ mvn install
 ```
-Within the `/target` directory, the file `bitflow4j-0.1.1-jar-with-dependencies.jar` is created. This file should be used for further usages.
+Within the `/target` directory, the file `bitflow4j-0.0.1-jar-with-dependencies.jar` is created. This file should be used for further usages.
 
 ## Bitflow script usage and examples
 
@@ -48,7 +48,7 @@ Installation via maven (add this to your pom.xml):
 <dependency>
 	<groupId>bitflow4j</groupId>
 	<artifactId>bitflow4j</artifactId>
-	<version>0.1.1</version>
+	<version>0.0.1</version>
 </dependency>
 ```
 
