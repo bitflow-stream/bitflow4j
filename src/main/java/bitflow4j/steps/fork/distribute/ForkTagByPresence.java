@@ -15,9 +15,8 @@ public class ForkTagByPresence extends AbstractTagFork {
     private final static String TAGPRESENT = "present";
     private final static String TAGABSENT = "absent";
 
-
     public ForkTagByPresence(String tagName) {
-        super(true, false);
+        super();
         this.tagName = tagName;
     }
 
@@ -28,8 +27,8 @@ public class ForkTagByPresence extends AbstractTagFork {
 
     @Override
     public void setSubPipelines(Collection<Pair<String, PipelineBuilder>> subPipelines) throws IOException {
-        for(Pair pair : subPipelines){
-            if(!pair.getLeft().equals(TAGPRESENT) && !pair.getLeft().equals(TAGABSENT)){
+        for (Pair pair : subPipelines) {
+            if (!pair.getLeft().equals(TAGPRESENT) && !pair.getLeft().equals(TAGABSENT)) {
                 throw new IOException(String.format("A different identifer than '%s' and '%s' was found: '%s'",
                         TAGPRESENT, TAGABSENT, pair.getLeft()));
             }

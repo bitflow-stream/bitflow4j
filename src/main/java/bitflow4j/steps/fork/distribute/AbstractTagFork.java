@@ -10,8 +10,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
 @Description("A Fork that forks the samples based on the provided template. Samples with the same template values of the provided" +
@@ -20,53 +18,20 @@ public abstract class AbstractTagFork implements ScriptableDistributor {
 
     private static final Logger logger = Logger.getLogger(AbstractTagFork.class.getName());
 
-    protected final boolean wildcardMatch, regexMatch;
     private final Map<String, Pipeline> subPipelines = new HashMap<>();
     private final Map<String, Collection<Pair<String, Pipeline>>> tagValueCache = new HashMap<>(); // Additional cache just for reducing object creation
-    private final Map<String, Pattern> patterns = new HashMap<>();
 
-    protected  Collection<Pair<String, PipelineBuilder>> subPipelineBuilders;
-    private List<String> availableKeys;
-    private Collection<Object> formattedSubPipelines;
+    protected Collection<Pair<String, PipelineBuilder>> subPipelineBuilders;
+    protected List<String> availableKeys;
+    protected Collection<Object> formattedSubPipelines;
 
-
-    public AbstractTagFork(boolean wildcard, boolean regex) {
-        this.wildcardMatch = wildcard;
-        this.regexMatch = regex;
-    }
+    public AbstractTagFork() {}
 
     @Override
     public void setSubPipelines(Collection<Pair<String, PipelineBuilder>> subPipelines) throws IOException {
         this.subPipelineBuilders = subPipelines;
         availableKeys = subPipelines.stream().map(Pair::getLeft).sorted().collect(Collectors.toList());
-        compilePatterns();
         formattedSubPipelines = ScriptableDistributor.formattedSubPipelines(subPipelineBuilders);
-    }
-
-    private void compilePatterns() throws IOException {
-        if (wildcardMatch || regexMatch) {
-            for (Pair<String, PipelineBuilder> available : subPipelineBuilders) {
-                String key = available.getLeft();
-                try {
-                    patterns.put(key, Pattern.compile(toWildcardRegex(key)));
-                } catch (PatternSyntaxException e) {
-                    throw new IOException(e);
-                }
-
-            }
-        }
-    }
-
-    private String toWildcardRegex(String key) {
-        if (wildcardMatch) {
-            return key.replaceAll("\\*", ".*");
-        }
-        return key;
-    }
-
-    @Override
-    public String toString() {
-        return "";
     }
 
     @Override
@@ -85,7 +50,7 @@ public abstract class AbstractTagFork implements ScriptableDistributor {
             return tagValueCache.get(value);
         } else {
             List<Pair<String, Pipeline>> result = new ArrayList<>();
-            if(subPipelineBuilders != null){
+            if (subPipelineBuilders != null) {
                 for (Pair<String, PipelineBuilder> available : subPipelineBuilders) {
                     if (matches(available.getLeft(), value)) {
                         Pipeline pipeline = getPipeline(available.getLeft(), value, available.getRight());
@@ -118,12 +83,8 @@ public abstract class AbstractTagFork implements ScriptableDistributor {
         }
     }
 
-    protected String getSampleKey(Sample sample){
-        return null;
-    }
+    protected abstract String getSampleKey(Sample sample);
 
-    protected boolean matches(String key, String tag){
-        return false;
-    }
+    protected abstract boolean matches(String key, String tag);
 
 }
