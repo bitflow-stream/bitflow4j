@@ -19,7 +19,6 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -81,13 +80,11 @@ class BitflowScriptCompiler {
             if (e.getCause() instanceof RecognitionException) {
                 throw new CompilationException((RecognitionException) e.getCause());
             }
-            logger.log(Level.SEVERE, "Unknown exception during Bitflow script compilation", e);
-            throw new CompilationException("Unknown error: " + e.getCause().toString());
+            throw new CompilationException(e.getCause());
         } catch (RecognitionException e) {
             throw new CompilationException(e);
         } catch (Throwable e) {
-            logger.log(Level.SEVERE, "Exception during Bitflow script compilation", e);
-            throw new CompilationException(String.format("Unknown %s during Bitflow script compilation: %s", e.getClass().getName(), e.getMessage()));
+            throw new CompilationException(e);
         }
     }
 
@@ -98,7 +95,7 @@ class BitflowScriptCompiler {
     private Pipeline buildPipeline(BitflowParser.PipelinesContext ctx) throws CompilationException {
         if (ctx.pipeline().size() != 1) {
             // TODO implement parallel multi input
-            throw new CompilationException("Multiple parallel input pipelines are not yet supported");
+            throw new CompilationException(ctx, "Multiple parallel input pipelines are not yet supported");
         }
         return buildPipeline(ctx.pipeline(0));
     }
@@ -108,7 +105,7 @@ class BitflowScriptCompiler {
 
         if (ctx.pipelines() != null) {
             // TODO implement
-            throw new CompilationException("Nested input pipelines are not yet supported");
+            throw new CompilationException(ctx, "Nested input pipelines are not yet supported");
         } else if (ctx.dataInput() != null) {
             pipe.input(buildInput(ctx.dataInput()));
         } else if (ctx.pipelineElement() != null) {
@@ -155,7 +152,7 @@ class BitflowScriptCompiler {
         try {
             return endpointFactory.createSource(inputs);
         } catch (IOException e) {
-            throw new CompilationException(ctx, "Could not create source: " + e.getMessage());
+            throw new CompilationException(ctx, e);
         }
     }
 
@@ -164,7 +161,7 @@ class BitflowScriptCompiler {
         try {
             return endpointFactory.createSink(output);
         } catch (IOException e) {
-            throw new CompilationException(ctx, "Could not create sink: " + e.getMessage());
+            throw new CompilationException(ctx, e);
         }
     }
 
@@ -174,16 +171,16 @@ class BitflowScriptCompiler {
 
         RegisteredStep<ProcessingStepBuilder> regAnalysis = registry.getRegisteredStep(name);
         if (regAnalysis == null) {
-            throw new CompilationException(ctx, String.format("Unknown processing step: '%s'", name));
+            throw new CompilationException(ctx, name, "Unknown processing step");
         }
-        regAnalysis.validateParameters(params).forEach(e -> {
-            throw new CompilationException(ctx, e);
+        regAnalysis.validateParameters(params).forEach(parameterError -> {
+            throw new CompilationException(ctx, parameterError);
         });
 
         try {
             pipe.step(regAnalysis.builder.buildProcessingStep(params));
         } catch (IOException e) {
-            throw new CompilationException(ctx, name + ": " + e.getMessage());
+            throw new CompilationException(ctx, name, e);
         }
     }
 
@@ -193,7 +190,7 @@ class BitflowScriptCompiler {
 
         RegisteredStep<ForkBuilder> forkReg = registry.getRegisteredFork(forkName);
         if (forkReg == null) {
-            throw new CompilationException(ctx, "Unknown fork: " + forkName);
+            throw new CompilationException(ctx, forkName, "Unknown fork");
         }
 
         Collection<Pair<String, ScriptableDistributor.PipelineBuilder>> subPipes = new ArrayList<>();
@@ -209,11 +206,11 @@ class BitflowScriptCompiler {
             try {
                 distributor.setSubPipelines(subPipes);
             } catch (IOException e) {
-                throw new ConstructionException(forkName, e.getMessage());
+                throw new CompilationException(ctx, forkName, e);
             }
             pipe.step(new Fork(distributor));
         } catch (IOException e) {
-            throw new CompilationException(ctx, forkName + ": " + e.getMessage());
+            throw new CompilationException(ctx, forkName, e);
         }
     }
 
@@ -269,7 +266,7 @@ class BitflowScriptCompiler {
             String name = unwrap(step.name());
             RegisteredStep<BatchStepBuilder> registeredStep = registry.getRegisteredBatchStep(name);
             if (registeredStep == null) {
-                throw new CompilationException(step, "Unknown batch processing step: " + name);
+                throw new CompilationException(step, name, "Unknown batch processing step");
             }
             Map<String, String> registeredStepParams = buildParameters(step.parameters());
 
@@ -277,7 +274,7 @@ class BitflowScriptCompiler {
                 BatchHandler handler = registeredStep.builder.buildBatchStep(registeredStepParams);
                 batchStep.addBatchHandler(handler);
             } catch (IOException e) {
-                throw new CompilationException(step, name + ": " + e.getMessage());
+                throw new CompilationException(step, name, e);
             }
         }
         pipe.step(batchStep);
