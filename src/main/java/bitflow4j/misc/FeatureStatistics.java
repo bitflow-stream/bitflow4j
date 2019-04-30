@@ -18,7 +18,7 @@ public class FeatureStatistics implements Serializable{
 
     private static final Logger logger = Logger.getLogger(FeatureStatistics.class.getName());
 
-    public static class Feature {
+    public static class Feature implements Serializable {
         public final String name;
         public double min;
         public double max;
