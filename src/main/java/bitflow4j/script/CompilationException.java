@@ -5,68 +5,71 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.Token;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 public class CompilationException extends RuntimeException {
 
-    private static final int MAX_ERROR_TEXT = 30;
+    private static final int MAX_ERROR_TEXT = 50;
 
-    private List<String> errors;
-
-    public CompilationException(List<String> errors) {
-        super(concatErrors(errors));
-        this.errors = errors;
-    }
-
-    public CompilationException(String... errors) {
-        this(Arrays.asList(errors));
-    }
-
+    /**
+     * This constructor is for compiler errors that cannot be associated with a name entity like a processing step.
+     * The error message will be formatted with the given parser context.
+     */
     public CompilationException(ParserRuleContext ctx, String error) {
-        this(Collections.singletonList(error));
+        super(formatError(ctx.getStart(), null, ctx, error), null);
     }
 
+    /**
+     * These errors have no associated named script entity, but a exception that can be logged.
+     */
+    public CompilationException(ParserRuleContext ctx, Throwable cause) {
+        super(formatError(ctx.getStart(), null, ctx, cause.getMessage()), cause);
+    }
+
+    /**
+     * This constructor additionally provides the name of a pipeline step that caused the error.
+     */
+    public CompilationException(ParserRuleContext ctx, String stepName, String error) {
+        super(formatError(ctx.getStart(), stepName, ctx, error), null);
+    }
+
+    /**
+     * This constructor additionally provides the name of a pipeline step that caused the error.
+     */
+    public CompilationException(ParserRuleContext ctx, String stepName, Throwable cause) {
+        super(formatError(ctx.getStart(), stepName, ctx, cause.getMessage()), cause);
+    }
+
+    /**
+     * This shortcut constructor unpacks the information from the given RecognitionException and formats it.
+     * The exception itself is not logged as a cause, because all information it contains is formatted to a message.
+     */
     public CompilationException(RecognitionException e) {
-        this(null, formatError(e.getOffendingToken(), e.getCtx(), e.getMessage()));
+        super(formatError(e.getOffendingToken(), null, e.getCtx(), e.getMessage()), null);
     }
 
-    public static String formatError(ParserRuleContext ctx, String msg) {
-        return formatError(ctx.getStart(), ctx, msg);
+    /**
+     * This constructor is for unexpected errors that have no further context
+     */
+    public CompilationException(Throwable cause) {
+        super(String.format("Unknown %s during Bitflow script compilation", cause.getClass().getName()), cause);
     }
 
-    public static String formatError(Token position, RuleContext ctx, String msg) {
+    private static String formatError(Token position, String stepName, RuleContext ctx, String msg) {
         String text = "";
-        if (ctx != null)
-            text = ctx.getText();
-        if (text == null || text.isEmpty()) {
-            text = position.getText();
-        }
-        if (text.length() > MAX_ERROR_TEXT + "...".length()) {
-            text = text.substring(0, MAX_ERROR_TEXT) + "...";
+        if (stepName != null) {
+            text = stepName;
+        } else {
+            if (ctx != null) {
+                text = ctx.getText();
+            }
+            if (text == null || text.isEmpty()) {
+                text = position.getText();
+            }
+            if (text.length() > MAX_ERROR_TEXT + "...".length()) {
+                text = text.substring(0, MAX_ERROR_TEXT) + "...";
+            }
         }
         return String.format("Line %s (%s) '%s': %s",
                 position.getLine(), position.getCharPositionInLine(), text, msg);
-    }
-
-    public List<String> getErrors() {
-        return errors;
-    }
-
-    private static String concatErrors(List<String> errors) {
-        if (errors.isEmpty())
-            return "no errors";
-        else if (errors.size() == 1)
-            return errors.get(0);
-        else {
-            StringBuilder result = new StringBuilder("Multiple errors:");
-            int i = 1;
-            for (String err : errors) {
-                result.append("\n").append(i++).append(": ").append(err);
-            }
-            return result.toString();
-        }
     }
 
 }

@@ -81,7 +81,7 @@ public class Main {
             pipe = compiler.parseScript(rawScript);
         } catch (CompilationException exc) {
             logger.severe("Failed to parse Bitflow script:");
-            exc.getErrors().stream().map(s -> "\t" + s).forEach(logger::severe);
+            logger.log(Level.SEVERE, exc.getMessage(), exc.getCause());
             return;
         }
 
