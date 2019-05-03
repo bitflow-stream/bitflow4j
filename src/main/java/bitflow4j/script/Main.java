@@ -6,6 +6,7 @@ import bitflow4j.misc.TreeFormatter;
 import bitflow4j.script.endpoints.EndpointFactory;
 import bitflow4j.script.registry.RegisteredStep;
 import bitflow4j.script.registry.Registry;
+import bitflow4j.task.TaskPool;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
@@ -32,13 +33,17 @@ public class Main {
 
     public static void main(String[] args) {
         try {
-            executeMain(args);
+            int code = executeMain(args);
+            if (code != 0) {
+                System.exit(code);
+            }
         } catch (Throwable t) {
             logger.log(Level.SEVERE, "Fatal error", t);
+            System.exit(1);
         }
     }
 
-    public static void executeMain(String[] args) throws IOException {
+    public static int executeMain(String[] args) throws IOException {
         CmdArgs cmdArgs = new CmdArgs();
         JCommander jc = JCommander.newBuilder()
                 .allowAbbreviatedOptions(true)
@@ -49,11 +54,11 @@ public class Main {
         } catch (ParameterException e) {
             System.err.println(e.getMessage());
             e.usage();
-            return;
+            return 1;
         }
         if (args.length == 0 || cmdArgs.printHelp) {
             jc.usage();
-            return;
+            return 0;
         }
         cmdArgs.configureLogging();
 
@@ -62,35 +67,30 @@ public class Main {
 
         if (cmdArgs.printJsonCapabilities) {
             logJsonCapabilities(registry);
-            return;
+            return 0;
         } else if (cmdArgs.printCapabilities) {
             logCapabilities(registry);
-            return;
+            return 0;
         }
 
         if (!cmdArgs.hasValidScript()) {
             logger.severe("Please provide a Bitflow script either as file (-f parameter) or ");
             logger.severe(jc.toString());
-            return;
+            return 1;
         }
         String rawScript = cmdArgs.getRawScript();
         EndpointFactory endpoints = new EndpointFactory();
         BitflowScriptCompiler compiler = new BitflowScriptCompiler(registry, endpoints);
-        Pipeline pipe;
-        try {
-            pipe = compiler.parseScript(rawScript);
-        } catch (CompilationException exc) {
-            logger.severe("Failed to parse Bitflow script:");
-            logger.log(Level.SEVERE, exc.getMessage(), exc.getCause());
-            return;
-        }
+        Pipeline pipe = compiler.parseScript(rawScript);
 
         for (String line : TreeFormatter.standard.formatLines(pipe)) {
             logger.info(line);
         }
         if (cmdArgs.printPipeline)
-            return;
+            return 0;
         pipe.runAndWait();
+        TaskPool.shutdownAfter(cmdArgs.shutdownTimeout);
+        return 0;
     }
 
     private static final Comparator<RegisteredStep> stepComparator = (a1, a2) -> a1.getStepName().compareToIgnoreCase(a2.getStepName());
@@ -173,6 +173,8 @@ public class Main {
         public boolean verboseLogging = false;
         @Parameter(names = {"-q", "--quiet"}, description = "Set the log level to WARNING.")
         public boolean silentLogging = false;
+        @Parameter(names = {"--shutdown-after"}, description = "After all tasks have finished, wait this number of milliseconds before forcefully shutting down the JVM. Set to <= 0 to disable.")
+        public long shutdownTimeout = 3000L;
 
         public boolean hasValidScript() {
             boolean hasFile = fileName != null;

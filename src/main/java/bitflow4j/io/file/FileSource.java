@@ -111,7 +111,7 @@ public class FileSource extends ThreadedSource {
         Files.walkFileTree(new File(directory).toPath(),
                 new HashSet<>(Collections.singletonList(FOLLOW_LINKS)),
                 Integer.MAX_VALUE,
-                new SimpleFileVisitor<Path>() {
+                new SimpleFileVisitor<>() {
                     @Override
                     public FileVisitResult preVisitDirectory(Path path, BasicFileAttributes attr) throws IOException {
                         boolean result = visitor.visitFile(path, attr);

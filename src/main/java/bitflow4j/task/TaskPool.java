@@ -64,6 +64,7 @@ public class TaskPool {
         logger.info("Shutting down: " + reason);
         running = false;
         for (StoppableTask task : stoppable) {
+            logger.fine("Stopping task: " + task);
             try {
                 task.stop();
             } catch (IOException e) {
@@ -108,6 +109,29 @@ public class TaskPool {
         }
     }
 
+    /**
+     * Start a daemon thread that calls System.exit() after the given number of milliseconds.
+     * Used to ensure forceful application shutdown after all tasks have finished, even if some Thread is still running.
+     */
+    public static void shutdownAfter(long shutdownTimeout) {
+        if (shutdownTimeout > 0) {
+            Thread t = new Thread("shutdown timeout daemon thread") {
+                @Override
+                public void run() {
+                    try {
+                        Thread.sleep(shutdownTimeout);
+                    } catch (InterruptedException ignore) {
+                    }
+                    logger.severe(String.format("Calling System.exit(): All tasks are finished, " +
+                            "but threads failed to stop after %s milliseconds.", shutdownTimeout));
+                    System.exit(1);
+                }
+            };
+            t.setDaemon(true);
+            t.start();
+        }
+    }
+
     public void waitForTasks() {
         logger.fine("Waiting for Task threads to finish...");
         boolean haveRunningThread;
@@ -145,13 +169,17 @@ public class TaskPool {
             try {
                 task.run();
                 if (!backgroundTask)
-                    TaskPool.this.stop("Task finished: " + task);
+                    TaskPool.this.stop("Finished " + taskString());
             } catch (Throwable e) {
-                String msg = "Exception in Task " + task;
-                logger.log(Level.WARNING, msg, e);
+                String msg = "Exception in " + taskString();
+                logger.log(Level.SEVERE, msg, e);
                 if (!backgroundTask)
                     TaskPool.this.stop(msg);
             }
+        }
+
+        private String taskString() {
+            return (backgroundTask ? "Background " : "") + "Task " + task;
         }
 
     }
