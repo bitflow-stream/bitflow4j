@@ -99,6 +99,9 @@ public abstract class ThreadedSource extends AbstractSource implements ParallelT
         private final PipelineStep sink;
         private final boolean fatalReaderExceptions;
 
+        // Marker object for distinguishing between clean shutdown and continuing the loop.
+        private final Sample cleanShutdownMarker = Sample.newEmptySample();
+
         public LoopSampleReaderTask(SampleGenerator generator, boolean fatalReaderExceptions) {
             this.generator = generator;
             this.fatalReaderExceptions = fatalReaderExceptions;
@@ -115,6 +118,7 @@ public abstract class ThreadedSource extends AbstractSource implements ParallelT
             if (!pool.isRunning()) return false;
             Sample sample = readSample();
             if (sample == null) return true;
+            if (sample == cleanShutdownMarker) return false;
             if (!pool.isRunning()) return false;
 
             synchronized (outputLock) {
@@ -126,11 +130,7 @@ public abstract class ThreadedSource extends AbstractSource implements ParallelT
         private Sample readSample() throws IOException {
             try {
                 Sample sample = generator.nextSample();
-                if (sample == null) {
-                    // This is exception is handled below
-                    throw new IOException(toString() + " produced a null Sample");
-                }
-                return sample;
+                return sample == null ? cleanShutdownMarker : sample;
             } catch (IOException e) {
                 if (fatalReaderExceptions) {
                     throw e;
