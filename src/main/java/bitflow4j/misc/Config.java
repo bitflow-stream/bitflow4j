@@ -24,19 +24,14 @@ public class Config {
         }
     }
 
-    public static void initializeLogger() {
-        try {
-            InputStream config = ClassLoader.getSystemResourceAsStream(logging_properties);
-            if (config != null) {
-                LogManager.getLogManager().readConfiguration(config);
-                config.close();
-                return;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
+    public static void initializeLogger() throws IOException {
+        InputStream config = ClassLoader.getSystemResourceAsStream(logging_properties);
+        if (config == null) {
+            System.err.println("Failed to initialize logger from resource " + logging_properties);
+        } else {
+            LogManager.getLogManager().readConfiguration(config);
+            config.close();
         }
-        System.err.println("Failed to initialize logger from resource " + logging_properties);
     }
 
 }

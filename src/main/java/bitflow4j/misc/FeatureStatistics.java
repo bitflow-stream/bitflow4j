@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 /**
  * Created by anton on 6/26/16.
  */
-public class FeatureStatistics implements Serializable{
+public class FeatureStatistics implements Serializable {
 
     private static final Logger logger = Logger.getLogger(FeatureStatistics.class.getName());
 
@@ -123,8 +123,8 @@ public class FeatureStatistics implements Serializable{
         fillIni(ini);
         ini.store(file);
     }
-    
-    public Ini loadIniFile(String iniFile){
+
+    public Ini loadIniFile(String iniFile) {
         Ini ini = new Ini();
         ini.getConfig().setTree(false);
         try {
@@ -137,8 +137,8 @@ public class FeatureStatistics implements Serializable{
         fillFromIni(ini);
         return ini;
     }
-    
-    public Ini createIniFile(String iniFile){
+
+    public Ini createIniFile(String iniFile) {
         Ini ini = new Ini();
         ini.getConfig().setTree(false);
         try {
@@ -171,11 +171,11 @@ public class FeatureStatistics implements Serializable{
         }
     }
 
-    public static void main(String args[]) {
+    public static void main(String[] args) throws IOException {
         Config.initializeLogger();
         if (args.length != 1) {
             logger.severe("Parameters: <ini-file>");
-            System.exit(1);
+            return;
         }
         String file = args[0];
         FeatureStatistics stats = new FeatureStatistics(file);
