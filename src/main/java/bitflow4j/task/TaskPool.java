@@ -109,29 +109,6 @@ public class TaskPool {
         }
     }
 
-    /**
-     * Start a daemon thread that calls System.exit() after the given number of milliseconds.
-     * Used to ensure forceful application shutdown after all tasks have finished, even if some Thread is still running.
-     */
-    public static void shutdownAfter(long shutdownTimeout) {
-        if (shutdownTimeout > 0) {
-            Thread t = new Thread("shutdown timeout daemon thread") {
-                @Override
-                public void run() {
-                    try {
-                        Thread.sleep(shutdownTimeout);
-                    } catch (InterruptedException ignore) {
-                    }
-                    logger.severe(String.format("Calling System.exit(): All tasks are finished, " +
-                            "but threads failed to stop after %s milliseconds.", shutdownTimeout));
-                    System.exit(1);
-                }
-            };
-            t.setDaemon(true);
-            t.start();
-        }
-    }
-
     public void waitForTasks() {
         logger.fine("Waiting for Task threads to finish...");
         boolean haveRunningThread;
