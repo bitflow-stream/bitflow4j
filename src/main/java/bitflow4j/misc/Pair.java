@@ -1,6 +1,8 @@
 package bitflow4j.misc;
 
-public class Pair<A, B> {
+import java.io.Serializable;
+
+public class Pair<A, B> implements Serializable {
 
     private A left;
     private B right;
