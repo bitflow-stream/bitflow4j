@@ -25,7 +25,7 @@ public class TcpSource extends ThreadedSource {
         super.start(pool);
         for (String source : tcpSources) {
             TcpSampleInputStream reader = new TcpSampleInputStream(source, marshaller, pool);
-            readSamples(reader, true);
+            readSamplesRobust(reader);
         }
 
         // All readers have been added, so we can immediately start waiting for them to finish

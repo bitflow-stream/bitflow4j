@@ -52,7 +52,7 @@ public class FileSink extends MarshallingSampleWriter {
         } while (!append && file.exists());
 
         //Create directory structure if it does not exist yet
-        File directory = new File(file.getParentFile().getAbsolutePath());
+        File directory = new File(file.getAbsoluteFile().getParentFile().getAbsolutePath());
         directory.mkdirs();
 
         if (!file.exists() && !file.createNewFile()) {

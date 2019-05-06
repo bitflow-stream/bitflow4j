@@ -37,21 +37,31 @@ public abstract class ThreadedSource extends AbstractSource implements ParallelT
         Sample nextSample() throws IOException;
     }
 
+    /**
+     * Read samples from the given generator, until an Exception is thrown. Shut down the application after the first
+     * Exception. This is suitable when reading samples from a file or the standard input.
+     * <p>
+     * Exceptions from the writeSample() method of the subsequent processing step will also shut down the application.
+     */
     public void readSamples(SampleGenerator generator) throws IOException {
+        readSamples(generator, true);
+    }
+
+    /**
+     * Read samples form the given generator. If an Exception occurs when reading a sample, log the exception, but do
+     * not shut down. This is suitable when reading samples from the network, where errors are expected.
+     * <p>
+     * Exceptions from the writeSample() method of the subsequent processing step will still shut down the application.
+     */
+    public void readSamplesRobust(SampleGenerator generator) throws IOException {
         readSamples(generator, false);
     }
 
-    public void readSamples(SampleGenerator generator, boolean backgroundTask) throws IOException {
-        readerTask(new LoopSampleReaderTask(generator), backgroundTask);
-    }
-
-    public void readerTask(LoopTask task) throws IOException {
-        readerTask(task, false);
-    }
-
-    public void readerTask(LoopTask task, boolean backgroundTask) throws IOException {
+    // This method is not public to force usage of one of the other 2 readSamples* methods for clarity.
+    private void readSamples(SampleGenerator generator, boolean readerExceptionsAreFatal) throws IOException {
+        LoopTask task = new LoopSampleReaderTask(generator, readerExceptionsAreFatal);
         tasks.add(task);
-        pool.start(task, backgroundTask);
+        pool.start(task, false);
     }
 
     @Override
@@ -83,18 +93,18 @@ public abstract class ThreadedSource extends AbstractSource implements ParallelT
         // The output is closed in run(), after all tasks finish.
     }
 
-    protected boolean fatalReaderExceptions() {
-        // By default, do not shut down when an Exception occurs, keep going until the user shuts us down.
-        return false;
-    }
-
     private class LoopSampleReaderTask extends LoopTask {
 
         private final SampleGenerator generator;
         private final PipelineStep sink;
+        private final boolean fatalReaderExceptions;
 
-        public LoopSampleReaderTask(SampleGenerator generator) {
+        // Marker object for distinguishing between clean shutdown and continuing the loop.
+        private final Sample cleanShutdownMarker = Sample.newEmptySample();
+
+        public LoopSampleReaderTask(SampleGenerator generator, boolean fatalReaderExceptions) {
             this.generator = generator;
+            this.fatalReaderExceptions = fatalReaderExceptions;
             this.sink = ThreadedSource.this.output();
         }
 
@@ -105,25 +115,32 @@ public abstract class ThreadedSource extends AbstractSource implements ParallelT
 
         @Override
         public boolean executeIteration() throws IOException {
+            if (!pool.isRunning()) return false;
+            Sample sample = readSample();
+            if (sample == null) return true;
+            if (sample == cleanShutdownMarker) return false;
+            if (!pool.isRunning()) return false;
+
+            synchronized (outputLock) {
+                sink.writeSample(sample);
+            }
+            return true;
+        }
+
+        private Sample readSample() throws IOException {
             try {
-                if (!pool.isRunning())
-                    return false;
                 Sample sample = generator.nextSample();
-                if (sample == null || !pool.isRunning())
-                    return false;
-                synchronized (outputLock) {
-                    sink.writeSample(sample);
-                }
-                return true;
+                return sample == null ? cleanShutdownMarker : sample;
             } catch (IOException e) {
-                boolean isFatal = fatalReaderExceptions();
-                String fatalStr = isFatal ? "Fatal " : "Non-fatal ";
-                logger.log(Level.SEVERE, fatalStr + " exception in " + toString(), e);
-                if (isFatal)
-                    close();
-                return false;
+                if (fatalReaderExceptions) {
+                    throw e;
+                } else {
+                    logger.log(Level.SEVERE, "Non-fatal exception in " + toString(), e);
+                    return null;
+                }
             }
         }
+
     }
 
 }

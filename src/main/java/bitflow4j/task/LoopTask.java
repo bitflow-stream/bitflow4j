@@ -20,11 +20,37 @@ public abstract class LoopTask implements ParallelTask {
 
     @Override
     public void run() throws IOException {
-        while (!stop && executeIteration()) ;
+        // This is really ugly, but there is no other way to perform
+        // the notifyExited() cleanup, while not dropping the Exception.
+
+        IOException excIO = null;
+        RuntimeException excRT = null;
+        try {
+            runLoop();
+        } catch (RuntimeException e) {
+            excRT = e;
+        } catch (IOException e) {
+            excIO = e;
+        } finally {
+            notifyExited();
+        }
+        if (excIO != null) {
+            throw excIO;
+        }
+        if (excRT != null) {
+            throw excRT;
+        }
+    }
+
+    private void notifyExited() {
         synchronized (this) {
             exited = true;
             notifyAll();
         }
+    }
+
+    private void runLoop() throws IOException {
+        while (!stop && executeIteration()) ;
     }
 
     public void stop() {

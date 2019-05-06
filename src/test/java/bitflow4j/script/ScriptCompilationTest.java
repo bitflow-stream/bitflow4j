@@ -45,7 +45,7 @@ public class ScriptCompilationTest extends TestCase {
         if (fail) {
             assertNotNull(exc);
             assertNull(pipe);
-            Assert.assertArrayEquals(expected, exc.getErrors().toArray(new String[0]));
+            Assert.assertEquals(expected[0], exc.getMessage());
         } else {
             if (exc != null)
                 throw exc;
