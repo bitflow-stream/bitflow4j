@@ -4,6 +4,7 @@ import bitflow4j.misc.Config;
 import bitflow4j.misc.Pair;
 import org.junit.Before;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -12,7 +13,11 @@ import java.util.*;
 public class TestWithSamples {
 
     static {
-        Config.initializeLogger();
+        try {
+            Config.initializeLogger();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private Random random;

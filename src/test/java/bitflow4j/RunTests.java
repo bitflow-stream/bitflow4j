@@ -5,6 +5,7 @@ import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 
+import java.io.IOException;
 import java.util.logging.Logger;
 
 
@@ -16,7 +17,11 @@ public class RunTests {
     static final Logger logger = Logger.getLogger(RunTests.class.getName());
 
     static {
-        Config.initializeLogger();
+        try {
+            Config.initializeLogger();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) {

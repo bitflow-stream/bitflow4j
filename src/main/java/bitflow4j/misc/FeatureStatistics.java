@@ -171,7 +171,7 @@ public class FeatureStatistics implements Serializable {
         }
     }
 
-    public static void main(String args[]) throws IOException {
+    public static void main(String[] args) throws IOException {
         Config.initializeLogger();
         if (args.length != 1) {
             logger.severe("Parameters: <ini-file>");
