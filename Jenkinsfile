@@ -21,7 +21,7 @@ pipeline {
             post {
                 always {
                     junit "target/surefire-reports/TEST-*.xml"
-                    publishCoverage adapters: [jacocoAdapter('target/coverage-reports/*.exec')], sourceFileResolver: sourceFiles('STORE_ALL_BUILD')
+                    jacoco classPattern: 'target/classes,target/test-classes', execPattern: 'target/coverage-reports/*.exec', inclusionPattern: '**/*.class', sourcePattern: 'src/main/java,src/test/java'
                 }
             }
         }
