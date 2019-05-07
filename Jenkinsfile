@@ -9,6 +9,11 @@ pipeline {
         docker_image = 'teambitflow/bitflow4j'
     }
     stages {
+        stage('SonarQube analysis') {
+            withSonarQubeEnv('CIT SonarQube') {
+            sh 'mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.2:sonar'
+            }
+        }
         stage('Build') { 
             steps {
                 sh 'mvn test-compile -DskipTests=true -Dmaven.javadoc.skip=true -B -V'
