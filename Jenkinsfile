@@ -5,6 +5,10 @@ pipeline {
             args '-v /root/.m2:/root/.m2'
         }
     }
+    environment {
+        registry = 'teambitflow/bitflow4j'
+        registryCredential = 'dockerhub'
+    }
     stages {
         stage('Build') { 
             steps {
@@ -27,9 +31,22 @@ pipeline {
             }
             post {
                 success {
-                    archive 'target/*.jar'
+                    archiveArtifacts 'target/*.jar'
                 }
             }
+        }
+        stage('Build container') {
+            steps {
+                // sh 'docker build -t  .'
+                script {
+                    docker.build registry + ":$BUILD_NUMBER"
+                }
+            }
+            //post {
+            //   success {
+            //        sh ''
+            //    }
+            //}
         }
     }
 }
