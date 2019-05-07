@@ -10,8 +10,10 @@ pipeline {
     }
     stages {
         stage('SonarQube analysis') {
-            withSonarQubeEnv('CIT SonarQube') {
-            sh 'mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.2:sonar'
+                steps {
+                    withSonarQubeEnv('CIT SonarQube') {
+                    sh 'mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.2:sonar'
+                }  
             }
         }
         stage('Build') { 
