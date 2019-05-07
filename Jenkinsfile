@@ -25,8 +25,10 @@ pipeline {
             steps {
                 sh 'mvn package'
             }
-            success {
-                archive 'target/*.jar'
+            post {
+                success {
+                    archive 'target/*.jar'
+                }
             }
         }
     }
