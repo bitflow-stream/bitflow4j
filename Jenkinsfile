@@ -1,13 +1,12 @@
 pipeline {
     agent {
         docker {
-            image 'maven:3.6-jdk-11'
+            image 'teambitflow/maven-docker:3.6-jdk-11'
             args '-v /root/.m2:/root/.m2'
         }
     }
     environment {
-        registry = 'teambitflow/bitflow4j'
-        registryCredential = 'dockerhub'
+        docker_image = 'teambitflow/bitflow4j'
     }
     stages {
         stage('Build') { 
@@ -17,7 +16,7 @@ pipeline {
         }
         stage('Test') { 
             steps {
-                sh 'mvn test'
+                sh 'mvn test -B -V'
             }
             post {
                 always {
@@ -27,7 +26,7 @@ pipeline {
         }
         stage('Package') {
             steps {
-                sh 'mvn package'
+                sh 'mvn package -DskipTests=true -Dmaven.javadoc.skip=true -B -V'
             }
             post {
                 success {
@@ -37,16 +36,17 @@ pipeline {
         }
         stage('Build container') {
             steps {
-                // sh 'docker build -t  .'
                 script {
-                    docker.build registry + ":$BUILD_NUMBER"
+                    docker.build docker_image + ":$BUILD_NUMBER"
                 }
             }
-            //post {
-            //   success {
-            //        sh ''
-            //    }
-            //}
+            post {
+               success {
+                   sh 'docker tag $docker_image:$BUILD_NUMBER $docker_image:$latest'
+                   sh 'docker push $docker_image:$BUILD_NUMBER'
+                   sh 'docker push $docker_image:$latest'
+               }
+            }
         }
     }
 }
