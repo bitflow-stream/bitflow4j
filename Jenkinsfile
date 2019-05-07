@@ -15,19 +15,20 @@ pipeline {
             steps {
                 sh 'mvn test'
             }
-        }
-        /*
-        stage('Build Container') { 
-            steps {
-                // 
+            post {
+                always {
+                    junit "target/surefire-reports/TEST-*.xml"
+                }
             }
         }
-        stage('Push Container') {
+        stage('Package') {
             steps {
-                // 
+                sh 'mvn package'
+            }
+            success {
+                archive 'target/*.jar'
             }
         }
-        */
     }
 }
 
