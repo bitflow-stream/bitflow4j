@@ -13,7 +13,7 @@ pipeline {
         }
         stage('Test') { 
             steps {
-                sh 'mvn test jacoco:report coveralls:report'
+                sh 'mvn test'
             }
         }
         /*
