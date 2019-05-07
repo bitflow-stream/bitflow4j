@@ -37,14 +37,14 @@ pipeline {
         stage('Build container') {
             steps {
                 script {
-                    docker.build docker_image + ":$BUILD_NUMBER"
+                    docker.build docker_image + ':build-$BUILD_NUMBER'
                 }
             }
             post {
                success {
-                   sh 'docker tag $docker_image:$BUILD_NUMBER $docker_image:$latest'
-                   sh 'docker push $docker_image:$BUILD_NUMBER'
-                   sh 'docker push $docker_image:$latest'
+                   sh 'docker tag $docker_image:build-$BUILD_NUMBER $docker_image:latest'
+                   sh 'docker push $docker_image:build-$BUILD_NUMBER'
+                   sh 'docker push $docker_image:latest'
                }
             }
         }
