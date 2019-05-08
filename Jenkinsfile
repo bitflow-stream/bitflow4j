@@ -35,7 +35,7 @@ pipeline {
                 }
             }
         }
-        stage('SonarQube analysis') {
+        stage('SonarQube') {
             steps {
                 withSonarQubeEnv('CIT SonarQube') {
                     sh 'mvn sonar:sonar'
@@ -67,10 +67,10 @@ pipeline {
                         docker push $docker_image:latest'
                     '''
                     */
-                    slackSend color: 'good', message: 'Build ${env.JOB_NAME} ${env.BUILD_NUMBER} was successful (<${env.BUILD_URL}|Open Jenkins>) (<${env.SONAR_HOST_URL}|Open SonarQube>)'
+                    slackSend color: 'good', message: "Build ${env.JOB_NAME} ${env.BUILD_NUMBER} was successful (<${env.BUILD_URL}|Open Jenkins>) (<${env.SONAR_HOST_URL}|Open SonarQube>)"
                }
                failure {
-                    slackSend color: 'danger', message: 'Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)'
+                    slackSend color: 'danger', message: "Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
                }
             }
         }
