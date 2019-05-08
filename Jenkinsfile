@@ -35,17 +35,29 @@ pipeline {
                 }
             }
         }
+        stage('SonarQube analysis') {
+            steps {
+                withSonarQubeEnv('CIT SonarQube') {
+                sh 'mvn sonar:sonar'
+                }  
+            }
+        }
         stage('Build container') {
+            when {
+                branch 'master'
+            }
             steps {
                 script {
                     docker.build docker_image + ':build-$BUILD_NUMBER'
                 }
             }
             post {
-               success {
-                   sh 'docker tag $docker_image:build-$BUILD_NUMBER $docker_image:latest'
-                   sh 'docker push $docker_image:build-$BUILD_NUMBER'
-                   sh 'docker push $docker_image:latest'
+                success {
+                    sh '''
+                        docker tag $docker_image:build-$BUILD_NUMBER $docker_image:latest
+                        docker push $docker_image:build-$BUILD_NUMBER
+                        docker push $docker_image:latest'
+                    '''
                }
             }
         }
