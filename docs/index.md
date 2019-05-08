@@ -1,4 +1,4 @@
-[![Build Status](https://ci.bitflow.tream/jenkins/buildStatus/icon?job=bitflow4j%2Fmaster&build=lastBuild)](https://ci.bitflow.tream/jenkins/buildStatus/icon?job=bitflow4j%2Fmaster&build=lastBuild)
+[![Build Status](https://ci.bitflow.team/jenkins/buildStatus/icon?job=Bitflow%2Fbitflow4j%2Fmaster&build=lastBuild)](https://ci.bitflow.team/jenkins/buildStatus/icon?job=Bitflow%2Fbitflow4j%2Fmaster&build=lastBuild)
 
 # bitflow4j
 <b>bitflow4j</b> is a lightweight framework for performing data analysis on streamed timeseries data.
