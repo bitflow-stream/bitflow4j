@@ -1,8 +1,8 @@
 pipeline {
     agent {
         docker {
-            image 'teambitflow/maven-docker:3.6-jdk-11'
-            args '-v /root/.m2:/root/.m2 -v /root/.docker:/root/.docker'
+            image 'maven:3.6-jdk-11'
+            args '-v /root/.m2:/root/.m2'
         }
     }
     environment {
@@ -50,20 +50,23 @@ pipeline {
             }
         }
         stage('Build container') {
-            when {
-                branch 'master'
-            }
+            //when {
+            //    branch 'master'
+            //}
             steps {
                 script {
-                    sh 'docker build -t $docker_image:build-$BUILD_NUMER -t $docker_image:latest .'
+                    // sh 'docker build -t $docker_image:build-$BUILD_NUMER -t $docker_image:latest .'
+                    sh 'true'
                 }
             }
             post {
                 success {
+                    /*
                     sh '''
                         docker push $docker_image:build-$BUILD_NUMBER
                         docker push $docker_image:latest'
                     '''
+                    */
                     slackSend color: 'good', message: 'Build ${env.JOB_NAME} ${env.BUILD_NUMBER} was successful (<${env.BUILD_URL}|Open Jenkins>) (<${env.SONAR_HOST_URL}|Open SonarQube>)'
                }
                failure {
