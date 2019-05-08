@@ -42,6 +42,13 @@ pipeline {
                 }  
             }
         }
+        stage("Quality Gate") {
+            steps {
+                timeout(time: 30, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
         stage('Build container') {
             when {
                 branch 'master'
@@ -57,6 +64,7 @@ pipeline {
                         docker push $docker_image:build-$BUILD_NUMBER
                         docker push $docker_image:latest'
                     '''
+                    slackSend color: 'good', message: 'Build ${env.JOB_NAME} ${env.BUILD_NUMBER} was successful (<${env.BUILD_URL}|Open Jenkins>) (<${env.SONAR_HOST_URL}|Open SonarQube>)'
                }
             }
         }
