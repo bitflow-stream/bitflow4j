@@ -5,9 +5,6 @@ pipeline {
             args '-v /root/.m2:/root/.m2'
         }
     }
-    environment {
-        docker_image = 'teambitflow/bitflow4j'
-    }
     stages {
         stage('Build') { 
             steps {
@@ -20,7 +17,7 @@ pipeline {
             }
             post {
                 always {
-                    junit "target/surefire-reports/TEST-*.xml"
+                    junit 'target/surefire-reports/TEST-*.xml'
                     jacoco classPattern: 'target/classes,target/test-classes', execPattern: 'target/coverage-reports/*.exec', inclusionPattern: '**/*.class', sourcePattern: 'src/main/java,src/test/java'
                 }
             }
@@ -40,37 +37,22 @@ pipeline {
                 withSonarQubeEnv('CIT SonarQube') {
                     sh 'mvn sonar:sonar'
                 }  
-            }
-        }
-        stage("Quality Gate") {
-            steps {
                 timeout(time: 30, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
                 }
             }
         }
-        stage('Build container') {
-            //when {
-            //    branch 'master'
-            //}
-            steps {
-                script {
-                    // sh 'docker build -t $docker_image:build-$BUILD_NUMER -t $docker_image:latest .'
-                    sh 'true'
-                }
-            }
+        stage('Slack message') {
             post {
                 success {
-                    /*
-                    sh '''
-                        docker push $docker_image:build-$BUILD_NUMBER
-                        docker push $docker_image:latest'
-                    '''
-                    */
-                    slackSend color: 'good', message: "Build ${env.JOB_NAME} ${env.BUILD_NUMBER} was successful (<${env.BUILD_URL}|Open Jenkins>) (<${env.SONAR_HOST_URL}|Open SonarQube>)"
+                    withSonarQubeEnv('CIT SonarQube') {
+                        slackSend color: 'good', message: "Build ${env.JOB_NAME} ${env.BUILD_NUMBER} was successful (<${env.BUILD_URL}|Open Jenkins>) (<${env.SONAR_HOST_URL}|Open SonarQube>)"
+                    }
                }
                failure {
-                    slackSend color: 'danger', message: "Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
+                    withSonarQubeEnv('CIT SonarQube') {
+                        slackSend color: 'danger', message: "Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
+                    }
                }
             }
         }
