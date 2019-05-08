@@ -66,6 +66,9 @@ pipeline {
                     '''
                     slackSend color: 'good', message: 'Build ${env.JOB_NAME} ${env.BUILD_NUMBER} was successful (<${env.BUILD_URL}|Open Jenkins>) (<${env.SONAR_HOST_URL}|Open SonarQube>)'
                }
+               failure {
+                    slackSend color: 'danger', message: 'Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)'
+               }
             }
         }
     }
