@@ -11,7 +11,7 @@ pipeline {
     stages {
         stage('Build') { 
             steps {
-                sh 'mvn test-compile -DskipTests=true -Dmaven.javadoc.skip=true -B -V'
+                sh 'mvn clean test-compile -DskipTests=true -Dmaven.javadoc.skip=true -B -V'
             }
         }
         stage('Test') { 
@@ -38,7 +38,7 @@ pipeline {
         stage('SonarQube analysis') {
             steps {
                 withSonarQubeEnv('CIT SonarQube') {
-                sh 'mvn sonar:sonar'
+                    sh 'mvn sonar:sonar'
                 }  
             }
         }
@@ -48,13 +48,12 @@ pipeline {
             }
             steps {
                 script {
-                    docker.build docker_image + ':build-$BUILD_NUMBER'
+                    sh 'docker build -t $docker_image:build-$BUILD_NUMER -t $docker_image:latest .'
                 }
             }
             post {
                 success {
                     sh '''
-                        docker tag $docker_image:build-$BUILD_NUMBER $docker_image:latest
                         docker push $docker_image:build-$BUILD_NUMBER
                         docker push $docker_image:latest'
                     '''
