@@ -43,7 +43,7 @@ pipeline {
             }
         }
         stage('Slack message') {
-            steps { sh: 'true' }
+            steps { sh 'true' }
             post {
                 success {
                     withSonarQubeEnv('CIT SonarQube') {
