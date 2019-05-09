@@ -38,7 +38,7 @@ pipeline {
                     // The find & paste commands in the jacoco/junit lines list the relevant files and prints them, separted by comma
                     sh '''
                         mvn sonar:sonar \
-                        -Dsonar.sources=src/main/java -Dsonar.tests=src/test/java \
+                        -Dsonar.sources=./src/main/java -Dsonar.tests=./src/test/java \
                         -Dsonar.inclusions="**/*.java" -Dsonar.test.inclusions="**/*.java" \
                         -Dsonar.junit.reportPaths=$(find target/surefire-reports -name 'TEST-*.xml' | paste -s -d , -) \
                         -Dsonar.jacoco.reportPaths=$(find target/coverage-reports -name '*.exec' | paste -s -d , -)
