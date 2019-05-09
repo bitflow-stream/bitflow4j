@@ -35,7 +35,11 @@ pipeline {
         stage('SonarQube') {
             steps {
                 withSonarQubeEnv('CIT SonarQube') {
-                    sh 'mvn sonar:sonar'
+                    sh '''
+                        mvn sonar:sonar \
+                        -Dsonar.junit.reportPaths="target/surefire-reports/TEST-*.xml" \
+                        -Dsonar.jacoco.reportPaths="target/coverage-reports/*.exec" \
+                    '''
                 }  
                 timeout(time: 30, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
@@ -51,9 +55,7 @@ pipeline {
                     }
                }
                failure {
-                    withSonarQubeEnv('CIT SonarQube') {
-                        slackSend color: 'danger', message: "Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
-                    }
+                    slackSend color: 'danger', message: "Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
                }
             }
         }
