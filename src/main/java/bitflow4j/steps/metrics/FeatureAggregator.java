@@ -3,7 +3,6 @@ package bitflow4j.steps.metrics;
 import bitflow4j.AbstractPipelineStep;
 import bitflow4j.Header;
 import bitflow4j.Sample;
-import bitflow4j.misc.FeatureStatistics;
 import bitflow4j.misc.OnlineWindowStatistics;
 
 import java.io.IOException;
