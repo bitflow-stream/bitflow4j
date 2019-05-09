@@ -19,6 +19,11 @@ public class FeatureAggregator extends AbstractPipelineStep {
     private final ValueGetter[] getters;
     private final String[] suffixes;
 
+    /** Constructor for bitflow-script, features should be a comma-separated string. **/
+    public FeatureAggregator(int window, String features) {
+        this(window, convertVarArgs(features));
+    }
+
     public FeatureAggregator(int window, String... features) {
         this(window, makeGetters(features), makeSuffixes(features));
     }
@@ -31,6 +36,10 @@ public class FeatureAggregator extends AbstractPipelineStep {
         this.window = window;
         this.getters = getters;
         this.suffixes = suffixes;
+    }
+
+    public static String[] convertVarArgs(String features) {
+        return Arrays.stream(features.split(",")).map(String::trim).toArray(String[]::new);
     }
 
     @Override
