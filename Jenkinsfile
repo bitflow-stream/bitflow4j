@@ -37,8 +37,10 @@ pipeline {
                 withSonarQubeEnv('CIT SonarQube') {
                     sh '''
                         mvn sonar:sonar \
+                        -Dsonar.sources=src/main/java -Dsonar.tests=src/test/java \
+                        -Dsonar.inclusions="**/*.java" -Dsonar.test.inclusions="**/*.java" \
                         -Dsonar.junit.reportPaths="target/surefire-reports" \
-                        -Dsonar.jacoco.reportPaths="target/coverage-reports" \
+                        -Dsonar.jacoco.reportPaths="target/coverage-reports"
                     '''
                 }  
                 timeout(time: 30, unit: 'MINUTES') {
