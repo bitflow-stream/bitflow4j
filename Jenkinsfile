@@ -37,12 +37,13 @@ pipeline {
         stage('SonarQube') {
             steps {
                 withSonarQubeEnv('CIT SonarQube') {
-                    // The find & paste commands in the jacoco/junit lines list the relevant files and prints them, separted by comma
+                    // The find & paste command in the jacoco line lists the relevant files and prints them, separted by comma
+                    // The jacoco reports must be given file-wise, while the juni reports are read from the entire directory
                     sh '''
                         mvn sonar:sonar \
                         -Dsonar.sources=./src/main/java -Dsonar.tests=./src/test/java \
                         -Dsonar.inclusions="**/*.java" \
-                        -Dsonar.junit.reportPaths=$(find target/surefire-reports -name 'TEST-*.xml' | paste -s -d , -) \
+                        -Dsonar.junit.reportPaths=target/surefire-reports \
                         -Dsonar.jacoco.reportPaths=$(find target/coverage-reports -name '*.exec' | paste -s -d , -)
                     '''
                 }  
