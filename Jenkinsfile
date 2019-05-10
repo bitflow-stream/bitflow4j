@@ -8,7 +8,6 @@ pipeline {
     environment {
         registry = 'teambitflow/bitflow4j'
         registryCredential = 'dockerhub'
-        dockerImage = ''
     }
     stages {
         stage('Git') {
@@ -50,7 +49,6 @@ pipeline {
             }
         }
         stage('SonarQube') {
-            // only use sonarqube analysis when merging on master
             when {
                 branch 'master'
             }
@@ -72,43 +70,26 @@ pipeline {
                 }
             }
         }
-        stage('Maven') {
+        stage('Maven Install') {
             when {
                 branch 'master'
             }
             steps {
-                sh 'mvn install -B -V'
+                sh 'mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V'
             }
         }
-        stage('Docker build') {
-            // only build docker images when merging on master
+        stage('Docker') {
             when {
                 branch 'master'
             }
             steps {
                 script {
                     dockerImage = docker.build registry + ':build-$BUILD_NUMBER'
-                }
-            }
-        }
-        stage('Docker push') {
-            when {
-                branch 'master'
-            }
-            steps {
-                script {
                     docker.withRegistry('', registryCredential ) {
                         dockerImage.push()
                         dockerImage.push('latest')
                     }
                 }
-            }
-        }
-        stage('Docker clean') {
-            when {
-                branch 'master'
-            }
-            steps{
                 sh "docker rmi $registry:build-$BUILD_NUMBER"
             }
         }
@@ -116,19 +97,23 @@ pipeline {
     post {
         success {
             withSonarQubeEnv('CIT SonarQube') {
-                slackSend channel: '#jenkins-builds-all', color: 'good', message: "Build ${env.JOB_NAME} ${env.BUILD_NUMBER} was successful (<${env.BUILD_URL}|Open Jenkins>) (<${env.SONAR_HOST_URL}|Open SonarQube>)"
+                slackSend channel: '#jenkins-builds-all', color: 'good',
+                    message: "Build ${env.JOB_NAME} ${env.BUILD_NUMBER} was successful (<${env.BUILD_URL}|Open Jenkins>) (<${env.SONAR_HOST_URL}|Open SonarQube>)"
             }
         }
         failure {
-            slackSend channel: '#jenkins-builds-all', color: 'danger', message: "Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
+            slackSend channel: '#jenkins-builds-all', color: 'danger',
+                message: "Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
         }
         fixed {
             withSonarQubeEnv('CIT SonarQube') {
-                slackSend channel: '#jenkins-builds', color: 'good', message: "Thanks to ${env.GIT_COMMITTER_EMAIL} Build ${env.JOB_NAME} ${env.BUILD_NUMBER} was successful (<${env.BUILD_URL}|Open Jenkins>) (<${env.SONAR_HOST_URL}|Open SonarQube>)"
+                slackSend channel: '#jenkins-builds', color: 'good',
+                    message: "Thanks to ${env.GIT_COMMITTER_EMAIL}, build ${env.JOB_NAME} ${env.BUILD_NUMBER} was successful (<${env.BUILD_URL}|Open Jenkins>) (<${env.SONAR_HOST_URL}|Open SonarQube>)"
             }
         }
         regression {
-            slackSend channel: '#jenkins-builds', color: 'danger', message: "What have you done ${env.GIT_COMMITTER_EMAIL}? Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
+            slackSend channel: '#jenkins-builds', color: 'danger',
+                message: "What have you done ${env.GIT_COMMITTER_EMAIL}? Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
         }
     }
 }
