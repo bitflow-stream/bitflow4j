@@ -60,7 +60,7 @@ pipeline {
             }
         }
         stage('Docker build') {
-            agent none
+            agent any
             // only build docker images when merging on master
             //when {
             //    branch: 'master'
@@ -98,5 +98,9 @@ def pushDockerImage() {
         docker push $docker_image:build-$BUILD_NUMBER
         docker push $docker_image:latest'
     '''
+}
+
+def sendSlackError(String stage) {
+
 }
 
