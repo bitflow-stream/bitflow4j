@@ -106,7 +106,7 @@ pipeline {
         }
         fixed {
             script {
-                committerEmail = sh ( script: 'git --no-pager show -s --format=\'%ae\'', returnStdout: true).trim()
+                def committerEmail = sh ( script: 'git --no-pager show -s --format=\'%ae\'', returnStdout: true).trim()
                 withSonarQubeEnv('CIT SonarQube') {
                     slackSend color: 'good', message: "Thanks to ${comitterEmail} Build ${env.JOB_NAME} ${env.BUILD_NUMBER} was successful (<${env.BUILD_URL}|Open Jenkins>) (<${env.SONAR_HOST_URL}|Open SonarQube>)"
                 }
@@ -114,7 +114,7 @@ pipeline {
         }
         regression {
             script {
-                committerEmail = sh ( script: 'git --no-pager show -s --format=\'%ae\'', returnStdout: true).trim()
+                def committerEmail = sh ( script: 'git --no-pager show -s --format=\'%ae\'', returnStdout: true).trim()
                 slackSend color: 'danger', message: "What have you done ${committerEmail}? Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
             }
         }
