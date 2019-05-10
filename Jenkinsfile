@@ -43,6 +43,7 @@ pipeline {
                         mvn sonar:sonar \
                         -Dsonar.sources=./src/main/java -Dsonar.tests=./src/test/java \
                         -Dsonar.inclusions="**/*.java" -Dsonar.test.inclusions="**/src/test/java/**/.java" \
+                        -Dsonar.exclusions="**/src/main/java/bitflow4j/script/generated/**/*.java" \
                         -Dsonar.junit.reportPaths=target/surefire-reports \
                         -Dsonar.jacoco.reportPaths=$(find target/coverage-reports -name '*.exec' | paste -s -d , -)
                     '''
