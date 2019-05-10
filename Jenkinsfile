@@ -115,7 +115,7 @@ pipeline {
         regression {
             script {
                 committerEmail = sh ( script: 'git --no-pager show -s --format=\'%ae\'', returnStdout: true).trim()
-                slackSend color: 'danger', message: "What have you done ${comitterEmail}? Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
+                slackSend color: 'danger', message: "What have you done ${committerEmail}? Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
             }
         }
     }
