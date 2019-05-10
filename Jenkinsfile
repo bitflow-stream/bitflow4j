@@ -11,6 +11,14 @@ pipeline {
         dockerImage = ''
     }
     stages {
+        stage('Git') {
+            script {
+                env.GIT_COMMITTER_EMAIL = sh(
+                    script: "git --no-pager show -s --format='%ae'",
+                    returnStdout: true
+                    ).trim()
+            }
+        }
         stage('Build') { 
             steps {
                 sh 'mvn clean test-compile -DskipTests=true -Dmaven.javadoc.skip=true -B -V'
@@ -105,18 +113,12 @@ pipeline {
             slackSend color: 'danger', message: "Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
         }
         fixed {
-            step {
-                committerEmail = sh ( script: 'git --no-pager show -s --format=\'%ae\'', returnStdout: true).trim()
-                withSonarQubeEnv('CIT SonarQube') {
-                    slackSend color: 'good', message: "Thanks to ${comitterEmail} Build ${env.JOB_NAME} ${env.BUILD_NUMBER} was successful (<${env.BUILD_URL}|Open Jenkins>) (<${env.SONAR_HOST_URL}|Open SonarQube>)"
-                }
+            withSonarQubeEnv('CIT SonarQube') {
+                slackSend color: 'good', message: "Thanks to ${env.GIT_COMMITTER_EMAIL} Build ${env.JOB_NAME} ${env.BUILD_NUMBER} was successful (<${env.BUILD_URL}|Open Jenkins>) (<${env.SONAR_HOST_URL}|Open SonarQube>)"
             }
         }
         regression {
-            step {
-                committerEmail = sh ( script: 'git --no-pager show -s --format=\'%ae\'', returnStdout: true).trim()
-                slackSend color: 'danger', message: "What have you done ${committerEmail}? Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
-            }
+            slackSend color: 'danger', message: "What have you done ${env.GIT_COMMITTER_EMAIL}? Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
         }
     }
 }
