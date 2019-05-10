@@ -1,8 +1,8 @@
 pipeline {
     agent {
         docker {
-            image 'maven:3.6-jdk-11'
-            args '-v /root/.m2:/root/.m2'
+            image 'teambitflow/maven-docker:3.6-jdk-11'
+            args '-v /root/.m2:/root/.m2 -v /var/run/docker.sock:/var/run/docker.sock'
         }
     }
     environment {
@@ -39,9 +39,9 @@ pipeline {
         }
         stage('SonarQube') {
             // only use sonarqube analysis when merging on master
-            //when {
-            //    branch: 'master'
-            //}
+            when {
+                branch: 'master'
+            }
             steps {
                 withSonarQubeEnv('CIT SonarQube') {
                     // The find & paste command in the jacoco line lists the relevant files and prints them, separted by comma
@@ -61,12 +61,6 @@ pipeline {
             }
         }
         stage('Docker build') {
-            agent {
-                docker {
-                    image 'docker:latest'
-                    args '-v /var/run/docker.sock:/var/run/docker.sock'
-                }
-            }
             // only build docker images when merging on master
             //when {
             //    branch: 'master'
