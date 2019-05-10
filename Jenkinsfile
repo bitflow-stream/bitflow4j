@@ -35,16 +35,20 @@ pipeline {
             }
         }
         stage('SonarQube') {
+            when {
+                branch 'master'
+            }
             steps {
                 withSonarQubeEnv('CIT SonarQube') {
                     // The find & paste command in the jacoco line lists the relevant files and prints them, separted by comma
                     // The jacoco reports must be given file-wise, while the juni reports are read from the entire directory
                     sh '''
-                        mvn sonar:sonar \
-                        -Dsonar.sources=./src/main/java -Dsonar.tests=./src/test/java \
-                        -Dsonar.inclusions="**/*.java" -Dsonar.test.inclusions="**/src/test/java/**/.java" \
-                        -Dsonar.junit.reportPaths=target/surefire-reports \
-                        -Dsonar.jacoco.reportPaths=$(find target/coverage-reports -name '*.exec' | paste -s -d , -)
+                        mvn sonar:sonar -Dsonar.projectKey=bitflow4j \
+                            -Dsonar.sources=./src/main/java -Dsonar.tests=./src/test/java \
+                            -Dsonar.inclusions="**/*.java" -Dsonar.test.inclusions="**/src/test/java/**/.java" \
+                            -Dsonar.exclusions="**/src/main/java/bitflow4j/script/generated/**/*.java" \
+                            -Dsonar.junit.reportPaths=target/surefire-reports \
+                            -Dsonar.jacoco.reportPaths=$(find target/coverage-reports -name '*.exec' | paste -s -d , -)
                     '''
                 }  
                 timeout(time: 30, unit: 'MINUTES') {

@@ -1,4 +1,7 @@
 [![Build Status](https://ci.bitflow.team/jenkins/buildStatus/icon?job=Bitflow%2Fbitflow4j%2Fmaster&build=lastBuild)](http://wally144.cit.tu-berlin.de/jenkins/blue/organizations/jenkins/Bitflow%2Fbitflow4j/activity)
+[![Code Coverage](https://ci.bitflow.team/sonarqube/api/project_badges/measure?project=bitflow4j&metric=coverage)](http://wally144.cit.tu-berlin.de/sonarqube/dashboard?id=bitflow4j)
+[![Maintainability](https://ci.bitflow.team/sonarqube/api/project_badges/measure?project=bitflow4j&metric=sqale_rating)](http://wally144.cit.tu-berlin.de/sonarqube/dashboard?id=bitflow4j)
+[![Reliability](https://ci.bitflow.team/sonarqube/api/project_badges/measure?project=bitflow4j&metric=reliability_rating)](http://wally144.cit.tu-berlin.de/sonarqube/dashboard?id=bitflow4j)
 
 # bitflow4j
 <b>bitflow4j</b> is a lightweight framework for performing data analysis on streamed timeseries data.
