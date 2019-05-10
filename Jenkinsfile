@@ -5,6 +5,9 @@ pipeline {
             args '-v /root/.m2:/root/.m2'
         }
     }
+    environment {
+        docker_image = 'teambitflow/bitflow4j'
+    }
     stages {
         stage('Build') { 
             steps {
@@ -35,10 +38,14 @@ pipeline {
             }
         }
         stage('SonarQube') {
+            // only use sonarqube analysis when merging on master
+            //when {
+            //    branch: 'master'
+            //}
             steps {
                 withSonarQubeEnv('CIT SonarQube') {
                     // The find & paste command in the jacoco line lists the relevant files and prints them, separted by comma
-                    // The jacoco reports must be given file-wise, while the juni reports are read from the entire directory
+                    // The jacoco reports must be given file-wise, while the junit reports are read from the entire directory
                     sh '''
                         mvn sonar:sonar \
                         -Dsonar.sources=./src/main/java -Dsonar.tests=./src/test/java \
@@ -49,6 +56,23 @@ pipeline {
                 }  
                 timeout(time: 30, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+        stage('Docker build') {
+            agent none
+            // only build docker images when merging on master
+            //when {
+            //    branch: 'master'
+            //}
+            steps {
+                script {
+                    docker.build docker_image + ':build-$BUILD_NUMBER'
+                }
+            }
+            post {
+                success {
+                    pushDockerImage()
                 }
             }
         }
@@ -66,5 +90,13 @@ pipeline {
             }
         }
     }
+}
+
+def pushDockerImage() {
+    sh '''
+        docker tag $docker_image:build-$BUILD_NUMBER $docker_image:latest
+        docker push $docker_image:build-$BUILD_NUMBER
+        docker push $docker_image:latest'
+    '''
 }
 
