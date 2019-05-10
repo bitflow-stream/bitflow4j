@@ -62,7 +62,10 @@ pipeline {
         }
         stage('Docker build') {
             agent {
-                label 'master'
+                docker {
+                    image 'docker'
+                    args '-v /var/run/docker.sock:/var/run/docker.sock'
+                }
             }
             // only build docker images when merging on master
             //when {
