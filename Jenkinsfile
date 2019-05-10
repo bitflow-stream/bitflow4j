@@ -18,7 +18,7 @@ pipeline {
         }
         stage('Test') { 
             steps {
-                sh 'mvn2 test -B -V'
+                sh 'mvn test -B -V'
             }
             post {
                 always {
@@ -105,12 +105,18 @@ pipeline {
             slackSend color: 'danger', message: "Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
         }
         fixed {
-            withSonarQubeEnv('CIT SonarQube') {
-                slackSend color: 'good', message: "Thanks to ${env.CHANGE_AUTHOR} Build ${env.JOB_NAME} ${env.BUILD_NUMBER} was successful (<${env.BUILD_URL}|Open Jenkins>) (<${env.SONAR_HOST_URL}|Open SonarQube>)"
+            script {
+                committerEmail = sh ( script: 'git --no-pager show -s --format=\'%ae\'', returnStdout: true).trim()
+                withSonarQubeEnv('CIT SonarQube') {
+                    slackSend color: 'good', message: "Thanks to ${comitterEmail} Build ${env.JOB_NAME} ${env.BUILD_NUMBER} was successful (<${env.BUILD_URL}|Open Jenkins>) (<${env.SONAR_HOST_URL}|Open SonarQube>)"
+                }
             }
         }
         regression {
-            slackSend color: 'danger', message: "What have you done ${env.CHANGE_AUTHOR}? Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
+            script {
+                committerEmail = sh ( script: 'git --no-pager show -s --format=\'%ae\'', returnStdout: true).trim()
+                slackSend color: 'danger', message: "What have you done ${comitterEmail}? Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
+            }
         }
     }
 }
