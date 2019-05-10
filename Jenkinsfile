@@ -63,7 +63,7 @@ pipeline {
         stage('Docker build') {
             agent {
                 docker {
-                    image 'docker'
+                    image 'docker:latest'
                     args '-v /var/run/docker.sock:/var/run/docker.sock'
                 }
             }
@@ -72,6 +72,7 @@ pipeline {
             //    branch: 'master'
             //}
             steps {
+                sh 'which docker;docker version'
                 script {
                     docker.build docker_image + ':build-$BUILD_NUMBER'
                 }
