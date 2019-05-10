@@ -60,7 +60,9 @@ pipeline {
             }
         }
         stage('Docker build') {
-            agent any
+            agent {
+                label 'master'
+            }
             // only build docker images when merging on master
             //when {
             //    branch: 'master'
