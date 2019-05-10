@@ -64,9 +64,9 @@ pipeline {
         }
         stage('Docker build') {
             // only build docker images when merging on master
-            //when {
-            //    branch 'master'
-            //}
+            when {
+                branch 'master'
+            }
             steps {
                 script {
                     dockerImage = docker.build registry + ':build-$BUILD_NUMBER'
@@ -74,9 +74,9 @@ pipeline {
             }
         }
         stage('Docker push') {
-            //when {
-            //    branch 'master'
-            //}
+            when {
+                branch 'master'
+            }
             steps {
                 script {
                     docker.withRegistry('', registryCredential ) {
@@ -87,35 +87,30 @@ pipeline {
             }
         }
         stage('Remove Unused docker image') {
+            when {
+                branch 'master'
+            }
             steps{
                 sh "docker rmi $registry:build-$BUILD_NUMBER"
             }
         }
-        stage('Slack message') {
-            steps { sh 'true' }
-            post {
-                success {
-                    withSonarQubeEnv('CIT SonarQube') {
-                        slackSend color: 'good', message: "Build ${env.JOB_NAME} ${env.BUILD_NUMBER} was successful (<${env.BUILD_URL}|Open Jenkins>) (<${env.SONAR_HOST_URL}|Open SonarQube>)"
-                    }
-               }
-               failure {
-                    slackSend color: 'danger', message: "Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
-               }
+    }
+    post {
+        success {
+            withSonarQubeEnv('CIT SonarQube') {
+                slackSend color: 'good', message: "Build ${env.JOB_NAME} ${env.BUILD_NUMBER} was successful (<${env.BUILD_URL}|Open Jenkins>) (<${env.SONAR_HOST_URL}|Open SonarQube>)"
             }
+        }
+        failure {
+            slackSend color: 'danger', message: "Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
+        }
+        fixed {
+            withSonarQubeEnv('CIT SonarQube') {
+                slackSend color: 'good', message: "Thanks to ${env.CHANGE_AUTHOR} Build ${env.JOB_NAME} ${env.BUILD_NUMBER} was successful (<${env.BUILD_URL}|Open Jenkins>) (<${env.SONAR_HOST_URL}|Open SonarQube>)"
+            }
+        }
+        regression {
+            slackSend color: 'danger', message: "What have you done ${env.CHANGE_AUTHOR}? Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
         }
     }
 }
-
-def pushDockerImage() {
-    sh '''
-        docker tag $docker_image:build-$BUILD_NUMBER $docker_image:latest
-        docker push $docker_image:build-$BUILD_NUMBER
-        docker push $docker_image:latest'
-    '''
-}
-
-def sendSlackError(String stage) {
-
-}
-
