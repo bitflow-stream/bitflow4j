@@ -19,6 +19,8 @@ pipeline {
                 always {
                     junit 'target/surefire-reports/TEST-*.xml'
                     jacoco classPattern: 'target/classes,target/test-classes', execPattern: 'target/coverage-reports/*.exec', inclusionPattern: '**/*.class', sourcePattern: 'src/main/java,src/test/java'
+                    archiveArtifacts 'target/surefire-reports/TEST-*.xml'
+                    archiveArtifacts 'target/coverage-reports/*.exec'
                 }
             }
         }
@@ -35,7 +37,15 @@ pipeline {
         stage('SonarQube') {
             steps {
                 withSonarQubeEnv('CIT SonarQube') {
-                    sh 'mvn sonar:sonar'
+                    // The find & paste command in the jacoco line lists the relevant files and prints them, separted by comma
+                    // The jacoco reports must be given file-wise, while the juni reports are read from the entire directory
+                    sh '''
+                        mvn sonar:sonar \
+                        -Dsonar.sources=./src/main/java -Dsonar.tests=./src/test/java \
+                        -Dsonar.inclusions="**/*.java" -Dsonar.test.inclusions="**/src/test/java/**/.java" \
+                        -Dsonar.junit.reportPaths=target/surefire-reports \
+                        -Dsonar.jacoco.reportPaths=$(find target/coverage-reports -name '*.exec' | paste -s -d , -)
+                    '''
                 }  
                 timeout(time: 30, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
@@ -51,9 +61,7 @@ pipeline {
                     }
                }
                failure {
-                    withSonarQubeEnv('CIT SonarQube') {
-                        slackSend color: 'danger', message: "Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
-                    }
+                    slackSend color: 'danger', message: "Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
                }
             }
         }
