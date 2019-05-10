@@ -7,7 +7,7 @@ pipeline {
     }
     environment {
         registry = 'teambitflow/bitflow4j'
-        registryCredential = 'dockeub'
+        registryCredential = 'dockerhub'
         dockerImage = ''
     }
     stages {
@@ -18,7 +18,7 @@ pipeline {
         }
         stage('Test') { 
             steps {
-                sh 'mvn test -B -V'
+                sh 'mvn2 test -B -V'
             }
             post {
                 always {
@@ -86,7 +86,7 @@ pipeline {
                 }
             }
         }
-        stage('Remove Unused docker image') {
+        stage('Docker clean') {
             when {
                 branch 'master'
             }
