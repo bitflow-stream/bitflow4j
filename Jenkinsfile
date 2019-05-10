@@ -6,7 +6,9 @@ pipeline {
         }
     }
     environment {
-        docker_image = 'teambitflow/bitflow4j'
+        registry = 'teambitflow/bitflow4j'
+        registryCredential = ‘dockerhub’
+        dockerImage = ''
     }
     stages {
         stage('Build') { 
@@ -67,13 +69,26 @@ pipeline {
             //}
             steps {
                 script {
-                    docker.build docker_image + ':build-$BUILD_NUMBER'
+                    dockerImage = docker.build docker_image + ':build-$BUILD_NUMBER'
                 }
             }
-            post {
-                success {
-                    pushDockerImage()
+        }
+        stage('Docker push') {
+            //when {
+            //    branch 'master'
+            //}
+            steps {
+                script {
+                    docker.withRegistry('', registryCredential ) {
+                        dockerImage.push()
+                        dockerImage.push('latest')
+                    }
                 }
+            }
+        }
+        stage('Remove Unused docker image') {
+            steps{
+                sh "docker rmi $registry:$BUILD_NUMBER"
             }
         }
         stage('Slack message') {
