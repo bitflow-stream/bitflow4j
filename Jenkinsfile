@@ -40,7 +40,7 @@ pipeline {
         stage('SonarQube') {
             // only use sonarqube analysis when merging on master
             when {
-                branch: 'master'
+                branch 'master'
             }
             steps {
                 withSonarQubeEnv('CIT SonarQube') {
@@ -63,10 +63,9 @@ pipeline {
         stage('Docker build') {
             // only build docker images when merging on master
             //when {
-            //    branch: 'master'
+            //    branch 'master'
             //}
             steps {
-                sh 'which docker;docker version'
                 script {
                     docker.build docker_image + ':build-$BUILD_NUMBER'
                 }
