@@ -59,7 +59,7 @@ pipeline {
                     // The find & paste command in the jacoco line lists the relevant files and prints them, separted by comma
                     // The jacoco reports must be given file-wise, while the junit reports are read from the entire directory
                     sh '''
-                        mvn sonar:sonar -Dsonar.projectKey=bitflow4j \
+                        mvn sonar:sonar -B -V -Dsonar.projectKey=bitflow4j \
                             -Dsonar.sources=./src/main/java -Dsonar.tests=./src/test/java \
                             -Dsonar.inclusions="**/*.java" -Dsonar.test.inclusions="**/src/test/java/**/.java" \
                             -Dsonar.exclusions="**/src/main/java/bitflow4j/script/generated/**/*.java" \
@@ -70,6 +70,14 @@ pipeline {
                 timeout(time: 30, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
                 }
+            }
+        }
+        stage('Maven') {
+            when {
+                branch 'master'
+            }
+            steps {
+                sh 'mvn install -B -V'
             }
         }
         stage('Docker build') {
@@ -108,19 +116,19 @@ pipeline {
     post {
         success {
             withSonarQubeEnv('CIT SonarQube') {
-                slackSend color: 'good', message: "Build ${env.JOB_NAME} ${env.BUILD_NUMBER} was successful (<${env.BUILD_URL}|Open Jenkins>) (<${env.SONAR_HOST_URL}|Open SonarQube>)"
+                slackSend channel: '#jenkins-builds-all', color: 'good', message: "Build ${env.JOB_NAME} ${env.BUILD_NUMBER} was successful (<${env.BUILD_URL}|Open Jenkins>) (<${env.SONAR_HOST_URL}|Open SonarQube>)"
             }
         }
         failure {
-            slackSend color: 'danger', message: "Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
+            slackSend channel: '#jenkins-builds-all', color: 'danger', message: "Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
         }
         fixed {
             withSonarQubeEnv('CIT SonarQube') {
-                slackSend color: 'good', message: "Thanks to ${env.GIT_COMMITTER_EMAIL} Build ${env.JOB_NAME} ${env.BUILD_NUMBER} was successful (<${env.BUILD_URL}|Open Jenkins>) (<${env.SONAR_HOST_URL}|Open SonarQube>)"
+                slackSend channel: '#jenkins-builds', color: 'good', message: "Thanks to ${env.GIT_COMMITTER_EMAIL} Build ${env.JOB_NAME} ${env.BUILD_NUMBER} was successful (<${env.BUILD_URL}|Open Jenkins>) (<${env.SONAR_HOST_URL}|Open SonarQube>)"
             }
         }
         regression {
-            slackSend color: 'danger', message: "What have you done ${env.GIT_COMMITTER_EMAIL}? Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
+            slackSend channel: '#jenkins-builds', color: 'danger', message: "What have you done ${env.GIT_COMMITTER_EMAIL}? Build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open Jenkins>)"
         }
     }
 }
