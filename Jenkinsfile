@@ -7,7 +7,7 @@ pipeline {
     }
     environment {
         registry = 'teambitflow/bitflow4j'
-        registryCredential = ‘dockerhub’
+        registryCredential = 'dockerhub'
         dockerImage = ''
     }
     stages {
