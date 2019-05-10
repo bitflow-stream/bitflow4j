@@ -36,7 +36,7 @@ pipeline {
         }
         stage('SonarQube') {
             when {
-                branch: 'master'
+                branch 'master'
             }
             steps {
                 withSonarQubeEnv('CIT SonarQube') {
