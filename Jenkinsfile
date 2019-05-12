@@ -49,9 +49,9 @@ pipeline {
             }
         }
         stage('SonarQube') {
-            //when {
-            //    branch 'master'
-            //}
+            when {
+                branch 'master'
+            }
             steps {
                 withSonarQubeEnv('CIT SonarQube') {
                     // The find & paste command in the jacoco line lists the relevant files and prints them, separted by comma
