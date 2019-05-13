@@ -90,7 +90,11 @@ pipeline {
                         dockerImage.push('latest')
                     }
                 }
-                sh "docker rmi $registry:build-$BUILD_NUMBER"
+            }
+            post {
+                always {
+                    sh 'docker system prune -f' // Delete unused images and stopped containers
+                }
             }
         }
     }
