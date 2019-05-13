@@ -93,7 +93,7 @@ pipeline {
             }
             post {
                 always {
-                    sh 'docker system prune -f' # Delete unused images and stopped containers
+                    sh 'docker system prune -f' // Delete unused images and stopped containers
                 }
             }
         }
