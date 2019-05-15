@@ -88,13 +88,13 @@ pipeline {
             }
         }
         stage('Docker push') {
-            //when {
-            //    branch 'master'
-            //}
+            when {
+                branch 'master'
+            }
             steps {
                 script {
                     docker.withRegistry('', registryCredential ) {
-                        //env.dockerImage.push(':build-$BUILD_NUMBER')
+                        env.dockerImage.push(':build-$BUILD_NUMBER')
                         dockerImage.push('latest')
                     }
                 }
