@@ -65,7 +65,7 @@ pipeline {
                             -Dsonar.jacoco.reportPaths=$(find target/coverage-reports -name '*.exec' | paste -s -d , -)
                     '''
                 }  
-                timeout(time: 30, unit: 'MINUTES') {
+                timeout(time: 10, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
                 }
             }
@@ -75,25 +75,27 @@ pipeline {
                 branch 'master'
             }
             steps {
-                sh 'mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V'
+                // Only install the jar, that has been built in the previous stages. Do not re-compile or re-test.
+                sh 'mvn jar:jar install:install -B -V'
             }
         }
-        stage('Docker') {
-            when {
-                branch 'master'
-            }
+        stage('Docker build') {
             steps {
                 script {
-                    dockerImage = docker.build registry + ':build-$BUILD_NUMBER'
-                    docker.withRegistry('', registryCredential ) {
-                        dockerImage.push()
-                        dockerImage.push('latest')
-                    }
+                    env.dockerImage = docker.build registry + ':$BRANCH_NAME-build-$BUILD_NUMBER'
                 }
             }
-            post {
-                always {
-                    sh 'docker system prune -f' // Delete unused images and stopped containers
+        }
+        stage('Docker push') {
+            //when {
+            //    branch 'master'
+            //}
+            steps {
+                script {
+                    docker.withRegistry('', registryCredential ) {
+                        //env.dockerImage.push(':build-$BUILD_NUMBER')
+                        env.dockerImage.push('latest')
+                    }
                 }
             }
         }
