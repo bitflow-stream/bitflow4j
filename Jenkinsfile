@@ -93,9 +93,9 @@ pipeline {
             }
             steps {
                 script {
-                    docker.withRegistry('', registryCredential ) {
-                        env.dockerImage.push(':build-$BUILD_NUMBER')
-                        dockerImage.push('latest')
+                    docker.withRegistry('', registryCredential) {
+                        dockerImage.push("build-$BUILD_NUMBER")
+                        dockerImage.push("latest")
                     }
                 }
             }
