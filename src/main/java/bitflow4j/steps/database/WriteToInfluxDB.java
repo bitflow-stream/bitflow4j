@@ -76,7 +76,7 @@ public class WriteToInfluxDB extends AbstractPipelineStep {
     @Override
     protected void doClose() throws IOException {
         influxDB.close();
-        super.close();
+        super.doClose();
     }
 
     private void checkConnectionAndReconnect() {

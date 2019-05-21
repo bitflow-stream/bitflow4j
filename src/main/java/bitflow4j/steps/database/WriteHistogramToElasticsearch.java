@@ -88,30 +88,28 @@ public class WriteHistogramToElasticsearch implements BatchHandler {
             request.source(data);
 
             IndexResponse response = client.index(request, RequestOptions.DEFAULT);
-            printResponse(response, sample);
+            printResponse(response);
         }
         return batch;
     }
 
-    private void printResponse(IndexResponse indexResponse, Sample sample) {
-        String index = indexResponse.getIndex();
-        String id = indexResponse.getId();
+    private void printResponse(IndexResponse indexResponse) {
         if (indexResponse.getResult() == DocWriteResponse.Result.CREATED) {
             // Object was created in Database
-            logger.log(Level.FINE, "Document was created.");
+            logger.log(Level.FINE, String.format("Document was created: %s", toString()));
         } else if (indexResponse.getResult() == DocWriteResponse.Result.UPDATED) {
-            logger.log(Level.FINE, String.format("Rewritten existing document: %s", toString(sample)));
+            logger.log(Level.FINE, String.format("Rewritten existing document: %s", toString()));
         }
         ReplicationResponse.ShardInfo shardInfo = indexResponse.getShardInfo();
         if (shardInfo.getTotal() != shardInfo.getSuccessful()) {
             logger.log(Level.WARNING, String.format("Total-Shards (%s) did not match successful Shards (%s): %s",
-                    shardInfo.getTotal(), shardInfo.getSuccessful(), toString(sample)));
+                    shardInfo.getTotal(), shardInfo.getSuccessful(), toString()));
         }
         if (shardInfo.getFailed() > 0) {
             for (ReplicationResponse.ShardInfo.Failure failure :
                     shardInfo.getFailures()) {
                 String reason = failure.reason();
-                logger.log(Level.SEVERE, String.format("Failure (%s):\n %s ", toString(sample), failure.reason()));
+                logger.log(Level.SEVERE, String.format("Failure (%s):\n %s ", toString(), failure.reason()));
             }
         }
     }
