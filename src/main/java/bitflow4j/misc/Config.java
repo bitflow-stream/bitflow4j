@@ -14,6 +14,8 @@ import java.util.logging.Logger;
  */
 public class Config {
 
+    private static final Logger logger = Logger.getLogger(Config.class.getName());
+
     static final String logging_properties = "logging.properties";
 
     public static void setDefaultLogLevel(Level level) {
@@ -21,6 +23,14 @@ public class Config {
         root.setLevel(level);
         for (Handler h : root.getHandlers()) {
             h.setLevel(level);
+        }
+    }
+
+    public static void safeInitializeLogger() {
+        try {
+            initializeLogger();
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Failed to initialize logging", e);
         }
     }
 
