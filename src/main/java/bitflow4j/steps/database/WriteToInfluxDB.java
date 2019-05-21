@@ -39,17 +39,7 @@ public class WriteToInfluxDB extends AbstractPipelineStep {
 
         influxDB = InfluxDBFactory.connect(databaseURL, username, password);
 
-        Pong response = influxDB.ping();
-        while (response.getVersion().equalsIgnoreCase("unknown")) {
-            logger.log(Level.SEVERE, String.format("Could not connect to InfluxDB with address '%s'. Retry in %s milliseconds", databaseURL, reconnectTimeout));
-            try {
-                Thread.sleep(reconnectTimeout);
-            } catch(Exception e){
-                e.printStackTrace();
-            }
-            influxDB = InfluxDBFactory.connect(databaseURL, username, password);
-            response = influxDB.ping();
-        }
+        checkConnectionAndReconnect();
 
         // Handle already generated database
         if(!influxDB.databaseExists(databaseName)){
@@ -67,17 +57,7 @@ public class WriteToInfluxDB extends AbstractPipelineStep {
 
     @Override
     public void writeSample(Sample sample) throws IOException {
-        Pong response = influxDB.ping();
-        while (response.getVersion().equalsIgnoreCase("unknown")) {
-            logger.log(Level.SEVERE, String.format("Could not connect to InfluxDB with address '%s'. Retry in %s milliseconds", databaseURL, reconnectTimeout));
-            try {
-                Thread.sleep(reconnectTimeout);
-            } catch(Exception e){
-                e.printStackTrace();
-            }
-            influxDB = InfluxDBFactory.connect(databaseURL, username, password);
-            response = influxDB.ping();
-        }
+        checkConnectionAndReconnect();
 
         //Build database point
         String finalPrefix = sample.resolveTagTemplate(prefix);
@@ -96,6 +76,22 @@ public class WriteToInfluxDB extends AbstractPipelineStep {
     @Override
     protected void doClose() throws IOException {
         influxDB.close();
+        super.close();
+    }
+
+    private void checkConnectionAndReconnect() {
+        Pong response = influxDB.ping();
+        while (response.getVersion().equalsIgnoreCase("unknown")) {
+            logger.log(Level.SEVERE, String.format("Could not connect to InfluxDB with address '%s'. Retry in %s milliseconds", databaseURL, reconnectTimeout));
+            try {
+                Thread.sleep(reconnectTimeout);
+            } catch(Exception e){
+                logger.log(Level.WARNING, "Interrupted", e);
+                Thread.currentThread().interrupt();
+            }
+            influxDB = InfluxDBFactory.connect(databaseURL, username, password);
+            response = influxDB.ping();
+        }
     }
 
 }
