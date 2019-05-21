@@ -116,8 +116,9 @@ public class WriteHistogramToElasticsearch implements BatchHandler {
         }
     }
 
-    public String toString(Sample sample) {
+    @Override
+    public String toString() {
         return String.format("WriteHistogramToElasticSearch: Hostports: %s \nIndex: %s, Identifier = Identifier-Value: %s = %s",
-                hostports, indexName, identifierKey, sample.resolveTagTemplate(identifierTemplate));
+                hostports, indexName, identifierKey, identifierTemplate);
     }
 }
