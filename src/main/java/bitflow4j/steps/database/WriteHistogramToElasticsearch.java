@@ -25,27 +25,27 @@ public class WriteHistogramToElasticsearch implements BatchHandler {
 
     protected static final Logger logger = Logger.getLogger(WriteHistogramToElasticsearch.class.getName());
 
-    private final String hostports;
+    private final String hostPorts;
     private final String indexName;
     private final String identifierKey;
     private final String identifierTemplate;
     private final RestHighLevelClient client;
 
     /**
-     * @param hostports          Comma-separated list of host:port pairs, e.g.: host1:port1, host2:port2
+     * @param hostPorts          Comma-separated list of host:port pairs, e.g.: host1:port1, host2:port2
      * @param indexName          Index name of the respective index in the Elasticsearch-Database
      * @param identifierKey      Name of key-tag which is saved for each sample and used to identify/filter the entry in
      *                           the database (the same name will be applied in the DB entry as the property name)
      * @param identifierTemplate Used template to fill the named property with meaningful content (Tag-templates
      *                           should be used here)
      */
-    public WriteHistogramToElasticsearch(String hostports, String indexName, String identifierKey, String identifierTemplate) {
-        this.hostports = hostports;
+    public WriteHistogramToElasticsearch(String hostPorts, String indexName, String identifierKey, String identifierTemplate) {
+        this.hostPorts = hostPorts;
         this.indexName = indexName;
         this.identifierKey = identifierKey;
         this.identifierTemplate = identifierTemplate;
 
-        List<Pair<String, Integer>> hostPortPairs = convertHostPortArgs(hostports);
+        List<Pair<String, Integer>> hostPortPairs = convertHostPortArgs(hostPorts);
         HttpHost[] httpHosts = new HttpHost[hostPortPairs.size()];
         for (int i = 0; i < hostPortPairs.size(); i++) {
             Pair<String, Integer> hostport = hostPortPairs.get(i);
@@ -58,8 +58,8 @@ public class WriteHistogramToElasticsearch implements BatchHandler {
     private static List<Pair<String, Integer>> convertHostPortArgs(String tags) {
         return Arrays.stream(tags.split(",")).map(String::trim)
                 .map(s -> {
-                    String[] hostports = s.split(":");
-                    return new Pair<String, Integer>(hostports[0], Integer.valueOf(hostports[1]));
+                    String[] hostPorts = s.split(":");
+                    return new Pair<>(hostPorts[0], Integer.valueOf(hostPorts[1]));
                 }).collect(Collectors.toList());
     }
 
@@ -117,6 +117,6 @@ public class WriteHistogramToElasticsearch implements BatchHandler {
     @Override
     public String toString() {
         return String.format("WriteHistogramToElasticSearch: Hostports: %s \nIndex: %s, Identifier = Identifier-Value: %s = %s",
-                hostports, indexName, identifierKey, identifierTemplate);
+                hostPorts, indexName, identifierKey, identifierTemplate);
     }
 }

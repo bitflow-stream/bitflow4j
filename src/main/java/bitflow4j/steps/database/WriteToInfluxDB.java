@@ -18,7 +18,6 @@ public class WriteToInfluxDB extends AbstractPipelineStep {
 
     private final static int batchModeSize = 100;
     private final static int batchModeTimeout = 200;
-    private static String databaseName;
     private final static int reconnectTimeout = 1000;
 
     private final String databaseURL;
@@ -35,16 +34,14 @@ public class WriteToInfluxDB extends AbstractPipelineStep {
         this.username = username;
         this.password = password;
         this.prefix = prefix;
-        this.databaseName = databaseName;
 
         influxDB = InfluxDBFactory.connect(databaseURL, username, password);
-
         checkConnectionAndReconnect();
 
         // Handle already generated database
-        if(!influxDB.databaseExists(databaseName)){
+        if (!influxDB.databaseExists(databaseName)) {
             influxDB.createDatabase(databaseName);
-            //Create the default policy which deletes data after 1000weeks, creates 1 replica and is (true) the default
+            // Create the default policy which deletes data after 1000weeks, creates 1 replica and is (true) the default
             influxDB.createRetentionPolicy("defaultPolicy", databaseName, "1000w", 1, true);
         }
 
@@ -59,7 +56,7 @@ public class WriteToInfluxDB extends AbstractPipelineStep {
     public void writeSample(Sample sample) throws IOException {
         checkConnectionAndReconnect();
 
-        //Build database point
+        // Build database point
         String finalPrefix = sample.resolveTagTemplate(prefix);
         Point.Builder pointBuilder = Point.measurement(finalPrefix)
                 .time(sample.getTimestamp().getTime(), TimeUnit.MILLISECONDS);
@@ -67,7 +64,7 @@ public class WriteToInfluxDB extends AbstractPipelineStep {
             pointBuilder.addField(sample.getHeader().header[j], sample.getValue(j));
         }
         Point point = pointBuilder.build();
-        //Send database point
+        // Send database point
         influxDB.write(point);
 
         output.writeSample(sample);
@@ -85,7 +82,7 @@ public class WriteToInfluxDB extends AbstractPipelineStep {
             logger.log(Level.SEVERE, String.format("Could not connect to InfluxDB with address '%s'. Retry in %s milliseconds", databaseURL, reconnectTimeout));
             try {
                 Thread.sleep(reconnectTimeout);
-            } catch(Exception e){
+            } catch (Exception e) {
                 logger.log(Level.WARNING, "Interrupted", e);
                 Thread.currentThread().interrupt();
             }
