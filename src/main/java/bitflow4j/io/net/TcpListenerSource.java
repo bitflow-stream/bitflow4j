@@ -130,7 +130,7 @@ public class TcpListenerSource extends ThreadedSource {
                 return namedStream;
             }
         };
-        readSamplesRobust(input);
+        readSamplesBackground(input);
         return remote;
     }
 

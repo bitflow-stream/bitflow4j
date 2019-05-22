@@ -44,7 +44,7 @@ public abstract class ThreadedSource extends AbstractSource implements ParallelT
      * Exceptions from the writeSample() method of the subsequent processing step will also shut down the application.
      */
     public void readSamples(SampleGenerator generator) throws IOException {
-        readSamples(generator, true);
+        readSamples(generator, true, false);
     }
 
     /**
@@ -54,14 +54,23 @@ public abstract class ThreadedSource extends AbstractSource implements ParallelT
      * Exceptions from the writeSample() method of the subsequent processing step will still shut down the application.
      */
     public void readSamplesRobust(SampleGenerator generator) throws IOException {
-        readSamples(generator, false);
+        readSamples(generator, false, false);
+    }
+
+    /**
+     * This read methods behaves like readSamplesRobust(), except that the ThreadPool is not stopped when the given
+     * SampleGenerator stops delivering samples. This is suitable for data inputs that are expected to end, like
+     * incoming TCP connections.
+     */
+    public void readSamplesBackground(SampleGenerator generator) throws IOException {
+        readSamples(generator, false, true);
     }
 
     // This method is not public to force usage of one of the other 2 readSamples* methods for clarity.
-    private void readSamples(SampleGenerator generator, boolean readerExceptionsAreFatal) throws IOException {
+    private void readSamples(SampleGenerator generator, boolean readerExceptionsAreFatal, boolean isBackgroundTask) throws IOException {
         LoopTask task = new LoopSampleReaderTask(generator, readerExceptionsAreFatal);
         tasks.add(task);
-        pool.start(task, false);
+        pool.start(task, isBackgroundTask);
     }
 
     @Override
