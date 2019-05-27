@@ -4,7 +4,11 @@ import bitflow4j.Sample;
 import bitflow4j.misc.Pair;
 import bitflow4j.steps.BatchHandler;
 import org.apache.http.HttpHost;
+import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.DocWriteResponse;
+import org.elasticsearch.action.bulk.BulkItemResponse;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.support.replication.ReplicationResponse;
@@ -67,11 +71,17 @@ public class WriteHistogramToElasticsearch implements BatchHandler {
     public List<Sample> handleBatch(List<Sample> batch) throws IOException {
 
         // 'Index' in IndexRequest stands for Putting data into the DB
-        IndexRequest request = new IndexRequest(indexName);
+        BulkRequest bulkRequest = new BulkRequest();
 
-        request.id();
         // For each sample of the batch
         for (Sample sample : batch) {
+            IndexRequest request = new IndexRequest(indexName, "_doc");
+            //new IndexRequest();
+            //request.opType(DocWriteRequest.OpType.CREATE);
+            System.out.println("1 request.type(): " + request.type());
+
+            //request.id();
+
             double[] metrics = sample.getMetrics();
 
             //Generate the data point which represents one frequency with its amplitudes (all have the same timestamp)
@@ -86,10 +96,19 @@ public class WriteHistogramToElasticsearch implements BatchHandler {
             data.endObject();
 
             request.source(data);
+            System.out.println("2 request.type(): " + request.type());
 
-            IndexResponse response = client.index(request, RequestOptions.DEFAULT);
-            printResponse(response);
+            //IndexResponse response = client.index(request, RequestOptions.DEFAULT);
+
+            //printResponse(response);
+
+            bulkRequest.add(request);
         }
+
+        BulkResponse bulkResponse = client.bulk(bulkRequest, RequestOptions.DEFAULT);
+
+        handleResponse(bulkResponse);
+
         return batch;
     }
 
@@ -114,9 +133,24 @@ public class WriteHistogramToElasticsearch implements BatchHandler {
         }
     }
 
+    private void handleResponse(BulkResponse bulkResponse) {
+        if (bulkResponse.hasFailures()) {
+            for (BulkItemResponse bulkItemResponse : bulkResponse) {
+                if (bulkItemResponse.isFailed()) {
+                    BulkItemResponse.Failure failure =
+                            bulkItemResponse.getFailure();
+                    logger.log(Level.WARNING, String.format("Elasticsearch write has failed with message: %s \n%s",
+                            failure.getMessage(), toString()));
+                }
+            }
+        } else {
+            logger.log(Level.INFO, String.format("Elasticsearch saved Histogram: %s Elements", bulkResponse.getItems().length));
+        }
+    }
+
     @Override
     public String toString() {
-        return String.format("WriteHistogramToElasticSearch: Hostports: %s \nIndex: %s, Identifier = Identifier-Value: %s = %s",
+        return String.format("WriteHistogramToElasticSearch: Hostports: %s , Index: %s, Identifier = Identifier-Value: %s = %s",
                 hostPorts, indexName, identifierKey, identifierTemplate);
     }
 }
