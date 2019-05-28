@@ -252,10 +252,12 @@
             <artifactId>mysql-connector-java</artifactId>
             <version>8.0.15</version>
         </dependency>
+        <!-- There exist newer elasticsearch versions(7.0, 7.1, 7.2 although) Grafana does only support these newer
+         versions since May 22th, so for stability reasons this version was chosen -->
         <dependency>
             <groupId>org.elasticsearch.client</groupId>
             <artifactId>elasticsearch-rest-high-level-client</artifactId>
-            <version>7.0.1</version>
+            <version>6.6.2</version>
         </dependency>
         <dependency>
             <groupId>org.influxdb</groupId>
