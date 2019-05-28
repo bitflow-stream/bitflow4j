@@ -21,13 +21,13 @@ public class WriteHistogramToElasticsearch implements BatchHandler {
      * @param identifierTemplate Used template to fill the named property with meaningful content (Tag-templates
      *                           should be used here)
      */
-    public WriteHistogramToElasticsearch(String hostPorts, String indexName, String identifierKey, String identifierTemplate) {
-        this.elasticsearchUtil = new ElasticsearchUtil(hostPorts, indexName, identifierKey, identifierTemplate);
+    public WriteHistogramToElasticsearch(String hostPorts, String indexName, String identifierKey, String identifierTemplate) throws IOException{
+        elasticsearchUtil = new ElasticsearchUtil(hostPorts, indexName, identifierKey, identifierTemplate);
     }
 
     @Override
     public List<Sample> handleBatch(List<Sample> batch) throws IOException {
-        elasticsearchUtil.writeBulk(batch);
+        elasticsearchUtil.write(batch);
         return batch;
     }
 

@@ -44,7 +44,7 @@ public class ElasticsearchUtil {
      * @param identifierTemplate Used template to fill the named property with meaningful content (Tag-templates
      *                           should be used here)
      */
-    public ElasticsearchUtil(String hostPorts, String indexName, String identifierKey, String identifierTemplate) {
+    public ElasticsearchUtil(String hostPorts, String indexName, String identifierKey, String identifierTemplate) throws IOException {
         this.hostPorts = hostPorts;
         this.indexName = indexName;
         this.identifierKey = identifierKey;
@@ -60,21 +60,25 @@ public class ElasticsearchUtil {
                 RestClient.builder(httpHosts));
     }
 
-    private static List<Pair<String, Integer>> convertHostPortArgs(String tags) {
-        return Arrays.stream(tags.split(",")).map(String::trim)
-                .map(s -> {
-                    String[] hostPorts = s.split(":");
-                    return new Pair<>(hostPorts[0], Integer.valueOf(hostPorts[1]));
-                }).collect(Collectors.toList());
+    private static List<Pair<String, Integer>> convertHostPortArgs(String tags) throws IOException {
+        try {
+            return Arrays.stream(tags.split(",")).map(String::trim)
+                    .map(s -> {
+                        String[] hostPorts = s.split(":");
+                        return new Pair<>(hostPorts[0], Integer.valueOf(hostPorts[1]));
+                    }).collect(Collectors.toList());
+        } catch(Exception e) {
+            throw new IOException("Failed to convert hostPorts pairs '" + tags + "' into host and ports, use syntax 'host1:port1, host2:port2': " + e);
+        }
     }
 
-    public void writeSingle(Sample sample) throws IOException {
+    public void write(Sample sample) throws IOException {
         IndexRequest request = generateIndexRequest(sample);
         IndexResponse response = client.index(request, RequestOptions.DEFAULT);
         printResponse(response);
     }
 
-    public void writeBulk(List<Sample> batch) throws IOException {
+    public void write(List<Sample> batch) throws IOException {
         // 'Index' in IndexRequest stands for Putting data into the DB
         BulkRequest bulkRequest = new BulkRequest();
 
