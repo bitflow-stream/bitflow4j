@@ -3,7 +3,11 @@ package bitflow4j.steps.database;
 import bitflow4j.Sample;
 import bitflow4j.misc.Pair;
 import org.apache.http.HttpHost;
+import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.DocWriteResponse;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
+import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -15,6 +19,7 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.rest.RestStatus;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -35,6 +40,7 @@ public class ElasticsearchUtil {
     private final String identifierKey;
     private final String identifierTemplate;
     private final RestHighLevelClient client;
+    private boolean indexCheckDone = false;
 
     /**
      * @param hostPorts          Comma-separated list of host:port pairs, e.g.: host1:port1, host2:port2
@@ -67,7 +73,7 @@ public class ElasticsearchUtil {
                         String[] hostPorts = s.split(":");
                         return new Pair<>(hostPorts[0], Integer.valueOf(hostPorts[1]));
                     }).collect(Collectors.toList());
-        } catch(Exception e) {
+        } catch (Exception e) {
             throw new IOException("Failed to convert hostPorts pairs '" + tags + "' into host and ports, use syntax 'host1:port1, host2:port2': " + e);
         }
     }
@@ -94,6 +100,10 @@ public class ElasticsearchUtil {
     }
 
     private IndexRequest generateIndexRequest(Sample sample) throws IOException {
+        if(!indexCheckDone){
+            indexCheck(sample);
+        }
+
         // 'Index' in IndexRequest stands for Putting data into the DB
         double[] metrics = sample.getMetrics();
         IndexRequest request = new IndexRequest(indexName, "_doc");
@@ -113,6 +123,72 @@ public class ElasticsearchUtil {
         return request;
     }
 
+    private void indexCheck(Sample sample) throws IOException {
+        // Check whether index mapping exists, add the correct one if not
+        GetIndexRequest requestIndex = new GetIndexRequest();
+        requestIndex.indices(indexName);
+        boolean indexExists = client.indices().exists(requestIndex, RequestOptions.DEFAULT);
+        logger.log(Level.INFO, String.format("indexExists: %s", indexExists));
+        if (!indexExists) {
+            CreateIndexRequest requestCreate = new CreateIndexRequest(indexName);
+            //requestCreate.
+
+            XContentBuilder builder = XContentFactory.jsonBuilder();
+            builder.startObject();
+            // Brackets only for readability
+            {
+                builder.startObject("_doc");
+                {
+                    builder.startObject("properties");
+                    {
+                        // Create timestamp field as date which is saved in milliseconds
+                        builder.startObject("timestamp");
+                        {
+                            builder.field("type", "date");
+                            builder.field("index", "true");
+                            builder.field("format", "epoch_millis");
+                        }
+                        builder.endObject();
+
+                        // Create identifierKey field as keyword
+                        builder.startObject(identifierKey);
+                        {
+                            builder.field("type", "keyword");
+                        }
+                        builder.endObject();
+
+                        // Create
+                        String[] header = sample.getHeader().header;
+                        for (String metric : header) {
+                            builder.startObject(metric);
+                            {
+                                builder.field("type", "float");
+                            }
+                            builder.endObject();
+                        }
+                    }
+                    builder.endObject();
+                }
+                builder.endObject();
+            }
+            builder.endObject();
+            requestCreate.mapping("_doc", builder);
+            try {
+                CreateIndexResponse createIndexResponse = client.indices().create(requestCreate, RequestOptions.DEFAULT);
+                boolean acknowledged = createIndexResponse.isAcknowledged();
+                boolean shardsAcknowledged = createIndexResponse.isShardsAcknowledged();
+                logger.log(Level.INFO, String.format("Created index for indexName '%s' and got response '%s' and '%s'.", indexName, acknowledged, shardsAcknowledged));
+            }
+            catch (ElasticsearchStatusException elasticEx){
+                //Can happen if multiple forks try to create this index, just ignore the message that it already was added
+                if (!elasticEx.getMessage().contains("resource_already_exists_exception")){
+                    throw elasticEx;
+                }
+            }
+        }
+        indexCheckDone = true;
+    }
+
     private void printResponse(IndexResponse indexResponse) {
         if (indexResponse.getResult() == DocWriteResponse.Result.CREATED) {
             // Object was created in Database
@@ -129,7 +205,7 @@ public class ElasticsearchUtil {
             for (ReplicationResponse.ShardInfo.Failure failure :
                     shardInfo.getFailures()) {
                 String reason = failure.reason();
-                logger.log(Level.SEVERE, String.format("Failure (%s):\n %s ", toString(), failure.reason()));
+                logger.log(Level.SEVERE, String.format("Failure (%s):\n %s ", toString(), reason));
             }
         }
     }
