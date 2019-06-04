@@ -41,6 +41,19 @@ public class ElasticsearchUtil {
     private final RestHighLevelClient client;
     private boolean indexCheckDone = false;
 
+    private static final String ELASTICSEARCH_DOCUMENT_KEYWORD = "_doc";
+    private static final String ELASTICSEARCH_PROPERTIES_KEYWORD = "properties";
+    private static final String ELASTICSEARCH_TYPE_KEYWORD = "type";
+    private static final String ELASTICSEARCH_FLOAT_KEYWORD = "float";
+    private static final String ELASTICSEARCH_KEYWORD_KEYWORD = "keyword";
+    private static final String ELASTICSEARCH_DATE_KEYWORD = "date";
+    private static final String ELASTICSEARCH_INDEX_KEYWORD = "index";
+    private static final String ELASTICSEARCH_TRUE_KEYWORD = "true";
+    private static final String ELASTICSEARCH_FORMAT_KEYWORD = "format";
+    private static final String ELASTICSEARCH_EPOCH_MILLIS_KEYWORD = "epoch_millis";
+
+    private static final String ELASTICSEARCH_TIMESTAMP_VARIABLE = "timestamp";
+
     /**
      * @param hostPorts          Comma-separated list of host:port pairs, e.g.: host1:port1, host2:port2
      * @param indexName          Index name of the respective index in the Elasticsearch-Database
@@ -99,19 +112,20 @@ public class ElasticsearchUtil {
     }
 
     private IndexRequest generateIndexRequest(Sample sample) throws IOException {
-        if(!indexCheckDone){
+        if (!indexCheckDone) {
             indexCheck(sample);
+            indexCheckDone = true;
         }
 
         // 'Index' in IndexRequest stands for Putting data into the DB
         double[] metrics = sample.getMetrics();
-        IndexRequest request = new IndexRequest(indexName, "_doc");
+        IndexRequest request = new IndexRequest(indexName, ELASTICSEARCH_DOCUMENT_KEYWORD);
         request.id();
         //Generate the data point which represents one frequency with its amplitudes (all have the same timestamp)
         XContentBuilder data = XContentFactory.jsonBuilder();
         data.startObject()
                 .field(identifierKey, sample.resolveTagTemplate(identifierTemplate))
-                .field("timestamp", sample.getTimestamp().getTime());
+                .field(ELASTICSEARCH_TIMESTAMP_VARIABLE, sample.getTimestamp().getTime());
 
         for (int j = 0; j < metrics.length; j++) {
             data.field(sample.getHeader().header[j], metrics[j]);
@@ -136,23 +150,23 @@ public class ElasticsearchUtil {
             builder.startObject();
             // Brackets only for readability
             {
-                builder.startObject("_doc");
+                builder.startObject(ELASTICSEARCH_DOCUMENT_KEYWORD);
                 {
-                    builder.startObject("properties");
+                    builder.startObject(ELASTICSEARCH_PROPERTIES_KEYWORD);
                     {
                         // Create timestamp field as date which is saved in milliseconds
-                        builder.startObject("timestamp");
+                        builder.startObject(ELASTICSEARCH_TIMESTAMP_VARIABLE);
                         {
-                            builder.field("type", "date");
-                            builder.field("index", "true");
-                            builder.field("format", "epoch_millis");
+                            builder.field(ELASTICSEARCH_TYPE_KEYWORD, ELASTICSEARCH_DATE_KEYWORD);
+                            builder.field(ELASTICSEARCH_INDEX_KEYWORD, ELASTICSEARCH_TRUE_KEYWORD);
+                            builder.field(ELASTICSEARCH_FORMAT_KEYWORD, ELASTICSEARCH_EPOCH_MILLIS_KEYWORD);
                         }
                         builder.endObject();
 
                         // Create identifierKey field as keyword
                         builder.startObject(identifierKey);
                         {
-                            builder.field("type", "keyword");
+                            builder.field(ELASTICSEARCH_TYPE_KEYWORD, ELASTICSEARCH_KEYWORD_KEYWORD);
                         }
                         builder.endObject();
 
@@ -161,7 +175,7 @@ public class ElasticsearchUtil {
                         for (String metric : header) {
                             builder.startObject(metric);
                             {
-                                builder.field("type", "float");
+                                builder.field(ELASTICSEARCH_TYPE_KEYWORD, ELASTICSEARCH_FLOAT_KEYWORD);
                             }
                             builder.endObject();
                         }
@@ -171,21 +185,19 @@ public class ElasticsearchUtil {
                 builder.endObject();
             }
             builder.endObject();
-            requestCreate.mapping("_doc", builder);
+            requestCreate.mapping(ELASTICSEARCH_DOCUMENT_KEYWORD, builder);
             try {
                 CreateIndexResponse createIndexResponse = client.indices().create(requestCreate, RequestOptions.DEFAULT);
                 boolean acknowledged = createIndexResponse.isAcknowledged();
                 boolean shardsAcknowledged = createIndexResponse.isShardsAcknowledged();
                 logger.log(Level.INFO, String.format("Created index for indexName '%s' and got response '%s' and '%s'.", indexName, acknowledged, shardsAcknowledged));
-            }
-            catch (ElasticsearchStatusException elasticEx){
+            } catch (ElasticsearchStatusException elasticEx) {
                 //Can happen if multiple forks try to create this index, just ignore the message that it already was added
-                if (!elasticEx.getMessage().contains("resource_already_exists_exception")){
+                if (!elasticEx.getMessage().contains("resource_already_exists_exception")) {
                     throw elasticEx;
                 }
             }
         }
-        indexCheckDone = true;
     }
 
     private void printResponse(IndexResponse indexResponse) {
