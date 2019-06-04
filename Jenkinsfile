@@ -50,15 +50,12 @@ pipeline {
             }
         }
         stage('SonarQube') {
-            when {
-                branch 'master'
-            }
             steps {
                 withSonarQubeEnv('CIT SonarQube') {
                     // The find & paste command in the jacoco line lists the relevant files and prints them, separted by comma
                     // The jacoco reports must be given file-wise, while the junit reports are read from the entire directory
                     sh '''
-                        mvn sonar:sonar -B -V -Dsonar.projectKey=bitflow4j \
+                        mvn sonar:sonar -B -V -Dsonar.projectKey=bitflow4j -Dsonar.branch.name=$BRANCH_NAME \
                             -Dsonar.sources=src/main/java -Dsonar.tests=src/test/java \
                             -Dsonar.inclusions="**/*.java" -Dsonar.test.inclusions="src/test/java/**/*.java" \
                             -Dsonar.exclusions="src/main/java/bitflow4j/script/generated/*.java" \
