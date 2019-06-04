@@ -16,27 +16,27 @@ public class SleepOnTagChange extends AbstractPipelineStep {
 
     protected static final Logger logger = Logger.getLogger(SleepOnTagChange.class.getName());
 
-    private final int time;
-    private final String onChangedTag;
+    private final int milliSeconds;
+    private final String tag;
 
     private String previousTag;
 
-    public SleepOnTagChange(int time, String onChangedTag) {
-        this.time = time;
-        this.onChangedTag = onChangedTag;
+    public SleepOnTagChange(int milliSeconds, String tag) {
+        this.milliSeconds = milliSeconds;
+        this.tag = tag;
     }
 
     @Override
     public void writeSample(Sample sample) throws IOException {
-        if (!sample.getTag(onChangedTag).equals(previousTag)) {
+        if (!sample.getTag(tag).equals(previousTag)) {
             // Sleep here, because the Tag changed
             try {
-                Thread.sleep(time);
+                Thread.sleep(milliSeconds);
             } catch (InterruptedException e) {
                 logger.log(Level.WARNING, "Interrupted", e);
                 Thread.currentThread().interrupt();
             }
-            previousTag = sample.getTag(onChangedTag);
+            previousTag = sample.getTag(tag);
         }
         output.writeSample(sample);
     }
