@@ -41,6 +41,36 @@ public interface BitflowVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitParameter(BitflowParser.ParameterContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link BitflowParser#parameterValue}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitParameterValue(BitflowParser.ParameterValueContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link BitflowParser#primitiveValue}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPrimitiveValue(BitflowParser.PrimitiveValueContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link BitflowParser#listValue}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitListValue(BitflowParser.ListValueContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link BitflowParser#mapValue}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMapValue(BitflowParser.MapValueContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link BitflowParser#mapValueElement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMapValueElement(BitflowParser.MapValueElementContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link BitflowParser#parameterList}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

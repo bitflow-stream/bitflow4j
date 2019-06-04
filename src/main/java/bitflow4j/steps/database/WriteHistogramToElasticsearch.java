@@ -15,7 +15,6 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,7 +24,7 @@ public class WriteHistogramToElasticsearch implements BatchHandler {
 
     protected static final Logger logger = Logger.getLogger(WriteHistogramToElasticsearch.class.getName());
 
-    private final String hostPorts;
+    private final List<String> hostPorts;
     private final String indexName;
     private final String identifierKey;
     private final String identifierTemplate;
@@ -39,7 +38,7 @@ public class WriteHistogramToElasticsearch implements BatchHandler {
      * @param identifierTemplate Used template to fill the named property with meaningful content (Tag-templates
      *                           should be used here)
      */
-    public WriteHistogramToElasticsearch(String hostPorts, String indexName, String identifierKey, String identifierTemplate) {
+    public WriteHistogramToElasticsearch(List<String> hostPorts, String indexName, String identifierKey, String identifierTemplate) {
         this.hostPorts = hostPorts;
         this.indexName = indexName;
         this.identifierKey = identifierKey;
@@ -55,8 +54,8 @@ public class WriteHistogramToElasticsearch implements BatchHandler {
                 RestClient.builder(httpHosts));
     }
 
-    private static List<Pair<String, Integer>> convertHostPortArgs(String tags) {
-        return Arrays.stream(tags.split(",")).map(String::trim)
+    private static List<Pair<String, Integer>> convertHostPortArgs(List<String> tags) {
+        return tags.stream().map(String::trim)
                 .map(s -> {
                     String[] hostPorts = s.split(":");
                     return new Pair<>(hostPorts[0], Integer.valueOf(hostPorts[1]));

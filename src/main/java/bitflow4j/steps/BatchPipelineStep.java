@@ -3,6 +3,8 @@ package bitflow4j.steps;
 import bitflow4j.AbstractPipelineStep;
 import bitflow4j.Sample;
 import bitflow4j.misc.TreeFormatter;
+import bitflow4j.script.registry.RegisteredParameter;
+import bitflow4j.script.registry.RegisteredParameterList;
 import bitflow4j.task.LoopTask;
 import bitflow4j.task.TaskPool;
 
@@ -62,15 +64,21 @@ public final class BatchPipelineStep extends AbstractPipelineStep implements Tre
         this.handlers.addAll(Arrays.asList(handlers));
     }
 
-    public static BatchPipelineStep createFromParameters(Map<String, String> params) throws IllegalArgumentException {
-        String separationTag = params.remove("separationTag");
-        String timeoutStr = params.remove("timeout");
-        long timeout = 0;
-        if (timeoutStr != null) {
-            timeout = Long.parseLong(timeoutStr);
+    public static final RegisteredParameterList BATCH_STEP_PARAMETERS = new RegisteredParameterList(
+            new RegisteredParameter[0],
+            new RegisteredParameter[]{
+                    new RegisteredParameter("separationTag", RegisteredParameter.ContainerType.Primitive, String.class),
+                    new RegisteredParameter("timeout", RegisteredParameter.ContainerType.Primitive, Long.class)
+            });
+
+    public static BatchPipelineStep createFromParameters(Map<String, Object> params) throws IllegalArgumentException {
+        String separationTag = null;
+        if (params.containsKey("separationTag")) {
+            separationTag = (String) params.get("separationTag");
         }
-        if (!params.isEmpty()) {
-            throw new IllegalArgumentException("Unsupported batch parameters: " + params);
+        long timeout = 0;
+        if (params.containsKey("timeout")) {
+            timeout = (Long) params.get("timeout");
         }
         return new BatchPipelineStep(separationTag, timeout);
     }

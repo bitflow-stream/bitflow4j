@@ -1,9 +1,6 @@
 package bitflow4j.script.registry;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 public class RegisteredStep<BuilderClass> {
 
@@ -12,34 +9,15 @@ public class RegisteredStep<BuilderClass> {
 
     private final String stepName;
     private final String description;
-    private final List<String> optionalParameters = new ArrayList<>();
-    private final List<String> requiredParameters = new ArrayList<>();
-    private boolean hasGeneric = false;
+    public final RegisteredParameterList parameters;
 
     public final BuilderClass builder;
 
-    public RegisteredStep(String classOrStepName, String description, BuilderClass builder) {
+    public RegisteredStep(String classOrStepName, String description, RegisteredParameterList parameters, BuilderClass builder) {
         this.stepName = splitCamelCase(classOrStepName);
         this.description = description;
         this.builder = builder;
-    }
-
-    public RegisteredStep<BuilderClass> optional(String... parameters) {
-        Collections.addAll(optionalParameters, parameters);
-        return this;
-    }
-
-    public RegisteredStep<BuilderClass> required(String... parameters) {
-        Collections.addAll(requiredParameters, parameters);
-        return this;
-    }
-
-    public List<String> getOptionalParameters() {
-        return optionalParameters;
-    }
-
-    public List<String> getRequiredParameters() {
-        return requiredParameters;
+        this.parameters = parameters == null ? new RegisteredParameterList() : parameters;
     }
 
     public String getStepName() {
@@ -48,40 +26,6 @@ public class RegisteredStep<BuilderClass> {
 
     public String getDescription() {
         return description;
-    }
-
-    public void acceptGenericConstructor() {
-        hasGeneric = true;
-    }
-
-    public boolean hasGenericConstructor() {
-        return hasGeneric;
-    }
-
-    /**
-     * validateParameters takes a map of parameters and validates them against the specified optional and required parameters.
-     * It returns a list of errors for unexpected or missing required parameters.
-     *
-     * @param params the input parameters to be validated
-     * @return a list of errors in the specified input parameters (required but missing or unexpected)
-     */
-    public List<String> validateParameters(Map<String, String> params) {
-        List<String> errors = new ArrayList<>();
-        if (hasGeneric) {
-            return errors;
-        }
-
-        params.keySet().forEach(s -> {
-            if (!optionalParameters.contains(s) && !requiredParameters.contains(s)) {
-                errors.add("Unexpected parameter '" + s + "'");
-            }
-        });
-        requiredParameters.forEach(s -> {
-            if (!params.keySet().contains(s)) {
-                errors.add("Missing required parameter '" + s + "'");
-            }
-        });
-        return errors;
     }
 
     public static String splitCamelCase(String camelCase) {

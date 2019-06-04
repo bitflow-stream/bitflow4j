@@ -11,6 +11,6 @@ import java.util.Map;
  */
 public interface ProcessingStepBuilder {
 
-    PipelineStep buildProcessingStep(Map<String, String> parameters) throws IOException;
+    PipelineStep buildProcessingStep(Map<String, Object> parameters) throws IOException;
 
 }

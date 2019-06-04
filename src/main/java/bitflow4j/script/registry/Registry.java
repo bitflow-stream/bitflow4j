@@ -130,7 +130,31 @@ public class Registry {
     }
 
     public boolean registerClass(Class impl) {
-        return new RegistryConstructor(impl).register(this);
+        return register(new RegistryConstructor(impl));
     }
+
+    public boolean register(RegistryConstructor constructor) {
+        if (constructor.isAbstract()) {
+            logger.fine("Class is abstract or interface, not registered: " + constructor.getClassName());
+            return false;
+        }
+        if (!constructor.hasConstructors()) {
+            logger.fine("Class missing valid constructor, not registered: " + constructor.getClassName());
+            return false;
+        }
+
+        if (constructor.isFork()) {
+            registerFork(constructor.makeRegisteredFork());
+        } else if (constructor.isBatchStep()) {
+            registerBatchStep(constructor.makeRegisteredBatchStep());
+        } else if (constructor.isProcessingStep()) {
+            registerStep(constructor.makeRegisteredStep());
+        } else {
+            logger.warning("Not registering class, because it does not implement/subclass any supported type: " + constructor.getClassName());
+            return false;
+        }
+        return true;
+    }
+
 
 }

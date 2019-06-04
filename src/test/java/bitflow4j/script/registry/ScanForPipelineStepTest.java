@@ -40,12 +40,14 @@ public class ScanForPipelineStepTest {
     // ##### Tests using class RequiredParamStep for testing required and optional params #######
     @Test
     public void givenStepConstructor_whenInvokeWithOptionalAndRequiredArgs_thenSetBothProperties() throws IOException {
-        Map<String, String> params = new HashMap<>();
+        Map<String, Object> params = new HashMap<>();
         params.put("requiredArg", "requiredArgValue");
         params.put("optionalArg", "optionalArgValue");
 
         Pipeline pipe = new Pipeline();
-        pipe.step(requiredParamsRegistration.builder.buildProcessingStep(params));
+        pipe.step(
+                requiredParamsRegistration.builder.buildProcessingStep(
+                        requiredParamsRegistration.parameters.parseRawParameters((params))));
         PipelineStep res = pipe.steps.get(0);
 
         assertTrue(res instanceof RequiredParamStep);
@@ -56,11 +58,13 @@ public class ScanForPipelineStepTest {
 
     @Test
     public void givenStepConstructor_whenInvokeWithRequiredArgsOnly_thenSetRequiredArgOnly() throws IOException {
-        Map<String, String> params = new HashMap<>();
+        Map<String, Object> params = new HashMap<>();
         params.put("requiredArg", "requiredArgValue");
 
         Pipeline pipe = new Pipeline();
-        pipe.step(requiredParamsRegistration.builder.buildProcessingStep(params));
+        pipe.step(
+                requiredParamsRegistration.builder.buildProcessingStep(
+                        requiredParamsRegistration.parameters.parseRawParameters(params)));
         PipelineStep res = pipe.steps.get(0);
 
         assertTrue(res instanceof RequiredParamStep);
@@ -71,11 +75,12 @@ public class ScanForPipelineStepTest {
 
     @Test(expected = ConstructionException.class)
     public void givenStepConstructor_whenInvokeWithoutRequiredArgs_thenThrowException() throws IOException {
-        Map<String, String> params = new HashMap<>();
+        Map<String, Object> params = new HashMap<>();
         params.put("optionalArg", "optionalArgValue");
 
         try {
             Pipeline pipe = new Pipeline();
+            // The parameters are not parsed in this test.
             pipe.step(requiredParamsRegistration.builder.buildProcessingStep(params));
         } catch (ConstructionException e) {
             assertEquals("required-param", e.getStepName());
@@ -86,14 +91,15 @@ public class ScanForPipelineStepTest {
 
     // ##### Tests using MixedParamStep for testing different parameter types and mixed constructors #######
     private MixedParamStep executeMixedStepConstruction(String parameterName, String parameterValue) throws IOException {
-        Map<String, String> params = new HashMap<>();
+        Map<String, Object> params = new HashMap<>();
         params.put(parameterName, parameterValue);
         return executeMixedStepConstruction(params);
     }
 
-    private MixedParamStep executeMixedStepConstruction(Map<String, String> params) throws IOException {
+    private MixedParamStep executeMixedStepConstruction(Map<String, Object> params) throws IOException {
         Pipeline pipe = new Pipeline();
-        pipe.step(mixedParamsRegistration.builder.buildProcessingStep(params));
+        pipe.step(mixedParamsRegistration.builder.buildProcessingStep(
+                mixedParamsRegistration.parameters.parseRawParameters(params)));
         PipelineStep res = pipe.steps.get(0);
         assertTrue(res instanceof MixedParamStep);
         return (MixedParamStep) res;
@@ -132,7 +138,7 @@ public class ScanForPipelineStepTest {
 
     @Test
     public void testMixedStep_withAllArgs() throws IOException {
-        Map<String, String> params = new HashMap<>();
+        Map<String, Object> params = new HashMap<>();
         params.put("stringArg", "value");
         params.put("intArg", "5");
         params.put("doubleArg", "5.5");
@@ -144,7 +150,7 @@ public class ScanForPipelineStepTest {
 
     @Test
     public void testMixedStep_withSomeArgs() throws IOException {
-        Map<String, String> params = new HashMap<>();
+        Map<String, Object> params = new HashMap<>();
         params.put("doubleArg", "5.5");
         params.put("booleanArg", "TRUE");
 
@@ -154,7 +160,7 @@ public class ScanForPipelineStepTest {
 
     @Test(expected = ConstructionException.class)
     public void testMixedStep_withNonexistentCombination_shouldThrowException() throws IOException {
-        Map<String, String> params = new HashMap<>();
+        Map<String, Object> params = new HashMap<>();
         params.put("stringArg", "value");
         params.put("intArg", "5");
         params.put("booleanArg", "TRUE");
