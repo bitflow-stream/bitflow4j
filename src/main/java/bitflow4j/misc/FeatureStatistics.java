@@ -19,12 +19,17 @@ public class FeatureStatistics implements Serializable {
     private static final Logger logger = Logger.getLogger(FeatureStatistics.class.getName());
 
     public static class Feature implements Serializable {
-        public final String name;
-        public double min;
-        public double max;
-        public final double avg;
-        public final double stddev;
-        public final int count;
+        private final String name;
+        private double min;
+        private double max;
+        private final double avg;
+        private final double stddev;
+        private final int count;
+
+        public Feature() {
+            // Empty constructor required for de-serialization
+            this("", 0, 0, 0, 0, 0);
+        }
 
         public Feature(String name, double min, double max, double avg, double stddev, int count) {
             this.name = name;
@@ -33,6 +38,10 @@ public class FeatureStatistics implements Serializable {
             this.avg = avg;
             this.stddev = stddev;
             this.count = count;
+        }
+
+        public Feature(Feature copyFrom) {
+            this(copyFrom.name, copyFrom.min, copyFrom.max, copyFrom.avg, copyFrom.stddev, copyFrom.count);
         }
 
         public Feature(String name, Map<String, String> values) throws NumberFormatException {
@@ -82,6 +91,38 @@ public class FeatureStatistics implements Serializable {
             return name + " (min: " + min + ", max: " + max + ", avg: " + avg +
                     ", stddev: " + stddev + ", count: " + count + ")";
         }
+
+        public void setMin(double min) {
+            this.min = min;
+        }
+
+        public void setMax(double max) {
+            this.max = max;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public double getMin() {
+            return min;
+        }
+
+        public double getMax() {
+            return max;
+        }
+
+        public double getAvg() {
+            return avg;
+        }
+
+        public double getStddev() {
+            return stddev;
+        }
+
+        public int getCount() {
+            return count;
+        }
     }
 
     private final Map<String, Feature> features = new HashMap<>();
@@ -90,6 +131,12 @@ public class FeatureStatistics implements Serializable {
      * Create an empty instance without loading from file.
      */
     public FeatureStatistics() {
+    }
+
+    public FeatureStatistics(FeatureStatistics copyFrom) {
+        for (Feature feature : copyFrom.allFeatures()) {
+            features.put(feature.name, new Feature(feature));
+        }
     }
 
     public FeatureStatistics(String iniFile) {
