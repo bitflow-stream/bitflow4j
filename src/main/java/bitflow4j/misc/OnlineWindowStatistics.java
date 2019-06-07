@@ -21,7 +21,7 @@ public class OnlineWindowStatistics extends OnlineStatistics {
     public void push(double x) {
         if (window.isFull()) {
             double oldest = (double) window.get();
-            //remove(oldest);
+            remove(oldest);
             window.remove();
         }
         super.push(x);

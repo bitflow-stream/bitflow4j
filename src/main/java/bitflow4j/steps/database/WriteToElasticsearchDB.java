@@ -1,15 +1,14 @@
 package bitflow4j.steps.database;
 
+import bitflow4j.AbstractPipelineStep;
 import bitflow4j.Sample;
-import bitflow4j.steps.BatchHandler;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.logging.Logger;
 
-public class WriteHistogramToElasticsearch implements BatchHandler {
+public class WriteToElasticsearchDB extends AbstractPipelineStep {
 
-    protected static final Logger logger = Logger.getLogger(WriteHistogramToElasticsearch.class.getName());
+    protected static final Logger logger = Logger.getLogger(WriteToElasticsearchDB.class.getName());
 
     private final ElasticsearchUtil elasticsearchUtil;
 
@@ -21,14 +20,14 @@ public class WriteHistogramToElasticsearch implements BatchHandler {
      * @param identifierTemplate Used template to fill the named property with meaningful content (Tag-templates
      *                           should be used here)
      */
-    public WriteHistogramToElasticsearch(List<String> hostPorts, String indexName, String identifierKey, String identifierTemplate) throws IOException{
+    public WriteToElasticsearchDB(String hostPorts, String indexName, String identifierKey, String identifierTemplate) throws IOException {
         elasticsearchUtil = new ElasticsearchUtil(hostPorts, indexName, identifierKey, identifierTemplate);
     }
 
     @Override
-    public List<Sample> handleBatch(List<Sample> batch) throws IOException {
-        elasticsearchUtil.write(batch);
-        return batch;
+    public void writeSample(Sample sample) throws IOException {
+        elasticsearchUtil.write(sample);
+        output.writeSample(sample);
     }
 
     @Override

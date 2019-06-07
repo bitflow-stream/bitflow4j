@@ -1,6 +1,7 @@
 package bitflow4j.steps.normalization;
 
 import bitflow4j.misc.OnlineStatistics;
+import bitflow4j.misc.Pair;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,16 +9,16 @@ import java.util.Map;
 /**
  * Created by anton on 7/7/16.
  */
-public class OnlineAutoFeatureStandardizer extends OnlineAbstractFeatureScaler {
+public class OnlineAutoStandardizer extends AbstractOnlineScaler {
 
     private final Map<String, OnlineStatistics> features = new HashMap<>();
 
     @Override
-    protected boolean canStandardize(String name) {
+    protected boolean canScale(String name) {
         return true;
     }
 
-    protected double standardize(String name, double val) {
+    protected Pair<Double, Boolean> scale(String name, double val) {
         OnlineStatistics estimator = features.get(name);
         if (estimator == null) {
             estimator = new OnlineStatistics();
@@ -27,7 +28,15 @@ public class OnlineAutoFeatureStandardizer extends OnlineAbstractFeatureScaler {
         double average = estimator.mean();
         double stdDeviation = estimator.standardDeviation();
         if (stdDeviation == 0) stdDeviation = 1;
-        return (val - average) / stdDeviation;
+        double scaledValue = (val - average) / stdDeviation;
+
+        // TODO implement handling of changed scaling model (see OnlineAutoMinMaxScaler)
+        return new Pair<>(scaledValue, false);
+    }
+
+    @Override
+    protected void updateScaling(String name) {
+        // Updates are always applied automatically
     }
 
 }
