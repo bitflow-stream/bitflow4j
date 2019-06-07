@@ -22,8 +22,8 @@ public class OnlineStandardizer extends AbstractOnlineScaler {
     public OnlineStandardizer(FeatureStatistics stats) {
         this(new HashMap<>(), new HashMap<>());
         for (FeatureStatistics.Feature ft : stats.allFeatures()) {
-            averages.put(ft.name, ft.avg);
-            stddevs.put(ft.name, ft.stddev);
+            averages.put(ft.getName(), ft.getAvg());
+            stddevs.put(ft.getName(), ft.getStddev());
         }
     }
 

@@ -160,7 +160,7 @@ public class OnlineAutoMinMaxScaler extends AbstractOnlineScaler {
 
     public void setFeatures(FeatureStatistics stats) {
         for (FeatureStatistics.Feature stat : stats.allFeatures()) {
-            features.put(stat.name, new Feature(stat.name, stat.min, stat.max, conceptChangeThreshold));
+            features.put(stat.getName(), new Feature(stat.getName(), stat.getMin(), stat.getMax(), conceptChangeThreshold));
         }
     }
 
