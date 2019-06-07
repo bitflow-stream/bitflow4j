@@ -28,14 +28,15 @@ public class MetricFilter extends AbstractPipelineStep {
         this(new MetricNameSelection(excludedCols));
     }
 
-    /** Constructor for bitflow-script, specifying whether to include or exclude the comma-separated string of columns **/
-    public MetricFilter(boolean include, String columns) {
-        String[] cols = Arrays.stream(columns.split(",")).map(String::trim).toArray(String[]::new);
+    /**
+     * Constructor for bitflow-script, specifying whether to include or exclude the comma-separated string of columns
+     **/
+    public MetricFilter(boolean include, List<String> columns) {
+        String[] cols = columns.toArray(String[]::new);
 
         if (include) {
             this.filter = new MetricNameIncludeSelection(cols);
-        }
-        else { //exclude
+        } else { //exclude
             this.filter = new MetricNameSelection(cols);
         }
     }
@@ -46,8 +47,8 @@ public class MetricFilter extends AbstractPipelineStep {
             outputHeader = buildHeader(sample.getHeader());
         }
 
-        double values[] = new double[outputHeader.header.length];
-        double inputMetrics[] = sample.getMetrics();
+        double[] values = new double[outputHeader.header.length];
+        double[] inputMetrics = sample.getMetrics();
         int j = 0;
         for (int i = 0; i < includedMetrics.length; i++) {
             if (includedMetrics[i]) {
@@ -69,7 +70,7 @@ public class MetricFilter extends AbstractPipelineStep {
             }
             includedMetrics[i] = shouldInclude;
         }
-        return new Header(fields.toArray(new String[fields.size()]));
+        return new Header(fields.toArray(String[]::new));
     }
 
     public interface MetricSelection {

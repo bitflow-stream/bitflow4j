@@ -20,6 +20,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * BitflowScriptCompiler wraps anything Antlr related and implements the Antlr AST listener that can parse
@@ -167,16 +168,12 @@ class BitflowScriptCompiler {
 
     private void buildProcessingStep(Pipeline pipe, BitflowParser.ProcessingStepContext ctx) throws CompilationException {
         String name = unwrap(ctx.name());
-        Map<String, String> params = buildParameters(ctx.parameters());
-
         RegisteredStep<ProcessingStepBuilder> regAnalysis = registry.getRegisteredStep(name);
         if (regAnalysis == null) {
             throw new CompilationException(ctx, name, "Unknown processing step");
         }
-        regAnalysis.validateParameters(params).forEach(parameterError -> {
-            throw new CompilationException(ctx, parameterError);
-        });
 
+        Map<String, Object> params = buildParameters(regAnalysis.parameters, ctx.parameters());
         try {
             pipe.step(regAnalysis.builder.buildProcessingStep(params));
         } catch (IOException e) {
@@ -185,13 +182,12 @@ class BitflowScriptCompiler {
     }
 
     private void buildFork(Pipeline pipe, BitflowParser.ForkContext ctx) throws CompilationException {
-        Map<String, String> forkParams = buildParameters(ctx.parameters());
         String forkName = unwrap(ctx.name());
-
         RegisteredStep<ForkBuilder> forkReg = registry.getRegisteredFork(forkName);
         if (forkReg == null) {
             throw new CompilationException(ctx, forkName, "Unknown fork");
         }
+        Map<String, Object> forkParams = buildParameters(forkReg.parameters, ctx.parameters());
 
         Collection<Pair<String, ScriptableDistributor.PipelineBuilder>> subPipes = new ArrayList<>();
         for (BitflowParser.NamedSubPipelineContext subPipeline : ctx.namedSubPipeline()) {
@@ -243,16 +239,39 @@ class BitflowScriptCompiler {
         return new Fork(multiplex);
     }
 
-    private Map<String, String> buildParameters(BitflowParser.ParametersContext ctx) throws CompilationException {
-        Map<String, String> params = new HashMap<>();
+    private Map<String, Object> buildParameters(RegisteredParameterList params, BitflowParser.ParametersContext ctx) throws CompilationException {
+        Map<String, Object> rawParameters = extractRawParameters(ctx);
+        try {
+            return params.parseRawParameters(rawParameters);
+        } catch (IllegalArgumentException e) {
+            throw new CompilationException(ctx, e);
+        }
+    }
+
+    private Map<String, Object> extractRawParameters(BitflowParser.ParametersContext ctx) throws CompilationException {
+        Map<String, Object> params = new HashMap<>();
         if (ctx.parameterList() != null) {
             for (BitflowParser.ParameterContext param : ctx.parameterList().parameter()) {
-                String key = unwrap(param.name(0));
-                String value = unwrap(param.name(1));
+                String key = unwrap(param.name());
                 if (params.containsKey(key)) {
-                    throw new CompilationException(ctx, String.format("Duplicate parameter %s (values '%s' and '%s')", key, params.get(key), value));
+                    throw new CompilationException(ctx, String.format("Duplicate parameter %s", key));
                 } else {
-                    params.put(key, value);
+                    BitflowParser.ParameterValueContext value = param.parameterValue();
+                    Object valueObj;
+                    if (value.primitiveValue() != null) {
+                        valueObj = unwrap(value.primitiveValue().name());
+                    } else if (value.listValue() != null) {
+                        valueObj = value.listValue().primitiveValue().stream().
+                                map(v -> unwrap(v.name())).collect(Collectors.toList());
+                    } else if (value.mapValue() != null) {
+                        valueObj = value.mapValue().mapValueElement().stream().
+                                collect(Collectors.toMap(
+                                        e -> unwrap(e.name()),
+                                        e -> unwrap(e.primitiveValue().name())));
+                    } else {
+                        throw new CompilationException(value, "Unexpected parameter value type");
+                    }
+                    params.put(key, valueObj);
                 }
             }
         }
@@ -260,16 +279,16 @@ class BitflowScriptCompiler {
     }
 
     private void buildWindow(Pipeline pipe, BitflowParser.WindowContext window) {
-        Map<String, String> params = buildParameters(window.parameters());
+        Map<String, Object> params = buildParameters(BatchPipelineStep.BATCH_STEP_PARAMETERS, window.parameters());
         BatchPipelineStep batchStep = BatchPipelineStep.createFromParameters(params);
+
         for (BitflowParser.ProcessingStepContext step : window.processingStep()) {
             String name = unwrap(step.name());
             RegisteredStep<BatchStepBuilder> registeredStep = registry.getRegisteredBatchStep(name);
             if (registeredStep == null) {
                 throw new CompilationException(step, name, "Unknown batch processing step");
             }
-            Map<String, String> registeredStepParams = buildParameters(step.parameters());
-
+            Map<String, Object> registeredStepParams = buildParameters(registeredStep.parameters, step.parameters());
             try {
                 BatchHandler handler = registeredStep.builder.buildBatchStep(registeredStepParams);
                 batchStep.addBatchHandler(handler);

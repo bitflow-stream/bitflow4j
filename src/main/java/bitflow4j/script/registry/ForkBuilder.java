@@ -10,6 +10,6 @@ import java.util.Map;
  */
 public interface ForkBuilder {
 
-    ScriptableDistributor buildFork(Map<String, String> parameters) throws IOException;
+    ScriptableDistributor buildFork(Map<String, Object> parameters) throws IOException;
 
 }

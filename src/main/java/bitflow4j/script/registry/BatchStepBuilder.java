@@ -7,6 +7,6 @@ import java.util.Map;
 
 public interface BatchStepBuilder {
 
-    BatchHandler buildBatchStep(Map<String, String> parameters) throws IOException;
+    BatchHandler buildBatchStep(Map<String, Object> parameters) throws IOException;
 
 }

@@ -4,6 +4,7 @@ import bitflow4j.Pipeline;
 import bitflow4j.misc.Config;
 import bitflow4j.misc.TreeFormatter;
 import bitflow4j.script.endpoints.EndpointFactory;
+import bitflow4j.script.registry.RegisteredParameter;
 import bitflow4j.script.registry.RegisteredStep;
 import bitflow4j.script.registry.Registry;
 import com.beust.jcommander.JCommander;
@@ -171,13 +172,13 @@ public class Main {
 
     private static void logCapability(RegisteredStep registeredPipelineStep) {
         System.out.println(" - " + registeredPipelineStep.getStepName());
-        System.out.println("     Description: " + registeredPipelineStep.getDescription());
-        if (!registeredPipelineStep.getRequiredParameters().isEmpty())
-            System.out.println("     Required parameters: " + registeredPipelineStep.getRequiredParameters());
-        if (!registeredPipelineStep.getOptionalParameters().isEmpty())
-            System.out.println("     Optional parameters: " + registeredPipelineStep.getOptionalParameters());
-        if (registeredPipelineStep.hasGenericConstructor())
-            System.out.println("     Accepts any parameters");
+        String desc = registeredPipelineStep.getDescription();
+        if (desc != null && !desc.isEmpty())
+            System.out.println("     Description: " + desc);
+        if (!registeredPipelineStep.parameters.getRequired().isEmpty())
+            System.out.println("     Required parameters: " + registeredPipelineStep.parameters.getRequired());
+        if (!registeredPipelineStep.parameters.getOptional().isEmpty())
+            System.out.println("     Optional parameters: " + registeredPipelineStep.parameters.getOptional());
     }
 
     private static void logJsonCapabilities(Registry registry) {
@@ -198,19 +199,33 @@ public class Main {
         root.put(name, capabilities);
     }
 
+    private static final class JsonParameter {
+        public final String name;
+        public final String type;
+        public final boolean required;
+
+        JsonParameter(String name, String type, boolean required) {
+            this.name = name;
+            this.type = type;
+            this.required = required;
+        }
+
+        JsonParameter(RegisteredParameter param, boolean required) {
+            this(param.name, param.toString(), required);
+        }
+    }
+
     private static final class JsonCapability {
         public final String name;
         public final String description;
-        public final List<String> required_parameters;
-        public final List<String> optional_parameters;
-        public final boolean accepts_generic_parameters;
+        public final List<JsonParameter> parameters = new ArrayList<>();
 
         private JsonCapability(RegisteredStep<?> step) {
             this.name = step.getStepName();
             this.description = step.getDescription();
-            this.required_parameters = step.getRequiredParameters();
-            this.optional_parameters = step.getOptionalParameters();
-            this.accepts_generic_parameters = step.hasGenericConstructor();
+            step.parameters.getOptional().forEach(p -> parameters.add(new JsonParameter(p, false)));
+            step.parameters.getRequired().forEach(p -> parameters.add(new JsonParameter(p, true)));
+            parameters.sort(Comparator.comparing(o -> !o.required + o.name)); // Sort optional parameters first (lexicographically: "false" < "true")
         }
     }
 

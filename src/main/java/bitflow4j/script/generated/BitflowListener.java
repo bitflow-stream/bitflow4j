@@ -58,6 +58,56 @@ public interface BitflowListener extends ParseTreeListener {
 	 */
 	void exitParameter(BitflowParser.ParameterContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link BitflowParser#parameterValue}.
+	 * @param ctx the parse tree
+	 */
+	void enterParameterValue(BitflowParser.ParameterValueContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link BitflowParser#parameterValue}.
+	 * @param ctx the parse tree
+	 */
+	void exitParameterValue(BitflowParser.ParameterValueContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link BitflowParser#primitiveValue}.
+	 * @param ctx the parse tree
+	 */
+	void enterPrimitiveValue(BitflowParser.PrimitiveValueContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link BitflowParser#primitiveValue}.
+	 * @param ctx the parse tree
+	 */
+	void exitPrimitiveValue(BitflowParser.PrimitiveValueContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link BitflowParser#listValue}.
+	 * @param ctx the parse tree
+	 */
+	void enterListValue(BitflowParser.ListValueContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link BitflowParser#listValue}.
+	 * @param ctx the parse tree
+	 */
+	void exitListValue(BitflowParser.ListValueContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link BitflowParser#mapValue}.
+	 * @param ctx the parse tree
+	 */
+	void enterMapValue(BitflowParser.MapValueContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link BitflowParser#mapValue}.
+	 * @param ctx the parse tree
+	 */
+	void exitMapValue(BitflowParser.MapValueContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link BitflowParser#mapValueElement}.
+	 * @param ctx the parse tree
+	 */
+	void enterMapValueElement(BitflowParser.MapValueElementContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link BitflowParser#mapValueElement}.
+	 * @param ctx the parse tree
+	 */
+	void exitMapValueElement(BitflowParser.MapValueElementContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link BitflowParser#parameterList}.
 	 * @param ctx the parse tree
 	 */

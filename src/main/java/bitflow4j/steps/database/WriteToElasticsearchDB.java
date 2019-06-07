@@ -4,6 +4,7 @@ import bitflow4j.AbstractPipelineStep;
 import bitflow4j.Sample;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class WriteToElasticsearchDB extends AbstractPipelineStep {
@@ -20,7 +21,7 @@ public class WriteToElasticsearchDB extends AbstractPipelineStep {
      * @param identifierTemplate Used template to fill the named property with meaningful content (Tag-templates
      *                           should be used here)
      */
-    public WriteToElasticsearchDB(String hostPorts, String indexName, String identifierKey, String identifierTemplate) throws IOException {
+    public WriteToElasticsearchDB(List<String> hostPorts, String indexName, String identifierKey, String identifierTemplate) throws IOException {
         elasticsearchUtil = new ElasticsearchUtil(hostPorts, indexName, identifierKey, identifierTemplate);
     }
 

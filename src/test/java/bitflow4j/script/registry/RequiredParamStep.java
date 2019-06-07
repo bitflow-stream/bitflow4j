@@ -20,8 +20,8 @@ public class RequiredParamStep extends AbstractPipelineStep {
         this.requiredArg = requiredArg;
     }
 
-    public RequiredParamStep(String requiredArg, String OptionalArg) {
+    public RequiredParamStep(String requiredArg, String optionalArg) {
         this.requiredArg = requiredArg;
-        this.optionalArg = OptionalArg;
+        this.optionalArg = optionalArg;
     }
 }

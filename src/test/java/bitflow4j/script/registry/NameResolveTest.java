@@ -6,12 +6,12 @@ import static org.junit.Assert.assertEquals;
 
 public class NameResolveTest {
 
-    private RegisteredStep constructRegisteredStep(String name) {
-        return new RegisteredStep<ProcessingStepBuilder>(name, "", parameters -> null);
+    private RegisteredStep<ProcessingStepBuilder> constructRegisteredStep(String name) {
+        return new RegisteredStep<>(name, "", new RegisteredParameterList(), parameters -> null);
     }
 
     private void testExpectedResult(String input, String expectation) {
-        RegisteredStep testObject = constructRegisteredStep(input);
+        RegisteredStep<ProcessingStepBuilder> testObject = constructRegisteredStep(input);
         assertEquals(expectation, testObject.getStepName());
     }
 
