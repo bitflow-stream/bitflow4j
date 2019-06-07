@@ -61,8 +61,12 @@ public class OnlineAutoMinMaxScaler extends AbstractOnlineScaler {
 
     public static class Feature {
         Feature(String name, double min, double max, double threshold) {
-            this.scalingMin = this.reportedMin = this.observedMin = min;
-            this.scalingMax = this.reportedMax = this.observedMax = max;
+            this.scalingMin = min;
+            this.reportedMin = min;
+            this.observedMin = min;
+            this.scalingMax = max;
+            this.reportedMax = max;
+            this.observedMax = max;
             this.name = name;
             this.threshold = threshold;
         }
@@ -71,17 +75,17 @@ public class OnlineAutoMinMaxScaler extends AbstractOnlineScaler {
         final String name;
 
         // Used for actual scaling
-        public double scalingMin;
-        public double scalingMax;
+        private double scalingMin;
+        private double scalingMax;
 
         // Have been reported as concept change
         // Returning false from ConceptChangeHandler.conceptChanged() prevents this from being used as scalingMin/scalingMax
-        public double reportedMin;
-        public double reportedMax;
+        private double reportedMin;
+        private double reportedMax;
 
         // The actual reportedMin/reportedMax values from all the observed values so far
-        public double observedMin;
-        public double observedMax;
+        private double observedMin;
+        private double observedMax;
 
         // return true upon concept change
         boolean push(double val) {
@@ -119,6 +123,34 @@ public class OnlineAutoMinMaxScaler extends AbstractOnlineScaler {
             if (range == 0) range = scalingMax; // TODO not really correct
             if (range == 0) return 0; // There is no correct value here, but return something in the 0-1 range.
             return (val - scalingMin) / range;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public double getScalingMin() {
+            return scalingMin;
+        }
+
+        public double getScalingMax() {
+            return scalingMax;
+        }
+
+        public double getReportedMin() {
+            return reportedMin;
+        }
+
+        public double getReportedMax() {
+            return reportedMax;
+        }
+
+        public double getObservedMin() {
+            return observedMin;
+        }
+
+        public double getObservedMax() {
+            return observedMax;
         }
     }
 
