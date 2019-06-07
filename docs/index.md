@@ -31,7 +31,7 @@ The script can be passed directly on the command line, or in a file, using the `
 java -cp bitflow4j.jar bitflow4j.script.Main -f bitflow-script.bf
 ```
 ```
-java -cp bitflow4j.jar bitflow4j.script.Main "input.csv -> Standardize() -> output.csv"
+java -cp bitflow4j.jar bitflow4j.script.Main -s "input.csv -> Standardize() -> output.csv"
 ```
 
 When starting, the Java implementation of the Bitflow Script scans a list of packages for pipeline steps that will be made available in the script. The list of packages to scan defaults to `bitflow4j`, but can be modified by passing a comma-separated list of packages to the `-P` parameter.
