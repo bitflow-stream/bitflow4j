@@ -7,8 +7,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 import static org.junit.Assert.*;
 
@@ -143,9 +145,35 @@ public class ScanForPipelineStepTest {
         params.put("intArg", "5");
         params.put("doubleArg", "5.5");
         params.put("booleanArg", "TRUE");
+        params.put("boolList", Arrays.asList("true", "false", "true"));
+        params.put("intArray", Arrays.asList("2", "4", "6"));
+        params.put("stringArray", Arrays.asList("x", "1111"));
+
+        Map<String, String> inputFloatMap = new HashMap<String, String>();
+        inputFloatMap.put("hello", "1.0001");
+        inputFloatMap.put("2", "4.005");
+        params.put("floatMap", inputFloatMap);
 
         MixedParamStep res = executeMixedStepConstruction(params);
+
+        assertEquals("value", res.stringArg);
+        assertEquals(5, res.intArg);
+        assertEquals(5.5, res.doubleArg, 0.000000000001);
         assertTrue(res.booleanArg);
+        assertArrayEquals(new Boolean[]{true, false, true}, res.boolList.toArray(Boolean[]::new));
+        assertArrayEquals(new int[]{2, 4, 6}, res.intArray);
+        assertArrayEquals(new String[]{"x", "1111"}, res.stringArray);
+
+        HashMap<String, Float> expectedMap = new HashMap<>();
+        expectedMap.put("hello", 1.0001F);
+        expectedMap.put("2", 4.005F);
+
+        // Use TreeMap for printing, to get a sorted and predictable output
+        // TODO find way to assert equal maps
+        String expectedMapString = new TreeMap<>(expectedMap).toString();
+        String actualMapString = new TreeMap<>(res.floatMap).toString();
+
+        assertEquals(expectedMapString, actualMapString);
     }
 
     @Test

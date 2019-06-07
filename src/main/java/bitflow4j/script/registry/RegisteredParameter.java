@@ -1,5 +1,6 @@
 package bitflow4j.script.registry;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -31,7 +32,7 @@ public class RegisteredParameter {
     }
 
     public enum ContainerType {
-        Primitive, List, Map
+        Primitive, List, Map, Array
     }
 
     public final String name;
@@ -48,23 +49,25 @@ public class RegisteredParameter {
         this.name = param.getName();
         Type paramType = param.getParameterizedType();
 
-        Class<?> t = getPrimitiveType(paramType);
-        if (t == null) {
-            t = getListType(paramType);
-            if (t == null) {
-                t = getMapType(paramType);
-                if (t == null) {
-                    throw new IllegalArgumentException(String.format("Cannot construct registered parameter from type %s", paramType));
-                } else {
-                    containerType = ContainerType.Map;
-                }
-            } else {
-                containerType = ContainerType.List;
-            }
-        } else {
+        Class<?> primitive = getPrimitiveType(paramType);
+        Class<?> list = getListType(paramType);
+        Class<?> array = getArrayType(paramType);
+        Class<?> map = getMapType(paramType);
+        if (primitive != null) {
+            type = primitive;
             containerType = ContainerType.Primitive;
+        } else if (list != null) {
+            type = list;
+            containerType = ContainerType.List;
+        } else if (array != null) {
+            type = array;
+            containerType = ContainerType.Array;
+        } else if (map != null) {
+            type = map;
+            containerType = ContainerType.Map;
+        } else {
+            throw new IllegalArgumentException(String.format("Cannot construct registered parameter from type %s", paramType));
         }
-        type = t;
     }
 
     public String toString() {
@@ -77,14 +80,16 @@ public class RegisteredParameter {
                 return type.getSimpleName();
             case List:
                 return String.format("List (%s)", type.getSimpleName());
+            case Array:
+                return String.format("Array (%s)", type.getSimpleName());
             case Map:
-                return String.format("Map (%s)", type.getSimpleName());
+                return String.format("Map (String => %s)", type.getSimpleName());
         }
         return String.format("Unknown container type %s of %s", containerType, type);
     }
 
     public static boolean isParseable(Type paramType) {
-        return getPrimitiveType(paramType) != null || getMapType(paramType) != null || getListType(paramType) != null;
+        return getPrimitiveType(paramType) != null || getMapType(paramType) != null || getListType(paramType) != null || getArrayType(paramType) != null;
     }
 
     public static Class<?> getPrimitiveType(Type paramType) {
@@ -116,9 +121,21 @@ public class RegisteredParameter {
         return null;
     }
 
+    public static Class<?> getArrayType(Type paramType) {
+        if (paramType instanceof Class) {
+            Class paramClass = (Class) paramType;
+            if (paramClass.isArray()) {
+                Type componentType = paramClass.getComponentType();
+                if (getPrimitiveType(componentType) != null)
+                    return (Class) componentType;
+            }
+        }
+        return null;
+    }
+
     public boolean canParse(Object inputValue) {
         return (inputValue instanceof Map && containerType == ContainerType.Map)
-                || (inputValue instanceof List && containerType == ContainerType.List)
+                || (inputValue instanceof List && (containerType == ContainerType.List || containerType == ContainerType.Array))
                 || (inputValue instanceof String && containerType == ContainerType.Primitive);
     }
 
@@ -129,7 +146,7 @@ public class RegisteredParameter {
         if (inputValue instanceof Map) {
             return parseMapValue((Map) inputValue);
         } else if (inputValue instanceof List) {
-            return parseListValue((List) inputValue);
+            return parseListOrArrayValue((List) inputValue);
         } else if (inputValue instanceof String) {
             return parsePrimitiveValue((String) inputValue);
         } else {
@@ -159,11 +176,17 @@ public class RegisteredParameter {
         }
     }
 
-    public List<?> parseListValue(List<?> inputList) throws IllegalArgumentException {
-        if (containerType != ContainerType.List) {
+    public Object parseListOrArrayValue(List<?> inputList) throws IllegalArgumentException {
+        if (containerType == ContainerType.Array) {
+            return parseArrayValue(inputList);
+        } else if (containerType == ContainerType.List) {
+            return parseListValue(inputList);
+        } else {
             throw new IllegalArgumentException(String.format("Parameter %s received list value: %s", this, inputList));
         }
+    }
 
+    public List<?> parseListValue(List<?> inputList) throws IllegalArgumentException {
         List<Object> parsedList = new ArrayList<>(inputList.size());
         for (int i = 0; i < inputList.size(); i++) {
             Object arg = inputList.get(i);
@@ -176,6 +199,47 @@ public class RegisteredParameter {
             parsedList.add(parsedVal);
         }
         return parsedList;
+    }
+
+    public Object parseArrayValue(List<?> inputList) throws IllegalArgumentException {
+        Object parsedArray = Array.newInstance(type, inputList.size());
+        for (int i = 0; i < inputList.size(); i++) {
+            Object arg = inputList.get(i);
+            if (!(arg instanceof String)) {
+                throw new IllegalArgumentException(
+                        String.format("Element %s in list-parameter %s is of type %s (expecting only String): %s",
+                                i, this, arg.getClass(), arg));
+            }
+            Object parsedVal = parsePrimitiveValue((String) arg, " (list element " + i + ")");
+            setArrayElement(i, parsedArray, parsedVal, type);
+        }
+        return parsedArray;
+    }
+
+    @SuppressWarnings("SuspiciousSystemArraycopy")
+    private static void setArrayElement(int index, Object array, Object element, Class<?> elementType) {
+
+        // TODO HACK could not find a cleaner way to set single element in a generic array, that could also contain primitive values
+
+        if (!elementType.isPrimitive()) {
+            Object[] miniArray = new Object[]{element};
+            System.arraycopy(miniArray, 0, array, index, 1);
+        } else if (elementType == double.class) {
+            double[] miniArray = new double[]{(Double) element};
+            System.arraycopy(miniArray, 0, array, index, 1);
+        } else if (elementType == int.class) {
+            int[] miniArray = new int[]{(Integer) element};
+            System.arraycopy(miniArray, 0, array, index, 1);
+        } else if (elementType == float.class) {
+            float[] miniArray = new float[]{(Float) element};
+            System.arraycopy(miniArray, 0, array, index, 1);
+        } else if (elementType == long.class) {
+            long[] miniArray = new long[]{(Long) element};
+            System.arraycopy(miniArray, 0, array, index, 1);
+        } else if (elementType == boolean.class) {
+            boolean[] miniArray = new boolean[]{(Boolean) element};
+            System.arraycopy(miniArray, 0, array, index, 1);
+        }
     }
 
     public Map<String, ?> parseMapValue(Map<?, ?> inputMap) throws IllegalArgumentException {
