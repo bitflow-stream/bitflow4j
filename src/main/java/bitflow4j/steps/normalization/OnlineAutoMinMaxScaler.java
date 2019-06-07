@@ -1,6 +1,7 @@
 package bitflow4j.steps.normalization;
 
 import bitflow4j.misc.FeatureStatistics;
+import bitflow4j.misc.Pair;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,68 +9,54 @@ import java.util.Map;
 /**
  * Created by anton on 7/7/16.
  */
-public class OnlineAutoMinMaxScaler extends OnlineAbstractFeatureScaler {
-
-    public interface ConceptChangeHandler {
-        // Return false -> ignore this concept-change
-        boolean conceptChanged(OnlineAutoMinMaxScaler scaler, String feature);
-    }
-
-    public static ConceptChangeHandler noConceptChanged = (s, f) -> false;
+public class OnlineAutoMinMaxScaler extends AbstractOnlineScaler {
 
     public final Map<String, Feature> features;
 
     // In percent: how much must scalingMin/scalingMax values change before a concept change is fired
     private final double conceptChangeThreshold;
 
-    private ConceptChangeHandler handler;
-
-    public OnlineAutoMinMaxScaler(double conceptChangeThreshold, ConceptChangeHandler handler, FeatureStatistics stats) {
-        this.conceptChangeThreshold = conceptChangeThreshold;
-        this.handler = handler;
-        this.features = new HashMap<>();
-        setFeatures(stats);
+    public OnlineAutoMinMaxScaler() {
+        this(0);
     }
 
-    public OnlineAutoMinMaxScaler(ConceptChangeHandler handler, Map<String, Feature> features, double conceptChangeThreshold) {
+    // By default, all changed concepts are accepted
+    public OnlineAutoMinMaxScaler(double conceptChangeThreshold) {
+        this(conceptChangeThreshold, acceptAllChangedConcepts(true));
+    }
+
+    public OnlineAutoMinMaxScaler(double conceptChangeThreshold, ConceptChangeHandler handler) {
+        super(handler);
         this.conceptChangeThreshold = conceptChangeThreshold;
-        this.handler = handler;
+        this.features = new HashMap<>();
+    }
+
+    public OnlineAutoMinMaxScaler(double conceptChangeThreshold, ConceptChangeHandler handler, Map<String, Feature> features) {
+        super(handler);
+        this.conceptChangeThreshold = conceptChangeThreshold;
         this.features = features;
     }
 
-    // Will silently adjust the scalings
-    public OnlineAutoMinMaxScaler() {
-        this(0, null, null);
-    }
-
-    // Will start with given values, then silently adjust the scalings
-    public OnlineAutoMinMaxScaler(FeatureStatistics stats) {
-        this(0, null, stats);
-    }
-
-    // Start with nothing and notify changed scalings
-    public OnlineAutoMinMaxScaler(double conceptChangeThreshold, ConceptChangeHandler handler) {
-        this(conceptChangeThreshold, handler, null);
-    }
-
     @Override
-    protected boolean canStandardize(String name) {
+    protected boolean canScale(String name) {
         return true;
     }
 
     @Override
-    protected double standardize(String name, double val) {
+    protected Pair<Double, Boolean> scale(String name, double val) {
         Feature stat = features.get(name);
         if (stat == null) {
             stat = new Feature(name, val, val, conceptChangeThreshold);
             features.put(name, stat);
         }
-        if (stat.push(val)) {
-            if (handler == null || handler.conceptChanged(this, name)) {
-                stat.flushScalingValues();
-            }
-        }
-        return stat.standardize(val);
+        boolean conceptChanged = stat.push(val);
+        double scaledValue = stat.standardize(val);
+        return new Pair<>(scaledValue, conceptChanged);
+    }
+
+    @Override
+    protected void updateScaling(String name) {
+        features.get(name).flushScalingValues();
     }
 
     public static class Feature {
@@ -93,8 +80,8 @@ public class OnlineAutoMinMaxScaler extends OnlineAbstractFeatureScaler {
         public double reportedMax;
 
         // The actual reportedMin/reportedMax values from all the observed values so far
-        private double observedMin;
-        private double observedMax;
+        public double observedMin;
+        public double observedMax;
 
         // return true upon concept change
         boolean push(double val) {
@@ -140,20 +127,14 @@ public class OnlineAutoMinMaxScaler extends OnlineAbstractFeatureScaler {
     }
 
     public void setFeatures(FeatureStatistics stats) {
-        if (stats != null) {
-            for (FeatureStatistics.Feature stat : stats.allFeatures()) {
-                features.put(stat.name, new Feature(stat.name, stat.min, stat.max, conceptChangeThreshold));
-            }
+        for (FeatureStatistics.Feature stat : stats.allFeatures()) {
+            features.put(stat.name, new Feature(stat.name, stat.min, stat.max, conceptChangeThreshold));
         }
-    }
-
-    public void setConceptChangeHandler(ConceptChangeHandler handler) {
-        this.handler = handler;
     }
 
     @Override
     public String toString() {
-        return "online auto min-max scaler";
+        return "Online auto min-max scaler";
     }
 
 }

@@ -26,6 +26,12 @@ public class FeatureStatistics implements Serializable {
         public final double stddev;
         public final int count;
 
+        public Feature() {
+            // Empty constructor required for de-serialization
+            name = "";
+            avg = stddev = count = 0;
+        }
+
         public Feature(String name, double min, double max, double avg, double stddev, int count) {
             this.name = name;
             this.min = min;
@@ -33,6 +39,10 @@ public class FeatureStatistics implements Serializable {
             this.avg = avg;
             this.stddev = stddev;
             this.count = count;
+        }
+
+        public Feature(Feature copyFrom) {
+            this(copyFrom.name, copyFrom.min, copyFrom.max, copyFrom.avg, copyFrom.stddev, copyFrom.count);
         }
 
         public Feature(String name, Map<String, String> values) throws NumberFormatException {
@@ -90,6 +100,12 @@ public class FeatureStatistics implements Serializable {
      * Create an empty instance without loading from file.
      */
     public FeatureStatistics() {
+    }
+
+    public FeatureStatistics(FeatureStatistics copyFrom) {
+        for (Feature feature : copyFrom.allFeatures()) {
+            features.put(feature.name, new Feature(feature));
+        }
     }
 
     public FeatureStatistics(String iniFile) {
