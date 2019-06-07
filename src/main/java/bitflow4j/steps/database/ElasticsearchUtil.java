@@ -21,7 +21,6 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -34,7 +33,7 @@ public class ElasticsearchUtil {
 
     protected static final Logger logger = Logger.getLogger(ElasticsearchUtil.class.getName());
 
-    private final String hostPorts;
+    private final List<String> hostPorts;
     private final String indexName;
     private final String identifierKey;
     private final String identifierTemplate;
@@ -62,7 +61,7 @@ public class ElasticsearchUtil {
      * @param identifierTemplate Used template to fill the named property with meaningful content (Tag-templates
      *                           should be used here)
      */
-    public ElasticsearchUtil(String hostPorts, String indexName, String identifierKey, String identifierTemplate) throws IOException {
+    public ElasticsearchUtil(List<String> hostPorts, String indexName, String identifierKey, String identifierTemplate) throws IOException {
         this.hostPorts = hostPorts;
         this.indexName = indexName;
         this.identifierKey = identifierKey;
@@ -78,9 +77,9 @@ public class ElasticsearchUtil {
                 RestClient.builder(httpHosts));
     }
 
-    private static List<Pair<String, Integer>> convertHostPortArgs(String tags) throws IOException {
+    private static List<Pair<String, Integer>> convertHostPortArgs(List<String> tags) throws IOException {
         try {
-            return Arrays.stream(tags.split(",")).map(String::trim)
+            return tags.stream().map(String::trim)
                     .map(s -> {
                         String[] hostPorts = s.split(":");
                         return new Pair<>(hostPorts[0], Integer.valueOf(hostPorts[1]));
