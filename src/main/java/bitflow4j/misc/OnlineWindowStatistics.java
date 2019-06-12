@@ -20,10 +20,12 @@ public class OnlineWindowStatistics extends OnlineStatistics {
     @Override
     public void push(double x) {
         if (window.isFull()) {
+            // If Ring-Buffer is full, get the oldest element, remove it from the super-class and from the ring-buffer
             double oldest = (double) window.get();
-            remove(oldest);
+            super.remove(oldest);
             window.remove();
         }
+        // Push the newest value to the superclass and add it to the Ring-Buffer
         super.push(x);
         window.add(x);
         latest = x;
