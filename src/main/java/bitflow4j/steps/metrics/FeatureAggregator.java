@@ -95,11 +95,16 @@ public class FeatureAggregator extends AbstractPipelineStep {
         String[] header = new String[values.length];
 
         for (int i = 0; i < num; i++) {
+            // For every metric: Set name and value
             String field = sample.getHeader().header[i];
             double value = sample.getMetrics()[i];
+
+            // Push the value once to the statistics
+            OnlineWindowStatistics stat = getStats(field);
+            stat.push(value);
+
             for (int j = 0; j < getters.length; j++) {
-                OnlineWindowStatistics stat = getStats(field);
-                stat.push(value);
+                // For every requested Statistic: Get it
                 double outVal = getters[j] == null ? value : getters[j].compute(stat);
                 String suffix = suffixes[j];
 
