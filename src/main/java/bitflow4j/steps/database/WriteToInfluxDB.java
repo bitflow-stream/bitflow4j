@@ -72,8 +72,11 @@ public class WriteToInfluxDB extends AbstractPipelineStep {
             Point.Builder pointBuilder = Point.measurement(finalPrefix)
                     .time(sample.getTimestamp().getTime(), TimeUnit.MILLISECONDS);
             for (int j = i; j < sample.getMetrics().length && j < i + metricsPerRequest; j++) {
-                double val = filterInvalidValues(sample.getValue(j));
-                pointBuilder.addField(sample.getHeader().header[j], val);
+                double val = sample.getValue(j);
+                if (isValidValue(val)) {
+                    // Only include valid values, because storing the point fails otherwise.
+                    pointBuilder.addField(sample.getHeader().header[j], val);
+                }
             }
 
             // Send database point
@@ -101,17 +104,8 @@ public class WriteToInfluxDB extends AbstractPipelineStep {
         return b.toString();
     }
 
-    private static double filterInvalidValues(double val) {
-        if (val == Double.POSITIVE_INFINITY) {
-            val = Double.MAX_VALUE;
-        }
-        if (val == Double.NEGATIVE_INFINITY) {
-            val = Double.MIN_VALUE;
-        }
-        if (Double.isNaN(val)) {
-            val = Double.MAX_VALUE;
-        }
-        return val;
+    private static boolean isValidValue(double val) {
+        return Double.isFinite(val);
     }
 
     @Override
