@@ -59,7 +59,7 @@ public class Endpoint {
     }
 
     public enum Format {
-        UNDEFINED, TEXT, CSV, BINARY, WAV;
+        UNDEFINED, TEXT, CSV, BIN, WAV;
 
         public static Format find(String search) {
             for (Format t : Format.values()) {
@@ -72,7 +72,7 @@ public class Endpoint {
 
         public Marshaller getMarshaller() {
             switch (this) {
-                case BINARY:
+                case BIN:
                     return new BinaryMarshaller();
                 case CSV:
                     return new CsvMarshaller();
