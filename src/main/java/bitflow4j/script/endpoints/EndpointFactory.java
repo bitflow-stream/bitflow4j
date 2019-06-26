@@ -160,10 +160,10 @@ public class EndpointFactory {
         switch (type) {
             case TCP:
             case LISTEN:
-                return Endpoint.Format.BINARY;
+                return Endpoint.Format.BIN;
             case FILE:
                 if (target.endsWith(".bin")) {
-                    return Endpoint.Format.BINARY;
+                    return Endpoint.Format.BIN;
                 } else if (target.endsWith(".wav")) {
                     return Endpoint.Format.WAV;
                 } else {

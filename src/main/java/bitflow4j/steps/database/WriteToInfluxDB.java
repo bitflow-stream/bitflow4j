@@ -16,34 +16,36 @@ import java.util.logging.Logger;
 @Description("Writes all metrics of samples to the database with the given prefix.")
 public class WriteToInfluxDB extends AbstractPipelineStep {
 
+    protected static final Logger logger = Logger.getLogger(WriteToInfluxDB.class.getName());
+
     private final static int batchModeSize = 100;
     private final static int batchModeTimeout = 200;
     private final static int reconnectTimeout = 1000;
 
+    private final String databaseName;
     private final String databaseURL;
     private final String username;
     private final String password;
     private final String prefix;
+    private final int metricsPerRequest;
 
     private InfluxDB influxDB;
-
-    protected static final Logger logger = Logger.getLogger(WriteToInfluxDB.class.getName());
+    private boolean defaultDatabasedChecked;
 
     public WriteToInfluxDB(String databaseURL, String databaseName, String username, String password, String prefix) {
+        // By default, do not limit the number of metrics in one request.
+        this(databaseURL, databaseName, username, password, prefix, Integer.MAX_VALUE);
+    }
+
+    public WriteToInfluxDB(String databaseURL, String databaseName, String username, String password, String prefix, int metricsPerRequest) {
         this.databaseURL = databaseURL;
+        this.databaseName = databaseName;
         this.username = username;
         this.password = password;
         this.prefix = prefix;
+        this.metricsPerRequest = metricsPerRequest;
 
         influxDB = InfluxDBFactory.connect(databaseURL, username, password);
-        checkConnectionAndReconnect();
-
-        // Handle already generated database
-        if (!influxDB.databaseExists(databaseName)) {
-            influxDB.createDatabase(databaseName);
-            // Create the default policy which deletes data after 1000weeks, creates 1 replica and is (true) the default
-            influxDB.createRetentionPolicy("defaultPolicy", databaseName, "1000w", 1, true);
-        }
 
         // Logging & Enabling Batch-Saving Mode (not single calls for every sample to the DB)
         influxDB.setLogLevel(InfluxDB.LogLevel.NONE);
@@ -54,20 +56,62 @@ public class WriteToInfluxDB extends AbstractPipelineStep {
 
     @Override
     public void writeSample(Sample sample) throws IOException {
-        checkConnectionAndReconnect();
-
-        // Build database point
-        String finalPrefix = sample.resolveTagTemplate(prefix);
-        Point.Builder pointBuilder = Point.measurement(finalPrefix)
-                .time(sample.getTimestamp().getTime(), TimeUnit.MILLISECONDS);
-        for (int j = 0; j < sample.getMetrics().length; j++) {
-            pointBuilder.addField(sample.getHeader().header[j], sample.getValue(j));
+        try {
+            checkConnectionAndReconnect();
+            ensureDefaultDatabase();
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, String.format("Failed to connect to InfluxDB at %s: %s", databaseURL, buildExceptionMessage(e)));
+            return;
         }
-        Point point = pointBuilder.build();
-        // Send database point
-        influxDB.write(point);
+
+        // Build and send database points.
+        // Split the sample into parts to avoid parser errors due to  overly long request.
+        for (int i = 0; i < sample.getMetrics().length; i += metricsPerRequest) {
+            String finalPrefix = sample.resolveTagTemplate(prefix);
+
+            Point.Builder pointBuilder = Point.measurement(finalPrefix)
+                    .time(sample.getTimestamp().getTime(), TimeUnit.MILLISECONDS);
+            for (int j = i; j < sample.getMetrics().length && j < i + metricsPerRequest; j++) {
+                double val = filterInvalidValues(sample.getValue(j));
+                pointBuilder.addField(sample.getHeader().header[j], val);
+            }
+
+            // Send database point
+            Point point = pointBuilder.build();
+            if (logger.isLoggable(Level.FINER)) {
+                logger.finer(String.format("Sending point to InfluxDB at %s, line protocol length: %s", databaseURL, point.lineProtocol().length()));
+            }
+            influxDB.write(point);
+        }
 
         output.writeSample(sample);
+    }
+
+    private static String buildExceptionMessage(Throwable e) {
+        StringBuilder b = new StringBuilder();
+        while (e != null) {
+            b.append("[");
+            b.append(e.getClass().getName());
+            b.append("] ");
+            b.append(e.getMessage());
+            e = e.getCause();
+            if (e != null)
+                b.append(", caused by: ");
+        }
+        return b.toString();
+    }
+
+    private static double filterInvalidValues(double val) {
+        if (val == Double.POSITIVE_INFINITY) {
+            val = Double.MAX_VALUE;
+        }
+        if (val == Double.NEGATIVE_INFINITY) {
+            val = Double.MIN_VALUE;
+        }
+        if (Double.isNaN(val)) {
+            val = Double.MAX_VALUE;
+        }
+        return val;
     }
 
     @Override
@@ -89,6 +133,20 @@ public class WriteToInfluxDB extends AbstractPipelineStep {
             influxDB = InfluxDBFactory.connect(databaseURL, username, password);
             response = influxDB.ping();
         }
+    }
+
+    private void ensureDefaultDatabase() {
+        if (defaultDatabasedChecked) {
+            return;
+        }
+
+        // Handle already generated database
+        if (!influxDB.databaseExists(databaseName)) {
+            influxDB.createDatabase(databaseName);
+            // Create the default policy which deletes data after 1000weeks, creates 1 replica and is (true) the default
+            influxDB.createRetentionPolicy("defaultPolicy", databaseName, "1000w", 1, true);
+        }
+        defaultDatabasedChecked = true;
     }
 
 }

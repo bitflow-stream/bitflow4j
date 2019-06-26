@@ -52,7 +52,7 @@ public class EndpointFactoryTest {
 
     @Test
     public void givenTCPEndpoints_whenCreateSink_thenReturnTCPSink() throws IOException {
-        String fileEndpoint = "tcp+binary://0.1.2.3:8012";
+        String fileEndpoint = "tcp+bin://0.1.2.3:8012";
 
         PipelineStep sink = new EndpointFactory().createSink(fileEndpoint);
 
@@ -148,22 +148,22 @@ public class EndpointFactoryTest {
         // standard format for std is text
         executeTest("std://-", Endpoint.Type.STD, Endpoint.Format.CSV, "-");
         // standard format for tcp is bin
-        executeTest("tcp://" + sampleHostPort, Endpoint.Type.TCP, Endpoint.Format.BINARY, sampleHostPort);
+        executeTest("tcp://" + sampleHostPort, Endpoint.Type.TCP, Endpoint.Format.BIN, sampleHostPort);
         // standard format for file with .bin ending is binary
-        executeTest("file://filename.bin", Endpoint.Type.FILE, Endpoint.Format.BINARY, "filename.bin");
+        executeTest("file://filename.bin", Endpoint.Type.FILE, Endpoint.Format.BIN, "filename.bin");
         executeTest("file://filename.csv", Endpoint.Type.FILE, Endpoint.Format.CSV, "filename.csv");
         // standard format for other files is binary
         executeTest("file://filename", Endpoint.Type.FILE, Endpoint.Format.CSV, "filename");
 
         // GUESSES
         // guess host and port as tcp
-        executeTest(sampleHostPort, Endpoint.Type.TCP, Endpoint.Format.BINARY, sampleHostPort);
+        executeTest(sampleHostPort, Endpoint.Type.TCP, Endpoint.Format.BIN, sampleHostPort);
         // guess port as tcp listen
-        executeTest(":8000", Endpoint.Type.LISTEN, Endpoint.Format.BINARY, ":8000");
+        executeTest(":8000", Endpoint.Type.LISTEN, Endpoint.Format.BIN, ":8000");
         // guess file
         executeTest("/opt/somefile", Endpoint.Type.FILE, Endpoint.Format.CSV, "/opt/somefile");
         // guess CSV file
-        executeTest("/opt/somefile.bin", Endpoint.Type.FILE, Endpoint.Format.BINARY, "/opt/somefile.bin");  
+        executeTest("/opt/somefile.bin", Endpoint.Type.FILE, Endpoint.Format.BIN, "/opt/somefile.bin");
         // guess wav file
         executeTest("/opt/somefile.wav", Endpoint.Type.FILE, Endpoint.Format.WAV, "/opt/somefile.wav");
         // guess console
