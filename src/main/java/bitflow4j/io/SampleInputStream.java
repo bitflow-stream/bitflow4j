@@ -23,6 +23,7 @@ public abstract class SampleInputStream implements ThreadedSource.SampleGenerato
     private static final Logger logger = Logger.getLogger(SampleInputStream.class.getName());
 
     private final Marshaller marshaller;
+    private final boolean addSourceTag;
     private boolean closed = false;
 
     private String sourceName;
@@ -33,6 +34,12 @@ public abstract class SampleInputStream implements ThreadedSource.SampleGenerato
 
     public SampleInputStream(Marshaller marshaller) {
         this.marshaller = marshaller;
+        this.addSourceTag = false;
+    }
+
+    public SampleInputStream(Marshaller marshaller, boolean addSourceTag) {
+        this.marshaller = marshaller;
+        this.addSourceTag = addSourceTag;
     }
 
     public static class NamedInputStream {
@@ -86,7 +93,8 @@ public abstract class SampleInputStream implements ThreadedSource.SampleGenerato
                     throw new IOException("Input stream '" + sourceName + "' contains Sample before first Header");
                 }
                 Sample s = marshaller.unmarshallSample(input, header);
-                s.setTag("Source", sourceName);
+                if(addSourceTag)
+                    s.setTag("Source", sourceName);
                 return s;
             }
         } catch (IOException e) {

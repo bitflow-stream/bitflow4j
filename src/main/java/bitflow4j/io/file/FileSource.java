@@ -36,12 +36,21 @@ public class FileSource extends ThreadedSource {
 
     private final List<File> files = new ArrayList<>();
     private final Marshaller marshaller;
+    private final boolean addSourceTag;
     private boolean robust = false;
 
     public FileSource(Marshaller marshaller, String... files) throws IOException {
         this.marshaller = marshaller;
         for (String file : files)
             addFile(new File(file));
+        this.addSourceTag = false;
+    }
+
+    public FileSource(Marshaller marshaller, boolean addSourceTag, String... files) throws IOException {
+        this.marshaller = marshaller;
+        for (String file : files)
+            addFile(new File(file));
+        this.addSourceTag = addSourceTag;
     }
 
     public Marshaller getMarshaller() {
@@ -156,7 +165,7 @@ public class FileSource extends ThreadedSource {
     @Override
     public void start(TaskPool pool) throws IOException {
         super.start(pool);
-        FileSampleReader reader = new FileSampleReader(pool, marshaller);
+        FileSampleReader reader = new FileSampleReader(pool, marshaller, addSourceTag);
         readSamples(reader);
         initFinished();
     }
@@ -172,6 +181,11 @@ public class FileSource extends ThreadedSource {
 
         public FileSampleReader(TaskPool pool, Marshaller marshaller) {
             super(marshaller);
+            this.files = FileSource.this.files.iterator();
+        }
+
+        public FileSampleReader(TaskPool pool, Marshaller marshaller, boolean addSourceTag) {
+            super(marshaller, addSourceTag);
             this.files = FileSource.this.files.iterator();
         }
 
