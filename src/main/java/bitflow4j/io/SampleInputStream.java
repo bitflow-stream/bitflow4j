@@ -85,7 +85,9 @@ public abstract class SampleInputStream implements ThreadedSource.SampleGenerato
                 if (header == null) {
                     throw new IOException("Input stream '" + sourceName + "' contains Sample before first Header");
                 }
-                return marshaller.unmarshallSample(input, header);
+                Sample s = marshaller.unmarshallSample(input, header);
+                s.setTag("Source", sourceName);
+                return s;
             }
         } catch (IOException e) {
             closeCurrentInput();
