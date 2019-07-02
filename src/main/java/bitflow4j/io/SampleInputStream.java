@@ -22,6 +22,8 @@ public abstract class SampleInputStream implements ThreadedSource.SampleGenerato
 
     private static final Logger logger = Logger.getLogger(SampleInputStream.class.getName());
 
+    private static final String BITFLOW_SOURCE_TAG = "bitflow-source";
+
     private final Marshaller marshaller;
     private final boolean addSourceTag;
     private boolean closed = false;
@@ -94,7 +96,7 @@ public abstract class SampleInputStream implements ThreadedSource.SampleGenerato
                 }
                 Sample s = marshaller.unmarshallSample(input, header);
                 if(addSourceTag)
-                    s.setTag("Source", sourceName);
+                    s.setTag(BITFLOW_SOURCE_TAG, sourceName);
                 return s;
             }
         } catch (IOException e) {
