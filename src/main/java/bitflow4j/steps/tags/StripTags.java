@@ -6,13 +6,35 @@ import bitflow4j.script.registry.Description;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
-@Description("Removes all tags of passed through samples.")
+@Description("Removes all tags of passed through samples or only the specified List of Tags.")
 public class StripTags extends AbstractPipelineStep {
+
+    private final List<String> tags;
+
+    public StripTags(){
+        this.tags = null;
+    }
+
+    public StripTags(List<String> tags){
+        this.tags = tags;
+    }
 
     @Override
     public void writeSample(Sample sample) throws IOException {
-        sample.setAllTags(new HashMap<>());
+        if(tags == null) {
+            sample.setAllTags(new HashMap<>());
+        }
+        else{
+            for (String tagName : tags) {
+                if (sample.getTags().keySet().contains(tagName)) {
+                    sample.getTags().remove(tagName);
+                }
+            }
+        }
         output.writeSample(sample);
     }
 
