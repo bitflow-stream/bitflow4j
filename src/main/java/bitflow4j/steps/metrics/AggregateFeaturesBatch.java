@@ -1,6 +1,7 @@
 package bitflow4j.steps.metrics;
 
 import bitflow4j.Sample;
+import bitflow4j.script.registry.Description;
 import bitflow4j.steps.BatchHandler;
 
 import java.io.IOException;
@@ -10,6 +11,8 @@ import java.util.List;
 /**
  * @author kevinstyp
  */
+@Description("Calculates the requested features on a per batch base. Calculations for new batches do not yield information" +
+        "from previous batches")
 public class AggregateFeaturesBatch implements BatchHandler {
 
     private final AggregateFeaturesUtil.ValueGetter[] getters;
@@ -24,7 +27,6 @@ public class AggregateFeaturesBatch implements BatchHandler {
     }
 
     public AggregateFeaturesBatch(AggregateFeaturesUtil.ValueGetter[] getters, String[] suffixes) {
-        //this.featuresUtil = new AggregateFeaturesUtil(getters, suffixes);
         this.getters = getters;
         this.suffixes = suffixes;
     }

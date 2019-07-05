@@ -1,11 +1,9 @@
 package bitflow4j.steps.metrics;
 
-import bitflow4j.AbstractPipelineStep;
 import bitflow4j.Header;
 import bitflow4j.Sample;
 import bitflow4j.misc.OnlineWindowStatistics;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,16 +21,8 @@ public class AggregateFeaturesUtil {
     private final String[] suffixes;
 
     /**
-     * Constructor for bitflow-script, features should be a comma-separated string.
+     * Constructor for usage by batch or sample-wise step
      **/
-    public AggregateFeaturesUtil(int window, List<String> features) {
-        this(window, features.toArray(String[]::new));
-    }
-
-    public AggregateFeaturesUtil(int window, String... features) {
-        this(window, makeGetters(features), makeSuffixes(features));
-    }
-
     public AggregateFeaturesUtil(int window, ValueGetter[] getters, String[] suffixes) {
         if (getters.length != suffixes.length) {
             throw new IllegalArgumentException("The length of getters and suffixes does not match: " + getters.length + " != "
@@ -42,11 +32,6 @@ public class AggregateFeaturesUtil {
         this.getters = getters;
         this.suffixes = suffixes;
     }
-
-    /*@Override
-    public void writeSample(Sample sample) throws IOException {
-        super.writeSample(compute(sample));
-    }*/
 
     public interface ValueGetter {
         double compute(OnlineWindowStatistics stats);
