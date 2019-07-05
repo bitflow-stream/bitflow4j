@@ -12,42 +12,50 @@ import java.util.logging.Level;
 /**
  * Created by anton on 09.02.17.
  */
-public class FeatureAggregator extends AbstractPipelineStep {
+public class AggregateFeaturesStep extends AbstractPipelineStep {
 
+    /*
     private final Map<String, OnlineWindowStatistics> stats = new HashMap<>();
     private final int window;
-    private final ValueGetter[] getters;
+    private final AggregateFeaturesUtil.ValueGetter[] getters;
     private final String[] suffixes;
+    */
+    private final AggregateFeaturesUtil featuresUtil;
 
     /**
      * Constructor for bitflow-script, features should be a comma-separated string.
      **/
-    public FeatureAggregator(int window, List<String> features) {
+    public AggregateFeaturesStep(int window, List<String> features) {
         this(window, features.toArray(String[]::new));
     }
 
-    public FeatureAggregator(int window, String... features) {
-        this(window, makeGetters(features), makeSuffixes(features));
+    public AggregateFeaturesStep(int window, String... features) {
+        this(window, AggregateFeaturesUtil.makeGetters(features), AggregateFeaturesUtil.makeSuffixes(features));
     }
 
-    public FeatureAggregator(int window, ValueGetter[] getters, String[] suffixes) {
-        if (getters.length != suffixes.length) {
+    public AggregateFeaturesStep(int window, AggregateFeaturesUtil.ValueGetter[] getters, String[] suffixes) {
+        this.featuresUtil = new AggregateFeaturesUtil(window, getters, suffixes);
+
+
+        /*if (getters.length != suffixes.length) {
             throw new IllegalArgumentException("The length of getters and suffixes does not match: " + getters.length + " != "
                     + suffixes.length);
         }
         this.window = window;
         this.getters = getters;
-        this.suffixes = suffixes;
+        this.suffixes = suffixes;*/
     }
 
     @Override
     public void writeSample(Sample sample) throws IOException {
-        super.writeSample(compute(sample));
+        super.writeSample(featuresUtil.compute(sample));
     }
 
+    /*
     public interface ValueGetter {
         double compute(OnlineWindowStatistics stats);
     }
+
 
     public static final Map<String, ValueGetter> ALL_GETTERS = new HashMap<>();
 
@@ -132,12 +140,13 @@ public class FeatureAggregator extends AbstractPipelineStep {
             return res;
         }
     }
+    */
 
     @Override
     public String toString() {
         StringBuilder res = new StringBuilder("aggregator [");
         boolean added = false;
-        for (String name : suffixes) {
+        for (String name : featuresUtil.getSuffixes()) {
             if (added) res.append(", ");
             added = true;
             res.append(name);
