@@ -4,14 +4,15 @@ import bitflow4j.Header;
 import bitflow4j.Sample;
 import bitflow4j.io.list.ListSink;
 import bitflow4j.steps.query.exceptions.IllegalStreamingQueryException;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.Date;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
+@Disabled("The query script language is currently not further developed")
 public class TestsForV4 {
 
     /**
@@ -320,9 +321,10 @@ public class TestsForV4 {
     /**
      * Test if we can group by without window
      */
-    @Test(expected = IllegalStreamingQueryException.class)
+    @Test
     public void test5() throws IllegalStreamingQueryException {
-        new StreamingQuery("Select * Where CPU>1 Group by host");
+        assertThrows(IllegalStreamingQueryException.class, () ->
+                new StreamingQuery("Select * Where CPU>1 Group by host"));
     }
 
     /**

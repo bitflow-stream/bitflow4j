@@ -5,20 +5,21 @@ import bitflow4j.misc.TreeFormatter;
 import bitflow4j.script.endpoints.EndpointFactory;
 import bitflow4j.script.registry.Registry;
 import com.google.common.collect.Lists;
-import junit.framework.TestCase;
-import org.junit.Assert;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-public class ScriptCompilationTest extends TestCase {
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ScriptCompilationTest {
 
     File dataFile;
     String dataFileName;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         try {
             dataFile = File.createTempFile("test-data-", ".csv");
@@ -45,7 +46,7 @@ public class ScriptCompilationTest extends TestCase {
         if (fail) {
             assertNotNull(exc);
             assertNull(pipe);
-            Assert.assertEquals(expected[0], exc.getMessage());
+            assertEquals(expected[0], exc.getMessage());
         } else {
             if (exc != null)
                 throw exc;
@@ -53,14 +54,16 @@ public class ScriptCompilationTest extends TestCase {
             List<String> expectedList = Lists.newArrayList(expected);
             expectedList.add(0, "Pipeline");
             List<String> steps = TreeFormatter.standard.formatLines(pipe);
-            Assert.assertArrayEquals(expectedList.toArray(new String[0]), steps.toArray(new String[0]));
+            assertArrayEquals(expectedList.toArray(new String[0]), steps.toArray(new String[0]));
         }
     }
 
+    @Test
     public void testEmpty() {
         script(true, "", "Line 1 (0) '<EOF>': mismatched input '<EOF>' expecting {'{', 'batch', STRING, IDENTIFIER}");
     }
 
+    @Test
     public void testInput() {
         script(false, dataFileName, "└─Reading file: " + dataFileName + " (format CSV)");
         script(false, ":8888", "└─Listen for incoming samples on :8888 (format BIN)");
@@ -68,30 +71,33 @@ public class ScriptCompilationTest extends TestCase {
         script(false, "-", "└─Reading from stdin (format CSV)");
     }
 
+    @Test
     public void testNet() {
         script(false, " :7777 -> csv://- ",
                 "├─Listen for incoming samples on :7777 (format BIN)",
                 "└─Writing to stdout (format CSV)");
     }
 
+    @Test
     public void testUnwrapStrings() {
-        script(false, " ':7777' -> `mixed-param`( `doubleArg` = '1.00', \"booleanArg\" = `true` ) -> \"csv://-\" ",
+        script(false, " ':7777' -> `test-optional-params`( `requiredArg` = '55', \"boolArg\" = `true` ) -> \"csv://-\" ",
                 "├─Listen for incoming samples on :7777 (format BIN)",
-                "├─a MixedParamStep",
+                "├─a TestOptionalParamsStep",
                 "└─Writing to stdout (format CSV)");
     }
 
+    @Test
     public void testSomeSteps() {
-        script(false, dataFileName + " -> mixed-param()->inter_file ->mixed-param()->out.bin",
+        script(false, dataFileName + " -> test-no-params()->inter_file ->test-no-params()->out.bin",
                 "├─Reading file: " + dataFileName + " (format CSV)",
-                "├─a MixedParamStep",
+                "├─a TestNoParamsStep",
                 "├─Writing file inter_file (append: false, deleteFiles: false, format: CSV)",
-                "├─a MixedParamStep",
+                "├─a TestNoParamsStep",
                 "└─Writing file out.bin (append: false, deleteFiles: false, format: BIN)");
-        script(false, "  " + dataFileName + "  ->  mixed-param   ( )  ->  mixed-param (  )  ->  out.bin   ",
+        script(false, "  " + dataFileName + "  ->  test-no-params   ( )  ->  test-no-params (  )  ->  out.bin   ",
                 "├─Reading file: " + dataFileName + " (format CSV)",
-                "├─a MixedParamStep",
-                "├─a MixedParamStep",
+                "├─a TestNoParamsStep",
+                "├─a TestNoParamsStep",
                 "└─Writing file out.bin (append: false, deleteFiles: false, format: BIN)");
     }
 

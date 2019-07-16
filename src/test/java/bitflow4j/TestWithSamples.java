@@ -2,7 +2,7 @@ package bitflow4j;
 
 import bitflow4j.misc.Config;
 import bitflow4j.misc.Pair;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 import java.io.IOException;
 import java.util.*;
@@ -31,7 +31,7 @@ public class TestWithSamples {
     private static final long dateFrom = getYear(2010).getTime().getTime();
     private static final long dateTo = getYear(2015).getTime().getTime();
 
-    @Before
+    @BeforeEach
     public void setup() {
         random = new Random(123123);
     }

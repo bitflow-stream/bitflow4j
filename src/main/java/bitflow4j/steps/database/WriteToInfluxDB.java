@@ -2,7 +2,9 @@ package bitflow4j.steps.database;
 
 import bitflow4j.AbstractPipelineStep;
 import bitflow4j.Sample;
+import bitflow4j.script.registry.BitflowConstructor;
 import bitflow4j.script.registry.Description;
+import bitflow4j.script.registry.Optional;
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
 import org.influxdb.dto.Point;
@@ -37,7 +39,8 @@ public class WriteToInfluxDB extends AbstractPipelineStep {
         this(databaseURL, databaseName, username, password, prefix, Integer.MAX_VALUE);
     }
 
-    public WriteToInfluxDB(String databaseURL, String databaseName, String username, String password, String prefix, int metricsPerRequest) {
+    @BitflowConstructor
+    public WriteToInfluxDB(String databaseURL, String databaseName, String username, String password, String prefix, @Optional(defaultInt = Integer.MAX_VALUE) int metricsPerRequest) {
         this.databaseURL = databaseURL;
         this.databaseName = databaseName;
         this.username = username;

@@ -3,17 +3,19 @@ package bitflow4j.steps.query;
 import bitflow4j.Header;
 import bitflow4j.Sample;
 import bitflow4j.io.list.ListSink;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.Date;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests that must run without error after version 3 of the program.
  */
+@Disabled("The query script language is currently not further developed")
 public class TestsForV3 {
 
     /**

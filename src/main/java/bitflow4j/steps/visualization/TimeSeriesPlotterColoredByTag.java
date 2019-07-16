@@ -3,7 +3,9 @@ package bitflow4j.steps.visualization;
 import bitflow4j.AbstractPipelineStep;
 import bitflow4j.Header;
 import bitflow4j.Sample;
+import bitflow4j.script.registry.BitflowConstructor;
 import bitflow4j.script.registry.Description;
+import bitflow4j.script.registry.Optional;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
@@ -41,20 +43,13 @@ public class TimeSeriesPlotterColoredByTag extends AbstractPipelineStep {
             "#e377c2", "#f7b6d2", "#7f7f7f", "#c7c7c7", "#bcbd22", "#dbdb8d", "#17becf", "#9edae5"};
     private int currentColor = 0;
 
-    public TimeSeriesPlotterColoredByTag(String baseFilePath, String colorTag) {
-        this(baseFilePath, 0, 0, colorTag, 1600, 400);
-    }
-
-    public TimeSeriesPlotterColoredByTag(String baseFilePath, int numSamplesToSkip, String colorTag) {
-        this(baseFilePath, numSamplesToSkip, 0, colorTag, 1600, 400);
-    }
-
-    public TimeSeriesPlotterColoredByTag(String baseFilePath, int numSamplesToSkip, int numSamplesToSkipAtStart, String colorTag) {
-        this(baseFilePath, numSamplesToSkip, numSamplesToSkipAtStart, colorTag, 1600, 400);
-    }
-
-    public TimeSeriesPlotterColoredByTag(String baseFilePath, int numSamplesToSkip, int numSamplesToSkipAtStart, String colorTag,
-                                         int imageWidth, int imageHeight) {
+    @BitflowConstructor
+    public TimeSeriesPlotterColoredByTag(String baseFilePath,
+                                         @Optional int numSamplesToSkip,
+                                         @Optional int numSamplesToSkipAtStart,
+                                         String colorTag,
+                                         @Optional(defaultInt = 1600) int imageWidth,
+                                         @Optional(defaultInt = 400) int imageHeight) {
         if (!baseFilePath.endsWith(File.separator)) {
             this.baseFilePath = baseFilePath + File.separator;
         } else {

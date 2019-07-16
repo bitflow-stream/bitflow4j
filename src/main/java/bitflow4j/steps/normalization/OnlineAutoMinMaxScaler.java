@@ -2,6 +2,8 @@ package bitflow4j.steps.normalization;
 
 import bitflow4j.misc.FeatureStatistics;
 import bitflow4j.misc.Pair;
+import bitflow4j.script.registry.BitflowConstructor;
+import bitflow4j.script.registry.Optional;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,7 +23,8 @@ public class OnlineAutoMinMaxScaler extends AbstractOnlineScaler {
     }
 
     // By default, all changed concepts are accepted
-    public OnlineAutoMinMaxScaler(double conceptChangeThreshold) {
+    @BitflowConstructor
+    public OnlineAutoMinMaxScaler(@Optional(defaultDouble = 0) double conceptChangeThreshold) {
         this(conceptChangeThreshold, acceptAllChangedConcepts(true));
     }
 

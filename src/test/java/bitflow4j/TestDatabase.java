@@ -6,14 +6,15 @@ import bitflow4j.io.sql.DBSampleSink;
 import bitflow4j.io.sql.DBSampleSource;
 import bitflow4j.io.sql.JDBCReader;
 import bitflow4j.io.sql.JDBCWriter;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Created by malcolmx on 21.03.17.
@@ -34,10 +35,10 @@ public class TestDatabase extends TestWithSamples {
         testWritePipeline.runAndWait();
         testReadPipeline.runAndWait();
         List<Sample> samplesRead = testSampleSink.samples;
-        Assert.assertTrue("Test failed because the samples written to the sql and the samples read from the sql where different.", samplesEqual(samples, samplesRead));
+        assertTrue(samplesEqual(samples, samplesRead), "Test failed because the samples written to the sql and the samples read from the sql where different.");
     }
 
-    @After
+    @AfterEach
     public void deleteDatabaseFile() {
         File file = new File(DB_FILE);
         System.out.println("Absolute file path: " + file.getAbsolutePath());

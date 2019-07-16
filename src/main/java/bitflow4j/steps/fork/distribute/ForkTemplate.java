@@ -3,6 +3,7 @@ package bitflow4j.steps.fork.distribute;
 import bitflow4j.Sample;
 import bitflow4j.misc.Pair;
 import bitflow4j.script.registry.Description;
+import bitflow4j.script.registry.Optional;
 import bitflow4j.steps.fork.ScriptableDistributor;
 
 import java.io.IOException;
@@ -21,11 +22,7 @@ public class ForkTemplate extends AbstractTagFork {
     protected final boolean wildcardMatch, regexMatch;
     private final Map<String, Pattern> patterns = new HashMap<>();
 
-    public ForkTemplate(String template) {
-        this(template, true, false);
-    }
-
-    public ForkTemplate(String template, boolean wildcard, boolean regex) {
+    public ForkTemplate(String template, @Optional(defaultBool = true) boolean wildcard, @Optional boolean regex) {
         super();
         this.wildcardMatch = wildcard;
         this.regexMatch = regex;
