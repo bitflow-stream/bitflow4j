@@ -4,6 +4,7 @@ import bitflow4j.AbstractPipelineStep;
 import bitflow4j.Header;
 import bitflow4j.Sample;
 import bitflow4j.misc.OnlineWindowStatistics;
+import bitflow4j.script.registry.BitflowConstructor;
 
 import java.io.IOException;
 import java.util.*;
@@ -22,6 +23,7 @@ public class FeatureAggregator extends AbstractPipelineStep {
     /**
      * Constructor for bitflow-script, features should be a comma-separated string.
      **/
+    @BitflowConstructor
     public FeatureAggregator(int window, List<String> features) {
         this(window, features.toArray(String[]::new));
     }

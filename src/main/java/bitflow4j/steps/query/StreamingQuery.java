@@ -3,6 +3,7 @@ package bitflow4j.steps.query;
 import bitflow4j.AbstractPipelineStep;
 import bitflow4j.Header;
 import bitflow4j.Sample;
+import bitflow4j.script.registry.BitflowConstructor;
 import bitflow4j.steps.query.exceptions.IllegalQuerySemantics;
 import bitflow4j.steps.query.exceptions.IllegalQuerySyntax;
 import bitflow4j.steps.query.exceptions.IllegalStreamingQueryException;
@@ -58,13 +59,12 @@ public class StreamingQuery extends AbstractPipelineStep {
     private ArrayList<String> tagValues; // list of the different tags in sample
     private int groupCounter; // actual group that is calculated, used from functions like Sum() when asking for sampleList for actual group
 
-
     public StreamingQuery(String query) throws IllegalStreamingQueryException {
-        calculateOutputIfWhereIsFalse = true; // true = default
-        initQuery(query);
+        this(query, true);
     }
 
-    public StreamingQuery(String query, boolean outputWhenWhereIsFalse) throws IllegalStreamingQueryException {
+    @BitflowConstructor
+    public StreamingQuery(String query, @bitflow4j.script.registry.Optional(defaultBool = true) boolean outputWhenWhereIsFalse) throws IllegalStreamingQueryException {
         setCalculateOutputIfWhereIsFalse(outputWhenWhereIsFalse);
         initQuery(query);
     }

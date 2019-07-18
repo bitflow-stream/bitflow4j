@@ -2,6 +2,8 @@ package bitflow4j.steps;
 
 import bitflow4j.AbstractPipelineStep;
 import bitflow4j.Sample;
+import bitflow4j.script.registry.BitflowConstructor;
+import bitflow4j.script.registry.Optional;
 import bitflow4j.task.StoppableLoopTask;
 import bitflow4j.task.TaskPool;
 
@@ -27,12 +29,17 @@ public class DecouplingPipelineStep extends AbstractPipelineStep {
     private final Sample closedMarker = Sample.newEmptySample();
     private boolean finishedFlushing = false;
 
-    public DecouplingPipelineStep(int queueSize) {
-        this.queue = new ArrayBlockingQueue<>(queueSize);
+    @BitflowConstructor
+    public DecouplingPipelineStep(@Optional int queueSize) {
+        if (queueSize <= 0) {
+            this.queue = new LinkedBlockingDeque<>();
+        } else {
+            this.queue = new ArrayBlockingQueue<>(queueSize);
+        }
     }
 
     public DecouplingPipelineStep() {
-        this.queue = new LinkedBlockingDeque<>();
+        this(0);
     }
 
     @Override

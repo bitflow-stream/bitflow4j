@@ -5,8 +5,7 @@ import bitflow4j.io.console.SampleWriter;
 import bitflow4j.io.marshall.*;
 import bitflow4j.misc.Pair;
 import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -14,6 +13,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Created by anton on 27.12.16.
@@ -41,7 +42,7 @@ public class TestMarshaller extends TestWithSamples {
                 if (marshaller.peekIsHeader(inBuffer)) {
                     header = marshaller.unmarshallHeader(inBuffer);
                 } else {
-                    Assert.assertNotNull(header);
+                    assertNotNull(header);
                     receivedSamples.add(marshaller.unmarshallSample(inBuffer, header));
                 }
             } catch (InputStreamClosedException exc) {
@@ -50,7 +51,7 @@ public class TestMarshaller extends TestWithSamples {
         }
 
         List<Sample> expected = flatten(headers);
-        Assert.assertTrue(EqualsBuilder.reflectionEquals(expected, receivedSamples));
+        assertTrue(EqualsBuilder.reflectionEquals(expected, receivedSamples));
     }
 
     private void testAllHeaders(Marshaller marshaller) throws IOException {
@@ -70,7 +71,6 @@ public class TestMarshaller extends TestWithSamples {
         ByteArrayInputStream inBuffer = new ByteArrayInputStream(buf.toByteArray());
         SampleInputStream reader = new SampleInputStream.Single(inBuffer, "test", null, marshaller);
 
-
         Iterator<Sample> expectedSamples = flatten(headers).iterator();
 
         List<Sample> receivedSamples = new ArrayList<>();
@@ -78,14 +78,14 @@ public class TestMarshaller extends TestWithSamples {
             Sample sample = reader.nextSample();
             if (sample == null)
                 break;
-            Assert.assertTrue("Received more samples than expected", expectedSamples.hasNext());
+            assertTrue(expectedSamples.hasNext(), "Received more samples than expected");
             Sample expected = expectedSamples.next();
 
             if (!EqualsBuilder.reflectionEquals(expected, sample)) {
-                Assert.assertEquals("Unexpected sample nr " + i, expected, sample);
+                assertEquals(expected, sample, "Unexpected sample nr " + i);
             }
         }
-        Assert.assertFalse("Received less samples than expected", expectedSamples.hasNext());
+        assertFalse(expectedSamples.hasNext(), "Received less samples than expected");
     }
 
     @Test

@@ -2,6 +2,8 @@ package bitflow4j.steps.visualization;
 
 import bitflow4j.AbstractPipelineStep;
 import bitflow4j.Sample;
+import bitflow4j.script.registry.BitflowConstructor;
+import bitflow4j.script.registry.Optional;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
@@ -33,7 +35,8 @@ public class HistogramAlgorithm extends AbstractPipelineStep {
     private String postfix = "histogram";
     private final String baseFilePath;
 
-    public HistogramAlgorithm(String baseFilePath, String postfix) {
+    @BitflowConstructor
+    public HistogramAlgorithm(String baseFilePath, @Optional(defaultString = "histogram") String postfix) {
         data = new HashMap<>();
         this.baseFilePath = baseFilePath;
         maxValue = new HashMap<>();

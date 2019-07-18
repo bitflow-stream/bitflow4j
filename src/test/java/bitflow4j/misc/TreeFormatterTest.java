@@ -1,29 +1,34 @@
 package bitflow4j.misc;
 
-import junit.framework.TestCase;
-import org.junit.Assert;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-public class TreeFormatterTest extends TestCase {
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+
+public class TreeFormatterTest {
 
     public void doTest(Object tree, String... expectedLines) {
         List<String> lines = TreeFormatter.standard.formatLines(tree);
-        Assert.assertArrayEquals(expectedLines, lines.toArray(new String[0]));
+        assertArrayEquals(expectedLines, lines.toArray(new String[0]));
     }
 
+    @Test
     public void testSingle() {
         doTest("hello", "hello");
     }
 
+    @Test
     public void testNull() {
         doTest(null, "(null)");
     }
 
+    @Test
     public void testMulti() {
         doTest(new TreeFormatter.SimpleNode("parent", "child1", "child2"), "parent", "├─child1", "└─child2");
     }
 
+    @Test
     public void testDeep() {
         doTest(new TreeFormatter.SimpleNode("parent",
                         "child1",
