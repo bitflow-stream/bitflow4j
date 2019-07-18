@@ -1,6 +1,7 @@
 package bitflow4j.steps.metrics;
 
 import bitflow4j.Sample;
+import bitflow4j.script.registry.BitflowConstructor;
 import bitflow4j.script.registry.Description;
 import bitflow4j.steps.BatchHandler;
 
@@ -21,6 +22,7 @@ public class AggregateFeaturesBatch implements BatchHandler {
     private final String[] suffixes;
     private final boolean singleSample;
 
+    @BitflowConstructor
     AggregateFeaturesBatch(boolean singleSample, List<String> features) {
         this(singleSample, features.toArray(String[]::new));
     }
