@@ -37,7 +37,7 @@ public class AggregateFeaturesUtil {
         double compute(OnlineWindowStatistics stats);
     }
 
-    public static final Map<String, ValueGetter> ALL_GETTERS = new HashMap<>();
+    private static final Map<String, ValueGetter> ALL_GETTERS = new HashMap<>();
 
     static {
         ALL_GETTERS.put("input", null);
@@ -49,7 +49,7 @@ public class AggregateFeaturesUtil {
         ALL_GETTERS.put("meanSlope", OnlineWindowStatistics::mean_slope);
     }
 
-    public static ValueGetter[] makeGetters(String... names) {
+    protected static ValueGetter[] makeGetters(String... names) {
         if (names.length < 1) {
             throw new IllegalArgumentException("Need at least one feature name to compute");
         }
