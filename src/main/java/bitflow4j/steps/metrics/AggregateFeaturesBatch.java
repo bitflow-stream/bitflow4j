@@ -53,7 +53,10 @@ public class AggregateFeaturesBatch implements BatchHandler {
         if (singleSample) {
             return Collections.singletonList(lastSampleResult);
         } else {
-            int lastSampleResultSize = lastSampleResult.getMetrics().length;
+            int lastSampleResultSize = 0;
+            if (lastSampleResult != null) {
+                lastSampleResultSize = lastSampleResult.getMetrics().length;
+            }
             String[] headerExtension = new String[lastSampleResultSize];
             double[] metricExtension = new double[lastSampleResultSize];
             for (int i = 0; i < lastSampleResultSize; i++) {
