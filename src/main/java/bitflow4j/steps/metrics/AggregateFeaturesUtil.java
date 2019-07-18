@@ -3,6 +3,7 @@ package bitflow4j.steps.metrics;
 import bitflow4j.Header;
 import bitflow4j.Sample;
 import bitflow4j.misc.OnlineWindowStatistics;
+import bitflow4j.script.registry.BitflowConstructor;
 
 import java.util.*;
 import java.util.logging.Level;

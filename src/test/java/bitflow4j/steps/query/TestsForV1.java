@@ -5,13 +5,13 @@ import bitflow4j.Sample;
 import bitflow4j.io.list.ListSink;
 import bitflow4j.steps.query.exceptions.IllegalStreamingQueryException;
 import bitflow4j.steps.query.exceptions.MissingMetricException;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.Date;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests that must run without error after version 1 of the program.
@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
  * <p>
  * Reset list before new tests.
  */
+@Disabled("The query script language is currently not further developed")
 public class TestsForV1 {
 
     /**
@@ -213,39 +214,41 @@ public class TestsForV1 {
     /**
      * Test to produce IllegalStreamingQueryExceptions
      */
-    @Test(expected = IllegalStreamingQueryException.class)
+    @Test
     public void test4_1() throws IllegalStreamingQueryException {
-        new StreamingQuery("Select ** ");
+        assertThrows(IllegalStreamingQueryException.class, () -> new StreamingQuery("Select ** "));
     }
 
-    @Test(expected = IllegalStreamingQueryException.class)
+    @Test
     public void test4_2() throws IllegalStreamingQueryException {
-        new StreamingQuery("Select * Fromm input");
+        assertThrows(IllegalStreamingQueryException.class, () -> new StreamingQuery("Select * Fromm input"));
     }
 
-    @Test(expected = IllegalStreamingQueryException.class)
+    @Test
     public void test4_3() throws IllegalStreamingQueryException {
-        new StreamingQuery("Select * Where (cpu=2");
+        assertThrows(IllegalStreamingQueryException.class, () -> new StreamingQuery("Select * Where (cpu=2"));
     }
 
     /**
      * Test for MissingMetricException.
      */
-    @Test(expected = MissingMetricException.class)
+    @Test
     public void test5() throws IOException {
-        // define query
-        String query = "Select cpu, mem As memory";
-        StreamingQuery sq;
-        ListSink sink = new ListSink();
-        sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        assertThrows(MissingMetricException.class, () -> {
+            // define query
+            String query = "Select cpu, mem As memory";
+            StreamingQuery sq;
+            ListSink sink = new ListSink();
+            sq = new StreamingQuery(query);
+            sq.setOutgoingSink(sink);
 
-        // Input 1
-        String[] input_1_strings = {"cpu", "temp", "ram"};
-        Header header_input_1 = new Header(input_1_strings);
-        double[] values_input_1 = {2, 3, 0.5};
-        Sample inputSample_1 = new Sample(header_input_1, values_input_1, new Date());
-        sq.writeSample(inputSample_1);
+            // Input 1
+            String[] input_1_strings = {"cpu", "temp", "ram"};
+            Header header_input_1 = new Header(input_1_strings);
+            double[] values_input_1 = {2, 3, 0.5};
+            Sample inputSample_1 = new Sample(header_input_1, values_input_1, new Date());
+            sq.writeSample(inputSample_1);
+        });
     }
 
     /**

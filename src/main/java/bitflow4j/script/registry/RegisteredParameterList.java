@@ -8,69 +8,30 @@ import java.util.stream.Collectors;
 
 public class RegisteredParameterList {
 
-    private final Map<String, RegisteredParameter> optional = new HashMap<>();
-    private final Map<String, RegisteredParameter> required = new HashMap<>();
+    private final Map<String, RegisteredParameter> params = new HashMap<>();
 
     public RegisteredParameterList() {
         // No parameters
     }
 
-    public RegisteredParameterList(RegisteredParameter[] defaultRequired, RegisteredParameter[] defaultOptional) {
-        Arrays.stream(defaultRequired).forEach(p -> add(p, true));
-        Arrays.stream(defaultOptional).forEach(p -> add(p, false));
+    public RegisteredParameterList(RegisteredParameter[] parameters) {
+        Arrays.stream(parameters).forEach(this::add);
     }
 
-    public RegisteredParameterList(Collection<Constructor<?>> constructors) {
-        fillFromConstructors(constructors);
+    public RegisteredParameterList(Constructor<?> constructor) {
+        params.putAll(getConstructorParameters(constructor));
     }
 
-    public Collection<RegisteredParameter> getOptional() {
-        return optional.values();
+    public Collection<RegisteredParameter> getParams() {
+        return params.values();
     }
 
-    public Collection<RegisteredParameter> getRequired() {
-        return required.values();
-    }
-
-    public void add(RegisteredParameter param, boolean isRequired) {
-        if (isRequired)
-            required.put(param.name, param);
-        else
-            optional.put(param.name, param);
+    public void add(RegisteredParameter param) {
+        params.put(param.name, param);
     }
 
     public static List<String> getParameterNames(Executable methodOrConstructor) {
         return Arrays.stream(methodOrConstructor.getParameters()).map(Parameter::getName).collect(Collectors.toList());
-    }
-
-    private void fillFromConstructors(Collection<Constructor<?>> constructors) {
-        if (constructors.isEmpty())
-            return;
-
-        Map<String, RegisteredParameter> newOptional = new HashMap<>();
-        Map<String, RegisteredParameter> newRequired = getConstructorParameters(constructors.iterator().next());
-
-        constructors.forEach(constructor -> {
-            Map<String, RegisteredParameter> params = getConstructorParameters(constructor);
-
-            // Every new parameter is registered optional
-            for (RegisteredParameter param : params.values()) {
-                if (!newRequired.containsKey(param.name)) {
-                    newOptional.put(param.name, param);
-                }
-            }
-
-            // Clean requiredParams by moving extraneous parameters from requiredParams to optionalParams
-            for (Iterator<String> i = newRequired.keySet().iterator(); i.hasNext(); ) {
-                String name = i.next();
-                if (!params.containsKey(name)) {
-                    newOptional.put(name, newRequired.get(name));
-                    i.remove();
-                }
-            }
-        });
-        optional.putAll(newOptional);
-        required.putAll(newRequired);
     }
 
     private static Map<String, RegisteredParameter> getConstructorParameters(Executable constructor) {
@@ -83,7 +44,7 @@ public class RegisteredParameterList {
     }
 
     /**
-     * validateParameters takes a map of parameters and validates them against the specified optional and required parameters.
+     * validate takes a map of parameters and validates them against the specified optional and required parameters.
      *
      * @param params the input parameters to be validated
      * @return an error description in the specified input parameters (required but missing or unexpected)
@@ -94,8 +55,8 @@ public class RegisteredParameterList {
                 .map(k -> validateParam(k, params.get(k)))
                 .filter(Objects::nonNull)
                 .forEach(errors::add);
-        required.keySet().stream()
-                .filter(s -> !params.containsKey(s))
+        this.params.entrySet().stream()
+                .filter(s -> !s.getValue().isOptional && !params.containsKey(s.getKey()))
                 .map(s -> "Missing required parameter '" + s + "'")
                 .forEach(errors::add);
         if (!errors.isEmpty())
@@ -105,9 +66,7 @@ public class RegisteredParameterList {
     }
 
     private String validateParam(String name, Object value) {
-        RegisteredParameter param = optional.get(name);
-        if (param == null)
-            param = required.get(name);
+        RegisteredParameter param = params.get(name);
         if (param == null)
             return "Unexpected parameter " + name;
         if (!param.canParse(value))
@@ -116,20 +75,21 @@ public class RegisteredParameterList {
     }
 
     public Map<String, Object> parseRawParameters(Map<String, Object> rawParameters) throws IllegalArgumentException {
-        for (String required : required.keySet()) {
-            if (!rawParameters.containsKey(required)) {
-                throw new IllegalArgumentException("Missing required parameter " + required);
+        Map<String, Object> result = new HashMap<>();
+        for (Map.Entry<String, RegisteredParameter> paramEntry : params.entrySet()) {
+            RegisteredParameter param = paramEntry.getValue();
+            String name = paramEntry.getKey();
+            if (rawParameters.containsKey(name)) {
+                Object parsedValue = param.parseValue(rawParameters.get(name));
+                result.put(name, parsedValue);
+            } else if (param.isOptional) {
+                result.put(name, param.getDefaultValue());
+            } else {
+                throw new IllegalArgumentException("Missing required parameter " + param);
             }
         }
-
-        Map<String, Object> result = new HashMap<>();
         for (String name : rawParameters.keySet()) {
-            Object rawValue = rawParameters.get(name);
-            if (required.containsKey(name)) {
-                result.put(name, required.get(name).parseValue(rawValue));
-            } else if (optional.containsKey(name)) {
-                result.put(name, optional.get(name).parseValue(rawValue));
-            } else {
+            if (!params.containsKey(name)) {
                 throw new IllegalArgumentException("Unknown parameter: " + name);
             }
         }

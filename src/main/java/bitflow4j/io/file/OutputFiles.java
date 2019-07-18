@@ -6,7 +6,9 @@ import bitflow4j.io.marshall.Marshaller;
 import bitflow4j.misc.Pair;
 import bitflow4j.script.endpoints.Endpoint;
 import bitflow4j.script.endpoints.EndpointFactory;
+import bitflow4j.script.registry.BitflowConstructor;
 import bitflow4j.script.registry.Description;
+import bitflow4j.script.registry.Optional;
 import bitflow4j.steps.fork.Distributor;
 import bitflow4j.steps.fork.Fork;
 
@@ -20,7 +22,7 @@ import java.util.logging.Logger;
 
 /**
  * Allows splitting samples into different files, based on a file name template that can contain tag names surrounded by '${}', e.g.:
- *      ./data/${layer}/${host}.csv
+ * ./data/${layer}/${host}.csv
  */
 @Description("Uses the provided template in parameter file to save samples in their respective file. Example call: " +
         "output-files(file='./${data_type}/${serial}.csv', marshaller='CSV') " +
@@ -32,16 +34,23 @@ public class OutputFiles extends Fork {
     private final String fileNameTemplate;
 
     public OutputFiles(String file) {
-        this(file, EndpointFactory.guessFormat(Endpoint.Type.FILE, file).getMarshaller());
+        this(file, (String) null);
     }
 
-    public OutputFiles(String file, String format) {
-        this(file, Marshaller.get(format));
+    @BitflowConstructor
+    public OutputFiles(String file, @Optional() String format) {
+        this(file, getMarshaller(file, format));
     }
 
     public OutputFiles(String file, Marshaller marshaller) {
         super(new MultiFileDistributor(file, marshaller));
         this.fileNameTemplate = file;
+    }
+
+    private static Marshaller getMarshaller(String file, String format) {
+        if (format == null || format.isEmpty())
+            return EndpointFactory.guessFormat(Endpoint.Type.FILE, file).getMarshaller();
+        return Marshaller.get(format);
     }
 
     @Override

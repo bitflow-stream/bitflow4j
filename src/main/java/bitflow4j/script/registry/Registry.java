@@ -138,7 +138,7 @@ public class Registry {
             logger.fine("Class is abstract or interface, not registered: " + constructor.getClassName());
             return false;
         }
-        if (!constructor.hasConstructors()) {
+        if (!constructor.hasConstructor()) {
             logger.fine("Class missing valid constructor, not registered: " + constructor.getClassName());
             return false;
         }

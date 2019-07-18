@@ -4,16 +4,18 @@ import bitflow4j.Header;
 import bitflow4j.Sample;
 import bitflow4j.io.list.ListSink;
 import bitflow4j.steps.query.exceptions.IllegalStreamingQueryException;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.Date;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests that must run without error after version 2 of the program.
  */
+@Disabled("The query script language is currently not further developed")
 public class TestsForV2 {
 
     /**
@@ -124,109 +126,102 @@ public class TestsForV2 {
      * Test the window all mode in combination with all aggregation functions.
      */
     @Test
-    public void test2() {
-
+    public void test2() throws IOException {
         Date d = new Date();
 
         // define query
         String query = "Select min(a) As min, MAX(a) As max, AvG(a), meDiAn(a), cOUNT(*) As count, sUm(a) As Summe Where a>1 Window all";
         StreamingQuery sq;
 
-        try {
-            ListSink sink = new ListSink();
-            sq = new StreamingQuery(query);
-            sq.setOutgoingSink(sink);
+        ListSink sink = new ListSink();
+        sq = new StreamingQuery(query);
+        sq.setOutgoingSink(sink);
 
-            // Input 1
-            String[] input_1_strings = {"a", "b"};
-            Header header_input_1 = new Header(input_1_strings);
-            double[] values_input_1 = {5, 10};
-            Sample inputSample_1 = new Sample(header_input_1, values_input_1, d);
-            sq.writeSample(inputSample_1);
-            // Expected Output 1
-            String[] output_1_strings = {"min", "max", "Avg(a)", "Median(a)", "count", "Summe"};
-            Header header_output_1 = new Header(output_1_strings);
-            double[] values_output_1 = {5, 5, 5, 5, 1, 5};
-            Sample expectedOutputSample_1 = new Sample(header_output_1, values_output_1, d);
-            assertTrue(TestHelpers.compareSamples(expectedOutputSample_1, sink.samples.get(0)));
+        // Input 1
+        String[] input_1_strings = {"a", "b"};
+        Header header_input_1 = new Header(input_1_strings);
+        double[] values_input_1 = {5, 10};
+        Sample inputSample_1 = new Sample(header_input_1, values_input_1, d);
+        sq.writeSample(inputSample_1);
+        // Expected Output 1
+        String[] output_1_strings = {"min", "max", "Avg(a)", "Median(a)", "count", "Summe"};
+        Header header_output_1 = new Header(output_1_strings);
+        double[] values_output_1 = {5, 5, 5, 5, 1, 5};
+        Sample expectedOutputSample_1 = new Sample(header_output_1, values_output_1, d);
+        assertTrue(TestHelpers.compareSamples(expectedOutputSample_1, sink.samples.get(0)));
 
-            // Input 2
-            String[] input_2_strings = {"b", "a"};
-            Header header_input_2 = new Header(input_2_strings);
-            double[] values_input_2 = {100, 1};
-            Sample inputSample_2 = new Sample(header_input_2, values_input_2, d);
-            sq.writeSample(inputSample_2);
-            // Expected Output 2
-            String[] output_2_strings = {"min", "max", "Avg(a)", "Median(a)", "count", "Summe"};
-            Header header_output_2 = new Header(output_2_strings);
-            double[] values_output_2 = {5, 5, 5, 5, 1, 5};
-            Sample expectedOutputSample_2 = new Sample(header_output_2, values_output_2, d);
+        // Input 2
+        String[] input_2_strings = {"b", "a"};
+        Header header_input_2 = new Header(input_2_strings);
+        double[] values_input_2 = {100, 1};
+        Sample inputSample_2 = new Sample(header_input_2, values_input_2, d);
+        sq.writeSample(inputSample_2);
+        // Expected Output 2
+        String[] output_2_strings = {"min", "max", "Avg(a)", "Median(a)", "count", "Summe"};
+        Header header_output_2 = new Header(output_2_strings);
+        double[] values_output_2 = {5, 5, 5, 5, 1, 5};
+        Sample expectedOutputSample_2 = new Sample(header_output_2, values_output_2, d);
 
-            if (sq.getCalculateOutputIfWhereIsFalse()) {
-                assertTrue(TestHelpers.compareSamples(expectedOutputSample_2, sink.samples.get(1)));
-            } else {
-                assertEquals(1, sink.samples.size());
-            }
+        if (sq.getCalculateOutputIfWhereIsFalse()) {
+            assertTrue(TestHelpers.compareSamples(expectedOutputSample_2, sink.samples.get(1)));
+        } else {
+            assertEquals(1, sink.samples.size());
+        }
 
-            // Input 3
-            String[] input_3_strings = {"a"};
-            Header header_input_3 = new Header(input_3_strings);
-            double[] values_input_3 = {10};
-            Sample inputSample_3 = new Sample(header_input_3, values_input_3, d);
-            sq.writeSample(inputSample_3);
-            // Expected Output 3
-            String[] output_3_strings = {"min", "max", "Avg(a)", "Median(a)", "count", "Summe"};
-            Header header_output_3 = new Header(output_3_strings);
-            double[] values_output_3 = {5, 10, 7.5, 7.5, 2, 15};
-            Sample expectedOutputSample_3 = new Sample(header_output_3, values_output_3, d);
+        // Input 3
+        String[] input_3_strings = {"a"};
+        Header header_input_3 = new Header(input_3_strings);
+        double[] values_input_3 = {10};
+        Sample inputSample_3 = new Sample(header_input_3, values_input_3, d);
+        sq.writeSample(inputSample_3);
+        // Expected Output 3
+        String[] output_3_strings = {"min", "max", "Avg(a)", "Median(a)", "count", "Summe"};
+        Header header_output_3 = new Header(output_3_strings);
+        double[] values_output_3 = {5, 10, 7.5, 7.5, 2, 15};
+        Sample expectedOutputSample_3 = new Sample(header_output_3, values_output_3, d);
 
-            if (sq.getCalculateOutputIfWhereIsFalse()) {
-                assertTrue(TestHelpers.compareSamples(expectedOutputSample_3, sink.samples.get(2)));
-            } else {
-                assertTrue(TestHelpers.compareSamples(expectedOutputSample_3, sink.samples.get(1)));
-            }
+        if (sq.getCalculateOutputIfWhereIsFalse()) {
+            assertTrue(TestHelpers.compareSamples(expectedOutputSample_3, sink.samples.get(2)));
+        } else {
+            assertTrue(TestHelpers.compareSamples(expectedOutputSample_3, sink.samples.get(1)));
+        }
 
-            // Input 4
-            String[] input_4_strings = {"b", "d", "a"};
-            Header header_input_4 = new Header(input_4_strings);
-            double[] values_input_4 = {12, 0.5, 20};
-            Sample inputSample_4 = new Sample(header_input_4, values_input_4, d);
-            sq.writeSample(inputSample_4);
-            // Expected Output 4
-            String[] output_4_strings = {"min", "max", "Avg(a)", "Median(a)", "count", "Summe"};
-            Header header_output_4 = new Header(output_4_strings);
-            double avg = (5.0 + 10.0 + 20.0) / 3.0;
-            double[] values_output_4 = {5, 20, avg, 10, 3, 35};
-            Sample expectedOutputSample_4 = new Sample(header_output_4, values_output_4, d);
+        // Input 4
+        String[] input_4_strings = {"b", "d", "a"};
+        Header header_input_4 = new Header(input_4_strings);
+        double[] values_input_4 = {12, 0.5, 20};
+        Sample inputSample_4 = new Sample(header_input_4, values_input_4, d);
+        sq.writeSample(inputSample_4);
+        // Expected Output 4
+        String[] output_4_strings = {"min", "max", "Avg(a)", "Median(a)", "count", "Summe"};
+        Header header_output_4 = new Header(output_4_strings);
+        double avg = (5.0 + 10.0 + 20.0) / 3.0;
+        double[] values_output_4 = {5, 20, avg, 10, 3, 35};
+        Sample expectedOutputSample_4 = new Sample(header_output_4, values_output_4, d);
 
-            if (sq.getCalculateOutputIfWhereIsFalse()) {
-                assertTrue(TestHelpers.compareSamples(expectedOutputSample_4, sink.samples.get(3)));
-            } else {
-                assertTrue(TestHelpers.compareSamples(expectedOutputSample_4, sink.samples.get(2)));
-            }
+        if (sq.getCalculateOutputIfWhereIsFalse()) {
+            assertTrue(TestHelpers.compareSamples(expectedOutputSample_4, sink.samples.get(3)));
+        } else {
+            assertTrue(TestHelpers.compareSamples(expectedOutputSample_4, sink.samples.get(2)));
+        }
 
-            // Input 5
-            String[] input_5_strings = {"a"};
-            Header header_input_5 = new Header(input_5_strings);
-            double[] values_input_5 = {2};
-            Sample inputSample_5 = new Sample(header_input_5, values_input_5, d);
-            sq.writeSample(inputSample_5);
-            // Expected Output 5
-            String[] output_5_strings = {"min", "max", "Avg(a)", "Median(a)", "count", "Summe"};
-            Header header_output_5 = new Header(output_5_strings);
-            avg = (5.0 + 10.0 + 20.0 + 2.0) / 4.0;
-            double[] values_output_5 = {2, 20, avg, 7.5, 4, 37};
-            Sample expectedOutputSample_5 = new Sample(header_output_5, values_output_5, d);
+        // Input 5
+        String[] input_5_strings = {"a"};
+        Header header_input_5 = new Header(input_5_strings);
+        double[] values_input_5 = {2};
+        Sample inputSample_5 = new Sample(header_input_5, values_input_5, d);
+        sq.writeSample(inputSample_5);
+        // Expected Output 5
+        String[] output_5_strings = {"min", "max", "Avg(a)", "Median(a)", "count", "Summe"};
+        Header header_output_5 = new Header(output_5_strings);
+        avg = (5.0 + 10.0 + 20.0 + 2.0) / 4.0;
+        double[] values_output_5 = {2, 20, avg, 7.5, 4, 37};
+        Sample expectedOutputSample_5 = new Sample(header_output_5, values_output_5, d);
 
-            if (sq.getCalculateOutputIfWhereIsFalse()) {
-                assertTrue(TestHelpers.compareSamples(expectedOutputSample_5, sink.samples.get(4)));
-            } else {
-                assertTrue(TestHelpers.compareSamples(expectedOutputSample_5, sink.samples.get(3)));
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            fail();
+        if (sq.getCalculateOutputIfWhereIsFalse()) {
+            assertTrue(TestHelpers.compareSamples(expectedOutputSample_5, sink.samples.get(4)));
+        } else {
+            assertTrue(TestHelpers.compareSamples(expectedOutputSample_5, sink.samples.get(3)));
         }
     }
 
@@ -327,19 +322,22 @@ public class TestsForV2 {
     /**
      * Test if some illegal querys are recognised as illegal.
      */
-    @Test(expected = IllegalStreamingQueryException.class)
+    @Test
     public void test4_1() throws IllegalStreamingQueryException {
-        new StreamingQuery("Select Cpu Where CPU>1.5 Window 10 s 1 d");
+        assertThrows(IllegalStreamingQueryException.class, () ->
+                new StreamingQuery("Select Cpu Where CPU>1.5 Window 10 s 1 d"));
     }
 
-    @Test(expected = IllegalStreamingQueryException.class)
+    @Test
     public void test4_2() throws IllegalStreamingQueryException {
-        new StreamingQuery("Select Cpu Where CPU>1.5 Window 1 d 1 h 1 s 1 m");
+        assertThrows(IllegalStreamingQueryException.class, () ->
+                new StreamingQuery("Select Cpu Where CPU>1.5 Window 1 d 1 h 1 s 1 m"));
     }
 
-    @Test(expected = IllegalStreamingQueryException.class)
+    @Test
     public void test4_3() throws IllegalStreamingQueryException {
-        new StreamingQuery("Select Sum(Cpu)");
+        assertThrows(IllegalStreamingQueryException.class, () ->
+                new StreamingQuery("Select Sum(Cpu)"));
     }
 
     /**

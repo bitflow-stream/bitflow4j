@@ -4,10 +4,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class RegisteredParameter {
 
@@ -38,11 +35,23 @@ public class RegisteredParameter {
     public final String name;
     public final ContainerType containerType;
     public final Class<?> type;
+    public final boolean isOptional;
+    public final Object defaultValue;
 
-    public RegisteredParameter(String name, ContainerType containerType, Class<?> type) {
+    public RegisteredParameter(String name, ContainerType containerType, Class<?> type, boolean isOptional, Object defaultValue) {
         this.name = name;
         this.containerType = containerType;
         this.type = type;
+        this.isOptional = isOptional;
+        this.defaultValue = defaultValue;
+    }
+
+    public RegisteredParameter(String name, ContainerType containerType, Class<?> type, Object defaultValue) {
+        this(name, containerType, type, true, defaultValue);
+    }
+
+    public RegisteredParameter(String name, ContainerType containerType, Class<?> type) {
+        this(name, containerType, type, false, null);
     }
 
     public RegisteredParameter(Parameter param) throws IllegalArgumentException {
@@ -68,6 +77,31 @@ public class RegisteredParameter {
         } else {
             throw new IllegalArgumentException(String.format("Cannot construct registered parameter from type %s", paramType));
         }
+
+        Optional optAnnotation = param.getAnnotation(Optional.class);
+        isOptional = optAnnotation != null;
+        defaultValue = isOptional ? extractDefaultValue(optAnnotation, containerType, type) : null;
+    }
+
+    private static Object extractDefaultValue(Optional opt, ContainerType containerType, Class<?> type) {
+        if (containerType != ContainerType.Primitive) {
+            // Default value for lists/arrays/maps is their empty value
+            return null;
+        }
+        if (type == String.class) {
+            return opt.defaultString();
+        } else if (type == Double.class || type == double.class) {
+            return opt.defaultDouble();
+        } else if (type == Long.class || type == long.class) {
+            return opt.defaultLong();
+        } else if (type == Float.class || type == float.class) {
+            return opt.defaultFloat();
+        } else if (type == Integer.class || type == int.class) {
+            return opt.defaultInt();
+        } else if (type == Boolean.class || type == boolean.class) {
+            return opt.defaultBool();
+        }
+        return null;
     }
 
     public String toString() {
@@ -131,6 +165,33 @@ public class RegisteredParameter {
             }
         }
         return null;
+    }
+
+    public Object getDefaultValue() {
+        switch (containerType) {
+            case Primitive:
+                return defaultValue;
+            case List:
+                return Collections.emptyList();
+            case Map:
+                return Collections.emptyMap();
+            case Array:
+                if (!type.isPrimitive()) {
+                    return new Object[]{};
+                } else if (type == double.class) {
+                    return new double[]{};
+                } else if (type == int.class) {
+                    return new int[]{};
+                } else if (type == float.class) {
+                    return new float[]{};
+                } else if (type == long.class) {
+                    return new long[]{};
+                } else if (type == boolean.class) {
+                    return new boolean[]{};
+                }
+            default:
+                throw new IllegalStateException("Invalid container type: " + containerType);
+        }
     }
 
     public boolean canParse(Object inputValue) {

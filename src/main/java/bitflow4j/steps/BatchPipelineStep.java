@@ -3,6 +3,8 @@ package bitflow4j.steps;
 import bitflow4j.AbstractPipelineStep;
 import bitflow4j.Sample;
 import bitflow4j.misc.TreeFormatter;
+import bitflow4j.script.registry.BitflowConstructor;
+import bitflow4j.script.registry.Optional;
 import bitflow4j.script.registry.RegisteredParameter;
 import bitflow4j.script.registry.RegisteredParameterList;
 import bitflow4j.task.LoopTask;
@@ -53,7 +55,8 @@ public final class BatchPipelineStep extends AbstractPipelineStep implements Tre
         this(batchSeparationTag, 0, handlers);
     }
 
-    public BatchPipelineStep(String batchSeparationTag, long timeoutMs) {
+    @BitflowConstructor
+    public BatchPipelineStep(@Optional String batchSeparationTag, @Optional long timeoutMs) {
         this.batchSeparationTag = batchSeparationTag;
         this.timeoutMs = timeoutMs;
     }
@@ -65,10 +68,9 @@ public final class BatchPipelineStep extends AbstractPipelineStep implements Tre
     }
 
     public static final RegisteredParameterList BATCH_STEP_PARAMETERS = new RegisteredParameterList(
-            new RegisteredParameter[0],
             new RegisteredParameter[]{
-                    new RegisteredParameter("separationTag", RegisteredParameter.ContainerType.Primitive, String.class),
-                    new RegisteredParameter("timeout", RegisteredParameter.ContainerType.Primitive, Long.class)
+                    new RegisteredParameter("separationTag", RegisteredParameter.ContainerType.Primitive, String.class, ""),
+                    new RegisteredParameter("timeout", RegisteredParameter.ContainerType.Primitive, Long.class, 0L)
             });
 
     public static BatchPipelineStep createFromParameters(Map<String, Object> params) throws IllegalArgumentException {
@@ -131,7 +133,7 @@ public final class BatchPipelineStep extends AbstractPipelineStep implements Tre
     }
 
     private boolean shouldFlush(Sample sample) {
-        if (batchSeparationTag != null) {
+        if (batchSeparationTag != null && !batchSeparationTag.isEmpty()) {
             if (!sample.hasTag(batchSeparationTag)) {
                 if (!warnedMissingSeparationTag) {
                     logger.warning("BatchPipelineStep: Dropping samples without '" + batchSeparationTag + "' tag");
