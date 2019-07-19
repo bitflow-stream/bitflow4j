@@ -5,8 +5,11 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.logging.Logger;
 
 public class RegisteredParameter {
+
+    private static final Logger logger = Logger.getLogger(RegisteredParameter.class.getName());
 
     private static final Map<Class<?>, Parser> primitiveParsers = new HashMap<>();
 
@@ -80,26 +83,88 @@ public class RegisteredParameter {
 
         Optional optAnnotation = param.getAnnotation(Optional.class);
         isOptional = optAnnotation != null;
-        defaultValue = isOptional ? extractDefaultValue(optAnnotation, containerType, type) : null;
+        defaultValue = isOptional ? extractDefaultValue(param, optAnnotation, containerType, type) : null;
     }
 
-    private static Object extractDefaultValue(Optional opt, ContainerType containerType, Class<?> type) {
+    private static Object extractDefaultValue(Parameter param, Optional opt, ContainerType containerType, Class<?> type) {
+        Map<Class, Object> defaults = extractDefaultsMap(opt);
+
+        Object defaultValue = defaults.get(type);
         if (containerType != ContainerType.Primitive) {
-            // Default value for lists/arrays/maps is their empty value
-            return null;
+            // Non-primitive types (lists/arrays/maps), cannot be stored in the @Optional annotations,
+            // and their default value is always an empty collection.
+            defaultValue = null;
+        } else {
+            // Remove the used type to enable the check below. All other entries should be default values.
+            defaults.remove(type);
+            defaults.remove(getPartnerType(type));
         }
+
+        // Check if the @Optional annotation was given a wrong default* value. Helps with debugging.
+        boolean containsWrongDefaults = defaults.entrySet().stream().anyMatch((e) -> !isDefaultValue(e.getKey(), e.getValue()));
+        if (containsWrongDefaults) {
+            logger.warning(String.format("Constructor %s declares parameter %s with invalid default values in @Optional. This indicates a bug.",
+                    param.getDeclaringExecutable(), param.getName()));
+        }
+
+        return defaultValue;
+    }
+
+    private static Map<Class, Object> extractDefaultsMap(Optional opt) {
+        Map<Class, Object> defaults = new HashMap<>();
+        defaults.put(String.class, opt.defaultString());
+        defaults.put(Double.class, opt.defaultDouble());
+        defaults.put(double.class, opt.defaultDouble());
+        defaults.put(Long.class, opt.defaultLong());
+        defaults.put(long.class, opt.defaultLong());
+        defaults.put(Float.class, opt.defaultFloat());
+        defaults.put(float.class, opt.defaultFloat());
+        defaults.put(Integer.class, opt.defaultInt());
+        defaults.put(int.class, opt.defaultInt());
+        defaults.put(Boolean.class, opt.defaultBool());
+        defaults.put(boolean.class, opt.defaultBool());
+        return defaults;
+    }
+
+    private static boolean isDefaultValue(Class type, Object val) {
         if (type == String.class) {
-            return opt.defaultString();
+            return ((String) val).isEmpty();
         } else if (type == Double.class || type == double.class) {
-            return opt.defaultDouble();
+            return (double) val == 0D;
         } else if (type == Long.class || type == long.class) {
-            return opt.defaultLong();
+            return (long) val == 0L;
         } else if (type == Float.class || type == float.class) {
-            return opt.defaultFloat();
+            return (float) val == 0F;
         } else if (type == Integer.class || type == int.class) {
-            return opt.defaultInt();
+            return (int) val == 0;
         } else if (type == Boolean.class || type == boolean.class) {
-            return opt.defaultBool();
+            return !((boolean) val);
+        }
+        throw new IllegalArgumentException("Invalid primitive type: " + type.getName());
+    }
+
+    private static Class getPartnerType(Class type) {
+        // Unfortunately, don't see how this boxing "partner" type can be obtained otherwise...
+        if (type == Double.class) {
+            return double.class;
+        } else if (type == double.class) {
+            return Double.class;
+        } else if (type == Long.class) {
+            return long.class;
+        } else if (type == long.class) {
+            return Long.class;
+        } else if (type == Float.class) {
+            return float.class;
+        } else if (type == float.class) {
+            return Float.class;
+        } else if (type == Integer.class) {
+            return int.class;
+        } else if (type == int.class) {
+            return Integer.class;
+        } else if (type == Boolean.class) {
+            return boolean.class;
+        } else if (type == boolean.class) {
+            return Boolean.class;
         }
         return null;
     }
