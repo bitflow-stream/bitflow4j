@@ -77,13 +77,6 @@ public class AggregateFeaturesBatch implements BatchHandler {
 
     @Override
     public String toString() {
-        StringBuilder res = new StringBuilder("aggregator [");
-        boolean added = false;
-        for (String name : suffixes) {
-            if (added) res.append(", ");
-            added = true;
-            res.append(name);
-        }
-        return res + "]";
+        return AggregateFeaturesUtil.formatString(suffixes);
     }
 }

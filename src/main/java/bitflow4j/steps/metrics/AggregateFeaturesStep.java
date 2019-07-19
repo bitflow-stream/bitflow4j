@@ -42,13 +42,6 @@ public class AggregateFeaturesStep extends AbstractPipelineStep {
 
     @Override
     public String toString() {
-        StringBuilder res = new StringBuilder("aggregator [");
-        boolean added = false;
-        for (String name : featuresUtil.getSuffixes()) {
-            if (added) res.append(", ");
-            added = true;
-            res.append(name);
-        }
-        return res + "]";
+        return featuresUtil.toString();
     }
 }

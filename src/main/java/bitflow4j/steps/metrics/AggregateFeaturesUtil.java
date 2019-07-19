@@ -128,6 +128,10 @@ public class AggregateFeaturesUtil {
 
     @Override
     public String toString() {
+        return formatString(suffixes);
+    }
+
+    public static String formatString(String[] suffixes){
         StringBuilder res = new StringBuilder("aggregator [");
         boolean added = false;
         for (String name : suffixes) {
