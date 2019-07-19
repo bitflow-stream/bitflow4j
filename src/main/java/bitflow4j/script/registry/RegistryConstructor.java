@@ -12,6 +12,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.*;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 class RegistryConstructor implements ProcessingStepBuilder, ForkBuilder, BatchStepBuilder {
 
@@ -20,26 +21,58 @@ class RegistryConstructor implements ProcessingStepBuilder, ForkBuilder, BatchSt
     private final String name;
     private final String description;
     private final Class<?> cls;
-    private final List<Constructor<?>> constructors;
+    private final Constructor<?> constructor;
 
     RegistryConstructor(Class<?> cls) {
         this.cls = cls;
         this.name = RegisteredStep.splitCamelCase(cls.getSimpleName());
         this.description = getDescriptionField(cls);
-        this.constructors = Lists.newArrayList(cls.getConstructors());
-        filterBadConstructors();
+        this.constructor = findConstructor(cls);
     }
 
-    private void filterBadConstructors() {
+    private static Constructor<?> findConstructor(Class<?> cls) {
+        List<Constructor<?>> constructors = Lists.newArrayList(cls.getConstructors());
+
+        // If there is at least one annotated constructor, consider those constructors only.
+        List<Constructor<?>> annotatedConstructors = constructors.stream().filter((c) ->
+                c.getAnnotation(BitflowConstructor.class) != null).collect(Collectors.toList());
+        boolean hasAnnotatedConstructors = !annotatedConstructors.isEmpty();
+        if (hasAnnotatedConstructors) {
+            if (annotatedConstructors.size() > 1) {
+                logger.warning(String.format("Class %s has multiple constructors annotated with %s. Only one should be annotated for predictable results.",
+                        cls.getName(), BitflowConstructor.class.getName()));
+            }
+            constructors = annotatedConstructors;
+        }
+
+        // Use only constructors, that take primitive values or specific collection types.
+        int totalConstructors = constructors.size();
         constructors.removeIf(constructor -> !isConstructable(constructor));
+        if (hasAnnotatedConstructors && totalConstructors != constructors.size()) {
+            logger.warning(String.format("Class %s contains a constructor annotated with %s, that is not constructable automatically.",
+                    cls, BitflowConstructor.class.getName()));
+        }
+        if (constructors.isEmpty()) {
+            return null;
+        } else if (constructors.size() == 1) {
+            return constructors.get(0);
+        }
+
+        // When there are multiple potential constructors, use the one with the most parameters.
+        logger.warning(String.format("Class %s has %s potential constructors - the one with the most parameters will be registered." +
+                        " Use the %s annotation on one constructor for predictable results.",
+                cls.getName(), constructors.size(), BitflowConstructor.class.getName()));
+        return constructors.stream().
+                max(Comparator.comparingInt(Constructor::getParameterCount)).
+                orElse(null);
     }
 
     public String getClassName() {
         return cls.getName();
     }
 
-    public boolean hasConstructors() {
-        return !constructors.isEmpty();
+    public boolean hasConstructor() {
+        return constructor != null;
     }
 
     public boolean isAbstract() {
@@ -59,7 +92,7 @@ class RegistryConstructor implements ProcessingStepBuilder, ForkBuilder, BatchSt
     }
 
     private RegisteredParameterList parameterList() {
-        return new RegisteredParameterList(constructors);
+        return new RegisteredParameterList(constructor);
     }
 
     //
@@ -150,28 +183,7 @@ class RegistryConstructor implements ProcessingStepBuilder, ForkBuilder, BatchSt
     // ==================== Object instantiation ====================
     //
 
-    private Object constructObject(Map<String, Object> parameters) throws ConstructionException {
-        String inputParamStr = sortedConcatenation(parameters.keySet());
-        for (Constructor<?> constructor : constructors) {
-            if (constructor.getParameters().length != parameters.size()) {
-                continue;
-            }
-            String constructorParamConc = sortedConcatenation(RegisteredParameterList.getParameterNames(constructor));
-            if (inputParamStr.equals(constructorParamConc)) {
-                return invokeSpecializedConstructor(constructor, parameters);
-            }
-        }
-        throw new ConstructionException(name, "No matching Constructor found for parameters " + parameters.toString());
-    }
-
-    private static String sortedConcatenation(Collection<String> parameters) {
-        if (parameters.size() == 0) {
-            return "";
-        }
-        return parameters.stream().sorted().reduce((s, s2) -> s.toLowerCase() + "_" + s2.toLowerCase()).get();
-    }
-
-    private Object invokeSpecializedConstructor(Constructor<?> constructor, Map<String, Object> dirtyParameterValues) throws ConstructionException {
+    private Object constructObject(Map<String, Object> dirtyParameterValues) throws ConstructionException {
         if (dirtyParameterValues.size() == 0) {
             return invokeConstructor(constructor, new Object[0]);
         }

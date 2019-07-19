@@ -175,10 +175,8 @@ public class Main {
         String desc = registeredPipelineStep.getDescription();
         if (desc != null && !desc.isEmpty())
             System.out.println("     Description: " + desc);
-        if (!registeredPipelineStep.parameters.getRequired().isEmpty())
-            System.out.println("     Required parameters: " + registeredPipelineStep.parameters.getRequired());
-        if (!registeredPipelineStep.parameters.getOptional().isEmpty())
-            System.out.println("     Optional parameters: " + registeredPipelineStep.parameters.getOptional());
+        if (!registeredPipelineStep.parameters.getParams().isEmpty())
+            System.out.println("     Parameters: " + registeredPipelineStep.parameters.getParams());
     }
 
     private static void logJsonCapabilities(Registry registry) {
@@ -203,15 +201,17 @@ public class Main {
         public final String name;
         public final String type;
         public final boolean required;
+        public final String defaultValue;
 
-        JsonParameter(String name, String type, boolean required) {
+        JsonParameter(String name, String type, boolean required, Object defaultValue) {
             this.name = name;
             this.type = type;
             this.required = required;
+            this.defaultValue = defaultValue == null ? null : defaultValue.toString();
         }
 
-        JsonParameter(RegisteredParameter param, boolean required) {
-            this(param.name, param.toString(), required);
+        JsonParameter(RegisteredParameter param) {
+            this(param.name, param.toString(), !param.isOptional, param.defaultValue);
         }
     }
 
@@ -223,8 +223,7 @@ public class Main {
         private JsonCapability(RegisteredStep<?> step) {
             this.name = step.getStepName();
             this.description = step.getDescription();
-            step.parameters.getOptional().forEach(p -> parameters.add(new JsonParameter(p, false)));
-            step.parameters.getRequired().forEach(p -> parameters.add(new JsonParameter(p, true)));
+            step.parameters.getParams().forEach(p -> parameters.add(new JsonParameter(p)));
             parameters.sort(Comparator.comparing(o -> !o.required + o.name)); // Sort optional parameters first (lexicographically: "false" < "true")
         }
     }

@@ -3,6 +3,7 @@ package bitflow4j.steps.metrics;
 import bitflow4j.AbstractPipelineStep;
 import bitflow4j.Header;
 import bitflow4j.Sample;
+import bitflow4j.script.registry.BitflowConstructor;
 
 import java.io.IOException;
 import java.util.*;
@@ -31,7 +32,8 @@ public class MetricFilter extends AbstractPipelineStep {
     /**
      * Constructor for bitflow-script, specifying whether to include or exclude the comma-separated string of columns
      **/
-    public MetricFilter(boolean include, List<String> columns) {
+    @BitflowConstructor
+    public MetricFilter(@bitflow4j.script.registry.Optional(defaultBool = false) boolean include, List<String> columns) {
         String[] cols = columns.toArray(String[]::new);
 
         if (include) {

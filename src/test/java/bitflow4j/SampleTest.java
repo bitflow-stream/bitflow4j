@@ -1,9 +1,10 @@
 package bitflow4j;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SampleTest {
 
@@ -12,7 +13,7 @@ public class SampleTest {
         Sample s = new Sample(null, null, (Date) null);
         s.setTag("x", "y");
         s.setTag("a", "b");
-        Assert.assertEquals("Hello y, it's b, , $} ${", s.resolveTagTemplate("Hello ${x}, it's ${a}, ${xxxx}, $} ${"));
+        assertEquals("Hello y, it's b, , $} ${", s.resolveTagTemplate("Hello ${x}, it's ${a}, ${xxxx}, $} ${"));
     }
 
 }

@@ -10,35 +10,35 @@ import bitflow4j.io.marshall.WavAudioMarshaller;
 import bitflow4j.io.net.TcpListenerSource;
 import bitflow4j.io.net.TcpSink;
 import bitflow4j.io.net.TcpSource;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class EndpointFactoryTest {
+
     private String testFileA = "testfile_A";
     private String testFileB = "testfile_B";
 
-
-    @Before
+    @BeforeEach
     public void reset() throws IOException {
         Files.write(Paths.get(testFileA), new byte[]{});
         Files.write(Paths.get(testFileB), new byte[]{});
     }
 
-    @After
+    @AfterEach
     public void cleanup() throws IOException {
         Files.deleteIfExists(Paths.get(testFileA));
         Files.deleteIfExists(Paths.get(testFileB));
     }
-
 
     @Test
     public void givenFileEndpoints_whenCreateSink_thenReturnFileSink() throws IOException {
@@ -60,43 +60,31 @@ public class EndpointFactoryTest {
         assertTrue(((TcpSink) sink).getMarshaller() instanceof BinaryMarshaller);
     }
 
-    @Test(expected = EndpointParseException.class)
+    @Test
     public void givenMixedFormatSources_whenCreateSource_thenThrowException() throws IOException {
         String[] mixedSources = new String[]{"tcp+csv://some.url", "tcp+text://some.url"};
 
-        try {
-            new EndpointFactory().createSource(mixedSources);
-
-        } catch (EndpointParseException e) {
-            assertContains(e.getMessage(), "Multiinput with varying formats or type");
-            throw e;
-        }
+        Throwable t = assertThrows(EndpointParseException.class,
+                () -> new EndpointFactory().createSource(mixedSources));
+        assertThat(t.getMessage(), containsString("Multiinput with varying formats or type"));
     }
 
-    @Test(expected = EndpointParseException.class)
+    @Test
     public void givenMixedTypeSources_whenCreateSource_thenThrowException() throws IOException {
         String[] mixedSources = new String[]{"tcp+csv://some.url", "file+csv://some.file"};
 
-        try {
-            new EndpointFactory().createSource(mixedSources);
-
-        } catch (EndpointParseException e) {
-            assertContains(e.getMessage(), "Multiinput with varying formats or type");
-            throw e;
-        }
+        Throwable t = assertThrows(EndpointParseException.class,
+                () -> new EndpointFactory().createSource(mixedSources));
+        assertThat(t.getMessage(), containsString("Multiinput with varying formats or type"));
     }
 
-    @Test(expected = EndpointParseException.class)
+    @Test
     public void givenMultipleLISTENSources_whenCreateSource_thenThrowException() throws IOException {
         String[] mixedSources = new String[]{"listen+csv://some.url", "listen+csv://some.file"};
 
-        try {
-            new EndpointFactory().createSource(mixedSources);
-
-        } catch (EndpointParseException e) {
-            assertContains(e.getMessage(), " not allowed");
-            throw e;
-        }
+        Throwable t = assertThrows(EndpointParseException.class,
+                () -> new EndpointFactory().createSource(mixedSources));
+        assertThat(t.getMessage(), containsString(" not allowed"));
     }
 
     @Test
@@ -105,10 +93,10 @@ public class EndpointFactoryTest {
 
         Source source = new EndpointFactory().createSource(multiFileSource);
 
-        assertTrue(source instanceof FileSource);
+        assertThat(source, instanceOf(FileSource.class));
         assertEquals(((FileSource) source).getFiles().get(0).getName(), testFileA);
         assertEquals(((FileSource) source).getFiles().get(1).getName(), testFileB);
-        assertTrue(((FileSource) source).getMarshaller() instanceof CsvMarshaller);
+        assertThat(((FileSource) source).getMarshaller(), instanceOf(CsvMarshaller.class));
     }
 
     @Test
@@ -116,10 +104,9 @@ public class EndpointFactoryTest {
         String[] fileEndpoint = new String[]{"file+wav://" + testFileA};
 
         Source source = new EndpointFactory().createSource(fileEndpoint);
-
-        assertTrue(source instanceof FileSource);
+        assertThat(source, instanceOf(FileSource.class));
         assertEquals(((FileSource) source).getFiles().get(0).getName(), testFileA);
-        assertTrue(((FileSource) source).getMarshaller() instanceof WavAudioMarshaller);
+        assertThat(((FileSource) source).getMarshaller(), instanceOf(WavAudioMarshaller.class));
     }
 
     @Test
@@ -127,18 +114,28 @@ public class EndpointFactoryTest {
         String[] tcpEndpoint = new String[]{"tcp+wav://1.2.3.4:8083"};
 
         Source source = new EndpointFactory().createSource(tcpEndpoint);
-
-        assertTrue(source instanceof TcpSource);
-        assertTrue(source.toString().contains("1.2.3.4:8083"));
+        assertThat(source, instanceOf(TcpSource.class));
+        assertThat(source.toString(), containsString("1.2.3.4:8083"));
     }
 
     @Test
     public void givenTCPListenEndpoints_whenCreateSource_thenReturnTCPListenerSource() throws IOException {
         String[] tcpListenEndpoint = new String[]{"listen+text://1.2.3.4:8083"};
-
         Source source = new EndpointFactory().createSource(tcpListenEndpoint);
+        assertThat(source, instanceOf(TcpListenerSource.class));
+    }
 
-        assertTrue(source instanceof TcpListenerSource);
+    private void executeTest(String endpointToken, Endpoint.Type expectedType, Endpoint.Format expectedFormat, String expectedTarget) {
+        Endpoint res = new EndpointFactory().parseEndpointToken(endpointToken);
+        assertEquals(expectedFormat, res.getFormat(), "format not as expected for endpointToken " + endpointToken);
+        assertEquals(expectedType, res.getType(), "type not as expected for endpointToken " + endpointToken);
+        assertEquals(expectedTarget, res.getTarget(), "target not as expected for endpointToken " + endpointToken);
+    }
+
+    private void executeExceptionTest(String endpointToken, String errorMessage) {
+        Throwable t = assertThrows(EndpointParseException.class,
+                () -> new EndpointFactory().parseEndpointToken(endpointToken));
+        assertThat(t.getMessage(), containsString(errorMessage));
     }
 
     @Test
@@ -179,29 +176,6 @@ public class EndpointFactoryTest {
         executeExceptionTest("://asdasd", "URL expected to be in form of: format+transport://target");
         executeExceptionTest("", "Endpoint cannot be empty");
         executeExceptionTest(null, "Endpoint cannot be empty");
-    }
-
-    private void executeTest(String endpointToken, Endpoint.Type expectedType, Endpoint.Format expectedFormat, String expectedTarget) {
-        Endpoint res = new EndpointFactory().parseEndpointToken(endpointToken);
-        assertEquals("format not as expected for endpointToken " + endpointToken, expectedFormat, res.getFormat());
-        assertEquals("type not as expected for endpointToken " + endpointToken, expectedType, res.getType());
-        assertEquals("target not as expected for endpointToken " + endpointToken, expectedTarget, res.getTarget());
-    }
-
-    private void executeExceptionTest(String endpointToken, String errorMessage) {
-        try {
-            new EndpointFactory().parseEndpointToken(endpointToken);
-        } catch (EndpointParseException e) {
-            assertContains(e.getMessage(), errorMessage);
-            return;
-        }
-        Assert.fail("Expected EndpointParseException to be thrown, but no exception was thrown for endpointToken \"" + endpointToken + "\"");
-    }
-
-    private void assertContains(String fullMessage, String subMessage) {
-        if (!fullMessage.contains(subMessage)) {
-            Assert.fail("\n\tExpected to contain:\t\t" + subMessage + "\n\tActual message:\t\t\t\t" + fullMessage);
-        }
     }
 
 }

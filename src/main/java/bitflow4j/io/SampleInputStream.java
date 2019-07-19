@@ -22,7 +22,10 @@ public abstract class SampleInputStream implements ThreadedSource.SampleGenerato
 
     private static final Logger logger = Logger.getLogger(SampleInputStream.class.getName());
 
+    private static final String BITFLOW_SOURCE_TAG = "bitflow-source";
+
     private final Marshaller marshaller;
+    private final boolean addSourceTag;
     private boolean closed = false;
 
     private String sourceName;
@@ -33,6 +36,12 @@ public abstract class SampleInputStream implements ThreadedSource.SampleGenerato
 
     public SampleInputStream(Marshaller marshaller) {
         this.marshaller = marshaller;
+        this.addSourceTag = false;
+    }
+
+    public SampleInputStream(Marshaller marshaller, boolean addSourceTag) {
+        this.marshaller = marshaller;
+        this.addSourceTag = addSourceTag;
     }
 
     public static class NamedInputStream {
@@ -85,7 +94,10 @@ public abstract class SampleInputStream implements ThreadedSource.SampleGenerato
                 if (header == null) {
                     throw new IOException("Input stream '" + sourceName + "' contains Sample before first Header");
                 }
-                return marshaller.unmarshallSample(input, header);
+                Sample s = marshaller.unmarshallSample(input, header);
+                if(addSourceTag)
+                    s.setTag(BITFLOW_SOURCE_TAG, sourceName);
+                return s;
             }
         } catch (IOException e) {
             closeCurrentInput();
