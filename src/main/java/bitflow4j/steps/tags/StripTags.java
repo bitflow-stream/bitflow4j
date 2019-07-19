@@ -2,7 +2,9 @@ package bitflow4j.steps.tags;
 
 import bitflow4j.AbstractPipelineStep;
 import bitflow4j.Sample;
+import bitflow4j.script.registry.BitflowConstructor;
 import bitflow4j.script.registry.Description;
+import bitflow4j.script.registry.Optional;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -19,13 +21,14 @@ public class StripTags extends AbstractPipelineStep {
         this.tags = null;
     }
 
-    public StripTags(List<String> tags){
+    @BitflowConstructor
+    public StripTags(@Optional List<String> tags){
         this.tags = tags;
     }
 
     @Override
     public void writeSample(Sample sample) throws IOException {
-        if(tags == null) {
+        if(tags == null || tags.isEmpty()) {
             sample.setAllTags(new HashMap<>());
         }
         else{
