@@ -1,38 +1,30 @@
 package bitflow4j.steps.metrics;
 
-import bitflow4j.AbstractPipelineStep;
 import bitflow4j.Header;
 import bitflow4j.Sample;
 import bitflow4j.misc.OnlineWindowStatistics;
 import bitflow4j.script.registry.BitflowConstructor;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created by anton on 09.02.17.
  */
-public class FeatureAggregator extends AbstractPipelineStep {
+public class AggregateFeaturesUtil {
+    Logger logger = Logger.getLogger(AggregateFeaturesUtil.class.getName());
 
     private final Map<String, OnlineWindowStatistics> stats = new HashMap<>();
     private final int window;
     private final ValueGetter[] getters;
+
     private final String[] suffixes;
 
     /**
-     * Constructor for bitflow-script, features should be a comma-separated string.
+     * Constructor for usage by batch or sample-wise step
      **/
-    @BitflowConstructor
-    public FeatureAggregator(int window, List<String> features) {
-        this(window, features.toArray(String[]::new));
-    }
-
-    public FeatureAggregator(int window, String... features) {
-        this(window, makeGetters(features), makeSuffixes(features));
-    }
-
-    public FeatureAggregator(int window, ValueGetter[] getters, String[] suffixes) {
+    public AggregateFeaturesUtil(int window, ValueGetter[] getters, String[] suffixes) {
         if (getters.length != suffixes.length) {
             throw new IllegalArgumentException("The length of getters and suffixes does not match: " + getters.length + " != "
                     + suffixes.length);
@@ -42,16 +34,11 @@ public class FeatureAggregator extends AbstractPipelineStep {
         this.suffixes = suffixes;
     }
 
-    @Override
-    public void writeSample(Sample sample) throws IOException {
-        super.writeSample(compute(sample));
-    }
-
     public interface ValueGetter {
         double compute(OnlineWindowStatistics stats);
     }
 
-    public static final Map<String, ValueGetter> ALL_GETTERS = new HashMap<>();
+    private static final Map<String, ValueGetter> ALL_GETTERS = new HashMap<>();
 
     static {
         ALL_GETTERS.put("input", null);
@@ -63,7 +50,7 @@ public class FeatureAggregator extends AbstractPipelineStep {
         ALL_GETTERS.put("meanSlope", OnlineWindowStatistics::mean_slope);
     }
 
-    public static ValueGetter[] makeGetters(String... names) {
+    protected static ValueGetter[] makeGetters(String... names) {
         if (names.length < 1) {
             throw new IllegalArgumentException("Need at least one feature name to compute");
         }
@@ -135,8 +122,16 @@ public class FeatureAggregator extends AbstractPipelineStep {
         }
     }
 
+    public String[] getSuffixes() {
+        return suffixes;
+    }
+
     @Override
     public String toString() {
+        return formatString(suffixes);
+    }
+
+    public static String formatString(String[] suffixes){
         StringBuilder res = new StringBuilder("aggregator [");
         boolean added = false;
         for (String name : suffixes) {
