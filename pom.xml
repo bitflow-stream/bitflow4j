@@ -188,6 +188,11 @@
             <artifactId>jfreechart</artifactId>
             <version>1.0.14</version> <!-- TODO newer version: 1.5.0 -->
         </dependency>
+        <dependency>
+            <groupId>anomaly-state-analysis</groupId>
+            <artifactId>online-density-estimation</artifactId>
+            <version>0.0.1</version>
+        </dependency>
 
         <!-- Dependencies for package bitflow4j.script -->
         <dependency>
