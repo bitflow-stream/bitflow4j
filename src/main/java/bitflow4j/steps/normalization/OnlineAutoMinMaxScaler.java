@@ -177,7 +177,7 @@ public class OnlineAutoMinMaxScaler extends AbstractOnlineScaler {
         return "Online auto min-max scaler";
     }
 
-    protected static class ThresholdConceptChangeDetector implements ConceptChangeDetector{
+    protected static class ThresholdConceptChangeDetector implements ConceptChangeDetector {
         private final double threshold;
 
         public ThresholdConceptChangeDetector(double threshold) {
@@ -186,14 +186,14 @@ public class OnlineAutoMinMaxScaler extends AbstractOnlineScaler {
 
         @Override
         public boolean isConceptChanged(double value) {
-            if(this.threshold > 0)
+            if (this.threshold > 0)
                 return value > threshold;
             else
                 return false;
         }
     }
 
-    protected static class RobustThresholdConceptChangeDetector implements ConceptChangeDetector{
+    protected static class RobustThresholdConceptChangeDetector implements ConceptChangeDetector {
         private static final int NUM_SAMPLES = 6;
 
         private final double threshold;
@@ -207,16 +207,16 @@ public class OnlineAutoMinMaxScaler extends AbstractOnlineScaler {
         public RobustThresholdConceptChangeDetector(double threshold, int windowSize) {
             this.threshold = threshold;
             this.windowSize = windowSize;
-            this.values =  new ArrayList<>();
+            this.values = new ArrayList<>();
         }
 
         @Override
         public boolean isConceptChanged(double value) {
             double referenceValue = value;
-            if(threshold > 0) {
+            if (threshold > 0) {
                 values.add(value);
                 if (values.size() >= windowSize) {
-                    int index = Math.round(windowSize / 2);
+                    int index = Math.round((float) windowSize / 2);
                     if (index >= 0 && index < values.size()) {
                         referenceValue = values.get(index);
                     }

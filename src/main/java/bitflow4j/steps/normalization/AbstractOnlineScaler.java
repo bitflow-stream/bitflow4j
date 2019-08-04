@@ -55,12 +55,12 @@ public abstract class AbstractOnlineScaler extends AbstractPipelineStep {
 
     public AbstractOnlineScaler() {
         // By default, accept changed scaling models immediately.
-        this(acceptAllChangedConcepts(true), (value) -> false);
+        this(acceptAllChangedConcepts(true), value -> false);
 
     }
 
     public AbstractOnlineScaler(ConceptChangeHandler handler) {
-        this(handler, (value) -> false);
+        this(handler, value -> false);
     }
 
     public AbstractOnlineScaler(ConceptChangeHandler handler, ConceptChangeDetector detector) {
