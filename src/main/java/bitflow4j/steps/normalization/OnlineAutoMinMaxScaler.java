@@ -5,7 +5,9 @@ import bitflow4j.misc.Pair;
 import bitflow4j.script.registry.BitflowConstructor;
 import bitflow4j.script.registry.Optional;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -15,28 +17,33 @@ public class OnlineAutoMinMaxScaler extends AbstractOnlineScaler {
 
     public final Map<String, Feature> features;
 
-    // In percent: how much must scalingMin/scalingMax values change before a concept change is fired
-    private final double conceptChangeThreshold;
-
     public OnlineAutoMinMaxScaler() {
-        this(0);
+        this(0.1);
     }
 
-    // By default, all changed concepts are accepted
     @BitflowConstructor
-    public OnlineAutoMinMaxScaler(@Optional(defaultDouble = 0) double conceptChangeThreshold) {
+    public OnlineAutoMinMaxScaler(@Optional(defaultDouble = 0.1) double conceptChangeThreshold) {
         this(conceptChangeThreshold, acceptAllChangedConcepts(true));
     }
 
+    public OnlineAutoMinMaxScaler(ConceptChangeDetector detector) {
+        this(detector, acceptAllChangedConcepts(true), new HashMap<>());
+    }
+
     public OnlineAutoMinMaxScaler(double conceptChangeThreshold, ConceptChangeHandler handler) {
-        super(handler);
-        this.conceptChangeThreshold = conceptChangeThreshold;
-        this.features = new HashMap<>();
+        this(conceptChangeThreshold, handler, new HashMap<>());
+    }
+
+    public OnlineAutoMinMaxScaler(ConceptChangeDetector detector, ConceptChangeHandler handler) {
+        this(detector, handler, new HashMap<>());
     }
 
     public OnlineAutoMinMaxScaler(double conceptChangeThreshold, ConceptChangeHandler handler, Map<String, Feature> features) {
-        super(handler);
-        this.conceptChangeThreshold = conceptChangeThreshold;
+        this(new ThresholdConceptChangeDetector(conceptChangeThreshold), handler, features);
+    }
+
+    public OnlineAutoMinMaxScaler(ConceptChangeDetector detector, ConceptChangeHandler handler, Map<String, Feature> features) {
+        super(handler, detector);
         this.features = features;
     }
 
@@ -46,10 +53,10 @@ public class OnlineAutoMinMaxScaler extends AbstractOnlineScaler {
     }
 
     @Override
-    protected Pair<Double, Boolean> scale(String name, double val) {
+    protected Pair<Double, Boolean> scale(String name, double val, ConceptChangeDetector detector) {
         Feature stat = features.get(name);
         if (stat == null) {
-            stat = new Feature(name, val, val, conceptChangeThreshold);
+            stat = new Feature(name, val, val, detector);
             features.put(name, stat);
         }
         boolean conceptChanged = stat.push(val);
@@ -63,7 +70,7 @@ public class OnlineAutoMinMaxScaler extends AbstractOnlineScaler {
     }
 
     public static class Feature {
-        Feature(String name, double min, double max, double threshold) {
+        Feature(String name, double min, double max, ConceptChangeDetector detector) {
             this.scalingMin = min;
             this.reportedMin = min;
             this.observedMin = min;
@@ -71,10 +78,10 @@ public class OnlineAutoMinMaxScaler extends AbstractOnlineScaler {
             this.reportedMax = max;
             this.observedMax = max;
             this.name = name;
-            this.threshold = threshold;
+            this.detector = detector;
         }
 
-        final double threshold;
+        final ConceptChangeDetector detector;
         final String name;
 
         // Used for actual scaling
@@ -94,13 +101,6 @@ public class OnlineAutoMinMaxScaler extends AbstractOnlineScaler {
         boolean push(double val) {
             if (val < observedMin) observedMin = val;
             if (val > observedMax) observedMax = val;
-            if (threshold <= 0) {
-                // Fast path: immediately adjust scalingMin/scalingMax for all future scalings
-                boolean changed = reportedMin > observedMin || reportedMax < observedMax;
-                reportedMin = observedMin;
-                reportedMax = observedMax;
-                return changed;
-            }
 
             double range = Math.abs(reportedMax - reportedMin);
             if (range == 0) range = reportedMax; // TODO not really correct
@@ -108,7 +108,8 @@ public class OnlineAutoMinMaxScaler extends AbstractOnlineScaler {
 
             double diffMin = Math.abs(reportedMin - observedMin);
             double diffMax = Math.abs(reportedMax - observedMax);
-            if (diffMin / range > threshold || diffMax / range > threshold) {
+
+            if (detector.isConceptChanged(diffMin / range) || detector.isConceptChanged(diffMax / range)) {
                 reportedMin = observedMin;
                 reportedMax = observedMax;
                 return true;
@@ -155,6 +156,10 @@ public class OnlineAutoMinMaxScaler extends AbstractOnlineScaler {
         public double getObservedMax() {
             return observedMax;
         }
+
+        public ConceptChangeDetector getDetector() {
+            return detector;
+        }
     }
 
     public Map<String, Feature> getFeatures() {
@@ -163,7 +168,7 @@ public class OnlineAutoMinMaxScaler extends AbstractOnlineScaler {
 
     public void setFeatures(FeatureStatistics stats) {
         for (FeatureStatistics.Feature stat : stats.allFeatures()) {
-            features.put(stat.getName(), new Feature(stat.getName(), stat.getMin(), stat.getMax(), conceptChangeThreshold));
+            features.put(stat.getName(), new Feature(stat.getName(), stat.getMin(), stat.getMax(), super.getDetector()));
         }
     }
 
@@ -172,4 +177,57 @@ public class OnlineAutoMinMaxScaler extends AbstractOnlineScaler {
         return "Online auto min-max scaler";
     }
 
+    protected static class ThresholdConceptChangeDetector implements ConceptChangeDetector{
+        private final double threshold;
+
+        public ThresholdConceptChangeDetector(double threshold) {
+            this.threshold = threshold;
+        }
+
+        @Override
+        public boolean isConceptChanged(double value) {
+            if(this.threshold > 0)
+                return value > threshold;
+            else
+                return false;
+        }
+    }
+
+    protected static class RobustThresholdConceptChangeDetector implements ConceptChangeDetector{
+        private static final int NUM_SAMPLES = 6;
+
+        private final double threshold;
+        private final int windowSize;
+        private List<Double> values;
+
+        public RobustThresholdConceptChangeDetector(double threshold) {
+            this(threshold, NUM_SAMPLES);
+        }
+
+        public RobustThresholdConceptChangeDetector(double threshold, int windowSize) {
+            this.threshold = threshold;
+            this.windowSize = windowSize;
+            this.values =  new ArrayList<>();
+        }
+
+        @Override
+        public boolean isConceptChanged(double value) {
+            double referenceValue = value;
+            if(threshold > 0) {
+                values.add(value);
+                if (values.size() >= windowSize) {
+                    int index = Math.round(windowSize / 2);
+                    if (index >= 0 && index < values.size()) {
+                        referenceValue = values.get(index);
+                    }
+                    values.clear();
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+            return referenceValue > threshold;
+        }
+    }
 }

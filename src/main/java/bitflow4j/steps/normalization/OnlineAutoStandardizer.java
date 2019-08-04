@@ -18,7 +18,8 @@ public class OnlineAutoStandardizer extends AbstractOnlineScaler {
         return true;
     }
 
-    protected Pair<Double, Boolean> scale(String name, double val) {
+    @Override
+    protected Pair<Double, Boolean> scale(String name, double val, ConceptChangeDetector detector) {
         OnlineStatistics estimator = features.get(name);
         if (estimator == null) {
             estimator = new OnlineStatistics();
@@ -31,7 +32,7 @@ public class OnlineAutoStandardizer extends AbstractOnlineScaler {
         double scaledValue = (val - average) / stdDeviation;
 
         // TODO implement handling of changed scaling model (see OnlineAutoMinMaxScaler)
-        return new Pair<>(scaledValue, false);
+        return new Pair<>(scaledValue, detector.isConceptChanged(scaledValue));
     }
 
     @Override

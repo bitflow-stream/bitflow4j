@@ -17,18 +17,20 @@ public class OnlineMinMaxScaler extends AbstractOnlineScaler {
         this.maxs = maxs;
     }
 
+    @Override
     protected boolean canScale(String name) {
         return mins.containsKey(name) && maxs.containsKey(name);
     }
 
-    protected Pair<Double, Boolean> scale(String name, double val) {
+    @Override
+    protected Pair<Double, Boolean> scale(String name, double val, ConceptChangeDetector detector) {
         double min = mins.get(name);
         double max = maxs.get(name);
         double range = max - min;
         double scaledValue = val;
         if (range != 0)
             scaledValue = (val - min) / range;
-        return new Pair<>(scaledValue, false);
+        return new Pair<>(scaledValue, detector.isConceptChanged(scaledValue));
     }
 
     @Override
