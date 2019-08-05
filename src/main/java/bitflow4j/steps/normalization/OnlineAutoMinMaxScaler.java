@@ -5,10 +5,7 @@ import bitflow4j.misc.Pair;
 import bitflow4j.script.registry.BitflowConstructor;
 import bitflow4j.script.registry.Optional;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by anton on 7/7/16.
@@ -18,12 +15,15 @@ public class OnlineAutoMinMaxScaler extends AbstractOnlineScaler {
     public final Map<String, Feature> features;
 
     public OnlineAutoMinMaxScaler() {
-        this(0.1);
+        this(0.1, "threshold");
     }
 
     @BitflowConstructor
-    public OnlineAutoMinMaxScaler(@Optional(defaultDouble = 0.1) double conceptChangeThreshold) {
-        this(conceptChangeThreshold, acceptAllChangedConcepts(true));
+    public OnlineAutoMinMaxScaler(
+            @Optional(defaultDouble = 0.1) double conceptChangeThreshold,
+            @Optional(defaultString = "threshold") String conceptDriftDetectorType) {
+        this(ConceptChangeDetector.getInstance(conceptDriftDetectorType, conceptChangeThreshold),
+                acceptAllChangedConcepts(true));
     }
 
     public OnlineAutoMinMaxScaler(ConceptChangeDetector detector) {
@@ -194,7 +194,7 @@ public class OnlineAutoMinMaxScaler extends AbstractOnlineScaler {
     }
 
     protected static class RobustThresholdConceptChangeDetector implements ConceptChangeDetector {
-        private static final int NUM_SAMPLES = 6;
+        private static final int NUM_SAMPLES = 8;
 
         private final double threshold;
         private final int windowSize;
@@ -216,6 +216,7 @@ public class OnlineAutoMinMaxScaler extends AbstractOnlineScaler {
             if (threshold > 0) {
                 values.add(value);
                 if (values.size() >= windowSize) {
+                    Collections.sort(values);
                     int index = Math.round((float) windowSize / 2);
                     if (index >= 0 && index < values.size()) {
                         referenceValue = values.get(index);
