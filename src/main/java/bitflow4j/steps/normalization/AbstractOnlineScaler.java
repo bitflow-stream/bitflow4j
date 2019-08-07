@@ -25,6 +25,22 @@ public abstract class AbstractOnlineScaler extends AbstractPipelineStep {
         List<Boolean> conceptChanged(AbstractOnlineScaler scaler, List<String> changedFeatures);
     }
 
+    public interface ConceptChangeDetector {
+        boolean isConceptChanged(double value);
+
+        static ConceptChangeDetector getInstance(String type, double threshold) {
+            switch (type) {
+                case "threshold":
+                    return new OnlineAutoMinMaxScaler.ThresholdConceptChangeDetector(threshold);
+                case "robustThreshold":
+                    return new OnlineAutoMinMaxScaler.RobustThresholdConceptChangeDetector(threshold);
+                default:
+                    throw new IllegalArgumentException(String.format("Unknown concept detector type %s", type));
+
+            }
+        }
+    }
+
     public static ConceptChangeHandler acceptAllChangedConcepts(final boolean accept) {
         return (s, f) -> acceptChangedConcept(accept);
     }
@@ -35,18 +51,29 @@ public abstract class AbstractOnlineScaler extends AbstractPipelineStep {
 
     private Set<String> warnedMetrics = new HashSet<>();
     private ConceptChangeHandler handler;
+    private ConceptChangeDetector detector;
 
     public AbstractOnlineScaler() {
         // By default, accept changed scaling models immediately.
-        this(acceptAllChangedConcepts(true));
+        this(acceptAllChangedConcepts(true), value -> false);
+
     }
 
     public AbstractOnlineScaler(ConceptChangeHandler handler) {
+        this(handler, value -> false);
+    }
+
+    public AbstractOnlineScaler(ConceptChangeHandler handler, ConceptChangeDetector detector) {
         this.handler = handler;
+        this.detector = detector;
     }
 
     public void setConceptChangeHandler(ConceptChangeHandler handler) {
         this.handler = handler;
+    }
+
+    public void setConceptChangeHandler(ConceptChangeDetector detector) {
+        this.detector = detector;
     }
 
     @Override
@@ -85,7 +112,11 @@ public abstract class AbstractOnlineScaler extends AbstractPipelineStep {
             }
             return new Pair<>(val, false);
         }
-        return scale(name, val);
+        return scale(name, val, detector);
+    }
+
+    public ConceptChangeDetector getDetector() {
+        return detector;
     }
 
     protected abstract boolean canScale(String name);
@@ -94,7 +125,7 @@ public abstract class AbstractOnlineScaler extends AbstractPipelineStep {
     // If true is returned, the ConceptChangeHandler will be notified, and updateScaling() will be called, if the concept
     // change should be accepted. If updateScaling is not called, the updated scaling model should be dropped.
     // If an implementations does not support this, false should always be returned here, and updateScaling() should be implemented as an empty method.
-    protected abstract Pair<Double, Boolean> scale(String name, double val);
+    protected abstract Pair<Double, Boolean> scale(String name, double val, ConceptChangeDetector conceptChangeDetector);
 
     protected abstract void updateScaling(String name);
 

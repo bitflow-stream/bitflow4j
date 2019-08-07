@@ -27,16 +27,18 @@ public class OnlineStandardizer extends AbstractOnlineScaler {
         }
     }
 
+    @Override
     protected boolean canScale(String name) {
         return averages.containsKey(name) && stddevs.containsKey(name);
     }
 
-    protected Pair<Double, Boolean> scale(String name, double val) {
+    @Override
+    protected Pair<Double, Boolean> scale(String name, double val, ConceptChangeDetector detector) {
         double average = averages.get(name);
         double stdDeviation = stddevs.get(name);
         if (stdDeviation == 0) stdDeviation = 1;
         double scaledValue = (val - average) / stdDeviation;
-        return new Pair<>(scaledValue, false);
+        return new Pair<>(scaledValue, detector.isConceptChanged(scaledValue));
     }
 
     @Override
