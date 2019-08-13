@@ -24,7 +24,7 @@ public class SetTags extends AbstractPipelineStep {
 
     @Override
     public void writeSample(Sample sample) throws IOException {
-        tags.forEach(sample::setTag);
+        tags.forEach((k,v) -> sample.setTag(k, sample.resolveTagTemplate(v)));
         super.writeSample(sample);
     }
 
