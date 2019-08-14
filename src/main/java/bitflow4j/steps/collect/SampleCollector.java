@@ -40,7 +40,7 @@ public class SampleCollector extends AbstractPipelineStep {
         ArrayList<String> removeTags = new ArrayList<>();
         for (String tagValue : timeoutMap.keySet()) {
             long endTime = timeoutMap.get(tagValue);
-            if (endTime > currentTime) {
+            if (endTime < currentTime) {
                 removeTags.add(tagValue);
                 //Flush this window
                 for (Sample s : samplesForTag.get(tagValue)) {
