@@ -111,7 +111,7 @@ public final class BatchPipelineStep extends AbstractPipelineStep implements Tre
                         try {
                             boolean flushed = flushResults();
                             if (flushed) {
-                                logger.log(Level.INFO, "Flushed batch due to timeout (" + timeoutMs + "ms).");
+                                logger.log(Level.INFO, String.format("Flushed batch due to timeout (" + timeoutMs + "ms) for step: %s.", BatchPipelineStep.this.toString()));
                             }
                         } catch (IOException ex) {
                             logger.log(Level.SEVERE, "Failed to automatically flush batch", ex);
@@ -189,7 +189,11 @@ public final class BatchPipelineStep extends AbstractPipelineStep implements Tre
     // Printing ========================================
     // =================================================
     public String toString() {
-        return String.format("Batch processing, %s handler(s)", handlers.size());
+        String firstHandler = "";
+        if(handlers.size() >= 1){
+            firstHandler = handlers.get(0).getClass().getSimpleName();
+        }
+        return String.format("Batch processing, %s handler(s): %s", handlers.size(), firstHandler);
     }
 
     @Override
