@@ -191,7 +191,7 @@ public final class BatchPipelineStep extends AbstractPipelineStep implements Tre
     public String toString() {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < handlers.size(); i++) {
-            sb.append(handlers.get(0).getClass().getSimpleName());
+            sb.append(handlers.get(i).getClass().getSimpleName());
             if(i < handlers.size() - 1){
                 sb.append(", ");
             }
