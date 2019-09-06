@@ -47,6 +47,7 @@ public class Registry {
      */
     public void registerStep(RegisteredStep<ProcessingStepBuilder> registeredStep) {
         checkAlreadyRegistered(registeredSteps, registeredStep, "Processing step");
+        logger.fine("Registering processing step: " + registeredStep);
         registeredSteps.put(registeredStep.getStepName(), registeredStep);
     }
 
@@ -62,6 +63,7 @@ public class Registry {
      */
     public void registerFork(RegisteredStep<ForkBuilder> registeredFork) {
         checkAlreadyRegistered(registeredForks, registeredFork, "Fork");
+        logger.fine("Registering fork: " + registeredFork);
         registeredForks.put(registeredFork.getStepName(), registeredFork);
     }
 
@@ -77,6 +79,7 @@ public class Registry {
      */
     public void registerBatchStep(RegisteredStep<BatchStepBuilder> batchStep) {
         checkAlreadyRegistered(registeredBatchSteps, batchStep, "Batch step");
+        logger.fine("Registering batch step: " + batchStep);
         registeredBatchSteps.put(batchStep.getStepName(), batchStep);
     }
 
@@ -155,6 +158,5 @@ public class Registry {
         }
         return true;
     }
-
 
 }

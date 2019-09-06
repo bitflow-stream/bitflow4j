@@ -3,6 +3,7 @@ package bitflow4j.script;
 import bitflow4j.Pipeline;
 import bitflow4j.misc.Config;
 import bitflow4j.misc.TreeFormatter;
+import bitflow4j.script.endpoints.Endpoint;
 import bitflow4j.script.endpoints.EndpointFactory;
 import bitflow4j.script.registry.RegisteredParameter;
 import bitflow4j.script.registry.RegisteredStep;
@@ -17,6 +18,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -77,6 +80,9 @@ public class Main {
 
     @Parameter(names = {"--shutdown-after"}, description = "After all tasks have finished, wait this number of milliseconds before forcefully shutting down the JVM. Set to <= 0 to disable.")
     public long shutdownTimeout = 3000L;
+
+    @Parameter(names = {"--endpoint-plugin"}, description = "Define one or more classes that implement Consumer<EndpointFactory>. Classes get loaded and instantiated once, for extending the EndpointFactory.", order = 2)
+    public List<String> endpointPluginClasses = new ArrayList<>();
 
     private int executeMainAndStop(String[] args) throws IOException {
         int result = executeMain(args);
@@ -143,6 +149,7 @@ public class Main {
         }
         String rawScript = getRawScript();
         EndpointFactory endpoints = new EndpointFactory();
+        applyEndpointPlugins(endpoints);
         BitflowScriptCompiler compiler = new BitflowScriptCompiler(registry, endpoints);
         Pipeline pipe = compiler.parseScript(rawScript);
 
@@ -152,6 +159,20 @@ public class Main {
         if (!printPipeline)
             pipe.runAndWait();
         return 0;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void applyEndpointPlugins(EndpointFactory factory) throws IOException {
+        for (String pluginClassname : endpointPluginClasses) {
+            try {
+                Class<?> pluginClass = Class.forName(pluginClassname);
+                Object pluginInstance = pluginClass.getConstructor().newInstance();
+                Consumer<EndpointFactory> pluginConsumer = (Consumer) pluginInstance;
+                pluginConsumer.accept(factory);
+            } catch (Exception e) {
+                throw new IOException(e);
+            }
+        }
     }
 
     private static final Comparator<RegisteredStep> stepComparator = (a1, a2) -> a1.getStepName().compareToIgnoreCase(a2.getStepName());
