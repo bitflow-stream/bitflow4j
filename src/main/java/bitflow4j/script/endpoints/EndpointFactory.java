@@ -15,13 +15,24 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
  * EndpointFactory provides methods to create Source and Sink from a endpoint token (script-like written form of an endpoint)
  */
 public class EndpointFactory {
+
+    private final Map<String, Function<String, Source>> customSources = new HashMap<>();
+
+    public void registerCustomSource(String name, Function<String, Source> sourceSupplier) {
+        customSources.put(name, sourceSupplier);
+    }
 
     /**
      * Creates a Source from one or multiple endpoint tokens.
@@ -41,7 +52,9 @@ public class EndpointFactory {
                 throw new EndpointParseException(Arrays.toString(endpointTokens), "Multiinput with varying formats or types.");
             }
         }
-        Marshaller marshaller = endpoints.get(0).getMarshaller();
+        Marshaller marshaller = null;
+        if (type != Endpoint.Type.CUSTOM)
+            marshaller = endpoints.get(0).getMarshaller();
         switch (type) {
             case TCP:
                 String[] targets = endpoints.stream().map(Endpoint::getTarget).toArray(String[]::new);
@@ -59,8 +72,17 @@ public class EndpointFactory {
                 return fs;
             case STD:
                 return new SampleReader(marshaller);
+            case CUSTOM:
+                if (endpoints.size() > 1) {
+                    throw new EndpointParseException(Arrays.toString(endpointTokens), "Multiinput with custom input type is not allowed");
+                }
+                String customType = endpoints.get(0).getCustomType();
+                if (customSources.containsKey(customType)) {
+                    return customSources.get(customType).apply(endpoints.get(0).getTarget());
+                }
+                // Fallthrough to the default case, if the custom type is not defined
             default:
-                throw new EndpointParseException(Arrays.toString(endpointTokens), "Could not find an appropriate Sink for type " + type);
+                throw new EndpointParseException(Arrays.toString(endpointTokens), "Could not find an appropriate Source for type " + type);
         }
     }
 
@@ -119,7 +141,7 @@ public class EndpointFactory {
      *
      * @param input the full endpointToken, expected to be in the URLFormat
      **/
-    public static Endpoint parseURLEndpoint(String input) {
+    public Endpoint parseURLEndpoint(String input) {
         String[] urlParts = input.split("://");
         if (urlParts.length != 2 || urlParts[0].isEmpty() || urlParts[1].isEmpty()) {
             throw new EndpointParseException(input, "URL expected to be in form of: format+transport://target");
@@ -127,6 +149,7 @@ public class EndpointFactory {
         String target = urlParts[1];
         Endpoint.Format format = null;
         Endpoint.Type type = null;
+        String customType = "";
 
         for (String part : urlParts[0].split("\\+")) {
             if (Endpoint.Format.find(part) != null) {
@@ -139,6 +162,9 @@ public class EndpointFactory {
                     throw new EndpointParseException(input, "multiple types defined for endpoint");
                 }
                 type = Endpoint.Type.find(part);
+            } else if (customSources.containsKey(part)) {
+                type = Endpoint.Type.CUSTOM;
+                customType = part;
             } else {
                 throw new EndpointParseException(input, "Unknown format or type: " + part);
             }
@@ -153,7 +179,7 @@ public class EndpointFactory {
         if (format == null) {
             format = guessFormat(type, target);
         }
-        return new Endpoint(input, target, format, type);
+        return new Endpoint(input, target, format, type, customType);
     }
 
     public static Endpoint.Format guessFormat(Endpoint.Type type, String target) {

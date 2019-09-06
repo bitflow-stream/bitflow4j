@@ -20,6 +20,10 @@ public class RegisteredStep<BuilderClass> {
         this.parameters = parameters == null ? new RegisteredParameterList() : parameters;
     }
 
+    public String toString() {
+        return String.format("%s (%s)", stepName, description);
+    }
+
     public String getStepName() {
         return stepName;
     }

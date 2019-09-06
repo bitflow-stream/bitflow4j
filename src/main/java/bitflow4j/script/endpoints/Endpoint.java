@@ -11,12 +11,22 @@ public class Endpoint {
     private final Format format;
     private final Type type;
     private final String target;
+    private final String customType;
 
-    public Endpoint(String endpointToken, String target, Format format, Type type) {
+    public Endpoint(String endpointToken, String target, Format format, Type type, String customType) {
         this.endpointToken = endpointToken;
         this.target = target;
         this.type = type;
         this.format = format;
+        this.customType = customType;
+    }
+
+    public Endpoint(String endpointToken, String target, Format format, Type type) {
+        this(endpointToken, target, format, type, "");
+    }
+
+    public Endpoint(String endpointToken, String target, String customType) {
+        this(endpointToken, target, Format.UNDEFINED, Type.CUSTOM, customType);
     }
 
     public Format getFormat() {
@@ -31,6 +41,10 @@ public class Endpoint {
         return target;
     }
 
+    public String getCustomType() {
+        return customType;
+    }
+
     @Override
     public String toString() {
         return endpointToken;
@@ -41,7 +55,7 @@ public class Endpoint {
     }
 
     public enum Type {
-        TCP, LISTEN, FILE, STD, EMPTY;
+        TCP, LISTEN, FILE, STD, EMPTY, CUSTOM;
 
         public static Type find(String search) {
             for (Type t : Type.values()) {
