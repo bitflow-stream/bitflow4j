@@ -122,8 +122,8 @@ class BitflowScriptCompiler {
             buildProcessingStep(pipe, ctx.processingStep());
         } else if (ctx.fork() != null) {
             buildFork(pipe, ctx.fork());
-        } else if (ctx.window() != null) {
-            buildWindow(pipe, ctx.window());
+        } else if (ctx.batch() != null) {
+            buildBatch(pipe, ctx.batch());
         }
     }
 
@@ -278,11 +278,11 @@ class BitflowScriptCompiler {
         return params;
     }
 
-    private void buildWindow(Pipeline pipe, BitflowParser.WindowContext window) {
-        Map<String, Object> params = buildParameters(BatchPipelineStep.BATCH_STEP_PARAMETERS, window.parameters());
+    private void buildBatch(Pipeline pipe, BitflowParser.BatchContext batch) {
+        Map<String, Object> params = buildParameters(BatchPipelineStep.BATCH_STEP_PARAMETERS, batch.parameters());
         BatchPipelineStep batchStep = BatchPipelineStep.createFromParameters(params);
-
-        for (BitflowParser.ProcessingStepContext step : window.processingStep()) {
+        BitflowParser.BatchPipelineContext batchPipeline = batch.batchPipeline();
+        for (BitflowParser.ProcessingStepContext step : batchPipeline.processingStep()) {
             String name = unwrap(step.name());
             RegisteredStep<BatchStepBuilder> registeredStep = registry.getRegisteredBatchStep(name);
             if (registeredStep == null) {

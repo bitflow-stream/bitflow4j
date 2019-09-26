@@ -256,6 +256,18 @@ public class BitflowBaseListener implements BitflowListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterBatchPipeline(BitflowParser.BatchPipelineContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitBatchPipeline(BitflowParser.BatchPipelineContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterMultiplexFork(BitflowParser.MultiplexForkContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -268,13 +280,13 @@ public class BitflowBaseListener implements BitflowListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterWindow(BitflowParser.WindowContext ctx) { }
+	@Override public void enterBatch(BitflowParser.BatchContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitWindow(BitflowParser.WindowContext ctx) { }
+	@Override public void exitBatch(BitflowParser.BatchContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
