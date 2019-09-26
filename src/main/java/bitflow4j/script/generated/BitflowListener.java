@@ -208,6 +208,16 @@ public interface BitflowListener extends ParseTreeListener {
 	 */
 	void exitSubPipeline(BitflowParser.SubPipelineContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link BitflowParser#batchPipeline}.
+	 * @param ctx the parse tree
+	 */
+	void enterBatchPipeline(BitflowParser.BatchPipelineContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link BitflowParser#batchPipeline}.
+	 * @param ctx the parse tree
+	 */
+	void exitBatchPipeline(BitflowParser.BatchPipelineContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link BitflowParser#multiplexFork}.
 	 * @param ctx the parse tree
 	 */
@@ -218,15 +228,15 @@ public interface BitflowListener extends ParseTreeListener {
 	 */
 	void exitMultiplexFork(BitflowParser.MultiplexForkContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link BitflowParser#window}.
+	 * Enter a parse tree produced by {@link BitflowParser#batch}.
 	 * @param ctx the parse tree
 	 */
-	void enterWindow(BitflowParser.WindowContext ctx);
+	void enterBatch(BitflowParser.BatchContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link BitflowParser#window}.
+	 * Exit a parse tree produced by {@link BitflowParser#batch}.
 	 * @param ctx the parse tree
 	 */
-	void exitWindow(BitflowParser.WindowContext ctx);
+	void exitBatch(BitflowParser.BatchContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link BitflowParser#schedulingHints}.
 	 * @param ctx the parse tree

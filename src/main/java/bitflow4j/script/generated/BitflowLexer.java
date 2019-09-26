@@ -18,7 +18,7 @@ public class BitflowLexer extends Lexer {
 		new PredictionContextCache();
 	public static final int
 		OPEN=1, CLOSE=2, EOP=3, NEXT=4, OPEN_PARAMS=5, CLOSE_PARAMS=6, EQ=7, SEP=8, 
-		OPEN_HINTS=9, CLOSE_HINTS=10, WINDOW=11, STRING=12, IDENTIFIER=13, COMMENT=14, 
+		OPEN_HINTS=9, CLOSE_HINTS=10, BATCH=11, STRING=12, IDENTIFIER=13, COMMENT=14, 
 		NEWLINE=15, WHITESPACE=16, TAB=17;
 	public static String[] channelNames = {
 		"DEFAULT_TOKEN_CHANNEL", "HIDDEN"
@@ -30,7 +30,7 @@ public class BitflowLexer extends Lexer {
 
 	public static final String[] ruleNames = {
 		"OPEN", "CLOSE", "EOP", "NEXT", "OPEN_PARAMS", "CLOSE_PARAMS", "EQ", "SEP", 
-		"OPEN_HINTS", "CLOSE_HINTS", "WINDOW", "STRING", "IDENTIFIER", "COMMENT", 
+		"OPEN_HINTS", "CLOSE_HINTS", "BATCH", "STRING", "IDENTIFIER", "COMMENT", 
 		"NEWLINE", "WHITESPACE", "TAB"
 	};
 
@@ -40,8 +40,8 @@ public class BitflowLexer extends Lexer {
 	};
 	private static final String[] _SYMBOLIC_NAMES = {
 		null, "OPEN", "CLOSE", "EOP", "NEXT", "OPEN_PARAMS", "CLOSE_PARAMS", "EQ", 
-		"SEP", "OPEN_HINTS", "CLOSE_HINTS", "WINDOW", "STRING", "IDENTIFIER", 
-		"COMMENT", "NEWLINE", "WHITESPACE", "TAB"
+		"SEP", "OPEN_HINTS", "CLOSE_HINTS", "BATCH", "STRING", "IDENTIFIER", "COMMENT", 
+		"NEWLINE", "WHITESPACE", "TAB"
 	};
 	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
 

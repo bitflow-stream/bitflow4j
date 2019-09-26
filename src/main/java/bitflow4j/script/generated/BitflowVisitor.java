@@ -131,17 +131,23 @@ public interface BitflowVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitSubPipeline(BitflowParser.SubPipelineContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link BitflowParser#batchPipeline}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBatchPipeline(BitflowParser.BatchPipelineContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link BitflowParser#multiplexFork}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitMultiplexFork(BitflowParser.MultiplexForkContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link BitflowParser#window}.
+	 * Visit a parse tree produced by {@link BitflowParser#batch}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitWindow(BitflowParser.WindowContext ctx);
+	T visitBatch(BitflowParser.BatchContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link BitflowParser#schedulingHints}.
 	 * @param ctx the parse tree
