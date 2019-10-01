@@ -12,6 +12,7 @@ import bitflow4j.task.TaskPool;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -39,6 +40,11 @@ public final class BatchPipelineStep extends AbstractPipelineStep implements Tre
     private List<Sample> window = new ArrayList<>();
     private final List<BatchHandler> handlers = new ArrayList<>();
 
+    private Map<String, Long> timeoutMap = new ConcurrentHashMap<>();
+    private Map<String, List<Sample>> samplesForTag = new ConcurrentHashMap<>();
+    private List<String> tagList = new ArrayList<>();
+    private final boolean mapMode;
+
     public BatchPipelineStep() {
         this((String) null);
     }
@@ -51,26 +57,37 @@ public final class BatchPipelineStep extends AbstractPipelineStep implements Tre
         this(batchSeparationTag, 0);
     }
 
-    public BatchPipelineStep(String batchSeparationTag, BatchHandler... handlers) {
-        this(batchSeparationTag, 0, handlers);
+    public BatchPipelineStep(String batchSeparationTag, long timeoutMs) {
+        this(batchSeparationTag, timeoutMs, false);
     }
 
-    @BitflowConstructor
-    public BatchPipelineStep(@Optional String batchSeparationTag, @Optional long timeoutMs) {
-        this.batchSeparationTag = batchSeparationTag;
-        this.timeoutMs = timeoutMs;
+    public BatchPipelineStep(String batchSeparationTag, BatchHandler... handlers) {
+        this(batchSeparationTag, 0, false, handlers);
     }
 
     public BatchPipelineStep(String batchSeparationTag, long timeoutMs, BatchHandler... handlers) {
+        this(batchSeparationTag, timeoutMs, false, handlers);
+    }
+
+    @BitflowConstructor
+    public BatchPipelineStep(@Optional String batchSeparationTag, @Optional long timeoutMs, @Optional boolean mapMode) {
         this.batchSeparationTag = batchSeparationTag;
         this.timeoutMs = timeoutMs;
+        this.mapMode = mapMode;
+    }
+
+    public BatchPipelineStep(String batchSeparationTag, long timeoutMs, boolean mapMode, BatchHandler... handlers) {
+        this.batchSeparationTag = batchSeparationTag;
+        this.timeoutMs = timeoutMs;
+        this.mapMode = mapMode;
         this.handlers.addAll(Arrays.asList(handlers));
     }
 
     public static final RegisteredParameterList BATCH_STEP_PARAMETERS = new RegisteredParameterList(
             new RegisteredParameter[]{
                     new RegisteredParameter("separationTag", RegisteredParameter.ContainerType.Primitive, String.class, ""),
-                    new RegisteredParameter("timeout", RegisteredParameter.ContainerType.Primitive, Long.class, 0L)
+                    new RegisteredParameter("timeout", RegisteredParameter.ContainerType.Primitive, Long.class, 0L),
+                    new RegisteredParameter("mapMode", RegisteredParameter.ContainerType.Primitive, Boolean.class, false)
             });
 
     public static BatchPipelineStep createFromParameters(Map<String, Object> params) throws IllegalArgumentException {
@@ -82,7 +99,11 @@ public final class BatchPipelineStep extends AbstractPipelineStep implements Tre
         if (params.containsKey("timeout")) {
             timeout = (Long) params.get("timeout");
         }
-        return new BatchPipelineStep(separationTag, timeout);
+        boolean mapMode = false;
+        if (params.containsKey("mapMode")) {
+            mapMode = (Boolean) params.get("mapMode");
+        }
+        return new BatchPipelineStep(separationTag, timeout, mapMode);
     }
 
     public void addBatchHandler(BatchHandler handler) {
@@ -106,17 +127,22 @@ public final class BatchPipelineStep extends AbstractPipelineStep implements Tre
 
                 @Override
                 protected boolean executeIteration() throws IOException {
-                    long currentTime = new Date().getTime();
-                    if (currentTime - startTime > timeoutMs) {
-                        try {
-                            boolean flushed = flushResults();
-                            if (flushed) {
-                                logger.log(Level.INFO, String.format("Flushed batch due to timeout (%sms) for step: %s.", timeoutMs, BatchPipelineStep.this.toString()));
+                    long currentTime = System.currentTimeMillis();
+                    if (mapMode) {
+                        flushMapResults(currentTime);
+                    } else {
+                        if (currentTime - startTime > timeoutMs) {
+                            try {
+                                boolean flushed = flushResults();
+                                if (flushed) {
+                                    logger.log(Level.INFO, String.format("Flushed batch due to timeout (%sms) for step: %s.", timeoutMs, BatchPipelineStep.this.toString()));
+                                }
+                            } catch (IOException ex) {
+                                logger.log(Level.SEVERE, "Failed to automatically flush batch", ex);
                             }
-                        } catch (IOException ex) {
-                            logger.log(Level.SEVERE, "Failed to automatically flush batch", ex);
                         }
                     }
+
                     return pool.sleep(timeoutMs / 2);
                 }
             });
@@ -125,11 +151,28 @@ public final class BatchPipelineStep extends AbstractPipelineStep implements Tre
 
     @Override
     public final synchronized void writeSample(Sample sample) throws IOException {
-        startTime = new Date().getTime();
-        if (shouldFlush(sample)) {
-            flushResults();
+        if (mapMode) {
+            addSampleToMaps(sample);
+        } else {
+            startTime = new Date().getTime();
+            if (shouldFlush(sample)) {
+                flushResults();
+            }
+            window.add(sample);
         }
-        window.add(sample);
+    }
+
+    private void addSampleToMaps(Sample sample) {
+        if (timeoutMap.get(sample.getTag(batchSeparationTag)) != null) {
+            samplesForTag.get(sample.getTag(batchSeparationTag)).add(sample);
+        } else {
+            //Put Sample into timeoutMap and create new ArrayList with Sample
+            timeoutMap.put(sample.getTag(batchSeparationTag), System.currentTimeMillis() + timeoutMs);
+            List<Sample> newList = new ArrayList<>();
+            newList.add(sample);
+            samplesForTag.put(sample.getTag(batchSeparationTag), newList);
+            tagList.add(sample.getTag(batchSeparationTag));
+        }
     }
 
     private boolean shouldFlush(Sample sample) {
@@ -151,6 +194,10 @@ public final class BatchPipelineStep extends AbstractPipelineStep implements Tre
 
     @Override
     protected synchronized void doClose() throws IOException {
+        if (mapMode) {
+            // Flush all remaining samples.
+            flushMapResults(-1);
+        }
         flushResults();
         super.doClose();
     }
@@ -162,6 +209,32 @@ public final class BatchPipelineStep extends AbstractPipelineStep implements Tre
         flush(window);
         window.clear();
         return true;
+    }
+
+    private synchronized void flushMapResults(long currentTime) throws IOException {
+        //Check for Lists to be flushed according to timeout
+        List<String> removeTags = new ArrayList<>();
+        for (String tagValue : tagList) {
+            long endTime = timeoutMap.get(tagValue);
+            if (endTime < currentTime || currentTime == -1) {
+                logger.log(Level.INFO, String.format("Flushing one result, Map Size: %s", timeoutMap.size()));
+                logger.log(Level.INFO, String.format("Flushing one result, Sample-receive: %s", samplesForTag.get(tagValue).get(0).getTag("received")));
+                removeTags.add(tagValue);
+                //Flush this window
+                for (Sample s : samplesForTag.get(tagValue)) {
+                    window.add(s);
+                }
+                flushResults();
+            } else {
+                //List 'tagList' keeps sorting of timeouts indirectly, so we can break the for loop after first not-timed-out sample
+                break;
+            }
+        }
+        for (String tagValue : removeTags) {
+            timeoutMap.remove(tagValue);
+            samplesForTag.remove(tagValue);
+            tagList.remove(tagValue);
+        }
     }
 
     private void printFlushMessage() {
@@ -192,7 +265,7 @@ public final class BatchPipelineStep extends AbstractPipelineStep implements Tre
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < handlers.size(); i++) {
             sb.append(handlers.get(i).getClass().getSimpleName());
-            if(i < handlers.size() - 1){
+            if (i < handlers.size() - 1) {
                 sb.append(", ");
             }
         }

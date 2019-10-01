@@ -73,6 +73,10 @@ public class Pipeline implements TreeFormatter.FormattedNode {
         return this;
     }
 
+    public Pipeline batch(String separationTag, long timeout, boolean mapMode, BatchHandler... steps) {
+        return step(new BatchPipelineStep(separationTag, timeout, mapMode, steps));
+    }
+
     public Pipeline batch(String separationTag, long timeout, BatchHandler... steps) {
         return step(new BatchPipelineStep(separationTag, timeout, steps));
     }
