@@ -8,8 +8,8 @@ import bitflow4j.script.endpoints.EndpointFactory;
 import bitflow4j.script.generated.BitflowLexer;
 import bitflow4j.script.generated.BitflowParser;
 import bitflow4j.script.registry.*;
+import bitflow4j.steps.AbstractBatchPipelineStep;
 import bitflow4j.steps.BatchHandler;
-import bitflow4j.steps.BatchPipelineStep;
 import bitflow4j.steps.fork.Fork;
 import bitflow4j.steps.fork.ScriptableDistributor;
 import bitflow4j.steps.fork.distribute.MultiplexDistributor;
@@ -279,8 +279,8 @@ class BitflowScriptCompiler {
     }
 
     private void buildWindow(Pipeline pipe, BitflowParser.WindowContext window) {
-        Map<String, Object> params = buildParameters(BatchPipelineStep.BATCH_STEP_PARAMETERS, window.parameters());
-        BatchPipelineStep batchStep = BatchPipelineStep.createFromParameters(params);
+        Map<String, Object> params = buildParameters(AbstractBatchPipelineStep.BATCH_STEP_PARAMETERS, window.parameters());
+        AbstractBatchPipelineStep batchStep = AbstractBatchPipelineStep.createFromParameters(params);
 
         for (BitflowParser.ProcessingStepContext step : window.processingStep()) {
             String name = unwrap(step.name());
