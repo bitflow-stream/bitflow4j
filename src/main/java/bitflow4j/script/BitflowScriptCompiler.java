@@ -8,8 +8,8 @@ import bitflow4j.script.endpoints.EndpointFactory;
 import bitflow4j.script.generated.BitflowLexer;
 import bitflow4j.script.generated.BitflowParser;
 import bitflow4j.script.registry.*;
+import bitflow4j.steps.AbstractBatchPipelineStep;
 import bitflow4j.steps.BatchHandler;
-import bitflow4j.steps.BatchPipelineStep;
 import bitflow4j.steps.fork.Fork;
 import bitflow4j.steps.fork.ScriptableDistributor;
 import bitflow4j.steps.fork.distribute.MultiplexDistributor;
@@ -241,6 +241,10 @@ class BitflowScriptCompiler {
 
     private Map<String, Object> buildParameters(RegisteredParameterList params, BitflowParser.ParametersContext ctx) throws CompilationException {
         Map<String, Object> rawParameters = extractRawParameters(ctx);
+        return buildExtractedParameters(params, ctx, rawParameters);
+    }
+
+    private Map<String, Object> buildExtractedParameters(RegisteredParameterList params, BitflowParser.ParametersContext ctx, Map<String, Object> rawParameters) throws CompilationException {
         try {
             return params.parseRawParameters(rawParameters);
         } catch (IllegalArgumentException e) {
@@ -279,8 +283,10 @@ class BitflowScriptCompiler {
     }
 
     private void buildBatch(Pipeline pipe, BitflowParser.BatchContext batch) {
-        Map<String, Object> params = buildParameters(BatchPipelineStep.BATCH_STEP_PARAMETERS, batch.parameters());
-        BatchPipelineStep batchStep = BatchPipelineStep.createFromParameters(params);
+        Map<String, Object> rawParams = extractRawParameters(batch.parameters());
+        Map<String, Object> parsedParams = buildExtractedParameters(AbstractBatchPipelineStep.getParameterList(rawParams), batch.parameters(), rawParams);
+        AbstractBatchPipelineStep batchStep = AbstractBatchPipelineStep.createFromParameters(parsedParams);
+
         BitflowParser.BatchPipelineContext batchPipeline = batch.batchPipeline();
         for (BitflowParser.ProcessingStepContext step : batchPipeline.processingStep()) {
             String name = unwrap(step.name());

@@ -7,6 +7,7 @@ import bitflow4j.io.marshall.CsvMarshaller;
 import bitflow4j.misc.TreeFormatter;
 import bitflow4j.steps.BatchHandler;
 import bitflow4j.steps.BatchPipelineStep;
+import bitflow4j.steps.MergeBatchPipelineStep;
 import bitflow4j.task.ParallelTask;
 import bitflow4j.task.StoppableTask;
 import bitflow4j.task.Task;
@@ -71,6 +72,13 @@ public class Pipeline implements TreeFormatter.FormattedNode {
     public Pipeline step(PipelineStep algo) {
         steps.add(algo);
         return this;
+    }
+
+    public Pipeline batch(String separationTag, long timeout, boolean mergeMode, BatchHandler... steps) {
+        if (mergeMode) {
+            return step(new MergeBatchPipelineStep(separationTag, timeout, steps));
+        }
+        return step(new BatchPipelineStep(separationTag, timeout, steps));
     }
 
     public Pipeline batch(String separationTag, long timeout, BatchHandler... steps) {

@@ -1,8 +1,6 @@
 package bitflow4j.steps;
 
-import bitflow4j.AbstractPipelineStep;
 import bitflow4j.Sample;
-import bitflow4j.misc.TreeFormatter;
 import bitflow4j.script.registry.BitflowConstructor;
 import bitflow4j.script.registry.Optional;
 import bitflow4j.script.registry.RegisteredParameter;
@@ -11,9 +9,11 @@ import bitflow4j.task.LoopTask;
 import bitflow4j.task.TaskPool;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Instead of immediately handling every Sample, fill up a list of samples based on a number of criteria (time, tag values, ...).
@@ -25,55 +25,44 @@ import java.util.logging.Logger;
  * <p>
  * Created by anton on 5/8/16.
  */
-public final class BatchPipelineStep extends AbstractPipelineStep implements TreeFormatter.FormattedNode {
-
-    protected static final Logger logger = Logger.getLogger(BatchPipelineStep.class.getName());
+public final class BatchPipelineStep extends AbstractBatchPipelineStep {
 
     private final String batchSeparationTag;
+    private final long timeoutMs;
+
+    private long startTime;
     private boolean warnedMissingSeparationTag = false;
     private String previousSeparationTagValue = null;
 
-    private final long timeoutMs;
-    private long startTime;
+    private final List<Sample> window = new ArrayList<>();
 
-    private List<Sample> window = new ArrayList<>();
-    private final List<BatchHandler> handlers = new ArrayList<>();
-
-    public BatchPipelineStep() {
-        this((String) null);
+    @BitflowConstructor
+    public BatchPipelineStep(@Optional String batchSeparationTag, @Optional long timeoutMs) {
+        this(batchSeparationTag, timeoutMs, new BatchHandler[0]);
     }
 
-    public BatchPipelineStep(BatchHandler... handlers) {
-        this(null, handlers);
-    }
-
-    public BatchPipelineStep(String batchSeparationTag) {
-        this(batchSeparationTag, 0);
+    public BatchPipelineStep(String batchSeparationTag, long timeoutMs, BatchHandler... handlers) {
+        super(handlers);
+        this.batchSeparationTag = batchSeparationTag;
+        this.timeoutMs = timeoutMs;
     }
 
     public BatchPipelineStep(String batchSeparationTag, BatchHandler... handlers) {
         this(batchSeparationTag, 0, handlers);
     }
 
-    @BitflowConstructor
-    public BatchPipelineStep(@Optional String batchSeparationTag, @Optional long timeoutMs) {
-        this.batchSeparationTag = batchSeparationTag;
-        this.timeoutMs = timeoutMs;
+    public BatchPipelineStep(BatchHandler... handlers) {
+        this(null, handlers);
     }
 
-    public BatchPipelineStep(String batchSeparationTag, long timeoutMs, BatchHandler... handlers) {
-        this.batchSeparationTag = batchSeparationTag;
-        this.timeoutMs = timeoutMs;
-        this.handlers.addAll(Arrays.asList(handlers));
-    }
-
-    public static final RegisteredParameterList BATCH_STEP_PARAMETERS = new RegisteredParameterList(
+    public static final RegisteredParameterList PARAMETER_LIST = new RegisteredParameterList(
             new RegisteredParameter[]{
                     new RegisteredParameter("separationTag", RegisteredParameter.ContainerType.Primitive, String.class, ""),
-                    new RegisteredParameter("timeout", RegisteredParameter.ContainerType.Primitive, Long.class, 0L)
+                    new RegisteredParameter("timeout", RegisteredParameter.ContainerType.Primitive, Long.class, 0L),
+                    mergeModeParameter
             });
 
-    public static BatchPipelineStep createFromParameters(Map<String, Object> params) throws IllegalArgumentException {
+    public static BatchPipelineStep createFromParameters(Map<String, Object> params) {
         String separationTag = null;
         if (params.containsKey("separationTag")) {
             separationTag = (String) params.get("separationTag");
@@ -85,17 +74,8 @@ public final class BatchPipelineStep extends AbstractPipelineStep implements Tre
         return new BatchPipelineStep(separationTag, timeout);
     }
 
-    public void addBatchHandler(BatchHandler handler) {
-        handlers.add(handler);
-    }
-
     @Override
-    public void start(TaskPool pool) throws IOException {
-        super.start(pool);
-
-        // TODO refactor for allowing additional flushing modes:
-        // window size, timeout (wall clock, sample timestamps), tag change. Micro batching ("jumping" window) vs moving window.
-
+    public void threadIteration(TaskPool pool) throws IOException {
         if (timeoutMs > 0) {
             startTime = new Date().getTime();
             pool.start(new LoopTask() {
@@ -106,17 +86,8 @@ public final class BatchPipelineStep extends AbstractPipelineStep implements Tre
 
                 @Override
                 protected boolean executeIteration() throws IOException {
-                    long currentTime = new Date().getTime();
-                    if (currentTime - startTime > timeoutMs) {
-                        try {
-                            boolean flushed = flushResults();
-                            if (flushed) {
-                                logger.log(Level.INFO, String.format("Flushed batch due to timeout (%sms) for step: %s.", timeoutMs, BatchPipelineStep.this.toString()));
-                            }
-                        } catch (IOException ex) {
-                            logger.log(Level.SEVERE, "Failed to automatically flush batch", ex);
-                        }
-                    }
+                    long currentTime = System.currentTimeMillis();
+                    checkForFlush(currentTime);
                     return pool.sleep(timeoutMs / 2);
                 }
             });
@@ -124,12 +95,39 @@ public final class BatchPipelineStep extends AbstractPipelineStep implements Tre
     }
 
     @Override
-    public final synchronized void writeSample(Sample sample) throws IOException {
+    public void checkForFlush(long currentTime) throws IOException {
+        if (currentTime - startTime > timeoutMs) {
+            try {
+                boolean flushed = flush();
+                if (flushed) {
+                    logger.log(Level.INFO, String.format("Flushed batch due to timeout (%sms) for step: %s.", timeoutMs, BatchPipelineStep.this.toString()));
+                }
+            } catch (IOException ex) {
+                logger.log(Level.SEVERE, "Failed to automatically flush batch", ex);
+            }
+        }
+    }
+
+    @Override
+    public void addSample(Sample sample) throws IOException {
         startTime = new Date().getTime();
         if (shouldFlush(sample)) {
-            flushResults();
+            flush();
         }
         window.add(sample);
+    }
+
+    @Override
+    public void closeCleanup() throws IOException {
+        flush();
+    }
+
+    private boolean flush() throws IOException {
+        if (window.isEmpty())
+            return false;
+        flushWindow(window);
+        window.clear();
+        return true;
     }
 
     private boolean shouldFlush(Sample sample) {
@@ -148,62 +146,4 @@ public final class BatchPipelineStep extends AbstractPipelineStep implements Tre
         }
         return false;
     }
-
-    @Override
-    protected synchronized void doClose() throws IOException {
-        flushResults();
-        super.doClose();
-    }
-
-    private synchronized boolean flushResults() throws IOException {
-        if (window.isEmpty())
-            return false;
-        printFlushMessage();
-        flush(window);
-        window.clear();
-        return true;
-    }
-
-    private void printFlushMessage() {
-        String info = "";
-        if (window.isEmpty()) {
-            info = " (no samples)";
-        } else {
-            int numSamples = window.size();
-            int numMetrics = window.get(0).getMetrics().length;
-            info += "(" + numSamples + " samples, " + numMetrics + " metrics)";
-        }
-        logger.info(toString() + " computing results " + info);
-    }
-
-    private void flush(List<Sample> window) throws IOException {
-        for (BatchHandler handler : handlers) {
-            window = handler.handleBatch(window);
-        }
-        for (Sample sample : window) {
-            this.output().writeSample(sample);
-        }
-    }
-
-    // =================================================
-    // Printing ========================================
-    // =================================================
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < handlers.size(); i++) {
-            sb.append(handlers.get(i).getClass().getSimpleName());
-            if(i < handlers.size() - 1){
-                sb.append(", ");
-            }
-        }
-        return String.format("Batch processing, %s handler(s): %s", handlers.size(), sb.toString());
-    }
-
-    @Override
-    public Collection<Object> formattedChildren() {
-        List<Object> children = new ArrayList<>(handlers.size());
-        children.addAll(handlers);
-        return children;
-    }
-
 }
