@@ -20,7 +20,7 @@ import java.util.logging.Level;
  */
 public class MergeBatchPipelineStep extends AbstractBatchPipelineStep {
 
-    private final String batchSeparationTag;
+    private final String tag;
     private final long timeoutMs;
 
     private final Map<String, Long> timeoutMap = new ConcurrentHashMap<>();
@@ -32,9 +32,9 @@ public class MergeBatchPipelineStep extends AbstractBatchPipelineStep {
         this(tag, timeoutMs, new BatchHandler[0]);
     }
 
-    public MergeBatchPipelineStep(String batchSeparationTag, long timeoutMs, BatchHandler... handlers) {
+    public MergeBatchPipelineStep(String tag, long timeoutMs, BatchHandler... handlers) {
         super(handlers);
-        this.batchSeparationTag = batchSeparationTag;
+        this.tag = tag;
         this.timeoutMs = timeoutMs;
     }
 
@@ -46,15 +46,15 @@ public class MergeBatchPipelineStep extends AbstractBatchPipelineStep {
             });
 
     public static MergeBatchPipelineStep createFromParameters(Map<String, Object> params) {
-        String separationTag = null;
-        if (params.containsKey("separationTag")) {
-            separationTag = (String) params.get("separationTag");
+        String tag = null;
+        if (params.containsKey("tag")) {
+            tag = (String) params.get("tag");
         }
         long timeout = 0;
         if (params.containsKey("timeout")) {
             timeout = (Long) params.get("timeout");
         }
-        return new MergeBatchPipelineStep(separationTag, timeout);
+        return new MergeBatchPipelineStep(tag, timeout);
     }
 
     @Override
@@ -116,15 +116,15 @@ public class MergeBatchPipelineStep extends AbstractBatchPipelineStep {
     }
 
     private void addSampleToMaps(Sample sample) {
-        if (timeoutMap.get(sample.getTag(batchSeparationTag)) != null) {
-            samplesForTag.get(sample.getTag(batchSeparationTag)).add(sample);
+        if (timeoutMap.get(sample.getTag(tag)) != null) {
+            samplesForTag.get(sample.getTag(tag)).add(sample);
         } else {
             //Put Sample into timeoutMap and create new ArrayList with Sample
-            timeoutMap.put(sample.getTag(batchSeparationTag), System.currentTimeMillis() + timeoutMs);
+            timeoutMap.put(sample.getTag(tag), System.currentTimeMillis() + timeoutMs);
             List<Sample> newList = new ArrayList<>();
             newList.add(sample);
-            samplesForTag.put(sample.getTag(batchSeparationTag), newList);
-            tagList.add(sample.getTag(batchSeparationTag));
+            samplesForTag.put(sample.getTag(tag), newList);
+            tagList.add(sample.getTag(tag));
         }
     }
 }

@@ -1,4 +1,7 @@
 pipeline {
+    options {
+        timeout(time: 1, unit: 'HOURS')
+    }
     agent {
         docker {
             image 'teambitflow/maven-docker:3.6-jdk-11'

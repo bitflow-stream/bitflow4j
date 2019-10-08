@@ -122,8 +122,8 @@ class BitflowScriptCompiler {
             buildProcessingStep(pipe, ctx.processingStep());
         } else if (ctx.fork() != null) {
             buildFork(pipe, ctx.fork());
-        } else if (ctx.window() != null) {
-            buildWindow(pipe, ctx.window());
+        } else if (ctx.batch() != null) {
+            buildBatch(pipe, ctx.batch());
         }
     }
 
@@ -282,12 +282,13 @@ class BitflowScriptCompiler {
         return params;
     }
 
-    private void buildWindow(Pipeline pipe, BitflowParser.WindowContext window) {
-        Map<String, Object> rawParams = extractRawParameters(window.parameters());
-        Map<String, Object> parsedParams = buildExtractedParameters(AbstractBatchPipelineStep.getParameterList(rawParams), window.parameters(), rawParams);
+    private void buildWindow(Pipeline pipe, BitflowParser.BatchContext batch) {
+        Map<String, Object> rawParams = extractRawParameters(batch.parameters());
+        Map<String, Object> parsedParams = buildExtractedParameters(AbstractBatchPipelineStep.getParameterList(rawParams), batch.parameters(), rawParams);
         AbstractBatchPipelineStep batchStep = AbstractBatchPipelineStep.createFromParameters(parsedParams);
 
-        for (BitflowParser.ProcessingStepContext step : window.processingStep()) {
+        BitflowParser.BatchPipelineContext batchPipeline = batch.batchPipeline();
+        for (BitflowParser.ProcessingStepContext step : batchPipeline.processingStep()) {
             String name = unwrap(step.name());
             RegisteredStep<BatchStepBuilder> registeredStep = registry.getRegisteredBatchStep(name);
             if (registeredStep == null) {

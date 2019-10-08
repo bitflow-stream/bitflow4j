@@ -18,7 +18,7 @@ public class BitflowParser extends Parser {
 		new PredictionContextCache();
 	public static final int
 		OPEN=1, CLOSE=2, EOP=3, NEXT=4, OPEN_PARAMS=5, CLOSE_PARAMS=6, EQ=7, SEP=8, 
-		OPEN_HINTS=9, CLOSE_HINTS=10, WINDOW=11, STRING=12, IDENTIFIER=13, COMMENT=14, 
+		OPEN_HINTS=9, CLOSE_HINTS=10, BATCH=11, STRING=12, IDENTIFIER=13, COMMENT=14, 
 		NEWLINE=15, WHITESPACE=16, TAB=17;
 	public static final int
 		RULE_script = 0, RULE_dataInput = 1, RULE_dataOutput = 2, RULE_name = 3, 
@@ -26,14 +26,14 @@ public class BitflowParser extends Parser {
 		RULE_listValue = 7, RULE_mapValue = 8, RULE_mapValueElement = 9, RULE_parameterList = 10, 
 		RULE_parameters = 11, RULE_pipelines = 12, RULE_pipeline = 13, RULE_pipelineElement = 14, 
 		RULE_pipelineTailElement = 15, RULE_processingStep = 16, RULE_fork = 17, 
-		RULE_namedSubPipeline = 18, RULE_subPipeline = 19, RULE_multiplexFork = 20, 
-		RULE_window = 21, RULE_schedulingHints = 22;
+		RULE_namedSubPipeline = 18, RULE_subPipeline = 19, RULE_batchPipeline = 20, 
+		RULE_multiplexFork = 21, RULE_batch = 22, RULE_schedulingHints = 23;
 	public static final String[] ruleNames = {
 		"script", "dataInput", "dataOutput", "name", "parameter", "parameterValue", 
 		"primitiveValue", "listValue", "mapValue", "mapValueElement", "parameterList", 
 		"parameters", "pipelines", "pipeline", "pipelineElement", "pipelineTailElement", 
-		"processingStep", "fork", "namedSubPipeline", "subPipeline", "multiplexFork", 
-		"window", "schedulingHints"
+		"processingStep", "fork", "namedSubPipeline", "subPipeline", "batchPipeline", 
+		"multiplexFork", "batch", "schedulingHints"
 	};
 
 	private static final String[] _LITERAL_NAMES = {
@@ -42,8 +42,8 @@ public class BitflowParser extends Parser {
 	};
 	private static final String[] _SYMBOLIC_NAMES = {
 		null, "OPEN", "CLOSE", "EOP", "NEXT", "OPEN_PARAMS", "CLOSE_PARAMS", "EQ", 
-		"SEP", "OPEN_HINTS", "CLOSE_HINTS", "WINDOW", "STRING", "IDENTIFIER", 
-		"COMMENT", "NEWLINE", "WHITESPACE", "TAB"
+		"SEP", "OPEN_HINTS", "CLOSE_HINTS", "BATCH", "STRING", "IDENTIFIER", "COMMENT", 
+		"NEWLINE", "WHITESPACE", "TAB"
 	};
 	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
 
@@ -124,9 +124,9 @@ public class BitflowParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(46);
+			setState(48);
 			pipelines();
-			setState(47);
+			setState(49);
 			match(EOF);
 			}
 		}
@@ -177,26 +177,26 @@ public class BitflowParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(50); 
+			setState(52); 
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			do {
 				{
 				{
-				setState(49);
+				setState(51);
 				name();
 				}
 				}
-				setState(52); 
+				setState(54); 
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			} while ( _la==STRING || _la==IDENTIFIER );
-			setState(55);
+			setState(57);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==OPEN_HINTS) {
 				{
-				setState(54);
+				setState(56);
 				schedulingHints();
 				}
 			}
@@ -247,14 +247,14 @@ public class BitflowParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(57);
-			name();
 			setState(59);
+			name();
+			setState(61);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==OPEN_HINTS) {
 				{
-				setState(58);
+				setState(60);
 				schedulingHints();
 				}
 			}
@@ -301,7 +301,7 @@ public class BitflowParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(61);
+			setState(63);
 			_la = _input.LA(1);
 			if ( !(_la==STRING || _la==IDENTIFIER) ) {
 			_errHandler.recoverInline(this);
@@ -357,11 +357,11 @@ public class BitflowParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(63);
-			name();
-			setState(64);
-			match(EQ);
 			setState(65);
+			name();
+			setState(66);
+			match(EQ);
+			setState(67);
 			parameterValue();
 			}
 		}
@@ -409,28 +409,28 @@ public class BitflowParser extends Parser {
 		ParameterValueContext _localctx = new ParameterValueContext(_ctx, getState());
 		enterRule(_localctx, 10, RULE_parameterValue);
 		try {
-			setState(70);
+			setState(72);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case STRING:
 			case IDENTIFIER:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(67);
+				setState(69);
 				primitiveValue();
 				}
 				break;
 			case OPEN_HINTS:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(68);
+				setState(70);
 				listValue();
 				}
 				break;
 			case OPEN:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(69);
+				setState(71);
 				mapValue();
 				}
 				break;
@@ -478,7 +478,7 @@ public class BitflowParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(72);
+			setState(74);
 			name();
 			}
 		}
@@ -532,35 +532,35 @@ public class BitflowParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(74);
+			setState(76);
 			match(OPEN_HINTS);
-			setState(83);
+			setState(85);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==STRING || _la==IDENTIFIER) {
 				{
-				setState(75);
+				setState(77);
 				primitiveValue();
-				setState(80);
+				setState(82);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				while (_la==SEP) {
 					{
 					{
-					setState(76);
+					setState(78);
 					match(SEP);
-					setState(77);
+					setState(79);
 					primitiveValue();
 					}
 					}
-					setState(82);
+					setState(84);
 					_errHandler.sync(this);
 					_la = _input.LA(1);
 				}
 				}
 			}
 
-			setState(85);
+			setState(87);
 			match(CLOSE_HINTS);
 			}
 		}
@@ -614,35 +614,35 @@ public class BitflowParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(87);
+			setState(89);
 			match(OPEN);
-			setState(96);
+			setState(98);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==STRING || _la==IDENTIFIER) {
 				{
-				setState(88);
+				setState(90);
 				mapValueElement();
-				setState(93);
+				setState(95);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				while (_la==SEP) {
 					{
 					{
-					setState(89);
+					setState(91);
 					match(SEP);
-					setState(90);
+					setState(92);
 					mapValueElement();
 					}
 					}
-					setState(95);
+					setState(97);
 					_errHandler.sync(this);
 					_la = _input.LA(1);
 				}
 				}
 			}
 
-			setState(98);
+			setState(100);
 			match(CLOSE);
 			}
 		}
@@ -690,11 +690,11 @@ public class BitflowParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(100);
-			name();
-			setState(101);
-			match(EQ);
 			setState(102);
+			name();
+			setState(103);
+			match(EQ);
+			setState(104);
 			primitiveValue();
 			}
 		}
@@ -746,23 +746,23 @@ public class BitflowParser extends Parser {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(104);
+			setState(106);
 			parameter();
-			setState(109);
+			setState(111);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,8,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					{
 					{
-					setState(105);
+					setState(107);
 					match(SEP);
-					setState(106);
+					setState(108);
 					parameter();
 					}
 					} 
 				}
-				setState(111);
+				setState(113);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,8,_ctx);
 			}
@@ -812,21 +812,21 @@ public class BitflowParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(112);
+			setState(114);
 			match(OPEN_PARAMS);
-			setState(117);
+			setState(119);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==STRING || _la==IDENTIFIER) {
 				{
-				setState(113);
-				parameterList();
 				setState(115);
+				parameterList();
+				setState(117);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==SEP) {
 					{
-					setState(114);
+					setState(116);
 					match(SEP);
 					}
 				}
@@ -834,7 +834,7 @@ public class BitflowParser extends Parser {
 				}
 			}
 
-			setState(119);
+			setState(121);
 			match(CLOSE_PARAMS);
 			}
 		}
@@ -887,32 +887,32 @@ public class BitflowParser extends Parser {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(121);
+			setState(123);
 			pipeline();
-			setState(126);
+			setState(128);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,11,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					{
 					{
-					setState(122);
+					setState(124);
 					match(EOP);
-					setState(123);
+					setState(125);
 					pipeline();
 					}
 					} 
 				}
-				setState(128);
+				setState(130);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,11,_ctx);
 			}
-			setState(130);
+			setState(132);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==EOP) {
 				{
-				setState(129);
+				setState(131);
 				match(EOP);
 				}
 			}
@@ -978,45 +978,45 @@ public class BitflowParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(138);
+			setState(140);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,13,_ctx) ) {
 			case 1:
 				{
-				setState(132);
+				setState(134);
 				dataInput();
 				}
 				break;
 			case 2:
 				{
-				setState(133);
+				setState(135);
 				pipelineElement();
 				}
 				break;
 			case 3:
 				{
-				setState(134);
-				match(OPEN);
-				setState(135);
-				pipelines();
 				setState(136);
+				match(OPEN);
+				setState(137);
+				pipelines();
+				setState(138);
 				match(CLOSE);
 				}
 				break;
 			}
-			setState(144);
+			setState(146);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==NEXT) {
 				{
 				{
-				setState(140);
+				setState(142);
 				match(NEXT);
-				setState(141);
+				setState(143);
 				pipelineTailElement();
 				}
 				}
-				setState(146);
+				setState(148);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -1040,8 +1040,8 @@ public class BitflowParser extends Parser {
 		public ForkContext fork() {
 			return getRuleContext(ForkContext.class,0);
 		}
-		public WindowContext window() {
-			return getRuleContext(WindowContext.class,0);
+		public BatchContext batch() {
+			return getRuleContext(BatchContext.class,0);
 		}
 		public PipelineElementContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -1066,28 +1066,28 @@ public class BitflowParser extends Parser {
 		PipelineElementContext _localctx = new PipelineElementContext(_ctx, getState());
 		enterRule(_localctx, 28, RULE_pipelineElement);
 		try {
-			setState(150);
+			setState(152);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,15,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(147);
+				setState(149);
 				processingStep();
 				}
 				break;
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(148);
+				setState(150);
 				fork();
 				}
 				break;
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(149);
-				window();
+				setState(151);
+				batch();
 				}
 				break;
 			}
@@ -1136,27 +1136,27 @@ public class BitflowParser extends Parser {
 		PipelineTailElementContext _localctx = new PipelineTailElementContext(_ctx, getState());
 		enterRule(_localctx, 30, RULE_pipelineTailElement);
 		try {
-			setState(155);
+			setState(157);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,16,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(152);
+				setState(154);
 				pipelineElement();
 				}
 				break;
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(153);
+				setState(155);
 				multiplexFork();
 				}
 				break;
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(154);
+				setState(156);
 				dataOutput();
 				}
 				break;
@@ -1209,16 +1209,16 @@ public class BitflowParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(157);
+			setState(159);
 			name();
-			setState(158);
-			parameters();
 			setState(160);
+			parameters();
+			setState(162);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==OPEN_HINTS) {
 				{
-				setState(159);
+				setState(161);
 				schedulingHints();
 				}
 			}
@@ -1285,53 +1285,53 @@ public class BitflowParser extends Parser {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(162);
+			setState(164);
 			name();
-			setState(163);
-			parameters();
 			setState(165);
+			parameters();
+			setState(167);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==OPEN_HINTS) {
 				{
-				setState(164);
+				setState(166);
 				schedulingHints();
 				}
 			}
 
-			setState(167);
+			setState(169);
 			match(OPEN);
-			setState(168);
+			setState(170);
 			namedSubPipeline();
-			setState(173);
+			setState(175);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,19,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					{
 					{
-					setState(169);
+					setState(171);
 					match(EOP);
-					setState(170);
+					setState(172);
 					namedSubPipeline();
 					}
 					} 
 				}
-				setState(175);
+				setState(177);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,19,_ctx);
 			}
-			setState(177);
+			setState(179);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==EOP) {
 				{
-				setState(176);
+				setState(178);
 				match(EOP);
 				}
 			}
 
-			setState(179);
+			setState(181);
 			match(CLOSE);
 			}
 		}
@@ -1383,23 +1383,23 @@ public class BitflowParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(182); 
+			setState(184); 
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			do {
 				{
 				{
-				setState(181);
+				setState(183);
 				name();
 				}
 				}
-				setState(184); 
+				setState(186); 
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			} while ( _la==STRING || _la==IDENTIFIER );
-			setState(186);
+			setState(188);
 			match(NEXT);
-			setState(187);
+			setState(189);
 			subPipeline();
 			}
 		}
@@ -1451,21 +1451,89 @@ public class BitflowParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(189);
+			setState(191);
 			pipelineTailElement();
-			setState(194);
+			setState(196);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==NEXT) {
 				{
 				{
-				setState(190);
+				setState(192);
 				match(NEXT);
-				setState(191);
+				setState(193);
 				pipelineTailElement();
 				}
 				}
-				setState(196);
+				setState(198);
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+			}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class BatchPipelineContext extends ParserRuleContext {
+		public List<ProcessingStepContext> processingStep() {
+			return getRuleContexts(ProcessingStepContext.class);
+		}
+		public ProcessingStepContext processingStep(int i) {
+			return getRuleContext(ProcessingStepContext.class,i);
+		}
+		public List<TerminalNode> NEXT() { return getTokens(BitflowParser.NEXT); }
+		public TerminalNode NEXT(int i) {
+			return getToken(BitflowParser.NEXT, i);
+		}
+		public BatchPipelineContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_batchPipeline; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).enterBatchPipeline(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitBatchPipeline(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitBatchPipeline(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final BatchPipelineContext batchPipeline() throws RecognitionException {
+		BatchPipelineContext _localctx = new BatchPipelineContext(_ctx, getState());
+		enterRule(_localctx, 40, RULE_batchPipeline);
+		int _la;
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(199);
+			processingStep();
+			setState(204);
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			while (_la==NEXT) {
+				{
+				{
+				setState(200);
+				match(NEXT);
+				setState(201);
+				processingStep();
+				}
+				}
+				setState(206);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -1516,45 +1584,45 @@ public class BitflowParser extends Parser {
 
 	public final MultiplexForkContext multiplexFork() throws RecognitionException {
 		MultiplexForkContext _localctx = new MultiplexForkContext(_ctx, getState());
-		enterRule(_localctx, 40, RULE_multiplexFork);
+		enterRule(_localctx, 42, RULE_multiplexFork);
 		int _la;
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(197);
+			setState(207);
 			match(OPEN);
-			setState(198);
+			setState(208);
 			subPipeline();
-			setState(203);
+			setState(213);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,23,_ctx);
+			_alt = getInterpreter().adaptivePredict(_input,24,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					{
 					{
-					setState(199);
+					setState(209);
 					match(EOP);
-					setState(200);
+					setState(210);
 					subPipeline();
 					}
 					} 
 				}
-				setState(205);
+				setState(215);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,23,_ctx);
+				_alt = getInterpreter().adaptivePredict(_input,24,_ctx);
 			}
-			setState(207);
+			setState(217);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==EOP) {
 				{
-				setState(206);
+				setState(216);
 				match(EOP);
 				}
 			}
 
-			setState(209);
+			setState(219);
 			match(CLOSE);
 			}
 		}
@@ -1569,87 +1637,64 @@ public class BitflowParser extends Parser {
 		return _localctx;
 	}
 
-	public static class WindowContext extends ParserRuleContext {
-		public TerminalNode WINDOW() { return getToken(BitflowParser.WINDOW, 0); }
+	public static class BatchContext extends ParserRuleContext {
+		public TerminalNode BATCH() { return getToken(BitflowParser.BATCH, 0); }
 		public ParametersContext parameters() {
 			return getRuleContext(ParametersContext.class,0);
 		}
 		public TerminalNode OPEN() { return getToken(BitflowParser.OPEN, 0); }
-		public List<ProcessingStepContext> processingStep() {
-			return getRuleContexts(ProcessingStepContext.class);
-		}
-		public ProcessingStepContext processingStep(int i) {
-			return getRuleContext(ProcessingStepContext.class,i);
+		public BatchPipelineContext batchPipeline() {
+			return getRuleContext(BatchPipelineContext.class,0);
 		}
 		public TerminalNode CLOSE() { return getToken(BitflowParser.CLOSE, 0); }
 		public SchedulingHintsContext schedulingHints() {
 			return getRuleContext(SchedulingHintsContext.class,0);
 		}
-		public List<TerminalNode> NEXT() { return getTokens(BitflowParser.NEXT); }
-		public TerminalNode NEXT(int i) {
-			return getToken(BitflowParser.NEXT, i);
-		}
-		public WindowContext(ParserRuleContext parent, int invokingState) {
+		public BatchContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
-		@Override public int getRuleIndex() { return RULE_window; }
+		@Override public int getRuleIndex() { return RULE_batch; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).enterWindow(this);
+			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).enterBatch(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitWindow(this);
+			if ( listener instanceof BitflowListener ) ((BitflowListener)listener).exitBatch(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitWindow(this);
+			if ( visitor instanceof BitflowVisitor ) return ((BitflowVisitor<? extends T>)visitor).visitBatch(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
-	public final WindowContext window() throws RecognitionException {
-		WindowContext _localctx = new WindowContext(_ctx, getState());
-		enterRule(_localctx, 42, RULE_window);
+	public final BatchContext batch() throws RecognitionException {
+		BatchContext _localctx = new BatchContext(_ctx, getState());
+		enterRule(_localctx, 44, RULE_batch);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(211);
-			match(WINDOW);
-			setState(212);
+			setState(221);
+			match(BATCH);
+			setState(222);
 			parameters();
-			setState(214);
+			setState(224);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==OPEN_HINTS) {
 				{
-				setState(213);
+				setState(223);
 				schedulingHints();
 				}
 			}
 
-			setState(216);
+			setState(226);
 			match(OPEN);
-			setState(217);
-			processingStep();
-			setState(222);
-			_errHandler.sync(this);
-			_la = _input.LA(1);
-			while (_la==NEXT) {
-				{
-				{
-				setState(218);
-				match(NEXT);
-				setState(219);
-				processingStep();
-				}
-				}
-				setState(224);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-			}
-			setState(225);
+			setState(227);
+			batchPipeline();
+			setState(228);
 			match(CLOSE);
 			}
 		}
@@ -1692,26 +1737,26 @@ public class BitflowParser extends Parser {
 
 	public final SchedulingHintsContext schedulingHints() throws RecognitionException {
 		SchedulingHintsContext _localctx = new SchedulingHintsContext(_ctx, getState());
-		enterRule(_localctx, 44, RULE_schedulingHints);
+		enterRule(_localctx, 46, RULE_schedulingHints);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(227);
+			setState(230);
 			match(OPEN_HINTS);
-			setState(232);
+			setState(235);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==STRING || _la==IDENTIFIER) {
 				{
-				setState(228);
+				setState(231);
 				parameterList();
-				setState(230);
+				setState(233);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==SEP) {
 					{
-					setState(229);
+					setState(232);
 					match(SEP);
 					}
 				}
@@ -1719,7 +1764,7 @@ public class BitflowParser extends Parser {
 				}
 			}
 
-			setState(234);
+			setState(237);
 			match(CLOSE_HINTS);
 			}
 		}
@@ -1735,84 +1780,85 @@ public class BitflowParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\23\u00ef\4\2\t\2"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\23\u00f2\4\2\t\2"+
 		"\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13"+
 		"\t\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22"+
-		"\4\23\t\23\4\24\t\24\4\25\t\25\4\26\t\26\4\27\t\27\4\30\t\30\3\2\3\2\3"+
-		"\2\3\3\6\3\65\n\3\r\3\16\3\66\3\3\5\3:\n\3\3\4\3\4\5\4>\n\4\3\5\3\5\3"+
-		"\6\3\6\3\6\3\6\3\7\3\7\3\7\5\7I\n\7\3\b\3\b\3\t\3\t\3\t\3\t\7\tQ\n\t\f"+
-		"\t\16\tT\13\t\5\tV\n\t\3\t\3\t\3\n\3\n\3\n\3\n\7\n^\n\n\f\n\16\na\13\n"+
-		"\5\nc\n\n\3\n\3\n\3\13\3\13\3\13\3\13\3\f\3\f\3\f\7\fn\n\f\f\f\16\fq\13"+
-		"\f\3\r\3\r\3\r\5\rv\n\r\5\rx\n\r\3\r\3\r\3\16\3\16\3\16\7\16\177\n\16"+
-		"\f\16\16\16\u0082\13\16\3\16\5\16\u0085\n\16\3\17\3\17\3\17\3\17\3\17"+
-		"\3\17\5\17\u008d\n\17\3\17\3\17\7\17\u0091\n\17\f\17\16\17\u0094\13\17"+
-		"\3\20\3\20\3\20\5\20\u0099\n\20\3\21\3\21\3\21\5\21\u009e\n\21\3\22\3"+
-		"\22\3\22\5\22\u00a3\n\22\3\23\3\23\3\23\5\23\u00a8\n\23\3\23\3\23\3\23"+
-		"\3\23\7\23\u00ae\n\23\f\23\16\23\u00b1\13\23\3\23\5\23\u00b4\n\23\3\23"+
-		"\3\23\3\24\6\24\u00b9\n\24\r\24\16\24\u00ba\3\24\3\24\3\24\3\25\3\25\3"+
-		"\25\7\25\u00c3\n\25\f\25\16\25\u00c6\13\25\3\26\3\26\3\26\3\26\7\26\u00cc"+
-		"\n\26\f\26\16\26\u00cf\13\26\3\26\5\26\u00d2\n\26\3\26\3\26\3\27\3\27"+
-		"\3\27\5\27\u00d9\n\27\3\27\3\27\3\27\3\27\7\27\u00df\n\27\f\27\16\27\u00e2"+
-		"\13\27\3\27\3\27\3\30\3\30\3\30\5\30\u00e9\n\30\5\30\u00eb\n\30\3\30\3"+
-		"\30\3\30\2\2\31\2\4\6\b\n\f\16\20\22\24\26\30\32\34\36 \"$&(*,.\2\3\3"+
-		"\2\16\17\2\u00f8\2\60\3\2\2\2\4\64\3\2\2\2\6;\3\2\2\2\b?\3\2\2\2\nA\3"+
-		"\2\2\2\fH\3\2\2\2\16J\3\2\2\2\20L\3\2\2\2\22Y\3\2\2\2\24f\3\2\2\2\26j"+
-		"\3\2\2\2\30r\3\2\2\2\32{\3\2\2\2\34\u008c\3\2\2\2\36\u0098\3\2\2\2 \u009d"+
-		"\3\2\2\2\"\u009f\3\2\2\2$\u00a4\3\2\2\2&\u00b8\3\2\2\2(\u00bf\3\2\2\2"+
-		"*\u00c7\3\2\2\2,\u00d5\3\2\2\2.\u00e5\3\2\2\2\60\61\5\32\16\2\61\62\7"+
-		"\2\2\3\62\3\3\2\2\2\63\65\5\b\5\2\64\63\3\2\2\2\65\66\3\2\2\2\66\64\3"+
-		"\2\2\2\66\67\3\2\2\2\679\3\2\2\28:\5.\30\298\3\2\2\29:\3\2\2\2:\5\3\2"+
-		"\2\2;=\5\b\5\2<>\5.\30\2=<\3\2\2\2=>\3\2\2\2>\7\3\2\2\2?@\t\2\2\2@\t\3"+
-		"\2\2\2AB\5\b\5\2BC\7\t\2\2CD\5\f\7\2D\13\3\2\2\2EI\5\16\b\2FI\5\20\t\2"+
-		"GI\5\22\n\2HE\3\2\2\2HF\3\2\2\2HG\3\2\2\2I\r\3\2\2\2JK\5\b\5\2K\17\3\2"+
-		"\2\2LU\7\13\2\2MR\5\16\b\2NO\7\n\2\2OQ\5\16\b\2PN\3\2\2\2QT\3\2\2\2RP"+
-		"\3\2\2\2RS\3\2\2\2SV\3\2\2\2TR\3\2\2\2UM\3\2\2\2UV\3\2\2\2VW\3\2\2\2W"+
-		"X\7\f\2\2X\21\3\2\2\2Yb\7\3\2\2Z_\5\24\13\2[\\\7\n\2\2\\^\5\24\13\2]["+
-		"\3\2\2\2^a\3\2\2\2_]\3\2\2\2_`\3\2\2\2`c\3\2\2\2a_\3\2\2\2bZ\3\2\2\2b"+
-		"c\3\2\2\2cd\3\2\2\2de\7\4\2\2e\23\3\2\2\2fg\5\b\5\2gh\7\t\2\2hi\5\16\b"+
-		"\2i\25\3\2\2\2jo\5\n\6\2kl\7\n\2\2ln\5\n\6\2mk\3\2\2\2nq\3\2\2\2om\3\2"+
-		"\2\2op\3\2\2\2p\27\3\2\2\2qo\3\2\2\2rw\7\7\2\2su\5\26\f\2tv\7\n\2\2ut"+
-		"\3\2\2\2uv\3\2\2\2vx\3\2\2\2ws\3\2\2\2wx\3\2\2\2xy\3\2\2\2yz\7\b\2\2z"+
-		"\31\3\2\2\2{\u0080\5\34\17\2|}\7\5\2\2}\177\5\34\17\2~|\3\2\2\2\177\u0082"+
-		"\3\2\2\2\u0080~\3\2\2\2\u0080\u0081\3\2\2\2\u0081\u0084\3\2\2\2\u0082"+
-		"\u0080\3\2\2\2\u0083\u0085\7\5\2\2\u0084\u0083\3\2\2\2\u0084\u0085\3\2"+
-		"\2\2\u0085\33\3\2\2\2\u0086\u008d\5\4\3\2\u0087\u008d\5\36\20\2\u0088"+
-		"\u0089\7\3\2\2\u0089\u008a\5\32\16\2\u008a\u008b\7\4\2\2\u008b\u008d\3"+
-		"\2\2\2\u008c\u0086\3\2\2\2\u008c\u0087\3\2\2\2\u008c\u0088\3\2\2\2\u008d"+
-		"\u0092\3\2\2\2\u008e\u008f\7\6\2\2\u008f\u0091\5 \21\2\u0090\u008e\3\2"+
-		"\2\2\u0091\u0094\3\2\2\2\u0092\u0090\3\2\2\2\u0092\u0093\3\2\2\2\u0093"+
-		"\35\3\2\2\2\u0094\u0092\3\2\2\2\u0095\u0099\5\"\22\2\u0096\u0099\5$\23"+
-		"\2\u0097\u0099\5,\27\2\u0098\u0095\3\2\2\2\u0098\u0096\3\2\2\2\u0098\u0097"+
-		"\3\2\2\2\u0099\37\3\2\2\2\u009a\u009e\5\36\20\2\u009b\u009e\5*\26\2\u009c"+
-		"\u009e\5\6\4\2\u009d\u009a\3\2\2\2\u009d\u009b\3\2\2\2\u009d\u009c\3\2"+
-		"\2\2\u009e!\3\2\2\2\u009f\u00a0\5\b\5\2\u00a0\u00a2\5\30\r\2\u00a1\u00a3"+
-		"\5.\30\2\u00a2\u00a1\3\2\2\2\u00a2\u00a3\3\2\2\2\u00a3#\3\2\2\2\u00a4"+
-		"\u00a5\5\b\5\2\u00a5\u00a7\5\30\r\2\u00a6\u00a8\5.\30\2\u00a7\u00a6\3"+
-		"\2\2\2\u00a7\u00a8\3\2\2\2\u00a8\u00a9\3\2\2\2\u00a9\u00aa\7\3\2\2\u00aa"+
-		"\u00af\5&\24\2\u00ab\u00ac\7\5\2\2\u00ac\u00ae\5&\24\2\u00ad\u00ab\3\2"+
-		"\2\2\u00ae\u00b1\3\2\2\2\u00af\u00ad\3\2\2\2\u00af\u00b0\3\2\2\2\u00b0"+
-		"\u00b3\3\2\2\2\u00b1\u00af\3\2\2\2\u00b2\u00b4\7\5\2\2\u00b3\u00b2\3\2"+
-		"\2\2\u00b3\u00b4\3\2\2\2\u00b4\u00b5\3\2\2\2\u00b5\u00b6\7\4\2\2\u00b6"+
-		"%\3\2\2\2\u00b7\u00b9\5\b\5\2\u00b8\u00b7\3\2\2\2\u00b9\u00ba\3\2\2\2"+
-		"\u00ba\u00b8\3\2\2\2\u00ba\u00bb\3\2\2\2\u00bb\u00bc\3\2\2\2\u00bc\u00bd"+
-		"\7\6\2\2\u00bd\u00be\5(\25\2\u00be\'\3\2\2\2\u00bf\u00c4\5 \21\2\u00c0"+
-		"\u00c1\7\6\2\2\u00c1\u00c3\5 \21\2\u00c2\u00c0\3\2\2\2\u00c3\u00c6\3\2"+
-		"\2\2\u00c4\u00c2\3\2\2\2\u00c4\u00c5\3\2\2\2\u00c5)\3\2\2\2\u00c6\u00c4"+
-		"\3\2\2\2\u00c7\u00c8\7\3\2\2\u00c8\u00cd\5(\25\2\u00c9\u00ca\7\5\2\2\u00ca"+
-		"\u00cc\5(\25\2\u00cb\u00c9\3\2\2\2\u00cc\u00cf\3\2\2\2\u00cd\u00cb\3\2"+
-		"\2\2\u00cd\u00ce\3\2\2\2\u00ce\u00d1\3\2\2\2\u00cf\u00cd\3\2\2\2\u00d0"+
-		"\u00d2\7\5\2\2\u00d1\u00d0\3\2\2\2\u00d1\u00d2\3\2\2\2\u00d2\u00d3\3\2"+
-		"\2\2\u00d3\u00d4\7\4\2\2\u00d4+\3\2\2\2\u00d5\u00d6\7\r\2\2\u00d6\u00d8"+
-		"\5\30\r\2\u00d7\u00d9\5.\30\2\u00d8\u00d7\3\2\2\2\u00d8\u00d9\3\2\2\2"+
-		"\u00d9\u00da\3\2\2\2\u00da\u00db\7\3\2\2\u00db\u00e0\5\"\22\2\u00dc\u00dd"+
-		"\7\6\2\2\u00dd\u00df\5\"\22\2\u00de\u00dc\3\2\2\2\u00df\u00e2\3\2\2\2"+
-		"\u00e0\u00de\3\2\2\2\u00e0\u00e1\3\2\2\2\u00e1\u00e3\3\2\2\2\u00e2\u00e0"+
-		"\3\2\2\2\u00e3\u00e4\7\4\2\2\u00e4-\3\2\2\2\u00e5\u00ea\7\13\2\2\u00e6"+
-		"\u00e8\5\26\f\2\u00e7\u00e9\7\n\2\2\u00e8\u00e7\3\2\2\2\u00e8\u00e9\3"+
-		"\2\2\2\u00e9\u00eb\3\2\2\2\u00ea\u00e6\3\2\2\2\u00ea\u00eb\3\2\2\2\u00eb"+
-		"\u00ec\3\2\2\2\u00ec\u00ed\7\f\2\2\u00ed/\3\2\2\2\37\669=HRU_bouw\u0080"+
-		"\u0084\u008c\u0092\u0098\u009d\u00a2\u00a7\u00af\u00b3\u00ba\u00c4\u00cd"+
-		"\u00d1\u00d8\u00e0\u00e8\u00ea";
+		"\4\23\t\23\4\24\t\24\4\25\t\25\4\26\t\26\4\27\t\27\4\30\t\30\4\31\t\31"+
+		"\3\2\3\2\3\2\3\3\6\3\67\n\3\r\3\16\38\3\3\5\3<\n\3\3\4\3\4\5\4@\n\4\3"+
+		"\5\3\5\3\6\3\6\3\6\3\6\3\7\3\7\3\7\5\7K\n\7\3\b\3\b\3\t\3\t\3\t\3\t\7"+
+		"\tS\n\t\f\t\16\tV\13\t\5\tX\n\t\3\t\3\t\3\n\3\n\3\n\3\n\7\n`\n\n\f\n\16"+
+		"\nc\13\n\5\ne\n\n\3\n\3\n\3\13\3\13\3\13\3\13\3\f\3\f\3\f\7\fp\n\f\f\f"+
+		"\16\fs\13\f\3\r\3\r\3\r\5\rx\n\r\5\rz\n\r\3\r\3\r\3\16\3\16\3\16\7\16"+
+		"\u0081\n\16\f\16\16\16\u0084\13\16\3\16\5\16\u0087\n\16\3\17\3\17\3\17"+
+		"\3\17\3\17\3\17\5\17\u008f\n\17\3\17\3\17\7\17\u0093\n\17\f\17\16\17\u0096"+
+		"\13\17\3\20\3\20\3\20\5\20\u009b\n\20\3\21\3\21\3\21\5\21\u00a0\n\21\3"+
+		"\22\3\22\3\22\5\22\u00a5\n\22\3\23\3\23\3\23\5\23\u00aa\n\23\3\23\3\23"+
+		"\3\23\3\23\7\23\u00b0\n\23\f\23\16\23\u00b3\13\23\3\23\5\23\u00b6\n\23"+
+		"\3\23\3\23\3\24\6\24\u00bb\n\24\r\24\16\24\u00bc\3\24\3\24\3\24\3\25\3"+
+		"\25\3\25\7\25\u00c5\n\25\f\25\16\25\u00c8\13\25\3\26\3\26\3\26\7\26\u00cd"+
+		"\n\26\f\26\16\26\u00d0\13\26\3\27\3\27\3\27\3\27\7\27\u00d6\n\27\f\27"+
+		"\16\27\u00d9\13\27\3\27\5\27\u00dc\n\27\3\27\3\27\3\30\3\30\3\30\5\30"+
+		"\u00e3\n\30\3\30\3\30\3\30\3\30\3\31\3\31\3\31\5\31\u00ec\n\31\5\31\u00ee"+
+		"\n\31\3\31\3\31\3\31\2\2\32\2\4\6\b\n\f\16\20\22\24\26\30\32\34\36 \""+
+		"$&(*,.\60\2\3\3\2\16\17\2\u00fa\2\62\3\2\2\2\4\66\3\2\2\2\6=\3\2\2\2\b"+
+		"A\3\2\2\2\nC\3\2\2\2\fJ\3\2\2\2\16L\3\2\2\2\20N\3\2\2\2\22[\3\2\2\2\24"+
+		"h\3\2\2\2\26l\3\2\2\2\30t\3\2\2\2\32}\3\2\2\2\34\u008e\3\2\2\2\36\u009a"+
+		"\3\2\2\2 \u009f\3\2\2\2\"\u00a1\3\2\2\2$\u00a6\3\2\2\2&\u00ba\3\2\2\2"+
+		"(\u00c1\3\2\2\2*\u00c9\3\2\2\2,\u00d1\3\2\2\2.\u00df\3\2\2\2\60\u00e8"+
+		"\3\2\2\2\62\63\5\32\16\2\63\64\7\2\2\3\64\3\3\2\2\2\65\67\5\b\5\2\66\65"+
+		"\3\2\2\2\678\3\2\2\28\66\3\2\2\289\3\2\2\29;\3\2\2\2:<\5\60\31\2;:\3\2"+
+		"\2\2;<\3\2\2\2<\5\3\2\2\2=?\5\b\5\2>@\5\60\31\2?>\3\2\2\2?@\3\2\2\2@\7"+
+		"\3\2\2\2AB\t\2\2\2B\t\3\2\2\2CD\5\b\5\2DE\7\t\2\2EF\5\f\7\2F\13\3\2\2"+
+		"\2GK\5\16\b\2HK\5\20\t\2IK\5\22\n\2JG\3\2\2\2JH\3\2\2\2JI\3\2\2\2K\r\3"+
+		"\2\2\2LM\5\b\5\2M\17\3\2\2\2NW\7\13\2\2OT\5\16\b\2PQ\7\n\2\2QS\5\16\b"+
+		"\2RP\3\2\2\2SV\3\2\2\2TR\3\2\2\2TU\3\2\2\2UX\3\2\2\2VT\3\2\2\2WO\3\2\2"+
+		"\2WX\3\2\2\2XY\3\2\2\2YZ\7\f\2\2Z\21\3\2\2\2[d\7\3\2\2\\a\5\24\13\2]^"+
+		"\7\n\2\2^`\5\24\13\2_]\3\2\2\2`c\3\2\2\2a_\3\2\2\2ab\3\2\2\2be\3\2\2\2"+
+		"ca\3\2\2\2d\\\3\2\2\2de\3\2\2\2ef\3\2\2\2fg\7\4\2\2g\23\3\2\2\2hi\5\b"+
+		"\5\2ij\7\t\2\2jk\5\16\b\2k\25\3\2\2\2lq\5\n\6\2mn\7\n\2\2np\5\n\6\2om"+
+		"\3\2\2\2ps\3\2\2\2qo\3\2\2\2qr\3\2\2\2r\27\3\2\2\2sq\3\2\2\2ty\7\7\2\2"+
+		"uw\5\26\f\2vx\7\n\2\2wv\3\2\2\2wx\3\2\2\2xz\3\2\2\2yu\3\2\2\2yz\3\2\2"+
+		"\2z{\3\2\2\2{|\7\b\2\2|\31\3\2\2\2}\u0082\5\34\17\2~\177\7\5\2\2\177\u0081"+
+		"\5\34\17\2\u0080~\3\2\2\2\u0081\u0084\3\2\2\2\u0082\u0080\3\2\2\2\u0082"+
+		"\u0083\3\2\2\2\u0083\u0086\3\2\2\2\u0084\u0082\3\2\2\2\u0085\u0087\7\5"+
+		"\2\2\u0086\u0085\3\2\2\2\u0086\u0087\3\2\2\2\u0087\33\3\2\2\2\u0088\u008f"+
+		"\5\4\3\2\u0089\u008f\5\36\20\2\u008a\u008b\7\3\2\2\u008b\u008c\5\32\16"+
+		"\2\u008c\u008d\7\4\2\2\u008d\u008f\3\2\2\2\u008e\u0088\3\2\2\2\u008e\u0089"+
+		"\3\2\2\2\u008e\u008a\3\2\2\2\u008f\u0094\3\2\2\2\u0090\u0091\7\6\2\2\u0091"+
+		"\u0093\5 \21\2\u0092\u0090\3\2\2\2\u0093\u0096\3\2\2\2\u0094\u0092\3\2"+
+		"\2\2\u0094\u0095\3\2\2\2\u0095\35\3\2\2\2\u0096\u0094\3\2\2\2\u0097\u009b"+
+		"\5\"\22\2\u0098\u009b\5$\23\2\u0099\u009b\5.\30\2\u009a\u0097\3\2\2\2"+
+		"\u009a\u0098\3\2\2\2\u009a\u0099\3\2\2\2\u009b\37\3\2\2\2\u009c\u00a0"+
+		"\5\36\20\2\u009d\u00a0\5,\27\2\u009e\u00a0\5\6\4\2\u009f\u009c\3\2\2\2"+
+		"\u009f\u009d\3\2\2\2\u009f\u009e\3\2\2\2\u00a0!\3\2\2\2\u00a1\u00a2\5"+
+		"\b\5\2\u00a2\u00a4\5\30\r\2\u00a3\u00a5\5\60\31\2\u00a4\u00a3\3\2\2\2"+
+		"\u00a4\u00a5\3\2\2\2\u00a5#\3\2\2\2\u00a6\u00a7\5\b\5\2\u00a7\u00a9\5"+
+		"\30\r\2\u00a8\u00aa\5\60\31\2\u00a9\u00a8\3\2\2\2\u00a9\u00aa\3\2\2\2"+
+		"\u00aa\u00ab\3\2\2\2\u00ab\u00ac\7\3\2\2\u00ac\u00b1\5&\24\2\u00ad\u00ae"+
+		"\7\5\2\2\u00ae\u00b0\5&\24\2\u00af\u00ad\3\2\2\2\u00b0\u00b3\3\2\2\2\u00b1"+
+		"\u00af\3\2\2\2\u00b1\u00b2\3\2\2\2\u00b2\u00b5\3\2\2\2\u00b3\u00b1\3\2"+
+		"\2\2\u00b4\u00b6\7\5\2\2\u00b5\u00b4\3\2\2\2\u00b5\u00b6\3\2\2\2\u00b6"+
+		"\u00b7\3\2\2\2\u00b7\u00b8\7\4\2\2\u00b8%\3\2\2\2\u00b9\u00bb\5\b\5\2"+
+		"\u00ba\u00b9\3\2\2\2\u00bb\u00bc\3\2\2\2\u00bc\u00ba\3\2\2\2\u00bc\u00bd"+
+		"\3\2\2\2\u00bd\u00be\3\2\2\2\u00be\u00bf\7\6\2\2\u00bf\u00c0\5(\25\2\u00c0"+
+		"\'\3\2\2\2\u00c1\u00c6\5 \21\2\u00c2\u00c3\7\6\2\2\u00c3\u00c5\5 \21\2"+
+		"\u00c4\u00c2\3\2\2\2\u00c5\u00c8\3\2\2\2\u00c6\u00c4\3\2\2\2\u00c6\u00c7"+
+		"\3\2\2\2\u00c7)\3\2\2\2\u00c8\u00c6\3\2\2\2\u00c9\u00ce\5\"\22\2\u00ca"+
+		"\u00cb\7\6\2\2\u00cb\u00cd\5\"\22\2\u00cc\u00ca\3\2\2\2\u00cd\u00d0\3"+
+		"\2\2\2\u00ce\u00cc\3\2\2\2\u00ce\u00cf\3\2\2\2\u00cf+\3\2\2\2\u00d0\u00ce"+
+		"\3\2\2\2\u00d1\u00d2\7\3\2\2\u00d2\u00d7\5(\25\2\u00d3\u00d4\7\5\2\2\u00d4"+
+		"\u00d6\5(\25\2\u00d5\u00d3\3\2\2\2\u00d6\u00d9\3\2\2\2\u00d7\u00d5\3\2"+
+		"\2\2\u00d7\u00d8\3\2\2\2\u00d8\u00db\3\2\2\2\u00d9\u00d7\3\2\2\2\u00da"+
+		"\u00dc\7\5\2\2\u00db\u00da\3\2\2\2\u00db\u00dc\3\2\2\2\u00dc\u00dd\3\2"+
+		"\2\2\u00dd\u00de\7\4\2\2\u00de-\3\2\2\2\u00df\u00e0\7\r\2\2\u00e0\u00e2"+
+		"\5\30\r\2\u00e1\u00e3\5\60\31\2\u00e2\u00e1\3\2\2\2\u00e2\u00e3\3\2\2"+
+		"\2\u00e3\u00e4\3\2\2\2\u00e4\u00e5\7\3\2\2\u00e5\u00e6\5*\26\2\u00e6\u00e7"+
+		"\7\4\2\2\u00e7/\3\2\2\2\u00e8\u00ed\7\13\2\2\u00e9\u00eb\5\26\f\2\u00ea"+
+		"\u00ec\7\n\2\2\u00eb\u00ea\3\2\2\2\u00eb\u00ec\3\2\2\2\u00ec\u00ee\3\2"+
+		"\2\2\u00ed\u00e9\3\2\2\2\u00ed\u00ee\3\2\2\2\u00ee\u00ef\3\2\2\2\u00ef"+
+		"\u00f0\7\f\2\2\u00f0\61\3\2\2\2\378;?JTWadqwy\u0082\u0086\u008e\u0094"+
+		"\u009a\u009f\u00a4\u00a9\u00b1\u00b5\u00bc\u00c6\u00ce\u00d7\u00db\u00e2"+
+		"\u00eb\u00ed";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {
