@@ -282,7 +282,7 @@ class BitflowScriptCompiler {
         return params;
     }
 
-    private void buildWindow(Pipeline pipe, BitflowParser.BatchContext batch) {
+    private void buildBatch(Pipeline pipe, BitflowParser.BatchContext batch) {
         Map<String, Object> rawParams = extractRawParameters(batch.parameters());
         Map<String, Object> parsedParams = buildExtractedParameters(AbstractBatchPipelineStep.getParameterList(rawParams), batch.parameters(), rawParams);
         AbstractBatchPipelineStep batchStep = AbstractBatchPipelineStep.createFromParameters(parsedParams);
