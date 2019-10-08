@@ -12,12 +12,12 @@ import java.util.*;
 import java.util.logging.Logger;
 
 /**
- * Instead of immediately handling every Sample, fill up a list of samples based on a number of criteria (time, tag values, ...).
- * The resulting list is then processed through a number of BatchHandlers, which possibly output a different number of samples in the end.
- * Afterwards, the resulting list of samples is forwarded to the subsequent processing step in the resulting order.
+ * This abstract class allows implementing batch processing steps. These steps do not immediately process incoming smaples,
+ * but instead collect them until a given criterion is met, and then use a list of BatchHandlers to process a list of collected
+ * samples, before forwarding the results.
  * <p>
- * The class is marked as final, because the obsolete way to use it was subclassing. Now, one or more BatchHandler instances must be added
- * through the addBatchHandler() method instead.
+ * By subclassing this class, new modes of batching can be introduced, that can be reused in different situations.
+ * One or more BatchHandler instances must be added through the addBatchHandler() method of a concrete subclass.
  * <p>
  * Created by anton on 5/8/16.
  */
@@ -25,50 +25,30 @@ public abstract class AbstractBatchPipelineStep extends AbstractPipelineStep imp
 
     protected static final Logger logger = Logger.getLogger(AbstractBatchPipelineStep.class.getName());
 
-    protected List<Sample> window = new ArrayList<>();
     private final List<BatchHandler> handlers = new ArrayList<>();
 
     public AbstractBatchPipelineStep(BatchHandler... handlers) {
         this.handlers.addAll(Arrays.asList(handlers));
     }
 
-    public static final RegisteredParameterList BATCH_STEP_PARAMETERS = new RegisteredParameterList(
-            new RegisteredParameter[]{
-                    new RegisteredParameter("separationTag", RegisteredParameter.ContainerType.Primitive, String.class, ""),
-                    new RegisteredParameter("timeout", RegisteredParameter.ContainerType.Primitive, Long.class, 0L),
-                    new RegisteredParameter("mergeMode", RegisteredParameter.ContainerType.Primitive, Boolean.class, false)
-            });
+    // This parameter determines which batch mode is used. When more modes are introduced, it should be changed to a string parameter.
+    public static final RegisteredParameter mergeModeParameter = new RegisteredParameter("mergeMode", RegisteredParameter.ContainerType.Primitive, Boolean.class, false);
+
+    public static RegisteredParameterList getParameterList(Map<String, Object> rawParameters) {
+        Object val = rawParameters.get("mergeMode");
+        if (mergeModeParameter.canParse(val) && (Boolean) mergeModeParameter.parseValue(val)) {
+            return MergeBatchPipelineStep.PARAMETER_LIST;
+        } else {
+            return BatchPipelineStep.PARAMETER_LIST;
+        }
+    }
 
     public static AbstractBatchPipelineStep createFromParameters(Map<String, Object> params) throws IllegalArgumentException {
         if (params.containsKey("mergeMode") && (Boolean) params.get("mergeMode")) {
-            return createMergeBatchPipelineStep(params);
+            return MergeBatchPipelineStep.createFromParameters(params);
         } else {
-            return createBatchPipelineStep(params);
+            return BatchPipelineStep.createFromParameters(params);
         }
-    }
-
-    private static MergeBatchPipelineStep createMergeBatchPipelineStep(Map<String, Object> params) {
-        String separationTag = null;
-        if (params.containsKey("separationTag")) {
-            separationTag = (String) params.get("separationTag");
-        }
-        long timeout = 0;
-        if (params.containsKey("timeout")) {
-            timeout = (Long) params.get("timeout");
-        }
-        return new MergeBatchPipelineStep(separationTag, timeout);
-    }
-
-    private static BatchPipelineStep createBatchPipelineStep(Map<String, Object> params) {
-        String separationTag = null;
-        if (params.containsKey("separationTag")) {
-            separationTag = (String) params.get("separationTag");
-        }
-        long timeout = 0;
-        if (params.containsKey("timeout")) {
-            timeout = (Long) params.get("timeout");
-        }
-        return new BatchPipelineStep(separationTag, timeout);
     }
 
     public void addBatchHandler(BatchHandler handler) {
@@ -103,16 +83,14 @@ public abstract class AbstractBatchPipelineStep extends AbstractPipelineStep imp
         super.doClose();
     }
 
-    protected synchronized boolean flushResults() throws IOException {
+    protected synchronized void flushWindow(List<Sample> window) throws IOException {
         if (window.isEmpty())
-            return false;
-        printFlushMessage();
+            return;
+        printFlushMessage(window);
         flush(window);
-        window.clear();
-        return true;
     }
 
-    private void printFlushMessage() {
+    private void printFlushMessage(List<Sample> window) {
         String info = "";
         if (window.isEmpty()) {
             info = " (no samples)";

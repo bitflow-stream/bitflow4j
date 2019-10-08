@@ -3,6 +3,8 @@ package bitflow4j.steps;
 import bitflow4j.Sample;
 import bitflow4j.script.registry.BitflowConstructor;
 import bitflow4j.script.registry.Optional;
+import bitflow4j.script.registry.RegisteredParameter;
+import bitflow4j.script.registry.RegisteredParameterList;
 import bitflow4j.task.LoopTask;
 import bitflow4j.task.TaskPool;
 
@@ -17,23 +19,42 @@ import java.util.logging.Level;
  * @author kevinstyp
  */
 public class MergeBatchPipelineStep extends AbstractBatchPipelineStep {
-    final String batchSeparationTag;
-    final long timeoutMs;
 
-    private Map<String, Long> timeoutMap = new ConcurrentHashMap<>();
-    private Map<String, List<Sample>> samplesForTag = new ConcurrentHashMap<>();
-    private List<String> tagList = new ArrayList<>();
+    private final String batchSeparationTag;
+    private final long timeoutMs;
+
+    private final Map<String, Long> timeoutMap = new ConcurrentHashMap<>();
+    private final Map<String, List<Sample>> samplesForTag = new ConcurrentHashMap<>();
+    private final List<String> tagList = new ArrayList<>();
 
     @BitflowConstructor
-    public MergeBatchPipelineStep(@Optional String batchSeparationTag, @Optional long timeoutMs) {
-        this.batchSeparationTag = batchSeparationTag;
-        this.timeoutMs = timeoutMs;
+    public MergeBatchPipelineStep(String tag, @Optional long timeoutMs) {
+        this(tag, timeoutMs, new BatchHandler[0]);
     }
 
     public MergeBatchPipelineStep(String batchSeparationTag, long timeoutMs, BatchHandler... handlers) {
         super(handlers);
         this.batchSeparationTag = batchSeparationTag;
         this.timeoutMs = timeoutMs;
+    }
+
+    public static final RegisteredParameterList PARAMETER_LIST = new RegisteredParameterList(
+            new RegisteredParameter[]{
+                    new RegisteredParameter("tag", RegisteredParameter.ContainerType.Primitive, String.class),
+                    new RegisteredParameter("timeout", RegisteredParameter.ContainerType.Primitive, Long.class, 0L),
+                    mergeModeParameter
+            });
+
+    public static MergeBatchPipelineStep createFromParameters(Map<String, Object> params) {
+        String separationTag = null;
+        if (params.containsKey("separationTag")) {
+            separationTag = (String) params.get("separationTag");
+        }
+        long timeout = 0;
+        if (params.containsKey("timeout")) {
+            timeout = (Long) params.get("timeout");
+        }
+        return new MergeBatchPipelineStep(separationTag, timeout);
     }
 
     @Override
@@ -81,10 +102,7 @@ public class MergeBatchPipelineStep extends AbstractBatchPipelineStep {
                 logger.log(Level.INFO, String.format("Flushing one result, Sample-receive: %s", samplesForTag.get(tagValue).get(0).getTag("received")));
                 removeTags.add(tagValue);
                 //Flush this window
-                for (Sample s : samplesForTag.get(tagValue)) {
-                    window.add(s);
-                }
-                flushResults();
+                flushWindow(samplesForTag.get(tagValue));
             } else {
                 //List 'tagList' keeps sorting of timeouts indirectly, so we can break the for loop after first not-timed-out sample
                 break;

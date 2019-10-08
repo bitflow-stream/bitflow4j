@@ -241,6 +241,10 @@ class BitflowScriptCompiler {
 
     private Map<String, Object> buildParameters(RegisteredParameterList params, BitflowParser.ParametersContext ctx) throws CompilationException {
         Map<String, Object> rawParameters = extractRawParameters(ctx);
+        return buildExtractedParameters(params, ctx, rawParameters);
+    }
+
+    private Map<String, Object> buildExtractedParameters(RegisteredParameterList params, BitflowParser.ParametersContext ctx, Map<String, Object> rawParameters) throws CompilationException {
         try {
             return params.parseRawParameters(rawParameters);
         } catch (IllegalArgumentException e) {
@@ -279,8 +283,9 @@ class BitflowScriptCompiler {
     }
 
     private void buildWindow(Pipeline pipe, BitflowParser.WindowContext window) {
-        Map<String, Object> params = buildParameters(AbstractBatchPipelineStep.BATCH_STEP_PARAMETERS, window.parameters());
-        AbstractBatchPipelineStep batchStep = AbstractBatchPipelineStep.createFromParameters(params);
+        Map<String, Object> rawParams = extractRawParameters(window.parameters());
+        Map<String, Object> parsedParams = buildExtractedParameters(AbstractBatchPipelineStep.getParameterList(rawParams), window.parameters(), rawParams);
+        AbstractBatchPipelineStep batchStep = AbstractBatchPipelineStep.createFromParameters(parsedParams);
 
         for (BitflowParser.ProcessingStepContext step : window.processingStep()) {
             String name = unwrap(step.name());
