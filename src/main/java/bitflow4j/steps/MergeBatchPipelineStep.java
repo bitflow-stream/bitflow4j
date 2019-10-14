@@ -8,6 +8,7 @@ import bitflow4j.script.registry.RegisteredParameterList;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -88,25 +89,27 @@ public class MergeBatchPipelineStep extends AbstractBatchPipelineStep {
     }
 
     private void flushMapResults(long currentTime) throws IOException {
+        if (tagList.isEmpty())
+            return;
+
         //Check for Lists to be flushed according to timeout
-        List<String> removeTags = new ArrayList<>();
-        for (String tagValue : tagList) {
+        Iterator<String> tagIter = tagList.iterator();
+        for (String tagValue = tagIter.next(); tagIter.hasNext(); tagValue = tagIter.next())
+        {
             long endTime = timeoutMap.get(tagValue);
             if (endTime < currentTime || currentTime == -1) {
-                logger.log(Level.INFO, String.format("Flushing one result, Map Size: %s", timeoutMap.size()));
-                logger.log(Level.INFO, String.format("Flushing one result, Sample-receive: %s", samplesForTag.get(tagValue).get(0).getTag("received")));
-                removeTags.add(tagValue);
+                Sample exampleSample = samplesForTag.get(tagValue).get(0);
+                logger.log(Level.INFO, String.format("Flushing one result, tag %s=%s, number of tags: %s, sample tags: %s", tag, tagValue, timeoutMap.size(), exampleSample.getTags()));
                 //Flush this window
                 flushWindow(samplesForTag.get(tagValue));
+                timeoutMap.remove(tagValue);
+                samplesForTag.remove(tagValue);
+                tagIter.remove();
+
             } else {
                 //List 'tagList' keeps sorting of timeouts indirectly, so we can break the for loop after first not-timed-out sample
                 break;
             }
-        }
-        for (String tagValue : removeTags) {
-            timeoutMap.remove(tagValue);
-            samplesForTag.remove(tagValue);
-            tagList.remove(tagValue);
         }
     }
 
