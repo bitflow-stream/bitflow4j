@@ -5,8 +5,6 @@ import bitflow4j.script.registry.BitflowConstructor;
 import bitflow4j.script.registry.Optional;
 import bitflow4j.script.registry.RegisteredParameter;
 import bitflow4j.script.registry.RegisteredParameterList;
-import bitflow4j.task.LoopTask;
-import bitflow4j.task.TaskPool;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -14,11 +12,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author kevinstyp
  */
 public class MergeBatchPipelineStep extends AbstractBatchPipelineStep {
+
+    private static final Logger logger = Logger.getLogger(MergeBatchPipelineStep.class.getName());
 
     private final String tag;
     private final long timeoutMs;
@@ -33,7 +34,7 @@ public class MergeBatchPipelineStep extends AbstractBatchPipelineStep {
     }
 
     public MergeBatchPipelineStep(String tag, long timeoutMs, BatchHandler... handlers) {
-        super(handlers);
+        super(timeoutMs / 2, handlers);
         this.tag = tag;
         this.timeoutMs = timeoutMs;
     }
@@ -58,31 +59,25 @@ public class MergeBatchPipelineStep extends AbstractBatchPipelineStep {
     }
 
     @Override
-    public void checkForFlush(long currentTime) throws IOException {
-        flushMapResults(currentTime);
-    }
-
-    @Override
     public void addSample(Sample sample) {
-        addSampleToMaps(sample);
+        if (timeoutMap.get(sample.getTag(tag)) != null) {
+            samplesForTag.get(sample.getTag(tag)).add(sample);
+        } else {
+            //Put Sample into timeoutMap and create new ArrayList with Sample
+            timeoutMap.put(sample.getTag(tag), System.currentTimeMillis() + timeoutMs);
+            List<Sample> newList = new ArrayList<>();
+            newList.add(sample);
+            samplesForTag.put(sample.getTag(tag), newList);
+            tagList.add(sample.getTag(tag));
+        }
     }
 
     @Override
-    public void threadIteration(TaskPool pool) throws IOException {
-        if (timeoutMs > 0) {
-            pool.start(new LoopTask() {
-                @Override
-                public String toString() {
-                    return "Auto-Flush Task for " + MergeBatchPipelineStep.this.toString();
-                }
-
-                @Override
-                protected boolean executeIteration() throws IOException {
-                    long currentTime = System.currentTimeMillis();
-                    checkForFlush(currentTime);
-                    return pool.sleep(timeoutMs / 2);
-                }
-            });
+    public void checkConcurrentFlush() {
+        try {
+            flushMapResults(System.currentTimeMillis());
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Failed to automatically flush batch", e);
         }
     }
 
@@ -92,7 +87,7 @@ public class MergeBatchPipelineStep extends AbstractBatchPipelineStep {
         flushMapResults(-1);
     }
 
-    private synchronized void flushMapResults(long currentTime) throws IOException {
+    private void flushMapResults(long currentTime) throws IOException {
         //Check for Lists to be flushed according to timeout
         List<String> removeTags = new ArrayList<>();
         for (String tagValue : tagList) {
@@ -115,16 +110,4 @@ public class MergeBatchPipelineStep extends AbstractBatchPipelineStep {
         }
     }
 
-    private void addSampleToMaps(Sample sample) {
-        if (timeoutMap.get(sample.getTag(tag)) != null) {
-            samplesForTag.get(sample.getTag(tag)).add(sample);
-        } else {
-            //Put Sample into timeoutMap and create new ArrayList with Sample
-            timeoutMap.put(sample.getTag(tag), System.currentTimeMillis() + timeoutMs);
-            List<Sample> newList = new ArrayList<>();
-            newList.add(sample);
-            samplesForTag.put(sample.getTag(tag), newList);
-            tagList.add(sample.getTag(tag));
-        }
-    }
 }

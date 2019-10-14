@@ -5,15 +5,13 @@ import bitflow4j.script.registry.BitflowConstructor;
 import bitflow4j.script.registry.Optional;
 import bitflow4j.script.registry.RegisteredParameter;
 import bitflow4j.script.registry.RegisteredParameterList;
-import bitflow4j.task.LoopTask;
-import bitflow4j.task.TaskPool;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Instead of immediately handling every Sample, fill up a list of samples based on a number of criteria (time, tag values, ...).
@@ -27,10 +25,12 @@ import java.util.logging.Level;
  */
 public final class BatchPipelineStep extends AbstractBatchPipelineStep {
 
+    private static final Logger logger = Logger.getLogger(BatchPipelineStep.class.getName());
+
     private final String batchSeparationTag;
     private final long timeoutMs;
 
-    private long startTime;
+    private long lastSampleReceived = -1;
     private boolean warnedMissingSeparationTag = false;
     private String previousSeparationTagValue = null;
 
@@ -42,7 +42,7 @@ public final class BatchPipelineStep extends AbstractBatchPipelineStep {
     }
 
     public BatchPipelineStep(String batchSeparationTag, long timeoutMs, BatchHandler... handlers) {
-        super(handlers);
+        super(timeoutMs / 2, handlers);
         this.batchSeparationTag = batchSeparationTag;
         this.timeoutMs = timeoutMs;
     }
@@ -75,28 +75,8 @@ public final class BatchPipelineStep extends AbstractBatchPipelineStep {
     }
 
     @Override
-    public void threadIteration(TaskPool pool) throws IOException {
-        if (timeoutMs > 0) {
-            startTime = new Date().getTime();
-            pool.start(new LoopTask() {
-                @Override
-                public String toString() {
-                    return "Auto-Flush Task for " + BatchPipelineStep.this.toString();
-                }
-
-                @Override
-                protected boolean executeIteration() throws IOException {
-                    long currentTime = System.currentTimeMillis();
-                    checkForFlush(currentTime);
-                    return pool.sleep(timeoutMs / 2);
-                }
-            });
-        }
-    }
-
-    @Override
-    public void checkForFlush(long currentTime) throws IOException {
-        if (currentTime - startTime > timeoutMs) {
+    public void checkConcurrentFlush() {
+        if (lastSampleReceived > 0 && System.currentTimeMillis() - lastSampleReceived > timeoutMs) {
             try {
                 boolean flushed = flush();
                 if (flushed) {
@@ -110,7 +90,8 @@ public final class BatchPipelineStep extends AbstractBatchPipelineStep {
 
     @Override
     public void addSample(Sample sample) throws IOException {
-        startTime = new Date().getTime();
+        // TODO is new Date().getTime() better than currentTimeMillis()? Also check other usages of currentTimeMillis().
+        lastSampleReceived = System.currentTimeMillis();
         if (shouldFlush(sample)) {
             flush();
         }

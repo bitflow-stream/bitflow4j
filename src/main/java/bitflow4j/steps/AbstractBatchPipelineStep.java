@@ -5,6 +5,7 @@ import bitflow4j.Sample;
 import bitflow4j.misc.TreeFormatter;
 import bitflow4j.script.registry.RegisteredParameter;
 import bitflow4j.script.registry.RegisteredParameterList;
+import bitflow4j.task.LoopTask;
 import bitflow4j.task.TaskPool;
 
 import java.io.IOException;
@@ -19,16 +20,26 @@ import java.util.logging.Logger;
  * By subclassing this class, new modes of batching can be introduced, that can be reused in different situations.
  * One or more BatchHandler instances must be added through the addBatchHandler() method of a concrete subclass.
  * <p>
+ * One concurrent thread can optionally be activated for regular checks for background flushes of batches.
+ * All invocations of abstract methods are properly synchronized in this abstract class, so no additional synchronization
+ * should be necessary in subclasses to avoid concurrency problems.
+ * <p>
  * Created by anton on 5/8/16.
  */
 public abstract class AbstractBatchPipelineStep extends AbstractPipelineStep implements TreeFormatter.FormattedNode {
 
     protected static final Logger logger = Logger.getLogger(AbstractBatchPipelineStep.class.getName());
 
+    private final long concurrentCheckTimeout;
     private final List<BatchHandler> handlers = new ArrayList<>();
 
-    public AbstractBatchPipelineStep(BatchHandler... handlers) {
+    public AbstractBatchPipelineStep(long concurrentCheckTimeout, BatchHandler... handlers) {
         this.handlers.addAll(Arrays.asList(handlers));
+        this.concurrentCheckTimeout = concurrentCheckTimeout;
+    }
+
+    public AbstractBatchPipelineStep(BatchHandler... handlers) {
+        this(-1, handlers);
     }
 
     // This parameter determines which batch mode is used. When more modes are introduced, it should be changed to a string parameter.
@@ -61,29 +72,47 @@ public abstract class AbstractBatchPipelineStep extends AbstractPipelineStep imp
 
         // TODO refactor for allowing additional flushing modes:
         // window size, timeout (wall clock, sample timestamps), tag change. Micro batching ("jumping" window) vs moving window.
-        threadIteration(pool);
+        initializeConcurrentChecks(pool);
     }
 
-    public abstract void threadIteration(TaskPool pool) throws IOException;
+    private void initializeConcurrentChecks(TaskPool pool) throws IOException {
+        if (concurrentCheckTimeout > 0) {
+            pool.start(new LoopTask() {
+                @Override
+                public String toString() {
+                    return "Auto-Flush Task for " + AbstractBatchPipelineStep.this.toString();
+                }
 
-    public abstract void checkForFlush(long currentTime) throws IOException;
+                @Override
+                protected boolean executeIteration() throws IOException {
+                    synchronized (AbstractBatchPipelineStep.this) {
+                        checkConcurrentFlush();
+                    }
+                    return pool.sleep(concurrentCheckTimeout);
+                }
+            });
+        }
+    }
 
     public abstract void addSample(Sample sample) throws IOException;
+
+    public abstract void checkConcurrentFlush();
 
     public abstract void closeCleanup() throws IOException;
 
     @Override
     public final synchronized void writeSample(Sample sample) throws IOException {
         addSample(sample);
+        // Do not forward the sample here
     }
 
     @Override
-    protected synchronized void doClose() throws IOException {
+    protected final synchronized void doClose() throws IOException {
         closeCleanup();
         super.doClose();
     }
 
-    protected synchronized void flushWindow(List<Sample> window) throws IOException {
+    protected final synchronized void flushWindow(List<Sample> window) throws IOException {
         if (window.isEmpty())
             return;
         printFlushMessage(window);
