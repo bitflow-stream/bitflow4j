@@ -86,8 +86,8 @@ pipeline {
             steps {
                 script {
                     dockerImage = docker.build registry + ':$BRANCH_NAME-build-$BUILD_NUMBER'
-                    dockerImageARM32 = docker.build registry + ':$BRANCH_NAME-build-$BUILD_NUMBER-arm32v7', '-f arm32v7.Dockerfile'
-                    dockerImageARM64 = docker.build registry + ':$BRANCH_NAME-build-$BUILD_NUMBER-arm64v8', '-f arm64v8.Dockerfile'
+                    dockerImageARM32 = docker.build registry + ':$BRANCH_NAME-build-$BUILD_NUMBER-arm32v7', '-f arm32v7.Dockerfile .'
+                    dockerImageARM64 = docker.build registry + ':$BRANCH_NAME-build-$BUILD_NUMBER-arm64v8', '-f arm64v8.Dockerfile .'
                 }
             }
         }
