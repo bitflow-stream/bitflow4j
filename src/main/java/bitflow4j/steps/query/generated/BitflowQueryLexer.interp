@@ -166,7 +166,7 @@ channel names:
 DEFAULT_TOKEN_CHANNEL
 HIDDEN
 
-mode names:
+learnMode names:
 DEFAULT_MODE
 
 atn:

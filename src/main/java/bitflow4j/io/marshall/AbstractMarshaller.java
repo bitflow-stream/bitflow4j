@@ -20,7 +20,7 @@ public abstract class AbstractMarshaller implements Marshaller {
     static final byte[] lineSepBytes_1 = lineSepString_1.getBytes();
     static final byte[] lineSepBytes_2 = lineSepString_2.getBytes();
 
-    static String readLine(InputStream input) throws IOException {
+    protected static String readLine(InputStream input) throws IOException {
         int chr = input.read();
         StringBuilder buffer = new StringBuilder(512);
         while (chr != lineSep_1 && chr != lineSep_2) {
@@ -33,7 +33,7 @@ public abstract class AbstractMarshaller implements Marshaller {
         return buffer.toString();
     }
 
-    static byte[] peek(InputStream input, int numBytes) throws IOException {
+    protected static byte[] peek(InputStream input, int numBytes) throws IOException {
         if (!input.markSupported()) {
             throw new IllegalArgumentException("Cannot peek from a " + input.getClass().getName() + ", since it does not support mark/reset");
         }
@@ -61,7 +61,7 @@ public abstract class AbstractMarshaller implements Marshaller {
         }
     }
 
-    static void cleanLineSeparation(InputStream input) throws IOException {
+    protected static void cleanLineSeparation(InputStream input) throws IOException {
         //Handling \r\n... line breaks
         input.mark(1);
         int chr = input.read();
