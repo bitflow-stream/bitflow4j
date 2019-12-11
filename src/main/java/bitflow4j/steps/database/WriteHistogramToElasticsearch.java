@@ -27,7 +27,9 @@ public class WriteHistogramToElasticsearch implements BatchHandler {
 
     @Override
     public List<Sample> handleBatch(List<Sample> batch) throws IOException {
-        elasticsearchUtil.write(batch);
+        if(batch.size() > 0){
+            elasticsearchUtil.write(batch);
+        }
         return batch;
     }
 
