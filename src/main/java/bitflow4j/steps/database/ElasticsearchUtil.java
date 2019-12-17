@@ -105,7 +105,12 @@ public class ElasticsearchUtil {
             bulkRequest.add(request);
         }
 
-        BulkResponse bulkResponse = client.bulk(bulkRequest, RequestOptions.DEFAULT);
+        BulkResponse bulkResponse = null;
+        try {
+            bulkResponse = client.bulk(bulkRequest, RequestOptions.DEFAULT);
+        } catch (IOException ioex){
+            logger.log(Level.SEVERE, "Internal error in elasticsearch.", ioex);
+        }
 
         handleResponse(bulkResponse);
     }
@@ -221,17 +226,19 @@ public class ElasticsearchUtil {
     }
 
     private void handleResponse(BulkResponse bulkResponse) {
-        if (bulkResponse.hasFailures()) {
-            for (BulkItemResponse bulkItemResponse : bulkResponse) {
-                if (bulkItemResponse.isFailed()) {
-                    BulkItemResponse.Failure failure =
-                            bulkItemResponse.getFailure();
-                    logger.log(Level.WARNING, String.format("Elasticsearch write has failed with message: %s \n%s",
-                            failure.getMessage(), toString()));
+        if(bulkResponse != null) {
+            if (bulkResponse.hasFailures()) {
+                for (BulkItemResponse bulkItemResponse : bulkResponse) {
+                    if (bulkItemResponse.isFailed()) {
+                        BulkItemResponse.Failure failure =
+                                bulkItemResponse.getFailure();
+                        logger.log(Level.WARNING, String.format("Elasticsearch write has failed with message: %s \n%s",
+                                failure.getMessage(), toString()));
+                    }
                 }
+            } else {
+                logger.log(Level.INFO, String.format("Elasticsearch saved Histogram: %s Elements", bulkResponse.getItems().length));
             }
-        } else {
-            logger.log(Level.INFO, String.format("Elasticsearch saved Histogram: %s Elements", bulkResponse.getItems().length));
         }
     }
 
