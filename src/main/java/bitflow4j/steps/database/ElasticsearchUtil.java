@@ -105,9 +105,12 @@ public class ElasticsearchUtil {
             bulkRequest.add(request);
         }
 
-        BulkResponse bulkResponse = client.bulk(bulkRequest, RequestOptions.DEFAULT);
-
-        handleResponse(bulkResponse);
+        try {
+            BulkResponse bulkResponse = client.bulk(bulkRequest, RequestOptions.DEFAULT);
+            handleResponse(bulkResponse);
+        } catch (IOException ioex) {
+            logger.log(Level.SEVERE, "Internal error in elasticsearch.", ioex);
+        }
     }
 
     private IndexRequest generateIndexRequest(Sample sample) throws IOException {
@@ -224,8 +227,7 @@ public class ElasticsearchUtil {
         if (bulkResponse.hasFailures()) {
             for (BulkItemResponse bulkItemResponse : bulkResponse) {
                 if (bulkItemResponse.isFailed()) {
-                    BulkItemResponse.Failure failure =
-                            bulkItemResponse.getFailure();
+                    BulkItemResponse.Failure failure = bulkItemResponse.getFailure();
                     logger.log(Level.WARNING, String.format("Elasticsearch write has failed with message: %s \n%s",
                             failure.getMessage(), toString()));
                 }
