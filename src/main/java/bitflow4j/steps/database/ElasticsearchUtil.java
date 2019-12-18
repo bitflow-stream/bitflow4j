@@ -105,14 +105,12 @@ public class ElasticsearchUtil {
             bulkRequest.add(request);
         }
 
-        BulkResponse bulkResponse = null;
         try {
-            bulkResponse = client.bulk(bulkRequest, RequestOptions.DEFAULT);
-        } catch (IOException ioex){
+            BulkResponse bulkResponse = client.bulk(bulkRequest, RequestOptions.DEFAULT);
+            handleResponse(bulkResponse);
+        } catch (IOException ioex) {
             logger.log(Level.SEVERE, "Internal error in elasticsearch.", ioex);
         }
-
-        handleResponse(bulkResponse);
     }
 
     private IndexRequest generateIndexRequest(Sample sample) throws IOException {
@@ -226,19 +224,16 @@ public class ElasticsearchUtil {
     }
 
     private void handleResponse(BulkResponse bulkResponse) {
-        if(bulkResponse != null) {
-            if (bulkResponse.hasFailures()) {
-                for (BulkItemResponse bulkItemResponse : bulkResponse) {
-                    if (bulkItemResponse.isFailed()) {
-                        BulkItemResponse.Failure failure =
-                                bulkItemResponse.getFailure();
-                        logger.log(Level.WARNING, String.format("Elasticsearch write has failed with message: %s \n%s",
-                                failure.getMessage(), toString()));
-                    }
+        if (bulkResponse.hasFailures()) {
+            for (BulkItemResponse bulkItemResponse : bulkResponse) {
+                if (bulkItemResponse.isFailed()) {
+                    BulkItemResponse.Failure failure = bulkItemResponse.getFailure();
+                    logger.log(Level.WARNING, String.format("Elasticsearch write has failed with message: %s \n%s",
+                            failure.getMessage(), toString()));
                 }
-            } else {
-                logger.log(Level.INFO, String.format("Elasticsearch saved Histogram: %s Elements", bulkResponse.getItems().length));
             }
+        } else {
+            logger.log(Level.INFO, String.format("Elasticsearch saved Histogram: %s Elements", bulkResponse.getItems().length));
         }
     }
 
