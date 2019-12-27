@@ -60,6 +60,12 @@ public abstract class MarshallingSampleWriter extends AbstractPipelineStep {
         super.writeSample(sample);
     }
 
+    public void flush() throws IOException {
+        if (output != null) {
+            output.flush();
+        }
+    }
+
     protected void closeStream() {
         OutputStream output = this.output; // Avoid race condition
         if (output != null) {
