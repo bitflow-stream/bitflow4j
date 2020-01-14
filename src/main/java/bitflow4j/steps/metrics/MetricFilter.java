@@ -25,10 +25,6 @@ public class MetricFilter extends AbstractPipelineStep {
         this.filter = filter;
     }
 
-    public MetricFilter(String... excludedCols) {
-        this(new MetricNameSelection(excludedCols));
-    }
-
     /**
      * Constructor for bitflow-script, specifying whether to include or exclude the comma-separated string of columns
      **/
@@ -41,6 +37,22 @@ public class MetricFilter extends AbstractPipelineStep {
         } else { //exclude
             this.filter = new MetricNameSelection(cols);
         }
+    }
+
+    public static class IncludeMetrics extends MetricFilter {
+
+        public IncludeMetrics(String... regex) {
+            super(new MetricRegexSelection(regex));
+        }
+
+    }
+
+    public static class ExcludeMetrics extends MetricFilter {
+
+        public ExcludeMetrics(String... regex) {
+            super(new MetricRegexExcludeSelection(regex));
+        }
+
     }
 
     @Override
