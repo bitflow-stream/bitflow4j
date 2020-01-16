@@ -11,6 +11,8 @@ import org.influxdb.dto.Point;
 import org.influxdb.dto.Pong;
 
 import java.io.IOException;
+import java.util.Date;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -72,8 +74,8 @@ public class WriteToInfluxDB extends AbstractPipelineStep {
         for (int i = 0; i < sample.getMetrics().length; i += metricsPerRequest) {
             String finalPrefix = sample.resolveTagTemplate(prefix);
 
-            Point.Builder pointBuilder = Point.measurement(finalPrefix)
-                    .time(sample.getTimestamp().getTime(), TimeUnit.MILLISECONDS);
+            Date utcSampleTime = convertLocalTimezoneToUTC(sample.getTimestamp());
+            Point.Builder pointBuilder = Point.measurement(finalPrefix).time(utcSampleTime.getTime(), TimeUnit.MILLISECONDS);
             for (int j = i; j < sample.getMetrics().length && j < i + metricsPerRequest; j++) {
                 double val = sample.getValue(j);
                 if (isValidValue(val)) {
@@ -91,6 +93,16 @@ public class WriteToInfluxDB extends AbstractPipelineStep {
         }
 
         output.writeSample(sample);
+    }
+
+    private static Date convertLocalTimezoneToUTC(Date localTime) {
+        TimeZone fromTimeZone = TimeZone.getDefault(); // The local time zone
+        TimeZone toTimeZone = TimeZone.getTimeZone("UTC");
+
+        long fromOffset = fromTimeZone.getRawOffset() + (fromTimeZone.inDaylightTime(localTime) ? fromTimeZone.getDSTSavings() : 0);
+        long toOffset = toTimeZone.getRawOffset() + (toTimeZone.inDaylightTime(localTime) ? toTimeZone.getDSTSavings() : 0);
+
+        return new java.util.Date(localTime.getTime() + (toOffset - fromOffset));
     }
 
     private static String buildExceptionMessage(Throwable e) {
