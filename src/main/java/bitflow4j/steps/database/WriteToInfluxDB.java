@@ -99,8 +99,8 @@ public class WriteToInfluxDB extends AbstractPipelineStep {
         TimeZone fromTimeZone = TimeZone.getDefault(); // The local time zone
         TimeZone toTimeZone = TimeZone.getTimeZone("UTC");
 
-        long fromOffset = fromTimeZone.getRawOffset() + (fromTimeZone.inDaylightTime(localTime) ? fromTimeZone.getDSTSavings() : 0);
-        long toOffset = toTimeZone.getRawOffset() + (toTimeZone.inDaylightTime(localTime) ? toTimeZone.getDSTSavings() : 0);
+        long fromOffset = (long) fromTimeZone.getRawOffset() + (fromTimeZone.inDaylightTime(localTime) ? fromTimeZone.getDSTSavings() : 0);
+        long toOffset = (long) toTimeZone.getRawOffset() + (toTimeZone.inDaylightTime(localTime) ? toTimeZone.getDSTSavings() : 0);
 
         return new java.util.Date(localTime.getTime() + (toOffset - fromOffset));
     }
