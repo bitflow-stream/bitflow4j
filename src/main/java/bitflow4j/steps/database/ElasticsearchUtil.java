@@ -1,7 +1,7 @@
 package bitflow4j.steps.database;
 
 import bitflow4j.Sample;
-import bitflow4j.misc.Pair;
+import bitflow4j.steps.misc.Pair;
 import org.apache.http.HttpHost;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.DocWriteResponse;

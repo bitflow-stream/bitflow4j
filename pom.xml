@@ -76,7 +76,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>bitflow4j.script.Main</mainClass>
+                            <mainClass>bitflow4j.Main</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -206,7 +206,7 @@
             <version>4.7.2</version>
         </dependency>
 
-        <!-- Dependencies for package bitflow4j.http -->
+        <!-- Dependencies for package bitflow4j.steps.http -->
         <dependency>
             <groupId>org.nanohttpd</groupId>
             <artifactId>nanohttpd</artifactId>
@@ -228,7 +228,7 @@
             <version>3.0.11.RELEASE</version>
         </dependency>
 
-        <!-- Dependencies for package bitflow4j.io.sql (not compile dependencies, only needed when actually connecting to the respective DB) -->
+        <!-- Dependencies for package bitflow4j.steps.database.sql (not compile dependencies, only needed when actually connecting to the respective DB) -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>

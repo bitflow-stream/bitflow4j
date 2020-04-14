@@ -1,9 +1,9 @@
 package bitflow4j.steps.normalization;
 
 import bitflow4j.misc.FeatureStatistics;
-import bitflow4j.misc.Pair;
-import bitflow4j.script.registry.BitflowConstructor;
-import bitflow4j.script.registry.Optional;
+import bitflow4j.registry.BitflowConstructor;
+import bitflow4j.registry.Optional;
+import bitflow4j.steps.misc.Pair;
 
 import java.util.*;
 
@@ -198,7 +198,7 @@ public class OnlineAutoMinMaxScaler extends AbstractOnlineScaler {
 
         private final double threshold;
         private final int windowSize;
-        private List<Double> values;
+        private final List<Double> values;
 
         public RobustThresholdConceptChangeDetector(double threshold) {
             this(threshold, NUM_SAMPLES);

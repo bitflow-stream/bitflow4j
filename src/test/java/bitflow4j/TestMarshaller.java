@@ -1,12 +1,10 @@
 package bitflow4j;
 
-import bitflow4j.io.SampleInputStream;
-import bitflow4j.io.console.SampleWriter;
-import bitflow4j.io.marshall.*;
-import bitflow4j.misc.Pair;
+import bitflow4j.steps.misc.Pair;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.junit.jupiter.api.Test;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -21,22 +19,24 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class TestMarshaller extends TestWithSamples {
 
-    private void testAllHeadersDirect(Marshaller marshaller) throws IOException {
+    @Test
+    private void testMarshaller() throws IOException {
+        BinaryMarshaller marshaller = new BinaryMarshaller();
         List<Pair<Header, List<Sample>>> headers = createSamples();
 
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
 
-        for (Pair<Header, List<Sample>> header : headers) {
+        for (bitflow4j.steps.misc.Pair<Header, List<Sample>> header : headers) {
             marshaller.marshallHeader(buf, header.getLeft());
             for (Sample sample : header.getRight()) {
                 marshaller.marshallSample(buf, sample);
             }
         }
 
-        ByteArrayInputStream inBuffer = new ByteArrayInputStream(buf.toByteArray());
+        BufferedInputStream inBuffer = new BufferedInputStream(new ByteArrayInputStream(buf.toByteArray()));
 
         List<Sample> receivedSamples = new ArrayList<>();
-        UnmarshalledHeader header = null;
+        Header header = null;
         while (true) {
             try {
                 if (marshaller.peekIsHeader(inBuffer)) {
@@ -45,7 +45,7 @@ public class TestMarshaller extends TestWithSamples {
                     assertNotNull(header);
                     receivedSamples.add(marshaller.unmarshallSample(inBuffer, header));
                 }
-            } catch (InputStreamClosedException exc) {
+            } catch (BitflowProtocolError exc) {
                 break;
             }
         }
@@ -54,12 +54,12 @@ public class TestMarshaller extends TestWithSamples {
         assertTrue(EqualsBuilder.reflectionEquals(expected, receivedSamples));
     }
 
-    private void testAllHeaders(Marshaller marshaller) throws IOException {
+    @Test
+    private void testMarshallerWithChannel() throws IOException {
         List<Pair<Header, List<Sample>>> headers = createSamples();
 
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
-        SampleWriter printer = new SampleWriter(buf, marshaller, "buffer");
-        printer.setOutgoingSink(new DropStep());
+        SampleChannel printer = new SampleChannel(null, buf);
 
         int x = 0;
         for (Pair<Header, List<Sample>> header : headers) {
@@ -69,13 +69,13 @@ public class TestMarshaller extends TestWithSamples {
         }
 
         ByteArrayInputStream inBuffer = new ByteArrayInputStream(buf.toByteArray());
-        SampleInputStream reader = new SampleInputStream.Single(inBuffer, "test", null, marshaller);
+        SampleChannel reader = new SampleChannel(inBuffer, null);
 
         Iterator<Sample> expectedSamples = flatten(headers).iterator();
 
         List<Sample> receivedSamples = new ArrayList<>();
         for (int i = 0; ; i++) {
-            Sample sample = reader.nextSample();
+            Sample sample = reader.readSample();
             if (sample == null)
                 break;
             assertTrue(expectedSamples.hasNext(), "Received more samples than expected");
@@ -86,26 +86,6 @@ public class TestMarshaller extends TestWithSamples {
             }
         }
         assertFalse(expectedSamples.hasNext(), "Received less samples than expected");
-    }
-
-    @Test
-    public void testBinaryAllHeaders() throws IOException {
-        testAllHeaders(new BinaryMarshaller());
-    }
-
-    @Test
-    public void testCsvAllHeaders() throws IOException {
-        testAllHeaders(new CsvMarshaller());
-    }
-
-    @Test
-    public void testBinaryAllHeadersDirect() throws IOException {
-        testAllHeadersDirect(new BinaryMarshaller());
-    }
-
-    @Test
-    public void testCsvAllHeadersDirect() throws IOException {
-        testAllHeadersDirect(new CsvMarshaller());
     }
 
 }

@@ -1,8 +1,8 @@
 package bitflow4j.steps.query;
 
 import bitflow4j.Header;
+import bitflow4j.MockContext;
 import bitflow4j.Sample;
-import bitflow4j.io.list.ListSink;
 import bitflow4j.steps.query.exceptions.IllegalStreamingQueryException;
 import bitflow4j.steps.query.exceptions.MissingMetricException;
 import org.junit.jupiter.api.Disabled;
@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests that must run without error after version 1 of the program.
  * <p>
- * Output samples are stored in a list in the helper class ListSink. This
+ * Output samples are stored in a list in the helper class MockContext. This
  * list is used to compare calculated and expected output samples.
  * <p>
  * Reset list before new tests.
@@ -36,9 +36,9 @@ public class TestsForV1 {
         String query = "SeLect *";
         StreamingQuery sq;
 
-        ListSink sink = new ListSink();
+        MockContext sink = new MockContext();
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 1
         String[] input_1_strings = {"cpu", "hosts", "memory"};
@@ -68,7 +68,7 @@ public class TestsForV1 {
 
         query = "Select ALL Where cpu=2";
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 3
         String[] input_3_strings = {"hosts", "cpu", "memory"};
@@ -96,9 +96,9 @@ public class TestsForV1 {
         String query = "Select cpu, mem as memory ";
         StreamingQuery sq;
 
-        ListSink sink = new ListSink();
+        MockContext sink = new MockContext();
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 1
         String[] input_1_strings = {"cpu", "mem", "temp", "ram"};
@@ -138,9 +138,9 @@ public class TestsForV1 {
         // define query
         String query = "Select cpu, mem As memory WHERE (cpu>=0.4 aNd mem=0.2) oR noT mem>=0.3";
         StreamingQuery sq;
-        ListSink sink = new ListSink();
+        MockContext sink = new MockContext();
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 1
         String[] input_1_strings = {"cpu", "mem", "temp", "ram"};
@@ -184,9 +184,9 @@ public class TestsForV1 {
 
         // define new query
         query = "Select ram As Ram, mem As Memory, cpu Where NOT(mem<=1 OR mem>=5) AND cpu=3 AND ram=4";
-        sink = new ListSink();
+        sink = new MockContext();
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 4
         String[] input_4_strings = {"ram", "cpu", "temp", "mem"};
@@ -238,9 +238,9 @@ public class TestsForV1 {
             // define query
             String query = "Select cpu, mem As memory";
             StreamingQuery sq;
-            ListSink sink = new ListSink();
+            MockContext sink = new MockContext();
             sq = new StreamingQuery(query);
-            sq.setOutgoingSink(sink);
+            sq.initialize(sink);
 
             // Input 1
             String[] input_1_strings = {"cpu", "temp", "ram"};
@@ -262,9 +262,9 @@ public class TestsForV1 {
         String query = "Select cpu*2 As TwoCpu, mem+cpu As MemCpu, ((cpu+cpu)+mem)*2";
         StreamingQuery sq;
 
-        ListSink sink = new ListSink();
+        MockContext sink = new MockContext();
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 1
         String[] input_1_strings = {"cpu", "mem", "temp", "ram"};
@@ -285,7 +285,7 @@ public class TestsForV1 {
 
         query = "Select power As Power, power*2, power+2, power- 2, power/2, ((power+power)*(power*ram)+3)*ram Where NOT power=2 AND ((power<100 AND power<=40 AND a>=4 AND b>10) OR e=100)";
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 2
         String[] input_2_strings = {"power", "ram", "cpu", "a", "b", "c", "d", "e", "Memory"};
@@ -312,9 +312,9 @@ public class TestsForV1 {
         String query = "Select cpu As CPU, ram Where TRUE OR FALSE";
         StreamingQuery sq;
 
-        ListSink sink = new ListSink();
+        MockContext sink = new MockContext();
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 1
         String[] input_1_strings = {"cpu", "ram"};
@@ -331,7 +331,7 @@ public class TestsForV1 {
 
         query = "Select cpu As CPU, ram Where TRUE AND FALSE";
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 2
         String[] input_2_strings = {"cpu", "ram"};
@@ -345,7 +345,7 @@ public class TestsForV1 {
 
         query = "Select mem As Memory, ram Where TRUE AND TRUE";
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 3
         String[] input_3_strings = {"mem", "temp", "ram"};
@@ -385,9 +385,9 @@ public class TestsForV1 {
         String query = "Select * Where (a>b AND C=c) OR 3.0>e";
         StreamingQuery sq;
 
-        ListSink sink = new ListSink();
+        MockContext sink = new MockContext();
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 1
         String[] input_1_strings = {"a", "b", "c", "C", "e"};

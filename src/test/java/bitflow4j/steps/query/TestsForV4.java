@@ -1,8 +1,8 @@
 package bitflow4j.steps.query;
 
 import bitflow4j.Header;
+import bitflow4j.MockContext;
 import bitflow4j.Sample;
-import bitflow4j.io.list.ListSink;
 import bitflow4j.steps.query.exceptions.IllegalStreamingQueryException;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -26,9 +26,9 @@ public class TestsForV4 {
         String query = "SeLect * Where CPU in {1,105,2000} OR RAM in {20,50}";
         StreamingQuery sq;
 
-        ListSink sink = new ListSink();
+        MockContext sink = new MockContext();
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 1
         String[] input_1_strings = {"CPU", "RAM"};
@@ -90,9 +90,9 @@ public class TestsForV4 {
         String query = "SELECT cpu*2 AS CPU_OUTPUT Having CPU_OUTPUT iN {10,100,1002}";
         StreamingQuery sq;
 
-        ListSink sink = new ListSink();
+        MockContext sink = new MockContext();
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 1
         String[] input_1_strings = {"cpu"};
@@ -164,9 +164,9 @@ public class TestsForV4 {
         String query = "SELECT * Where tag(host) in {foo,gulenko}";
         StreamingQuery sq;
 
-        ListSink sink = new ListSink();
+        MockContext sink = new MockContext();
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 1
         String[] input_1_strings = {"a"};
@@ -230,9 +230,9 @@ public class TestsForV4 {
         String query = "Select Count(host,IP) as Count2Tags Window all";
         StreamingQuery sq;
 
-        ListSink sink = new ListSink();
+        MockContext sink = new MockContext();
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 1
         String[] input_1_strings = {"a"};
@@ -338,9 +338,9 @@ public class TestsForV4 {
         String query = "Select * Where b>1 AND tag(host) = \"foo\"";
         StreamingQuery sq;
 
-        ListSink sink = new ListSink();
+        MockContext sink = new MockContext();
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 1
         String[] input_1_strings = {"a", "b", "c"};
@@ -389,9 +389,9 @@ public class TestsForV4 {
         String query = "Select Memory , Sum(Memory) Where Memory>10 Window all";
         StreamingQuery sq;
 
-        ListSink sink = new ListSink();
+        MockContext sink = new MockContext();
         sq = new StreamingQuery(query, false);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 1
         String[] input_1_strings = {"Memory"};

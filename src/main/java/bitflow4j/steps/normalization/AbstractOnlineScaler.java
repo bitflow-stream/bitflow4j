@@ -1,8 +1,8 @@
 package bitflow4j.steps.normalization;
 
-import bitflow4j.AbstractPipelineStep;
+import bitflow4j.AbstractProcessingStep;
 import bitflow4j.Sample;
-import bitflow4j.misc.Pair;
+import bitflow4j.steps.misc.Pair;
 
 import java.io.IOException;
 import java.util.*;
@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 /**
  * Created by anton on 6/23/16.
  */
-public abstract class AbstractOnlineScaler extends AbstractPipelineStep {
+public abstract class AbstractOnlineScaler extends AbstractProcessingStep {
 
     private static final Logger logger = Logger.getLogger(AbstractOnlineScaler.class.getName());
 
@@ -49,7 +49,7 @@ public abstract class AbstractOnlineScaler extends AbstractPipelineStep {
         return accept ? Collections.emptyList() : null;
     }
 
-    private Set<String> warnedMetrics = new HashSet<>();
+    private final Set<String> warnedMetrics = new HashSet<>();
     private ConceptChangeHandler handler;
     private ConceptChangeDetector detector;
 
@@ -77,7 +77,7 @@ public abstract class AbstractOnlineScaler extends AbstractPipelineStep {
     }
 
     @Override
-    public void writeSample(Sample sample) throws IOException {
+    public void handleSample(Sample sample) throws IOException {
         double[] inMetrics = sample.getMetrics();
         String[] fields = sample.getHeader().header;
         double[] metrics = new double[inMetrics.length];
@@ -101,7 +101,7 @@ public abstract class AbstractOnlineScaler extends AbstractPipelineStep {
                 }
             }
         }
-        super.writeSample(new Sample(sample.getHeader(), metrics, sample));
+        output(new Sample(sample.getHeader(), metrics, sample));
     }
 
     private Pair<Double, Boolean> doScale(String name, double val) {

@@ -45,10 +45,6 @@ public class Sample {
         this(source.getHeader(), source.getMetrics(), source);
     }
 
-    public static Sample unmarshallSample(Header header, double[] metrics, Date timestamp, String tags) throws IOException {
-        return new Sample(header, metrics, timestamp, parseTags(tags));
-    }
-
     public static Map<String, String> parseTags(String tags) throws IOException {
         Map<String, String> result = new HashMap<>();
         if (tags != null && !tags.isEmpty()) {

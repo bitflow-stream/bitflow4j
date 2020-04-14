@@ -1,8 +1,8 @@
 package bitflow4j.steps.query;
 
 import bitflow4j.Header;
+import bitflow4j.MockContext;
 import bitflow4j.Sample;
-import bitflow4j.io.list.ListSink;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -121,9 +121,9 @@ public class PerformanceEvaluator {
             ArrayList<Sample> list = createSamples(n);
             QueryOptimization queryOptimization = new QueryOptimization(query);
 
-            ListSink sink = new ListSink();
+            MockContext context = new MockContext();
             sq = new StreamingQuery(query, false);
-            sq.setOutgoingSink(sink);
+            sq.initialize(context);
 
             //start test
             long estimatedTime = 0;
@@ -177,11 +177,11 @@ public class PerformanceEvaluator {
 
     private static void runWriteForHPROF() throws IOException {
         ArrayList<Sample> list = createSamples(50000);
-        ListSink sink = new ListSink();
+        MockContext context = new MockContext();
         StreamingQuery sq;
 
         sq = new StreamingQuery("Select Sum(First) As SUM Where First>5 AND Second<5 Group by host Window 1000 Having SUM>1000", false);
-        sq.setOutgoingSink(sink);
+        sq.initialize(context);
         for (Sample s : list) {
             sq.writeSample(s);
         }

@@ -1,4 +1,4 @@
-package bitflow4j.misc;
+package bitflow4j.steps.misc;
 
 import java.io.Serializable;
 

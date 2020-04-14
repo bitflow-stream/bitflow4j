@@ -1,5 +1,6 @@
 package bitflow4j.misc;
 
+import bitflow4j.LoggingConfig;
 import org.ini4j.Ini;
 import org.ini4j.Profile;
 
@@ -219,7 +220,7 @@ public class FeatureStatistics implements Serializable {
     }
 
     public static void main(String[] args) throws IOException {
-        Config.initializeLogger();
+        LoggingConfig.initializeLogger();
         if (args.length != 1) {
             logger.severe("Parameters: <ini-file>");
             return;

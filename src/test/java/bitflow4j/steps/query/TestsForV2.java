@@ -1,8 +1,8 @@
 package bitflow4j.steps.query;
 
 import bitflow4j.Header;
+import bitflow4j.MockContext;
 import bitflow4j.Sample;
-import bitflow4j.io.list.ListSink;
 import bitflow4j.steps.query.exceptions.IllegalStreamingQueryException;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -29,9 +29,9 @@ public class TestsForV2 {
         String query = "Select Sum(Cpu) Where Cpu>10 Window 3";
         StreamingQuery sq;
 
-        ListSink sink = new ListSink();
+        MockContext sink = new MockContext();
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 1
         String[] input_1_strings = {"Cpu", "hosts", "memory"};
@@ -133,9 +133,9 @@ public class TestsForV2 {
         String query = "Select min(a) As min, MAX(a) As max, AvG(a), meDiAn(a), cOUNT(*) As count, sUm(a) As Summe Where a>1 Window all";
         StreamingQuery sq;
 
-        ListSink sink = new ListSink();
+        MockContext sink = new MockContext();
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 1
         String[] input_1_strings = {"a", "b"};
@@ -236,9 +236,9 @@ public class TestsForV2 {
         String query = "Select Count(*) As c Where CPU>1.5 Window 10 s";
         StreamingQuery sq;
 
-        ListSink sink = new ListSink();
+        MockContext sink = new MockContext();
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 1
         String[] input_1_strings = {"CPU"};
@@ -351,9 +351,9 @@ public class TestsForV2 {
         String query = "Select Count(*) As c, Count(host) As hosts Where CPU>1.5 Window all";
         StreamingQuery sq;
 
-        ListSink sink = new ListSink();
+        MockContext sink = new MockContext();
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 1
         String[] input_1_strings = {"CPU"};
@@ -486,9 +486,9 @@ public class TestsForV2 {
         String query = "Select CPU, sum(CPU) As CPUSUM, Min(RAM)+MAX(RAM), Count(*) As Samples, Count(host) As hosts Where RAM>=20 AND CPU>0.5 Window 4";
         StreamingQuery sq;
 
-        ListSink sink = new ListSink();
+        MockContext sink = new MockContext();
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 1
         String[] input_1_strings = {"CPU", "RAM"};
@@ -651,9 +651,9 @@ public class TestsForV2 {
 
         System.out.println("... timestamps ready! \n");
 
-        ListSink sink = new ListSink();
+        MockContext sink = new MockContext();
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 1
         String[] input_1_strings = {"CPU"};
@@ -732,9 +732,9 @@ public class TestsForV2 {
         String query = "Select Count(host) As c Window all";
         StreamingQuery sq;
 
-        ListSink sink = new ListSink();
+        MockContext sink = new MockContext();
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 1
         String[] input_1_strings = {"CPU", "RAM"};

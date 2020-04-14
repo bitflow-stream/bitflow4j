@@ -24,20 +24,20 @@ It is convenient, to invoke the Bitflow4j functionality through a domain specifi
 This lightweight scripting language is implemented in the `bitflow-stream` sub-directory of the [antlr-grammars repository](https://github.com/bitflow-stream/antlr-grammars).
 See the [README of the Bitflow Script](https://github.com/bitflow-stream/antlr-grammars/tree/master/bitflow-script) for details regarding the script syntax.
 
-The main entrypoint for a Bitflow Script is the class `bitflow4j.script.Main`.
+The main entrypoint for a Bitflow Script is the class `bitflow4j.Main`.
 It can be started with the `--help` parameter to list all command line options.
 The script can be passed directly on the command line, or in a file, using the `-f` option:
 
 ```
-java -cp bitflow4j.jar bitflow4j.script.Main -f bitflow-script.bf
+java -cp bitflow4j.jar bitflow4j.Main -f bitflow-script.bf
 ```
 ```
-java -cp bitflow4j.jar bitflow4j.script.Main -s "input.csv -> Standardize() -> output.csv"
+java -cp bitflow4j.jar bitflow4j.Main -s "input.csv -> Standardize() -> output.csv"
 ```
 
 When starting, the Java implementation of the Bitflow Script scans a list of packages for pipeline steps that will be made available in the script. The list of packages to scan defaults to `bitflow4j`, but can be modified by passing a comma-separated list of packages to the `-P` parameter.
 
-To see which pipeline steps and forks are available, start `bitflow4j.script.Main` with the `--capabilities` parameter.
+To see which pipeline steps and forks are available, start `bitflow4j.Main` with the `--capabilities` parameter.
 Specify the `-v` parameter for verbose logging, which will show which classes have been scanned, but not registered for usage in the script, because they do not fullfill the requirements listed below.
 
 
@@ -72,9 +72,9 @@ An error will be shown if parsing a parameter fails or if no fitting constructor
 The following interfaces can be implemented. See the documentation of the Bitflow Script for more information.
 
  - `bitflow4j.PipelineStep` (abstract class): Registered subclasses of `PipelineStep` can directly be instantiated and added as a single pipeline step.
- - `bitflow4j.script.registry.ProcessingStepBuilder` (interface): Registered instances of this interface can be used to modify the created pipeline in more complex ways than adding a single pipeline step. For example, multiple connected instances of `PipelineStep` can be instantiated and added in a predefined sequence. This should only be used, when pipeline steps depend on each other, so that a constructor with only primitive parameter types is not sufficient.
+ - `bitflow4j.registry.ProcessingStepBuilder` (interface): Registered instances of this interface can be used to modify the created pipeline in more complex ways than adding a single pipeline step. For example, multiple connected instances of `PipelineStep` can be instantiated and added in a predefined sequence. This should only be used, when pipeline steps depend on each other, so that a constructor with only primitive parameter types is not sufficient.
  - `bitflow4j.steps.fork.ScriptableDistributor` (interface): Registered implementations of `ScriptableDistributor` can be instantiated as a single fork step inside the pipeline. They will receive all defined sub pipelines and must distribute samples according to their custom logic.
- - `bitflow4j.script.registry.ForkBuilder` (interface): If the creation of a `ScriptableDistributor` cannot be implemented in a single constructor with primitive parameter types, a `ForkBuilder` can be used to move the creation of the `ScriptableDistributor` to a dedicated builder function. However, contrary to a `PipelineBuilder`, the `Pipeline` can not be further modified by a `ForkBuilder`.
+ - `bitflow4j.registry.ForkBuilder` (interface): If the creation of a `ScriptableDistributor` cannot be implemented in a single constructor with primitive parameter types, a `ForkBuilder` can be used to move the creation of the `ScriptableDistributor` to a dedicated builder function. However, contrary to a `PipelineBuilder`, the `Pipeline` can not be further modified by a `ForkBuilder`.
 
 ## Usage in Java code
 

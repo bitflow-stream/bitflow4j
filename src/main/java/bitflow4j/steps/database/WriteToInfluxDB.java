@@ -1,10 +1,10 @@
 package bitflow4j.steps.database;
 
-import bitflow4j.AbstractPipelineStep;
+import bitflow4j.AbstractProcessingStep;
 import bitflow4j.Sample;
-import bitflow4j.script.registry.BitflowConstructor;
-import bitflow4j.script.registry.Description;
-import bitflow4j.script.registry.Optional;
+import bitflow4j.registry.BitflowConstructor;
+import bitflow4j.registry.Description;
+import bitflow4j.registry.Optional;
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
 import org.influxdb.dto.Point;
@@ -16,7 +16,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Description("Writes all metrics of samples to the database with the given prefix.")
-public class WriteToInfluxDB extends AbstractPipelineStep {
+public class WriteToInfluxDB extends AbstractProcessingStep {
 
     protected static final Logger logger = Logger.getLogger(WriteToInfluxDB.class.getName());
 
@@ -58,7 +58,7 @@ public class WriteToInfluxDB extends AbstractPipelineStep {
     }
 
     @Override
-    public void writeSample(Sample sample) throws IOException {
+    public void handleSample(Sample sample) throws IOException {
         try {
             checkConnectionAndReconnect();
             ensureDefaultDatabase();
@@ -90,7 +90,7 @@ public class WriteToInfluxDB extends AbstractPipelineStep {
             influxDB.write(point);
         }
 
-        output.writeSample(sample);
+        output(sample);
     }
 
     private static String buildExceptionMessage(Throwable e) {
@@ -112,9 +112,8 @@ public class WriteToInfluxDB extends AbstractPipelineStep {
     }
 
     @Override
-    protected void doClose() throws IOException {
+    public void cleanup() {
         influxDB.close();
-        super.doClose();
     }
 
     private void checkConnectionAndReconnect() {

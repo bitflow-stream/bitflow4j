@@ -1,21 +1,21 @@
 package bitflow4j.steps.query;
 
 import bitflow4j.Header;
+import bitflow4j.MockContext;
 import bitflow4j.Sample;
-import bitflow4j.io.list.ListSink;
 
 import java.io.IOException;
 import java.util.ArrayList;
 
 public class QueryOptimization {
 
-    private ArrayList<Sample> list;
-    private ListSink sink;
-    private String query;
+    private final ArrayList<Sample> list;
+    private final MockContext sink;
+    private final String query;
 
     public QueryOptimization(String query) {
         list = new ArrayList<>();
-        sink = new ListSink();
+        sink = new MockContext();
         this.query = query;
     }
 
@@ -24,7 +24,7 @@ public class QueryOptimization {
             double[] values_output = {s.getMetrics()[0]};
             Header header_output = new Header(new String[]{"First"});
             Sample output = new Sample(header_output, values_output, s.getTimestamp(), s.getTags());
-            sink.writeSample(output);
+            sink.outputSample(output);
         } else if (query.equals("Select Sum(First) As SUM Where First>5 AND Second<5 Group by host Window 1000 Having SUM>1000")) {
             if (s.getMetrics()[0] > 5 && s.getMetrics()[1] < 5) {
                 list.add(s);
@@ -63,7 +63,7 @@ public class QueryOptimization {
                         Header header_output = new Header(new String[]{"SUM"});
                         Sample output = new Sample(header_output, values_output, s.getTimestamp());
                         output.setTag("host", "Germany");
-                        sink.writeSample(output);
+                        sink.outputSample(output);
                     }
                 }
                 if (list_England.size() > 0) {
@@ -76,7 +76,7 @@ public class QueryOptimization {
                         Header header_output = new Header(new String[]{"SUM"});
                         Sample output = new Sample(header_output, values_output, s.getTimestamp());
                         output.setTag("host", "England");
-                        sink.writeSample(output);
+                        sink.outputSample(output);
                     }
                 }
                 if (list_France.size() > 0) {
@@ -89,7 +89,7 @@ public class QueryOptimization {
                         Header header_output = new Header(new String[]{"SUM"});
                         Sample output = new Sample(header_output, values_output, s.getTimestamp());
                         output.setTag("host", "France");
-                        sink.writeSample(output);
+                        sink.outputSample(output);
                     }
                 }
                 if (list_null.size() > 0) {
@@ -101,7 +101,7 @@ public class QueryOptimization {
                         double[] values_output = {sum};
                         Header header_output = new Header(new String[]{"SUM"});
                         Sample output = new Sample(header_output, values_output, s.getTimestamp());
-                        sink.writeSample(output);
+                        sink.outputSample(output);
                     }
                 }
             }

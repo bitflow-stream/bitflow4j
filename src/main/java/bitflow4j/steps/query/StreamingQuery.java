@@ -1,9 +1,10 @@
 package bitflow4j.steps.query;
 
-import bitflow4j.AbstractPipelineStep;
+import bitflow4j.AbstractProcessingStep;
 import bitflow4j.Header;
 import bitflow4j.Sample;
-import bitflow4j.script.registry.BitflowConstructor;
+import bitflow4j.registry.BitflowConstructor;
+import bitflow4j.registry.StepName;
 import bitflow4j.steps.query.exceptions.IllegalQuerySemantics;
 import bitflow4j.steps.query.exceptions.IllegalQuerySyntax;
 import bitflow4j.steps.query.exceptions.IllegalStreamingQueryException;
@@ -24,7 +25,8 @@ import java.util.*;
  * Inherit from AbstractAlgorithm to get Bitflow interfaces.
  * The method writeSample(Sample s) is used to process Samples.
  */
-public class StreamingQuery extends AbstractPipelineStep {
+@StepName("query")
+public class StreamingQuery extends AbstractProcessingStep {
 
     private String query;
     private ParseTree tree;
@@ -34,7 +36,7 @@ public class StreamingQuery extends AbstractPipelineStep {
     private HeaderBuilderVisitor headerBuilderVisitor; // visitor that calculate the new header in outputSample
     private CalculateTimeVisitor timeVisitor; // visitor for calculate time in window time mode
 
-    private ArrayList<Sample> sampleList = new ArrayList<>(); // holds all Sample in Window
+    private final ArrayList<Sample> sampleList = new ArrayList<>(); // holds all Sample in Window
     private ArrayList<String> neededMetrics;
 
     private String[] lastHeader;
@@ -64,7 +66,7 @@ public class StreamingQuery extends AbstractPipelineStep {
     }
 
     @BitflowConstructor
-    public StreamingQuery(String query, @bitflow4j.script.registry.Optional(defaultBool = true) boolean outputWhenWhereIsFalse) throws IllegalStreamingQueryException {
+    public StreamingQuery(String query, @bitflow4j.registry.Optional(defaultBool = true) boolean outputWhenWhereIsFalse) throws IllegalStreamingQueryException {
         setCalculateOutputIfWhereIsFalse(outputWhenWhereIsFalse);
         initQuery(query);
     }
@@ -249,14 +251,13 @@ public class StreamingQuery extends AbstractPipelineStep {
      * part.
      */
     private void writeOutputSample(Sample outputSample) throws IOException {
-
         if (havingIsPartOfQuery) {
             ReturnHelperWherePart r = booleanVisitor.visitWithSample(tree, outputSample, true);
             if (r == null || r.getBool())
-                output().writeSample(outputSample);
+                output(outputSample);
         } else {
             //no having
-            output().writeSample(outputSample);
+            output(outputSample);
         }
     }
 
@@ -346,12 +347,12 @@ public class StreamingQuery extends AbstractPipelineStep {
      * Check if the header from a Sample fits to query
      */
     private boolean isHeaderOk(String[] headers) {
-
         for (String metricString : neededMetrics) {
             boolean found = false;
             for (String headerString : headers) {
                 if (metricString.equals(headerString)) {
                     found = true;
+                    break;
                 }
             }
             if (!found) {

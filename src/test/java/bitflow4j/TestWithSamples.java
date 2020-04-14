@@ -1,7 +1,6 @@
 package bitflow4j;
 
-import bitflow4j.misc.Config;
-import bitflow4j.misc.Pair;
+import bitflow4j.steps.misc.Pair;
 import org.junit.jupiter.api.BeforeEach;
 
 import java.io.IOException;
@@ -14,7 +13,7 @@ public class TestWithSamples {
 
     static {
         try {
-            Config.initializeLogger();
+            LoggingConfig.initializeLogger();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -97,7 +96,6 @@ public class TestWithSamples {
                 }
             }
             result.add(sample);
-//            System.out.println(date + ": " + Arrays.toString(metrics) + " -> " + sample.tagString());
         }
         return result;
     }

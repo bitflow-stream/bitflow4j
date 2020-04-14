@@ -1,7 +1,7 @@
 package bitflow4j.steps.normalization;
 
 import bitflow4j.misc.FeatureStatistics;
-import bitflow4j.misc.Pair;
+import bitflow4j.steps.misc.Pair;
 
 import java.util.HashMap;
 import java.util.Map;
