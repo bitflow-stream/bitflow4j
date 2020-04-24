@@ -3,7 +3,6 @@ package bitflow4j;
 import bitflow4j.steps.misc.Pair;
 import org.junit.jupiter.api.BeforeEach;
 
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -12,11 +11,7 @@ import java.util.*;
 public class TestWithSamples {
 
     static {
-        try {
-            LoggingConfig.initializeLogger();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        LoggingConfig.initializeLogger();
     }
 
     private Random random;

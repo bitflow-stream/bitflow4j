@@ -1,8 +1,11 @@
 package bitflow4j;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 public abstract class AbstractProcessingStep implements ProcessingStep {
+
+    protected static final Logger logger = Logger.getLogger(AbstractProcessingStep.class.getName());
 
     protected Context context = null;
 

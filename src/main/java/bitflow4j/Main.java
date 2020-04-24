@@ -22,12 +22,7 @@ public class Main {
     private static final Logger logger = Logger.getLogger(Main.class.getName());
 
     static {
-        try {
-            LoggingConfig.initializeLogger();
-        } catch (IOException e) {
-            System.err.println("Failed to initialize logger.");
-            e.printStackTrace();
-        }
+        LoggingConfig.initializeLogger();
     }
 
     public static void main(String[] args) {
@@ -80,7 +75,8 @@ public class Main {
         if (step == null) {
             logger.info("Known processing steps: " +
                     registry.getAllRegisteredSteps().stream().map(RegisteredStep::getStepName).collect(Collectors.toList()));
-            throw new IllegalArgumentException("Unknown processing step: " + stepName);
+            logger.severe("Unknown processing step: " + stepName);
+            System.exit(1);
         }
         SampleChannel channel = new SampleChannel(System.in, System.out);
         Runner runner = new Runner();
@@ -106,7 +102,10 @@ public class Main {
     }
 
     private void configureLogging() {
-        // shortLogMessages
+        if (shortLogMessages) {
+            // Re-initialize the logging system with new properties
+            LoggingConfig.initializeLogger(true);
+        }
         if (verboseLogging)
             LoggingConfig.setDefaultLogLevel(Level.FINER);
         else if (silentLogging)

@@ -16,7 +16,8 @@ public class LoggingConfig {
 
     private static final Logger logger = Logger.getLogger(LoggingConfig.class.getName());
 
-    static final String logging_properties = "logging.properties";
+    private static final String logging_properties = "logging.properties";
+    private static final String logging_properties_short = "logging-short.properties";
 
     public static void setDefaultLogLevel(Level level) {
         Logger root = Logger.getLogger("");
@@ -26,22 +27,26 @@ public class LoggingConfig {
         }
     }
 
-    public static void safeInitializeLogger() {
-        try {
-            initializeLogger();
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "Failed to initialize logging", e);
-        }
+    public static boolean initializeLogger() {
+        return initializeLogger(false);
     }
 
-    public static void initializeLogger() throws IOException {
-        InputStream config = ClassLoader.getSystemResourceAsStream(logging_properties);
+    public static boolean initializeLogger(boolean shortLog) {
+        String properties = shortLog ? logging_properties_short : logging_properties;
+        InputStream config = ClassLoader.getSystemResourceAsStream(properties);
         if (config == null) {
-            System.err.println("Failed to initialize logger from resource " + logging_properties);
+            System.err.println("Failed to initialize logger from resource " + properties);
         } else {
-            LogManager.getLogManager().readConfiguration(config);
-            config.close();
+            try {
+                LogManager.getLogManager().readConfiguration(config);
+                config.close();
+                return true;
+            } catch (IOException e) {
+                System.err.println("Failed to initialize logger from resource " + properties);
+                e.printStackTrace();
+            }
         }
+        return false;
     }
 
 }
