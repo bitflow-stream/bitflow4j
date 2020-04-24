@@ -1,6 +1,7 @@
 package bitflow4j;
 
 import bitflow4j.registry.ConstructionException;
+import bitflow4j.registry.RegisteredStep;
 import bitflow4j.registry.Registry;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -11,6 +12,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Main instantiates the requested ProcessingStep, parses the parameters, and starts reading samples from stdin.
@@ -61,6 +63,9 @@ public class Main {
     @Parameter(names = {"-q", "--quiet"}, description = "Set the log level to WARNING.")
     public boolean silentLogging = false;
 
+    @Parameter(names = {"-shortlog"}, description = "Do not print timestamps in logging output.")
+    public boolean shortLogMessages = false;
+
     public void executeMain(String[] args) throws IOException, ConstructionException {
         parseArguments(args);
         configureLogging();
@@ -72,6 +77,11 @@ public class Main {
         }
 
         ProcessingStep step = registry.instantiateStep(stepName, stepArgs);
+        if (step == null) {
+            logger.info("Known processing steps: " +
+                    registry.getAllRegisteredSteps().stream().map(RegisteredStep::getStepName).collect(Collectors.toList()));
+            throw new IllegalArgumentException("Unknown processing step: " + stepName);
+        }
         SampleChannel channel = new SampleChannel(System.in, System.out);
         Runner runner = new Runner();
         runner.run(step, channel);
@@ -96,6 +106,7 @@ public class Main {
     }
 
     private void configureLogging() {
+        // shortLogMessages
         if (verboseLogging)
             LoggingConfig.setDefaultLogLevel(Level.FINER);
         else if (silentLogging)

@@ -92,6 +92,9 @@ public class Registry {
     }
 
     private static Map<String, Object> parseMapString(String mapString) {
+        mapString = mapString.strip();
+        if (mapString.isEmpty())
+            return Collections.emptyMap();
         Map<String, Object> map = new HashMap<>();
         for (String part : mapString.split(",")) {
             String[] keyVal = part.split("=");

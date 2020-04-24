@@ -1,6 +1,7 @@
-# teambitflow/bitflow4j:arm-latest
+# bitflowstream/bitflow-pipeline-java:latest-arm32v7
+# Build from repository root directory:
+# mvn package
+# docker build -t bitflowstream/bitflow-pipeline-java:latest-arm32v7 -f build/arm32v7.Dockerfile .
 FROM arm32v7/openjdk:11-jre-slim
-WORKDIR /
-ADD target/bitflow4j-*-jar-with-dependencies.jar bitflow4j.jar
-ENTRYPOINT ["java", "-jar", "bitflow4j.jar"]
-
+ADD target/bitflow4j-*-jar-with-dependencies.jar /bitflow4j.jar
+ENTRYPOINT ["/bitflow-pipeline", "-exe", "java;java;-jar /bitflow4j.jar"]

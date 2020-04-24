@@ -21,7 +21,7 @@ public class EchoStep extends NoopStep {
 
     @Override
     public void initialize(Context context) throws IOException {
-        logger.info(msg);
+        System.err.println(msg);
         super.initialize(context);
     }
 
