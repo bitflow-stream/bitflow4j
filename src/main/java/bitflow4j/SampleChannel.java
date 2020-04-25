@@ -32,12 +32,16 @@ public class SampleChannel {
     }
 
     public Sample readSample() throws IOException {
-        while (true) {
-            if (inputHeader == null || marshaller.peekIsHeader(input)) {
-                inputHeader = marshaller.unmarshallHeader(input);
-            } else {
-                return marshaller.unmarshallSample(input, inputHeader);
+        try {
+            while (true) {
+                if (inputHeader == null || marshaller.peekIsHeader(input)) {
+                    inputHeader = marshaller.unmarshallHeader(input);
+                } else {
+                    return marshaller.unmarshallSample(input, inputHeader);
+                }
             }
+        } catch (ExpectedEOF e) {
+            return null;
         }
     }
 

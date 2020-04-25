@@ -1,7 +1,6 @@
 package bitflow4j;
 
 import bitflow4j.steps.misc.Pair;
-import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.junit.jupiter.api.Test;
 
 import java.io.BufferedInputStream;
@@ -17,16 +16,16 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Created by anton on 27.12.16.
  */
-public class TestMarshaller extends TestWithSamples {
+public class MarshallerTest {
 
     @Test
-    private void testMarshaller() throws IOException {
+    public void testMarshaller() throws IOException {
         BinaryMarshaller marshaller = new BinaryMarshaller();
-        List<Pair<Header, List<Sample>>> headers = createSamples();
+        List<Pair<Header, List<Sample>>> headers = Helpers.createSamples();
 
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
 
-        for (bitflow4j.steps.misc.Pair<Header, List<Sample>> header : headers) {
+        for (Pair<Header, List<Sample>> header : headers) {
             marshaller.marshallHeader(buf, header.getLeft());
             for (Sample sample : header.getRight()) {
                 marshaller.marshallSample(buf, sample);
@@ -45,23 +44,22 @@ public class TestMarshaller extends TestWithSamples {
                     assertNotNull(header);
                     receivedSamples.add(marshaller.unmarshallSample(inBuffer, header));
                 }
-            } catch (BitflowProtocolError exc) {
+            } catch (ExpectedEOF exc) {
                 break;
             }
         }
 
-        List<Sample> expected = flatten(headers);
-        assertTrue(EqualsBuilder.reflectionEquals(expected, receivedSamples));
+        List<Sample> expected = Helpers.flatten(headers);
+        assertArrayEquals(expected.toArray(), receivedSamples.toArray());
     }
 
     @Test
-    private void testMarshallerWithChannel() throws IOException {
-        List<Pair<Header, List<Sample>>> headers = createSamples();
+    public void testChannel() throws IOException {
+        List<Pair<Header, List<Sample>>> headers = Helpers.createSamples();
 
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         SampleChannel printer = new SampleChannel(null, buf);
 
-        int x = 0;
         for (Pair<Header, List<Sample>> header : headers) {
             for (Sample sample : header.getRight()) {
                 printer.writeSample(sample);
@@ -71,7 +69,7 @@ public class TestMarshaller extends TestWithSamples {
         ByteArrayInputStream inBuffer = new ByteArrayInputStream(buf.toByteArray());
         SampleChannel reader = new SampleChannel(inBuffer, null);
 
-        Iterator<Sample> expectedSamples = flatten(headers).iterator();
+        Iterator<Sample> expectedSamples = Helpers.flatten(headers).iterator();
 
         List<Sample> receivedSamples = new ArrayList<>();
         for (int i = 0; ; i++) {
@@ -81,9 +79,7 @@ public class TestMarshaller extends TestWithSamples {
             assertTrue(expectedSamples.hasNext(), "Received more samples than expected");
             Sample expected = expectedSamples.next();
 
-            if (!EqualsBuilder.reflectionEquals(expected, sample)) {
-                assertEquals(expected, sample, "Unexpected sample nr " + i);
-            }
+            assertEquals(expected, sample, "Unexpected sample nr " + i);
         }
         assertFalse(expectedSamples.hasNext(), "Received less samples than expected");
     }

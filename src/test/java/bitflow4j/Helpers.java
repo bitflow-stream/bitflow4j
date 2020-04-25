@@ -1,20 +1,19 @@
 package bitflow4j;
 
 import bitflow4j.steps.misc.Pair;
-import org.junit.jupiter.api.BeforeEach;
 
 import java.util.*;
 
 /**
  * Created by anton on 27.12.16.
  */
-public class TestWithSamples {
+public class Helpers {
 
     static {
         LoggingConfig.initializeLogger();
     }
 
-    private Random random;
+    private static final Random random = new Random(123123);
 
     private static Calendar getYear(int year) {
         Calendar c = Calendar.getInstance();
@@ -25,12 +24,7 @@ public class TestWithSamples {
     private static final long dateFrom = getYear(2010).getTime().getTime();
     private static final long dateTo = getYear(2015).getTime().getTime();
 
-    @BeforeEach
-    public void setup() {
-        random = new Random(123123);
-    }
-
-    List<Pair<Header, List<Sample>>> createSamples() {
+    public static List<Pair<Header, List<Sample>>> createSamples() {
         String[][] fields = new String[][]{
                 new String[]{ /* Empty header */},
                 new String[]{"field1"},
@@ -66,7 +60,7 @@ public class TestWithSamples {
         return result;
     }
 
-    List<Sample> createSamplesFor(Header header, int numTags, int numFields) {
+    public static List<Sample> createSamplesFor(Header header, int numTags, int numFields) {
         List<Sample> result = new ArrayList<>();
         for (int i = 0; i < numFields; i++) {
             double[] metrics = new double[header.header.length];
@@ -95,7 +89,7 @@ public class TestWithSamples {
         return result;
     }
 
-    List<Sample> flatten(List<Pair<Header, List<Sample>>> samples) {
+    public static List<Sample> flatten(List<Pair<Header, List<Sample>>> samples) {
         List<Sample> result = new ArrayList<>();
         for (Pair<Header, List<Sample>> header : samples) {
             result.addAll(header.getRight());

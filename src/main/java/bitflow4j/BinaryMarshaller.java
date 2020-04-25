@@ -68,6 +68,8 @@ public class BinaryMarshaller {
         byte[] peeked;
         try {
             peeked = peek(input, HEADER_START.length());
+            if (peeked.length == 0)
+                throw new ExpectedEOF();
         } catch (EOFException e) {
             throw new ExpectedEOF(); // Valid EOF at this point
         }
@@ -94,7 +96,7 @@ public class BinaryMarshaller {
         byte[] tagsField = readLine(input, false);
         if (!Arrays.equals(tagsField, HEADER_TAGS_BYTES)) {
             throw new BitflowProtocolError(String.format(
-                    "Bitflow binary header must have a second field of '%s'. Received: %s", HEADER_START, new String(tagsField)));
+                    "Bitflow binary header must have a second field of '%s'. Received: %s", HEADER_TAGS, new String(tagsField)));
         }
 
         List<String> headerList = new ArrayList<>();
@@ -147,11 +149,16 @@ public class BinaryMarshaller {
         }
 
         input.reset();
-        return input.readNBytes(num);
+        byte[] data = input.readNBytes(num);
+        input.read(); // Skip the line termination byte
+        return data;
     }
 
     private static byte[] peek(BufferedInputStream input, int numBytes) throws IOException {
         input.mark(numBytes);
+
+        // TODO sometimes, this returns 0 bytes. why?
+
         byte[] result = input.readNBytes(numBytes);
         input.reset();
         return result;

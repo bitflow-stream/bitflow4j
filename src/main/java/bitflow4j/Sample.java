@@ -96,10 +96,6 @@ public class Sample {
         return tag != null && !tag.isEmpty();
     }
 
-    public boolean headerChanged(Header oldHeader) {
-        return header.hasChanged(oldHeader);
-    }
-
     public void setAllTags(Map<String, String> tagsMap) {
         tags.clear();
         for (Map.Entry<String, String> tag : tagsMap.entrySet()) {
@@ -109,6 +105,18 @@ public class Sample {
 
     public boolean hasTags() {
         return !tags.isEmpty();
+    }
+
+    public boolean equals(Object otherObj) {
+        if (!(otherObj instanceof Sample))
+            return false;
+        Sample other = (Sample) otherObj;
+        if (this == other)
+            return true;
+        return timestamp.equals(other.timestamp) &&
+                header.equals(other.header) &&
+                Arrays.equals(metrics, other.metrics) &&
+                tags.equals(other.tags);
     }
 
     public int getIntTag(String tag) throws IOException {

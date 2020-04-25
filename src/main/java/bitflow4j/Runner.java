@@ -15,12 +15,9 @@ public class Runner {
 
         logger.info("Starting to receive samples...");
         while (running) {
-            Sample sample;
-            try {
-                sample = channel.readSample();
-            } catch (ExpectedEOF e) {
+            Sample sample = channel.readSample();
+            if (sample == null)
                 break;
-            }
             step.handleSample(sample);
         }
 

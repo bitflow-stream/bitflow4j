@@ -1,10 +1,15 @@
 package bitflow4j.registry;
 
+import bitflow4j.LoggingConfig;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class NameResolveTest {
+
+    static {
+        LoggingConfig.initializeLogger();
+    }
 
     private void testExpectedResult(String input, String expectation) {
         assertEquals(expectation, RegisteredStep.classNameToStepName(input));

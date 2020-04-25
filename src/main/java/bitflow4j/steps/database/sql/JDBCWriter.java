@@ -49,7 +49,7 @@ public class JDBCWriter extends Connector {
     }
 
     public void writeSample(Sample sample) throws SQLException {
-        if (lastWrittenSample == null || sample.headerChanged(lastWrittenSample.getHeader())) {
+        if (lastWrittenSample == null || !sample.getHeader().equals(lastWrittenSample.getHeader())) {
             List<String> newColumns = checkTableColumns(sample);
             if (!newColumns.isEmpty()) {
                 if (db.equals(DB.SQLite)) addColumns(newColumns);

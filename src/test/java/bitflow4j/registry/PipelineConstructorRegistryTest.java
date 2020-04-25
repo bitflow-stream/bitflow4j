@@ -1,5 +1,6 @@
 package bitflow4j.registry;
 
+import bitflow4j.LoggingConfig;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -14,12 +15,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class PipelineConstructorRegistryTest {
 
-    public static final String SCRIPT_PACKAGE = "bitflow4j.registry";
+    private static final Registry registry = new Registry();
 
-    private final Registry registry = new Registry();
-
-    public PipelineConstructorRegistryTest() {
-        registry.scanForProcessingSteps(SCRIPT_PACKAGE);
+    static {
+        LoggingConfig.initializeLogger();
+        registry.scanForProcessingSteps("bitflow4j.registry");
     }
 
     @SuppressWarnings("unchecked")
