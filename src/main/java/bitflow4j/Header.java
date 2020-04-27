@@ -29,6 +29,10 @@ public class Header {
         return this == other || Arrays.equals(header, other.header);
     }
 
+    public int hashCode() {
+        return Arrays.hashCode(header);
+    }
+
     public static Header newEmptyHeader() {
         return new Header(new String[0]);
     }

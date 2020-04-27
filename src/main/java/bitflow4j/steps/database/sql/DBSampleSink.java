@@ -50,9 +50,10 @@ public class DBSampleSink extends AbstractProcessingStep {
         } catch (SQLException e) {
             try {
                 writer.disconnect();
-            } finally {
-                throw new IOException(e);
+            } catch (SQLException e2) {
+                logger.log(Level.SEVERE, "Failed to disconnect writer after writing sample failed", e2);
             }
+            throw new IOException(e);
         }
     }
 

@@ -42,8 +42,7 @@ public class LoggingConfig {
                 config.close();
                 return true;
             } catch (IOException e) {
-                System.err.println("Failed to initialize logger from resource " + properties);
-                e.printStackTrace();
+                logger.log(Level.WARNING, "Failed to initialize logger from resource " + properties, e);
             }
         }
         return false;

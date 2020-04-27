@@ -119,6 +119,13 @@ public class Sample {
                 tags.equals(other.tags);
     }
 
+    public int hashCode() {
+        return (((31 + Arrays.hashCode(metrics))
+                * 31 + tags.hashCode())
+                * 31 + timestamp.hashCode())
+                * 31 + header.hashCode();
+    }
+
     public int getIntTag(String tag) throws IOException {
         int val;
         try {

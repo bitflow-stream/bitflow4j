@@ -60,10 +60,10 @@ public class JDBCWriter extends Connector {
         String valuesToInsert = buildValueString(sample);
         String columnsToInsert = buildColumnStrings(sample);
         String query = String.format(BASE_INSERT_STATEMENT, tableQualifier, columnsToInsert, valuesToInsert);
-        PreparedStatement preparedStatement = connection.prepareStatement(query);
-        preparedStatement.setString(1, sample.tagString());
-        preparedStatement.executeUpdate();
-        preparedStatement.close();
+        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setString(1, sample.tagString());
+            preparedStatement.executeUpdate();
+        }
         lastWrittenSample = sample;
     }
 

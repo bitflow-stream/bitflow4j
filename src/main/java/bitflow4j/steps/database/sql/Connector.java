@@ -31,7 +31,7 @@ public abstract class Connector {
         else
             throw new IllegalArgumentException("Database not supported. Only MYSQL, POSTGRESQL and SQLITE are supported.");
         this.user = user;
-        this.password = password;
+        this.password = password == null ? "" : password;
         this.url = url;
         this.tableQualifier = schema == null ? this.table : this.schema + "." + this.table;
         this.state = State.INITIALIZED;
@@ -45,7 +45,6 @@ public abstract class Connector {
     public Connector connect() throws SQLException {
         if (state == State.CONNECTED) return this;
         if (this.user == null) this.connection = DriverManager.getConnection(this.url);
-        else if (this.password == null) this.connection = DriverManager.getConnection(this.url, this.user, "");
         else this.connection = DriverManager.getConnection(this.url, this.user, this.password);
         this.state = State.CONNECTED;
         return this;
@@ -68,15 +67,15 @@ public abstract class Connector {
     }
 
     protected ResultSet executeQuery(String sqlQuery) throws SQLException {
-        Statement sqlStatement = connection.createStatement();
-        return sqlStatement.executeQuery(sqlQuery);
+        try (Statement sqlStatement = connection.createStatement()) {
+            return sqlStatement.executeQuery(sqlQuery);
+        }
     }
 
     protected int executeUpdate(String sqlQuery) throws SQLException {
-        Statement sqlStatement = connection.createStatement();
-        int result = sqlStatement.executeUpdate(sqlQuery);
-        sqlStatement.close();
-        return result;
+        try (Statement sqlStatement = connection.createStatement()) {
+            return sqlStatement.executeUpdate(sqlQuery);
+        }
     }
 
     protected enum State {
