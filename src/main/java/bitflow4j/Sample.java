@@ -59,6 +59,21 @@ public class Sample {
         return result;
     }
 
+    public static String formatTags(Map<String, String> tags) {
+        StringBuilder s = new StringBuilder();
+        boolean started = false;
+        for (Map.Entry<String, String> tag : tags.entrySet()) {
+            String key = escapeTagString(tag.getKey());
+            String value = escapeTagString(tag.getValue());
+            if (started) {
+                s.append(TAG_SEPARATOR);
+            }
+            s.append(key).append(TAG_EQUALS).append(value);
+            started = true;
+        }
+        return s.toString();
+    }
+
     public Map<String, String> getTags() {
         return tags;
     }
@@ -144,18 +159,7 @@ public class Sample {
     }
 
     public String tagString() {
-        StringBuilder s = new StringBuilder();
-        boolean started = false;
-        for (Map.Entry<String, String> tag : tags.entrySet()) {
-            String key = escapeTagString(tag.getKey());
-            String value = escapeTagString(tag.getValue());
-            if (started) {
-                s.append(TAG_SEPARATOR);
-            }
-            s.append(key).append(TAG_EQUALS).append(value);
-            started = true;
-        }
-        return s.toString();
+        return formatTags(tags);
     }
 
     void checkConsistency() throws IOException {
