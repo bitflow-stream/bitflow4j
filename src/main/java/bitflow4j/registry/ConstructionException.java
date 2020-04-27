@@ -6,7 +6,7 @@ package bitflow4j.registry;
  */
 public class ConstructionException extends Exception {
 
-    private String stepName;
+    private final String stepName;
 
     public ConstructionException(String stepName, String message) {
         super(message);
