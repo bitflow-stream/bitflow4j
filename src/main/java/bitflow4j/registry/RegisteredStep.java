@@ -29,7 +29,7 @@ public class RegisteredStep {
         this.stepName = extractStepName(cls);
         this.description = getDescriptionField(cls);
         this.constructor = findConstructor(cls);
-        this.parameters = new RegisteredParameterList(constructor);
+        this.parameters = constructor == null ? null : new RegisteredParameterList(constructor);
     }
 
     public String toString() {
