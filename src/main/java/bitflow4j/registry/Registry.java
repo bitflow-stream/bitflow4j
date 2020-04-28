@@ -96,7 +96,7 @@ public class Registry {
             return Collections.emptyMap();
         Map<String, Object> map = new HashMap<>();
         for (String param : strings) {
-            String[] keyVal = param.split("=", 1);
+            String[] keyVal = param.split("=", 2);
             if (keyVal.length != 2) {
                 throw new IllegalArgumentException(String.format("Illegal parameter format: %s", param));
             }
