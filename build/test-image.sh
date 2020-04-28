@@ -9,7 +9,7 @@ TAG="$1"
     tee /dev/stderr |\
     grep '\[java/echo\] hello world' > /dev/null
 
-# Sanity check 2: Test -fork-tag functionality.
+# Sanity check 2: Roughly test -fork-tag functionality.
 2>&1 docker run "$IMAGE:$TAG" 'closed://- -> java(step=echo, args={msg="hello world"}, exe-args=["-fork-tag", "test"])' |\
     tee /dev/stderr |\
-    grep '\[java/echo\] hello world' > /dev/null
+    grep 'Initializing step bitflow4j.MainFork' > /dev/null
