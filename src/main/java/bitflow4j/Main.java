@@ -6,9 +6,11 @@ import bitflow4j.registry.Registry;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
+import com.beust.jcommander.converters.IParameterSplitter;
 import com.google.common.collect.Lists;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -34,10 +36,16 @@ public class Main {
         }
     }
 
+    private static class NoopArgSplitter implements IParameterSplitter {
+        public List<String> split(String value) {
+            return Collections.singletonList(value);
+        }
+    }
+
     @Parameter(names = {"-step"}, description = "Name of the processing step to execute.")
     public String stepName = null;
 
-    @Parameter(names = {"-args"}, variableArity = true, description = "Arguments to pass to the processing step. Accepts multiple values. Format: -args a=b x=y")
+    @Parameter(names = {"-args"}, variableArity = true, splitter = NoopArgSplitter.class, description = "Arguments to pass to the processing step. Accepts multiple values. Format: -args a=b x=y")
     public List<String> stepArgs = null;
 
     @Parameter(names = {"-h", "--help"}, help = true, order = 0)

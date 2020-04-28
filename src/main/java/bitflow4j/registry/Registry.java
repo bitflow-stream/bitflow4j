@@ -105,6 +105,21 @@ public class Registry {
         return map;
     }
 
+    public static Map<String, String> parseStringMap(String mapString) {
+        mapString = mapString.strip();
+        if (mapString == null || mapString.isEmpty())
+            return Collections.emptyMap();
+        Map<String, String> map = new HashMap<>();
+        for (String param : mapString.split(",")) {
+            String[] keyVal = param.split("=");
+            if (keyVal.length != 2) {
+                throw new IllegalArgumentException(String.format("Illegal map format: %s", mapString));
+            }
+            map.put(keyVal[0].strip(), keyVal[1].strip());
+        }
+        return map;
+    }
+
     // =================================================================
     // ======= Printing and formatting of known processing steps =======
     // =================================================================
