@@ -61,6 +61,9 @@ public class Main {
     @Parameter(names = {"-shortlog"}, description = "Do not print timestamps in logging output.")
     public boolean shortLogMessages = false;
 
+    @Parameter(names = {"-fork-tag"}, description = "Execute one instance of the defined processing for every distinct value of the given tag.")
+    public String forkTag = null;
+
     public void executeMain(String[] args) throws IOException, ConstructionException {
         parseArguments(args);
         configureLogging();
@@ -71,16 +74,37 @@ public class Main {
             return;
         }
 
-        ProcessingStep step = registry.instantiateStep(stepName, stepArgs);
+        ProcessingStep step = makeStep(registry);
+        SampleChannel channel = new SampleChannel(System.in, System.out);
+        Runner runner = new Runner();
+        runner.run(step, channel);
+    }
+
+    private ProcessingStep makeStep(Registry registry) throws ConstructionException, IOException {
+        ProcessingStep step = null;
+        if (forkTag != null && !forkTag.isEmpty()) {
+            MainFork fork = new MainFork(forkTag, () ->
+            {
+                try {
+                    return registry.instantiateStep(stepName, stepArgs);
+                } catch (ConstructionException e) {
+                    logger.log(Level.SEVERE, "Failed to construct step " + stepName, e);
+                    return null;
+                }
+            });
+            // Instantiate one processing step to check if it exists. Use empty tag value.
+            if (fork.getForkHandler("") != null)
+                step = fork;
+        } else {
+            step = registry.instantiateStep(stepName, stepArgs);
+        }
         if (step == null) {
             logger.info("Known processing steps: " +
                     registry.getAllRegisteredSteps().stream().map(RegisteredStep::getStepName).collect(Collectors.toList()));
             logger.severe("Unknown processing step: " + stepName);
             System.exit(1);
         }
-        SampleChannel channel = new SampleChannel(System.in, System.out);
-        Runner runner = new Runner();
-        runner.run(step, channel);
+        return step;
     }
 
     private void parseArguments(String[] args) {

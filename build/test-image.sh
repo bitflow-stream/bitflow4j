@@ -8,3 +8,8 @@ TAG="$1"
 2>&1 docker run "$IMAGE:$TAG" 'closed://- -> java(step=echo, args={msg="hello world"})' |\
     tee /dev/stderr |\
     grep '\[java/echo\] hello world' > /dev/null
+
+# Sanity check 2: Test -fork-tag functionality.
+2>&1 docker run "$IMAGE:$TAG" 'closed://- -> java(step=echo, args={msg="hello world"}, exe-args=["-fork-tag", "test"])' |\
+    tee /dev/stderr |\
+    grep '\[java/echo\] hello world' > /dev/null
