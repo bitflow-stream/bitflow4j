@@ -1,8 +1,8 @@
 package bitflow4j.steps.query;
 
 import bitflow4j.Header;
+import bitflow4j.MockContext;
 import bitflow4j.Sample;
-import bitflow4j.io.list.ListSink;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -30,9 +30,9 @@ public class TestsForV3 {
         String query = "Select RAM, Sum(RAM), Count(*), Count(host) Group by host Window all";
         StreamingQuery sq;
 
-        ListSink sink = new ListSink();
+        MockContext sink = new MockContext();
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 1
         String[] input_1_strings = {"RAM"};
@@ -210,9 +210,9 @@ public class TestsForV3 {
         String query = "Select a*2, b As B Where a>1 Having B>9";
         StreamingQuery sq;
 
-        ListSink sink = new ListSink();
+        MockContext sink = new MockContext();
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 1
         String[] input_1_strings = {"a", "b"};
@@ -249,9 +249,9 @@ public class TestsForV3 {
         String query = "Select CPU, Sum(CPU) As SUM Window all Having SUM>100 AND CPU>30";
         StreamingQuery sq;
 
-        ListSink sink = new ListSink();
+        MockContext sink = new MockContext();
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 1
         String[] input_1_strings = {"CPU"};
@@ -296,9 +296,9 @@ public class TestsForV3 {
         String query = "Select Min(CPU), Max(CPU), Sum(CPU) Group by host, IP Window all";
         StreamingQuery sq;
 
-        ListSink sink = new ListSink();
+        MockContext sink = new MockContext();
         sq = new StreamingQuery(query);
-        sq.setOutgoingSink(sink);
+        sq.initialize(sink);
 
         // Input 1
         String[] input_1_strings = {"CPU"};

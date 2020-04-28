@@ -1,5 +1,7 @@
 package bitflow4j;
 
+import java.util.Arrays;
+
 /**
  * Created by anton on 5/3/16.
  * <p>
@@ -16,26 +18,19 @@ public class Header {
         this.header = header;
     }
 
-    public boolean hasChanged(Header oldHeader) {
-        if (oldHeader == null || header.length != oldHeader.header.length) {
-            return true;
-        } else if (this != oldHeader) {
-            // New instance with same length: must compare all header fields. Rare case.
-            for (int i = 0; i < header.length; i++) {
-                if (!header[i].equals(oldHeader.header[i])) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
     public int numFields() {
         return header.length;
     }
 
-    public boolean equals(Object other) {
-        return other instanceof Header && !hasChanged((Header) other);
+    public boolean equals(Object otherObj) {
+        if (!(otherObj instanceof Header))
+            return false;
+        Header other = (Header) otherObj;
+        return this == other || Arrays.equals(header, other.header);
+    }
+
+    public int hashCode() {
+        return Arrays.hashCode(header);
     }
 
     public static Header newEmptyHeader() {
@@ -49,11 +44,9 @@ public class Header {
         public boolean changed(Header newHeader) {
             Header lastHeader = this.lastHeader;
             this.lastHeader = newHeader;
-            if (lastHeader == null && newHeader == null)
-                return false;
             if (lastHeader == null)
-                return true;
-            return lastHeader.hasChanged(newHeader);
+                return newHeader != null;
+            return !lastHeader.equals(newHeader);
         }
 
     }

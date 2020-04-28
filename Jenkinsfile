@@ -2,14 +2,14 @@ pipeline {
     options {
         timeout(time: 1, unit: 'HOURS')
     }
-    agent {
+        agent {
         docker {
-            image 'teambitflow/maven-docker:3.6-jdk-11'
+            image 'bitflowstream/java-build'
             args '-v /root/.m2:/root/.m2 -v /var/run/docker.sock:/var/run/docker.sock'
         }
     }
     environment {
-        registry = 'teambitflow/bitflow4j'
+        registry = 'bitflowstream/bitflow-pipeline-java'
         registryCredential = 'dockerhub'
         dockerImage = ''
         dockerImageARM32 = ''
@@ -19,10 +19,7 @@ pipeline {
         stage('Git') {
             steps {
                 script {
-                    env.GIT_COMMITTER_EMAIL = sh(
-                        script: "git --no-pager show -s --format='%ae'",
-                        returnStdout: true
-                        ).trim()
+                    env.GIT_COMMITTER_EMAIL = sh(script: "git --no-pager show -s --format='%ae'", returnStdout: true).trim()
                 }
             }
         }
@@ -57,7 +54,7 @@ pipeline {
         stage('SonarQube') {
             steps {
                 withSonarQubeEnv('CIT SonarQube') {
-                    // The find & paste command in the jacoco line lists the relevant files and prints them, separted by comma
+                    // The find & paste command in the jacoco line lists the relevant files and prints them, separated by comma
                     // The jacoco reports must be given file-wise, while the junit reports are read from the entire directory
                     sh '''
                         mvn sonar:sonar -B -V -Dsonar.projectKey=bitflow4j -Dsonar.branch.name=$BRANCH_NAME \
@@ -85,9 +82,14 @@ pipeline {
         stage('Docker build') {
             steps {
                 script {
-                    dockerImage = docker.build registry + ':$BRANCH_NAME-build-$BUILD_NUMBER'
-                    dockerImageARM32 = docker.build registry + ':$BRANCH_NAME-build-$BUILD_NUMBER-arm32v7', '-f arm32v7.Dockerfile .'
-                    dockerImageARM64 = docker.build registry + ':$BRANCH_NAME-build-$BUILD_NUMBER-arm64v8', '-f arm64v8.Dockerfile .'
+                    dockerImage = docker.build registry + ':$BRANCH_NAME-build-$BUILD_NUMBER', '-f build/alpine.Dockerfile .'
+                    sh "./build/test-image.sh $BRANCH_NAME-build-$BUILD_NUMBER"
+
+                    dockerImageARM32 = docker.build registry + ':$BRANCH_NAME-build-$BUILD_NUMBER-arm32v7', '-f build/arm32v7.Dockerfile .'
+                    sh "./build/test-image.sh $BRANCH_NAME-build-$BUILD_NUMBER-arm32v7"
+
+                    dockerImageARM64 = docker.build registry + ':$BRANCH_NAME-build-$BUILD_NUMBER-arm64v8', '-f build/arm64v8.Dockerfile .'
+                    sh "./build/test-image.sh $BRANCH_NAME-build-$BUILD_NUMBER-arm64v8"
                 }
             }
         }
@@ -108,19 +110,12 @@ pipeline {
                         dockerImageARM64.push("latest-arm64v8")
                     }
                 }
-                withCredentials([
-                  [
+                withCredentials([[
                     $class: 'UsernamePasswordMultiBinding',
-                    credentialsId: 'dockerhub',
-                    usernameVariable: 'DOCKERUSER',
-                    passwordVariable: 'DOCKERPASS'
-                  ]
-                ]) {
+                    credentialsId: 'dockerhub', usernameVariable: 'DOCKERUSER', passwordVariable: 'DOCKERPASS'
+                ]]) {
                     // Dockerhub Login
-                    sh '''#! /bin/bash
-                    echo $DOCKERPASS | docker login -u $DOCKERUSER --password-stdin
-                    '''
-                    // teambitflow/bitflow4j:latest manifest
+                    sh 'echo "$DOCKERPASS" | docker login -u "$DOCKERUSER" --password-stdin'
                     sh "docker manifest create ${registry}:latest ${registry}:latest-amd64 ${registry}:latest-arm32v7 ${registry}:latest-arm64v8"
                     sh "docker manifest annotate ${registry}:latest ${registry}:latest-arm32v7 --os=linux --arch=arm --variant=v7"
                     sh "docker manifest annotate ${registry}:latest ${registry}:latest-arm64v8 --os=linux --arch=arm64 --variant=v8"

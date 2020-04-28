@@ -45,10 +45,6 @@ public class Sample {
         this(source.getHeader(), source.getMetrics(), source);
     }
 
-    public static Sample unmarshallSample(Header header, double[] metrics, Date timestamp, String tags) throws IOException {
-        return new Sample(header, metrics, timestamp, parseTags(tags));
-    }
-
     public static Map<String, String> parseTags(String tags) throws IOException {
         Map<String, String> result = new HashMap<>();
         if (tags != null && !tags.isEmpty()) {
@@ -61,6 +57,21 @@ public class Sample {
             }
         }
         return result;
+    }
+
+    public static String formatTags(Map<String, String> tags) {
+        StringBuilder s = new StringBuilder();
+        boolean started = false;
+        for (Map.Entry<String, String> tag : tags.entrySet()) {
+            String key = escapeTagString(tag.getKey());
+            String value = escapeTagString(tag.getValue());
+            if (started) {
+                s.append(TAG_SEPARATOR);
+            }
+            s.append(key).append(TAG_EQUALS).append(value);
+            started = true;
+        }
+        return s.toString();
     }
 
     public Map<String, String> getTags() {
@@ -100,10 +111,6 @@ public class Sample {
         return tag != null && !tag.isEmpty();
     }
 
-    public boolean headerChanged(Header oldHeader) {
-        return header.hasChanged(oldHeader);
-    }
-
     public void setAllTags(Map<String, String> tagsMap) {
         tags.clear();
         for (Map.Entry<String, String> tag : tagsMap.entrySet()) {
@@ -113,6 +120,25 @@ public class Sample {
 
     public boolean hasTags() {
         return !tags.isEmpty();
+    }
+
+    public boolean equals(Object otherObj) {
+        if (!(otherObj instanceof Sample))
+            return false;
+        Sample other = (Sample) otherObj;
+        if (this == other)
+            return true;
+        return timestamp.equals(other.timestamp) &&
+                header.equals(other.header) &&
+                Arrays.equals(metrics, other.metrics) &&
+                tags.equals(other.tags);
+    }
+
+    public int hashCode() {
+        return (((31 + Arrays.hashCode(metrics))
+                * 31 + tags.hashCode())
+                * 31 + timestamp.hashCode())
+                * 31 + header.hashCode();
     }
 
     public int getIntTag(String tag) throws IOException {
@@ -133,18 +159,7 @@ public class Sample {
     }
 
     public String tagString() {
-        StringBuilder s = new StringBuilder();
-        boolean started = false;
-        for (Map.Entry<String, String> tag : tags.entrySet()) {
-            String key = escapeTagString(tag.getKey());
-            String value = escapeTagString(tag.getValue());
-            if (started) {
-                s.append(TAG_SEPARATOR);
-            }
-            s.append(key).append(TAG_EQUALS).append(value);
-            started = true;
-        }
-        return s.toString();
+        return formatTags(tags);
     }
 
     void checkConsistency() throws IOException {

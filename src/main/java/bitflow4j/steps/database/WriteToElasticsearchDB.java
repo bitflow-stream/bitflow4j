@@ -1,13 +1,13 @@
 package bitflow4j.steps.database;
 
-import bitflow4j.AbstractPipelineStep;
+import bitflow4j.AbstractProcessingStep;
 import bitflow4j.Sample;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
 
-public class WriteToElasticsearchDB extends AbstractPipelineStep {
+public class WriteToElasticsearchDB extends AbstractProcessingStep {
 
     protected static final Logger logger = Logger.getLogger(WriteToElasticsearchDB.class.getName());
 
@@ -26,9 +26,9 @@ public class WriteToElasticsearchDB extends AbstractPipelineStep {
     }
 
     @Override
-    public void writeSample(Sample sample) throws IOException {
+    public void handleSample(Sample sample) throws IOException {
         elasticsearchUtil.write(sample);
-        output.writeSample(sample);
+        output(sample);
     }
 
     @Override
