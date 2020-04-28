@@ -81,9 +81,17 @@ public class Main {
     }
 
     private ProcessingStep makeStep(Registry registry) throws ConstructionException, IOException {
-        ProcessingStep step = null;
+        // Instantiate one processing step to check if it exists. Use empty tag value.
+        ProcessingStep step = registry.instantiateStep(stepName, stepArgs);
+        if (step == null) {
+            logger.info("Known processing steps: " +
+                    registry.getAllRegisteredSteps().stream().map(RegisteredStep::getStepName).collect(Collectors.toList()));
+            logger.severe("Unknown processing step: " + stepName);
+            System.exit(1);
+        }
+
         if (forkTag != null && !forkTag.isEmpty()) {
-            MainFork fork = new MainFork(forkTag, () ->
+            step = new MainFork(forkTag, () ->
             {
                 try {
                     return registry.instantiateStep(stepName, stepArgs);
@@ -92,17 +100,6 @@ public class Main {
                     return null;
                 }
             });
-            // Instantiate one processing step to check if it exists. Use empty tag value.
-            if (fork.getForkHandler("") != null)
-                step = fork;
-        } else {
-            step = registry.instantiateStep(stepName, stepArgs);
-        }
-        if (step == null) {
-            logger.info("Known processing steps: " +
-                    registry.getAllRegisteredSteps().stream().map(RegisteredStep::getStepName).collect(Collectors.toList()));
-            logger.severe("Unknown processing step: " + stepName);
-            System.exit(1);
         }
         return step;
     }
