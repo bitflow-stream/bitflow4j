@@ -36,12 +36,12 @@ public class Registry {
         }
     }
 
-    public ProcessingStep instantiateStep(String stepName, String parametersString) throws ConstructionException {
+    public ProcessingStep instantiateStep(String stepName, List<String> parametersList) throws ConstructionException {
         RegisteredStep step = getRegisteredStep(stepName);
         if (step == null) {
             return null;
         }
-        Map<String, Object> rawParameters = parseMapString(parametersString);
+        Map<String, Object> rawParameters = parseRawParameters(parametersList);
         Map<String, Object> parameters = step.parameters.parseRawParameters(rawParameters);
         return step.instantiate(parameters);
     }
@@ -91,15 +91,14 @@ public class Registry {
         return true;
     }
 
-    private static Map<String, Object> parseMapString(String mapString) {
-        mapString = mapString.strip();
-        if (mapString.isEmpty())
+    private static Map<String, Object> parseRawParameters(List<String> strings) {
+        if (strings == null || strings.isEmpty())
             return Collections.emptyMap();
         Map<String, Object> map = new HashMap<>();
-        for (String part : mapString.split(",")) {
-            String[] keyVal = part.split("=");
+        for (String param : strings) {
+            String[] keyVal = param.split("=", 1);
             if (keyVal.length != 2) {
-                throw new IllegalArgumentException(String.format("Failed to parse as map: %s", mapString));
+                throw new IllegalArgumentException(String.format("Illegal parameter format: %s", param));
             }
             map.put(keyVal[0].strip(), keyVal[1].strip());
         }

@@ -37,8 +37,8 @@ public class Main {
     @Parameter(names = {"-step"}, description = "Name of the processing step to execute.")
     public String stepName = null;
 
-    @Parameter(names = {"-args"}, description = "Arguments to pass to the processing step. Format: 'a=b, x=y'")
-    public String stepArgs = "";
+    @Parameter(names = {"-args"}, variableArity = true, description = "Arguments to pass to the processing step. Accepts multiple values. Format: -args a=b x=y")
+    public List<String> stepArgs = null;
 
     @Parameter(names = {"-h", "--help"}, help = true, order = 0)
     public boolean printHelp = false;
